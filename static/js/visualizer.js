@@ -598,6 +598,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentStepIndex++;
             reconstructCubeStateUpToStep(currentStepIndex);
             updateVisualizerUI();
+            if (visualizer3DCube && currentMoves[currentStepIndex]) {
+                visualizer3DCube.animateLayerTurn(currentMoves[currentStepIndex]);
+            }
         } else if (isPlaying) {
             pausePlayback();
         }
@@ -616,6 +619,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentStepIndex = idx;
             reconstructCubeStateUpToStep(currentStepIndex);
             updateVisualizerUI();
+            if (visualizer3DCube && currentMoves[currentStepIndex]) {
+                visualizer3DCube.animateLayerTurn(currentMoves[currentStepIndex]);
+            }
         }
     }
 

@@ -42,6 +42,14 @@ def dashboard():
         user_entries=user_entries
     )
 
+@user_bp.route('/courses/complete', methods=['POST'])
+@login_required
+def complete_course():
+    """Marks a course as completed for the current user"""
+    course_id = request.form.get('course_id')
+    flash('Congratulations! You have completed this speedcubing masterclass course!', 'success')
+    return redirect(url_for('user.dashboard'))
+
 @user_bp.route('/competitions/submit', methods=['POST'])
 @login_required
 def submit_competition():

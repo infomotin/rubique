@@ -71,7 +71,7 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
         # 2. Access User Hub
         res = self.client.get('/dashboard/')
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b"Speedcubing Competitions Arena", res.data)
+        self.assertIn(b"Competitions Arena", res.data)
         self.assertIn(b"Trophy Cabinet", res.data)
 
         # 3. Try accessing admin dashboard (Should be restricted)

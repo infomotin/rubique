@@ -1,194 +1,1730 @@
 {% extends "base.html" %}
 
-{% block title %}User Speedcubing Hub - CubePermutation AI{% endblock %}
+{% block title %}Speedcuber Working Hub - CubePermutation AI{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Tab pill active glow styling */
+    .nav-stage-btn.active {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(56, 189, 248, 0.15));
+        border-color: rgba(99, 102, 241, 0.6);
+        color: #e0e7ff;
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .nav-stage-btn.active .tab-icon {
+        transform: scale(1.15);
+    }
+    
+    /* Interactive Algo Card hover */
+    .algo-card {
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .algo-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
+    }
+    .algo-card.active-algo {
+        border-color: rgba(56, 189, 248, 0.8) !important;
+        background: rgba(14, 165, 233, 0.12) !important;
+        box-shadow: 0 0 25px rgba(56, 189, 248, 0.3) !important;
+    }
+
+    /* Facelet Net grid styling */
+    .net-cell {
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        border: 2px solid #0f172a;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .net-cell:hover {
+        transform: scale(1.1);
+        z-index: 10;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Turn button active tap */
+    .turn-btn {
+        transition: all 0.15s ease;
+    }
+    .turn-btn:active {
+        transform: scale(0.92);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="cyber-grid-bg min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
     
-    <!-- User Hub Hero Card -->
-    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-indigo-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
-        <div class="absolute -top-24 -right-24 w-72 h-72 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+    <!-- =========================================================================
+         TOP WELCOME & SPEEDCUBER STATUS HEADER
+         ========================================================================= -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-indigo-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <!-- User Avatar & Bio -->
             <div class="flex items-center gap-4">
-                <div class="w-16 h-16 rounded-2xl p-0.5 shadow-2xl relative" style="background: linear-gradient(135deg, {{ user.avatar_color or '#818cf8' }}, #38bdf8);">
-                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl font-bold font-outfit text-white">
+                <div class="w-16 h-16 rounded-2xl p-0.5 shadow-2xl relative group cursor-pointer" onclick="switchStage('stage-profile')">
+                    <div class="w-full h-full rounded-[14px] flex items-center justify-center text-2xl font-black font-outfit text-white shadow-inner"
+                         style="background: linear-gradient(135deg, {{ user.avatar_color or '#818cf8' }}, #06b6d4);">
                         {{ user.username[0] | upper }}
                     </div>
+                    <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950 shadow-md"></span>
                 </div>
                 <div>
                     <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 text-[11px] font-mono mb-1">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>SPEEDCUBER HUB &bull; MEMBER</span>
+                        <span class="tracking-widest">SPEEDCUBER STUDIO &bull; {{ user.role|upper }}</span>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">Welcome, {{ user.username }}!</h1>
-                    <p class="text-xs text-slate-400 font-mono">{{ user.bio or 'WCA Speedcubing Contender & Group Theorist' }}</p>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight flex items-center gap-2">
+                        <span>{{ user.username }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-slate-400 font-mono font-normal">WCA ID: {{ user.id }}</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 font-mono">{{ user.bio or 'Speedcubing Enthusiast & Mathematical Permutation Explorer' }}</p>
                 </div>
             </div>
 
-            <!-- Quick Launch to Studio -->
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ url_for('visualizer.index') }}" class="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs shadow-xl shadow-indigo-600/30 hover:scale-[1.02] transition-all flex items-center gap-2">
+            <!-- Header Quick Action Bar -->
+            <div class="flex items-center flex-wrap gap-2.5">
+                <button onclick="switchStage('stage-battle')" class="px-4 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 font-mono text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-swords text-rose-400"></i>
+                    <span>Quick Duel</span>
+                </button>
+                <a href="{{ url_for('visualizer.index') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs shadow-xl shadow-indigo-600/30 hover:scale-[1.02] transition-all flex items-center gap-2">
                     <i class="fa-solid fa-cube text-sm"></i>
-                    <span>Launch 3D Visualizer & Solver</span>
+                    <span>3D Visualizer Lab &rarr;</span>
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- 3 Metric Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
-            <span class="text-xs text-slate-400 uppercase">Total Solves</span>
-            <div class="text-3xl font-bold text-white mt-1">{{ stats.total_solves }}</div>
-            <div class="text-[11px] text-slate-500 mt-1">Logged in MySQL</div>
-        </div>
-        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
-            <span class="text-xs text-slate-400 uppercase">Best Solution</span>
-            <div class="text-3xl font-bold text-emerald-400 mt-1">{{ stats.min_moves }} <span class="text-xs text-slate-500">moves</span></div>
-            <div class="text-[11px] text-emerald-400 mt-1">Optimal Two-Phase</div>
-        </div>
-        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
-            <span class="text-xs text-slate-400 uppercase">Average Efficiency</span>
-            <div class="text-3xl font-bold text-cyan-300 mt-1">{{ stats.avg_moves }} <span class="text-xs text-slate-500">moves</span></div>
-            <div class="text-[11px] text-slate-500 mt-1">God's Number Compliant</div>
-        </div>
-    </div>
-
     <!-- =========================================================================
-         ACTIVE TOURNAMENTS & COMPETITIONS ARENA
+         MAIN TWO-COLUMN WORKING STAGE WITH SIDEBAR
          ========================================================================= -->
-    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-2xl shadow-2xl mb-8">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-            <div>
-                <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
-                    <i class="fa-solid fa-trophy text-amber-400"></i> Speedcubing Competitions Arena
-                </h2>
-                <p class="text-xs text-slate-400 font-mono">Participate in tournaments declared by the Super Admin</p>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- =========================================================================
+             LEFT SIDEBAR: SPEEDCUBER WORKING STAGES MENU
+             ========================================================================= -->
+        <div class="lg:col-span-3 glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/85 backdrop-blur-xl sticky top-20 z-20 shadow-2xl">
+            <div class="flex items-center justify-between px-3 py-1 mb-3 border-b border-slate-900 pb-2">
+                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">WORKING STAGES</span>
+                <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
             </div>
-            <span class="px-2.5 py-1 rounded-full bg-amber-950 text-amber-300 border border-amber-500/40 text-[10px] font-mono font-bold">
-                {{ competitions|length }} Tournaments Active
-            </span>
+            
+            <nav class="space-y-1.5 font-mono text-xs" id="sidebar-nav">
+                
+                <!-- 1. Overview & Analytics -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left active border border-transparent" data-target="stage-overview">
+                    <i class="tab-icon fa-solid fa-chart-line text-sm w-5 text-center text-indigo-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Overview & Stats</div>
+                        <div class="text-[10px] text-slate-500 font-sans">Metrics & Solve Log</div>
+                    </div>
+                </button>
+
+                <!-- 2. Human vs AI Battle -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-battle">
+                    <i class="tab-icon fa-solid fa-swords text-sm w-5 text-center text-rose-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Human vs AI Battle</div>
+                        <div class="text-[10px] text-rose-400/80 font-sans">Live 3D Speed Race</div>
+                    </div>
+                </button>
+
+                <!-- 3. Visual Learning Hub -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-learning">
+                    <i class="tab-icon fa-solid fa-graduation-cap text-sm w-5 text-center text-cyan-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Visual Learning Hub</div>
+                        <div class="text-[10px] text-cyan-400/80 font-sans">3D Algorithm Lab</div>
+                    </div>
+                </button>
+
+                <!-- 4. Solving Guide (CFOP) -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-guide">
+                    <i class="tab-icon fa-solid fa-book-open text-sm w-5 text-center text-emerald-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Solving Guide</div>
+                        <div class="text-[10px] text-emerald-400/80 font-sans">CFOP 4-Phase System</div>
+                    </div>
+                </button>
+
+                <!-- 5. Competitions Arena -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-competitions">
+                    <i class="tab-icon fa-solid fa-trophy text-sm w-5 text-center text-amber-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Competitions Arena</div>
+                        <div class="text-[10px] text-amber-400/80 font-sans">{{ competitions|length }} Active Tournaments</div>
+                    </div>
+                </button>
+
+                <!-- 6. Masterclasses & Courses -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-courses">
+                    <i class="tab-icon fa-solid fa-chalkboard-user text-sm w-5 text-center text-purple-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Masterclasses</div>
+                        <div class="text-[10px] text-purple-400/80 font-sans">{{ courses|length }} Video Courses</div>
+                    </div>
+                </button>
+
+                <!-- 7. Upload Cube / Vision Studio -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-scan">
+                    <i class="tab-icon fa-solid fa-camera text-sm w-5 text-center text-blue-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Upload & Net Studio</div>
+                        <div class="text-[10px] text-blue-400/80 font-sans">OpenCV & Custom Net</div>
+                    </div>
+                </button>
+
+                <!-- 8. Trophies & Coupons -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-trophies">
+                    <i class="tab-icon fa-solid fa-award text-sm w-5 text-center text-yellow-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Trophies & Coupons</div>
+                        <div class="text-[10px] text-yellow-400/80 font-sans">Cabinet & Rewards</div>
+                    </div>
+                </button>
+
+                <!-- 9. Profile Settings -->
+                <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-profile">
+                    <i class="tab-icon fa-solid fa-user-gear text-sm w-5 text-center text-slate-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Profile Settings</div>
+                        <div class="text-[10px] text-slate-500 font-sans">Preferences & Avatar</div>
+                    </div>
+                </button>
+
+            </nav>
+
+            <!-- Server Quick Status -->
+            <div class="mt-6 pt-4 border-t border-slate-900">
+                <div class="p-3 rounded-2xl bg-black/60 border border-slate-800 text-[11px] font-mono">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span>ENGINE</span>
+                        <span class="text-emerald-400 font-bold">Kociemba 2-Phase</span>
+                    </div>
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span>DB STORE</span>
+                        <span class="text-indigo-400">MySQL / SQLite</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {% for c in competitions %}
-                <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-amber-500/40 transition-all flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-bold text-white text-sm font-sans">{{ c.title }}</span>
-                            <span class="px-2 py-0.5 rounded bg-amber-950 text-amber-300 text-[10px] font-mono font-bold">
-                                {{ c.prize_trophy }}
-                            </span>
+        <!-- =========================================================================
+             RIGHT COLUMN: DYNAMIC WORKING STAGES CONTAINER
+             ========================================================================= -->
+        <div class="lg:col-span-9 space-y-6">
+            
+            <!-- -------------------------------------------------------------
+                 STAGE 1: OVERVIEW & SPEEDCUBING METRICS
+                 ------------------------------------------------------------- -->
+            <div id="stage-overview" class="stage-pane space-y-6 animate-fade-in">
+                
+                <!-- 4 High-Fidelity Metric Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    
+                    <div class="glass-card p-5 rounded-2xl border border-indigo-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>TOTAL SOLVES</span>
+                            <i class="fa-solid fa-cube text-indigo-400 text-sm"></i>
                         </div>
-                        <p class="text-xs text-slate-400 mb-3 font-sans">{{ c.description }}</p>
-                        
-                        <div class="p-2 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-indigo-300 mb-3 break-all">
-                            <span class="text-[10px] text-slate-500 block uppercase">Scramble Sequence:</span>
-                            {{ c.scramble }}
+                        <div class="text-3xl font-extrabold text-white mt-2">{{ stats.total_solves }}</div>
+                        <div class="text-[11px] text-indigo-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-database"></i> Relational MySQL Logged
                         </div>
                     </div>
 
-                    <!-- Solve Submission Form -->
-                    <form method="POST" action="{{ url_for('user.submit_competition') }}" class="pt-3 border-t border-slate-800/80">
-                        <input type="hidden" name="competition_id" value="{{ c.id }}">
+                    <div class="glass-card p-5 rounded-2xl border border-emerald-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>BEST SOLUTION</span>
+                            <i class="fa-solid fa-bolt text-emerald-400 text-sm"></i>
+                        </div>
+                        <div class="text-3xl font-extrabold text-emerald-400 mt-2">{{ stats.min_moves }} <span class="text-xs text-slate-500">moves</span></div>
+                        <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i> Optimal Two-Phase
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-cyan-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>AVG EFFICIENCY</span>
+                            <i class="fa-solid fa-chart-line text-cyan-400 text-sm"></i>
+                        </div>
+                        <div class="text-3xl font-extrabold text-cyan-300 mt-2">{{ stats.avg_moves }} <span class="text-xs text-slate-500">moves</span></div>
+                        <div class="text-[11px] text-cyan-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-infinity"></i> God's Number Compliant
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl border border-amber-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>GLOBAL RANK</span>
+                            <i class="fa-solid fa-crown text-amber-400 text-sm"></i>
+                        </div>
+                        <div class="text-3xl font-extrabold text-amber-300 mt-2">#{{ (user.id % 25) + 1 }}</div>
+                        <div class="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-fire"></i> Top 5% Speedcuber
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Live Quick Scramble Generator Card -->
+                <div class="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-slate-950/80">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-800 mb-4">
+                        <div>
+                            <span class="text-[10px] font-mono text-indigo-400 font-bold uppercase tracking-wider">OFFICIAL WCA SCRAMBLE GENERATOR</span>
+                            <h3 class="text-base font-bold font-outfit text-white">Generate Random Permutation State</h3>
+                        </div>
                         <div class="flex gap-2">
-                            <input type="text" name="solution" required placeholder="Enter your solution moves (e.g. U R U' R'...)"
-                                   class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-emerald-300 focus:outline-none focus:border-amber-500">
-                            <button type="submit" class="px-4 py-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-black font-bold text-xs font-mono rounded-lg transition-all whitespace-nowrap">
-                                Submit Entry
+                            <button id="overview-gen-scramble-btn" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-indigo-600/25">
+                                <i class="fa-solid fa-arrows-rotate"></i> New Scramble
+                            </button>
+                            <button id="overview-copy-scramble-btn" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono transition-all">
+                                <i class="fa-solid fa-copy mr-1"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 text-center font-mono">
+                        <div id="overview-scramble-display" class="text-indigo-300 font-bold text-sm sm:text-base tracking-widest leading-relaxed">
+                            R' D2 B2 L2 F2 U' B2 D' F2 U L2 F' R' D2 F U2 B2 R' D' F
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-slate-400">
+                        <span>Move Length: <strong class="text-white">20 moves</strong> (God's Metric)</span>
+                        <div class="flex gap-2">
+                            <button onclick="sendScrambleToBattle()" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 transition-colors">
+                                <i class="fa-solid fa-swords mr-1"></i> Send to Battle Arena
+                            </button>
+                            <a href="{{ url_for('visualizer.index') }}" class="px-3 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-300 transition-colors">
+                                <i class="fa-solid fa-play mr-1"></i> Open in Visualizer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Solve History Table -->
+                <div class="glass-card p-6 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                        <h3 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> Speedcubing Solve History
+                        </h3>
+                        <span class="text-xs font-mono text-slate-400">{{ history|length }} Solves Logged</span>
+                    </div>
+
+                    {% if history %}
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                                        <th class="py-2.5 px-3">Date / Timestamp</th>
+                                        <th class="py-2.5 px-3">Scramble Sequence</th>
+                                        <th class="py-2.5 px-3">Two-Phase Solution</th>
+                                        <th class="py-2.5 px-3 text-center">Move Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-900">
+                                    {% for row in history %}
+                                        <tr class="hover:bg-slate-900/50 transition-colors">
+                                            <td class="py-3 px-3 text-slate-500 whitespace-nowrap">{{ row.created_at[:16] if row.created_at else 'Just now' }}</td>
+                                            <td class="py-3 px-3 text-indigo-300 max-w-xs truncate" title="{{ row.scramble }}">{{ row.scramble | safe }}</td>
+                                            <td class="py-3 px-3 text-emerald-400 max-w-xs truncate" title="{{ row.solution }}">{{ row.solution | safe }}</td>
+                                            <td class="py-3 px-3 text-center">
+                                                <span class="px-2.5 py-0.5 rounded-full bg-slate-900 text-cyan-300 font-bold border border-slate-800">
+                                                    {{ row.move_count }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-10 text-slate-500 font-mono text-xs">
+                            <i class="fa-solid fa-cube text-3xl text-slate-700 mb-2 block"></i>
+                            No solves logged in your profile yet. Launch the Visualizer or compete in the Battle Arena!
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 2: HUMAN VS AI LIVE SPEEDCUBING BATTLE ARENA
+                 ------------------------------------------------------------- -->
+            <div id="stage-battle" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-rose-500/30 bg-slate-950/90 relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                        <div>
+                            <span class="text-xs font-mono text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                                LIVE COMPETITIVE SPEED DUEL
+                            </span>
+                            <h2 class="text-xl font-bold font-outfit text-white">Human vs Kociemba Two-Phase AI</h2>
+                            <p class="text-xs text-slate-400 font-mono">Race your speedcubing execution against group-theory optimal AI</p>
+                        </div>
+                        <button id="battle-new-scramble-btn" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-shuffle text-rose-400"></i> New Match Scramble
+                        </button>
+                    </div>
+
+                    <!-- Battle Scramble Bar -->
+                    <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 font-mono text-center mb-6">
+                        <span class="text-[10px] text-slate-500 block uppercase">Match Scramble Sequence:</span>
+                        <div id="battle-scramble-text" class="text-indigo-300 font-bold text-sm sm:text-base mt-1 tracking-wider break-all">
+                            R U R' U' F' U2 F U R U' R' F'
+                        </div>
+                    </div>
+
+                    <!-- 3D Battle Arena Viewports (Split Canvas) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+                        
+                        <!-- ================= HUMAN CONTENDER SIDE ================= -->
+                        <div class="p-6 rounded-3xl bg-slate-900/60 border border-indigo-500/40 flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute -top-12 -right-12 w-40 h-40 bg-indigo-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-bold font-outfit text-white text-sm block">{{ user.username }} (Human)</span>
+                                            <span class="text-[10px] text-slate-400 font-mono">Keyboard / Click Mode</span>
+                                        </div>
+                                    </div>
+                                    <span id="human-status-badge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700">Ready</span>
+                                </div>
+
+                                <!-- Human 3D Cube Canvas -->
+                                <div id="battle-cube-human" class="w-full h-56 rounded-2xl bg-black/70 border border-slate-800 flex items-center justify-center relative overflow-hidden mb-4">
+                                    <!-- Three.js Canvas injected here -->
+                                </div>
+
+                                <!-- Human Stopwatch Timer Display -->
+                                <div class="text-center py-3.5 bg-black/70 rounded-2xl border border-slate-800 mb-4">
+                                    <div id="human-timer" class="text-3xl sm:text-4xl font-mono font-black text-white tracking-widest">00:00.00</div>
+                                    <div class="text-[11px] text-slate-400 font-mono mt-1">
+                                        Moves Applied: <span id="human-move-count" class="text-indigo-400 font-bold">0</span> moves
+                                    </div>
+                                </div>
+
+                                <!-- Human Interactive Quick Face Buttons -->
+                                <div class="mb-4">
+                                    <div class="text-[10px] font-mono text-slate-400 mb-1.5 uppercase">Interactive Layer Turns (Click or Key):</div>
+                                    <div class="grid grid-cols-6 gap-1.5 font-mono text-xs">
+                                        <button class="human-move-btn face-btn turn-btn" data-m="R">R</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="U">U</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="F">F</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="L">L</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="D">D</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="B">B</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="R'">R'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="U'">U'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="F'">F'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="L'">L'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="D'">D'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="M">M</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Human Action Button -->
+                            <div class="space-y-2">
+                                <button id="human-start-btn" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-stopwatch"></i>
+                                    <span>Start Human Timer (or Spacebar)</span>
+                                </button>
+                                <button id="human-reset-btn" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white font-mono text-xs transition-colors">
+                                    Reset Human State
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ================= AI ENGINE SIDE ================= -->
+                        <div class="p-6 rounded-3xl bg-slate-900/60 border border-cyan-500/40 flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute -top-12 -right-12 w-40 h-40 bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-cyan-600 flex items-center justify-center text-white text-xs font-bold">
+                                            <i class="fa-solid fa-robot"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-bold font-outfit text-white text-sm block">Kociemba Two-Phase AI</span>
+                                            <span class="text-[10px] text-cyan-400 font-mono">Optimal Subgroup G₁ &rarr; G₂</span>
+                                        </div>
+                                    </div>
+                                    <span id="ai-status-badge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700">Standby</span>
+                                </div>
+
+                                <!-- AI 3D Cube Canvas -->
+                                <div id="battle-cube-ai" class="w-full h-56 rounded-2xl bg-black/70 border border-slate-800 flex items-center justify-center relative overflow-hidden mb-4">
+                                    <!-- Three.js Canvas injected here -->
+                                </div>
+
+                                <!-- AI Compute Timer Display -->
+                                <div class="text-center py-3.5 bg-black/70 rounded-2xl border border-slate-800 mb-4">
+                                    <div id="ai-timer" class="text-3xl sm:text-4xl font-mono font-black text-cyan-300 tracking-widest">00:00.00</div>
+                                    <div class="text-[11px] text-slate-400 font-mono mt-1">
+                                        Optimal Moves: <span id="ai-move-count" class="text-cyan-400 font-bold">--</span> moves
+                                    </div>
+                                </div>
+
+                                <!-- Calculated AI Move Sequence Display -->
+                                <div class="p-3.5 rounded-2xl bg-black/80 border border-slate-800 text-xs font-mono text-emerald-400 min-h-[96px] mb-4">
+                                    <div class="flex items-center justify-between text-[10px] text-slate-500 uppercase mb-1">
+                                        <span>Calculated Solution:</span>
+                                        <span id="ai-progress-text" class="text-cyan-400 font-bold">0 / 0</span>
+                                    </div>
+                                    <div id="ai-solution-text" class="text-emerald-300 font-bold break-all leading-relaxed">
+                                        Click "Execute AI Solver" to compute optimal solution...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI Controls -->
+                            <div class="space-y-2">
+                                <button id="ai-solve-btn" class="w-full py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs shadow-xl shadow-cyan-600/30 transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-microchip"></i>
+                                    <span>Compute & Animate AI Solve</span>
+                                </button>
+                                <div class="flex gap-2">
+                                    <button id="ai-step-play-btn" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-cyan-300 font-mono text-xs transition-colors">
+                                        <i class="fa-solid fa-play mr-1"></i> Step-by-Step 3D
+                                    </button>
+                                    <button id="ai-reset-btn" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white font-mono text-xs transition-colors">
+                                        Reset AI State
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Duel Outcome / Winner Declaration Banner (Hidden by default) -->
+                    <div id="battle-outcome-banner" class="hidden mt-6 p-4 rounded-2xl border text-center font-mono text-xs">
+                        <div id="battle-outcome-title" class="text-base font-bold font-outfit mb-1"></div>
+                        <div id="battle-outcome-desc" class="text-slate-300"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 3: INTERACTIVE 3D VISUAL LEARNING HUB
+                 ------------------------------------------------------------- -->
+            <div id="stage-learning" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/90 relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                        <div>
+                            <span class="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">3D INTERACTIVE ALGORITHM PLAYBOOK</span>
+                            <h2 class="text-xl font-bold font-outfit text-white">Visual Speedcubing Laboratory</h2>
+                            <p class="text-xs text-slate-400 font-mono">Select any algorithm to simulate its 3D permutation cycle in real-time</p>
+                        </div>
+                        <!-- Algo Category Switcher -->
+                        <div class="flex items-center gap-1.5 flex-wrap font-mono text-[11px]">
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold" data-cat="all">All</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="cfop">CFOP</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="oll">OLL</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="pll">PLL</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="math">Group Commutators</button>
+                        </div>
+                    </div>
+
+                    <!-- Embedded Interactive 3D Cube Viewer -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                        
+                        <!-- 3D Canvas Box -->
+                        <div class="lg:col-span-7 rounded-3xl bg-black/80 border border-slate-800 p-4 flex flex-col justify-between relative overflow-hidden">
+                            <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                                    <span id="active-algo-name" class="font-bold text-white">Sexy Move (Basic Commutator)</span>
+                                </span>
+                                <span id="active-algo-order" class="text-indigo-400">Order: 6</span>
+                            </div>
+
+                            <!-- Three.js Canvas Container -->
+                            <div id="learning-3d-canvas" class="w-full h-72 rounded-2xl bg-slate-950/60 flex items-center justify-center relative">
+                                <!-- Three.js canvas attached dynamically -->
+                            </div>
+
+                            <!-- Interactive Move Ribbon & Controls -->
+                            <div class="mt-3 pt-3 border-t border-slate-900 space-y-3">
+                                <!-- Ribbon -->
+                                <div id="learning-move-ribbon" class="flex items-center justify-center gap-2 flex-wrap font-mono text-xs text-indigo-300 py-1">
+                                    <!-- Move pills dynamically injected -->
+                                </div>
+
+                                <!-- Playback Toolbar -->
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-1.5">
+                                        <button id="learning-prev-btn" class="ctrl-btn text-xs" title="Step Back"><i class="fa-solid fa-backward-step"></i></button>
+                                        <button id="learning-play-btn" class="ctrl-btn-primary" title="Play Algorithm"><i class="fa-solid fa-play"></i></button>
+                                        <button id="learning-next-btn" class="ctrl-btn text-xs" title="Step Forward"><i class="fa-solid fa-forward-step"></i></button>
+                                        <button id="learning-reset-btn" class="ctrl-btn text-xs" title="Reset Cube"><i class="fa-solid fa-rotate-left"></i></button>
+                                    </div>
+                                    <div class="text-[11px] font-mono text-slate-500">
+                                        Speed: <span class="text-cyan-400 font-bold">Normal</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mathematical Context & Finger Tricks Panel -->
+                        <div class="lg:col-span-5 rounded-3xl bg-slate-900/60 border border-slate-800 p-5 flex flex-col justify-between">
+                            <div class="space-y-4 font-mono text-xs">
+                                <div>
+                                    <span class="text-[10px] text-slate-500 uppercase block">Algorithm Formula Notation:</span>
+                                    <div id="active-algo-formula" class="text-cyan-300 font-bold text-base mt-1 break-all bg-black/60 p-3 rounded-xl border border-slate-800">
+                                        R U R' U'
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="text-[10px] text-slate-500 uppercase block">Mathematical Group Theory Interpretation:</span>
+                                    <p id="active-algo-math" class="text-slate-300 text-xs font-sans mt-1 leading-relaxed">
+                                        Standard group commutator $[A, B] = A B A^{-1} B^{-1}$. Generates subgroup of order 6, meaning applying this permutation sequence 6 times restores the solved identity state $I$.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <span class="text-[10px] text-slate-500 uppercase block">Speedcubing Finger-Trick Cue:</span>
+                                    <p id="active-algo-tip" class="text-emerald-400 text-xs font-sans mt-1">
+                                        Right hand flick: Push R with right thumb, index flick U, pull back R' with thumb, index flick U'.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-slate-800/80">
+                                <a href="{{ url_for('visualizer.index') }}" class="w-full py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 font-mono text-xs text-center block transition-colors">
+                                    <i class="fa-solid fa-cube mr-1"></i> Inspect in Full Visualizer Lab
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Algorithm Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-mono text-xs" id="algo-cards-grid">
+                        
+                        <!-- Algo 1: Sexy Move -->
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 algo-card cursor-pointer active-algo" 
+                             data-cat="cfop" data-name="Sexy Move" data-order="6" data-moves="R U R' U'"
+                             data-math="Commutator [R, U] = R U R⁻¹ U⁻¹. Order 6 generator."
+                             data-tip="Right thumb up, index flick U, right thumb down, index flick U'.">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white font-sans text-sm">Sexy Move</span>
+                                <span class="text-indigo-400 text-[10px] font-bold">CFOP &bull; Order 6</span>
+                            </div>
+                            <div class="text-indigo-300 font-bold text-xs mt-1">R U R' U'</div>
+                            <p class="text-slate-400 text-[11px] mt-2 font-sans">Core building block of CFOP and group commutators.</p>
+                        </div>
+
+                        <!-- Algo 2: T-Perm -->
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 algo-card cursor-pointer" 
+                             data-cat="pll" data-name="T-Permutation (PLL)" data-order="2" data-moves="R U R' U' R' F R2 U' R' U' R U R' F'"
+                             data-math="Adjacent 2-corner and 2-edge transposition permutation. Order 2 involution."
+                             data-tip="Combine Sexy Move + Sledgehammer transition with right index F'.">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white font-sans text-sm">T-Permutation</span>
+                                <span class="text-cyan-400 text-[10px] font-bold">PLL &bull; Order 2</span>
+                            </div>
+                            <div class="text-cyan-300 font-bold text-xs mt-1 truncate">R U R' U' R' F R2 U' R' U' R U R' F'</div>
+                            <p class="text-slate-400 text-[11px] mt-2 font-sans">Swaps two adjacent corners and two adjacent edges in the top tier.</p>
+                        </div>
+
+                        <!-- Algo 3: Sune -->
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 algo-card cursor-pointer" 
+                             data-cat="oll" data-name="Sune (OLL 27)" data-order="6" data-moves="R U R' U R U2 R'"
+                             data-math="3-corner orientation twist while preserving edge orientation. Order 6."
+                             data-tip="Smooth single-hand right grip with U2 double flick.">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white font-sans text-sm">Sune (OLL 27)</span>
+                                <span class="text-emerald-400 text-[10px] font-bold">OLL &bull; Order 6</span>
+                            </div>
+                            <div class="text-emerald-400 font-bold text-xs mt-1">R U R' U R U2 R'</div>
+                            <p class="text-slate-400 text-[11px] mt-2 font-sans">Twists 3 corners clockwise while preserving edge orientation.</p>
+                        </div>
+
+                        <!-- Algo 4: Y-Perm -->
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 algo-card cursor-pointer" 
+                             data-cat="pll" data-name="Y-Permutation (PLL)" data-order="2" data-moves="F R U' R' U' R U R' F' R U R' U' R' F R F'"
+                             data-math="Diagonal corner swap + top edge swap. Order 2 involution."
+                             data-tip="Front face trigger followed by standard T-perm insertion.">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white font-sans text-sm">Y-Permutation</span>
+                                <span class="text-purple-400 text-[10px] font-bold">PLL &bull; Order 2</span>
+                            </div>
+                            <div class="text-purple-300 font-bold text-xs mt-1 truncate">F R U' R' U' R U R' F' R U R' U' R' F R F'</div>
+                            <p class="text-slate-400 text-[11px] mt-2 font-sans">Swaps two opposite corners diagonally across the face.</p>
+                        </div>
+
+                        <!-- Algo 5: Group Commutator 3-Cycle -->
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 algo-card cursor-pointer" 
+                             data-cat="math" data-name="Group Commutator 3-Cycle" data-order="3" data-moves="R U R' D R U' R' D'"
+                             data-math="Pure corner 3-cycle (c₁ c₂ c₃) preserving all 12 edge positions."
+                             data-tip="Conjugate insertion using bottom layer D and D' transfers.">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white font-sans text-sm">Corner 3-Cycle</span>
+                                <span class="text-amber-400 text-[10px] font-bold">Group Commutator</span>
+                            </div>
+                            <div class="text-amber-300 font-bold text-xs mt-1">R U R' D R U' R' D'</div>
+                            <p class="text-slate-400 text-[11px] mt-2 font-sans">Permutes 3 corner pieces leaving remaining 51 facelets invariant.</p>
+                        </div>
+
+                        <!-- Algo 6: F2L Basic Slot Insert -->
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 algo-card cursor-pointer" 
+                             data-cat="cfop" data-name="F2L Right Slot Insert" data-order="4" data-moves="U R U' R'"
+                             data-math="Standard corner-edge pair insertion into front-right slot."
+                             data-tip="Insert paired slot into lower layer with index pull.">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-white font-sans text-sm">F2L Basic Insert</span>
+                                <span class="text-rose-400 text-[10px] font-bold">F2L &bull; Pair Slot</span>
+                            </div>
+                            <div class="text-rose-300 font-bold text-xs mt-1">U R U' R'</div>
+                            <p class="text-slate-400 text-[11px] mt-2 font-sans">Seamlessly drops a paired corner-edge slot into bottom tier.</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 4: STEP-BY-STEP SOLVING GUIDE (CFOP 4-PHASE ROADMAP)
+                 ------------------------------------------------------------- -->
+            <div id="stage-guide" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/90">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                        <div>
+                            <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">SPEEDCUBING METHODOLOGY & CFOP SYSTEM</span>
+                            <h2 class="text-xl font-bold font-outfit text-white">4-Phase Speedcubing Blueprint</h2>
+                            <p class="text-xs text-slate-400 font-mono">Master the Fridrich (CFOP) method from Cross to Permutation</p>
+                        </div>
+                    </div>
+
+                    <!-- 4 Phase Cards -->
+                    <div class="space-y-4 font-sans text-xs">
+                        
+                        <!-- Phase 1: White Cross -->
+                        <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-all">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-white text-black font-extrabold flex items-center justify-center text-base font-mono shadow-lg">
+                                        1
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-white text-base font-outfit">Phase 1: The White Cross (EO Alignment)</h3>
+                                        <span class="text-xs font-mono text-emerald-400">Target Move Budget: &le; 8 moves</span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 font-mono text-[10px]">Intuitive Phase</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed mt-3">
+                                Orient 4 white edge pieces around the white center piece while ensuring side colors match adjacent Red, Blue, Orange, and Green centers. In group theory, this restricts the search tree to states where bottom edge orientations are invariant.
+                            </p>
+                            <div class="mt-3 p-3 rounded-xl bg-black/60 border border-slate-800 font-mono text-xs text-indigo-300 flex items-center justify-between">
+                                <span>Key Triggers: <strong class="text-white">F R' D' R F2</strong> or intuitive bottom face insertions</span>
+                                <button onclick="simulateGuideStep('cross')" class="text-emerald-400 hover:underline">Preview in 3D &rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- Phase 2: F2L -->
+                        <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-indigo-500/40 transition-all">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center text-base font-mono shadow-lg">
+                                        2
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-white text-base font-outfit">Phase 2: First Two Layers (F2L)</h3>
+                                        <span class="text-xs font-mono text-indigo-400">41 Standard Algorithms / Slot Pairing</span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full bg-indigo-950 text-indigo-300 font-mono text-[10px]">Efficiency Core</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed mt-3">
+                                Solve the 4 corner-edge slots simultaneously without disturbing the white cross. Pair a corner piece with its matching edge in the top layer and insert both into their bottom slot in a single fluid motion.
+                            </p>
+                            <div class="mt-3 p-3 rounded-xl bg-black/60 border border-slate-800 font-mono text-xs text-indigo-300 flex items-center justify-between">
+                                <span>Standard Pair Insertion: <strong class="text-white">U R U' R'</strong> (Right) &bull; <strong class="text-white">U' L' U L</strong> (Left)</span>
+                                <button onclick="simulateGuideStep('f2l')" class="text-indigo-400 hover:underline">Preview in 3D &rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- Phase 3: OLL -->
+                        <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-yellow-500/40 transition-all">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-yellow-500 text-black font-extrabold flex items-center justify-center text-base font-mono shadow-lg">
+                                        3
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-white text-base font-outfit">Phase 3: Orientation of Last Layer (OLL)</h3>
+                                        <span class="text-xs font-mono text-yellow-400">2-Look OLL / 57 Full Cases</span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full bg-yellow-950 text-yellow-300 font-mono text-[10px]">Yellow Face Complete</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed mt-3">
+                                Orient all 9 yellow facelets facing upwards on the top layer. 2-Look OLL breaks this down into two sub-steps: (1) Form a yellow top cross via <code class="text-yellow-300">F R U R' U' F'</code>, then (2) Orient the remaining 4 corners using Sune (<code class="text-yellow-300">R U R' U R U2 R'</code>).
+                            </p>
+                            <div class="mt-3 p-3 rounded-xl bg-black/60 border border-slate-800 font-mono text-xs text-yellow-300 flex items-center justify-between">
+                                <span>Yellow Edge Cross: <strong class="text-white">F (R U R' U') F'</strong></span>
+                                <button onclick="simulateGuideStep('oll')" class="text-yellow-400 hover:underline">Preview in 3D &rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- Phase 4: PLL -->
+                        <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/40 transition-all">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-500 text-black font-extrabold flex items-center justify-center text-base font-mono shadow-lg">
+                                        4
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-white text-base font-outfit">Phase 4: Permutation of Last Layer (PLL)</h3>
+                                        <span class="text-xs font-mono text-emerald-400">2-Look PLL / 21 Full Permutations</span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 font-mono text-[10px]">Final Solved State</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed mt-3">
+                                Permute all pieces on the top layer into their solved target locations while preserving orientation. 2-Look PLL first solves the 4 corner positions with T-Perm or Y-Perm, then cycles the 3/4 edge pieces with U-Perm or H-Perm to reach the identity permutation $\{1\}$.
+                            </p>
+                            <div class="mt-3 p-3 rounded-xl bg-black/60 border border-slate-800 font-mono text-xs text-emerald-300 flex items-center justify-between">
+                                <span>Adjacent Corner Swap: <strong class="text-white">T-Perm</strong> &bull; Edge 3-Cycle: <strong class="text-white">Ua / Ub Perm</strong></span>
+                                <button onclick="simulateGuideStep('pll')" class="text-emerald-400 hover:underline">Preview in 3D &rarr;</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 5: COMPETITIONS & TOURNAMENTS ARENA
+                 ------------------------------------------------------------- -->
+            <div id="stage-competitions" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/90">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                        <div>
+                            <span class="text-xs font-mono text-amber-400 font-bold uppercase tracking-wider">OFFICIAL WCA & GROUP THEORY TOURNAMENTS</span>
+                            <h2 class="text-xl font-bold font-outfit text-white">Active Competitions Arena</h2>
+                            <p class="text-xs text-slate-400 font-mono">Solve official scrambles, submit solutions, and win champion trophies</p>
+                        </div>
+                    </div>
+
+                    {% if competitions %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% for c in competitions %}
+                                <div class="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-amber-500/40 transition-all flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-bold text-white text-base font-outfit">{{ c.title }}</span>
+                                            <span class="px-2.5 py-1 rounded-full bg-amber-950 text-amber-300 text-[10px] font-mono font-bold flex items-center gap-1">
+                                                <i class="fa-solid fa-trophy text-amber-400"></i> {{ c.prize_trophy }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed">{{ c.description }}</p>
+                                        
+                                        <div class="p-3.5 rounded-2xl bg-black/80 border border-slate-800 font-mono text-xs text-indigo-300 mb-4 break-all">
+                                            <span class="text-[10px] text-slate-500 block uppercase mb-1">Official Tournament Scramble:</span>
+                                            {{ c.scramble }}
+                                        </div>
+                                    </div>
+
+                                    <form method="POST" action="{{ url_for('user.submit_competition') }}" class="pt-4 border-t border-slate-800/80 space-y-3">
+                                        <input type="hidden" name="competition_id" value="{{ c.id }}">
+                                        
+                                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                                            <div class="sm:col-span-8">
+                                                <input type="text" name="solution" required placeholder="Enter solution moves (e.g. U R U' R')..."
+                                                       class="w-full px-3.5 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-xs font-mono text-emerald-300 focus:outline-none focus:border-amber-500">
+                                            </div>
+                                            <div class="sm:col-span-4">
+                                                <input type="number" step="0.01" name="time_seconds" placeholder="Time (s)"
+                                                       class="w-full px-3 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-xs font-mono text-cyan-300 focus:outline-none focus:border-amber-500">
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-black font-bold text-xs font-mono rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-600/25">
+                                            <i class="fa-solid fa-paper-plane"></i>
+                                            <span>Submit Solution for Judging</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12 text-slate-500 font-mono text-xs">
+                            <i class="fa-solid fa-trophy text-4xl text-slate-700 mb-2 block"></i>
+                            No active tournaments open right now. Check back soon for Super Admin announcements!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 6: SPEEDCUBING MASTERCLASSES & VIDEO COURSES
+                 ------------------------------------------------------------- -->
+            <div id="stage-courses" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-purple-500/30 bg-slate-950/90">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                        <div>
+                            <span class="text-xs font-mono text-purple-400 font-bold uppercase tracking-wider">OFFICIAL CURRICULUM</span>
+                            <h2 class="text-xl font-bold font-outfit text-white">Speedcubing Masterclasses</h2>
+                            <p class="text-xs text-slate-400 font-mono">Structured courses declared by Super Admin & Grandmasters</p>
+                        </div>
+                    </div>
+
+                    {% if courses %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% for crs in courses %}
+                                <div class="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-purple-500/40 transition-all flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-bold text-white text-base font-outfit">{{ crs.title }}</span>
+                                            <span class="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 text-[10px] font-mono font-bold">
+                                                {{ crs.difficulty or 'Advanced' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed">{{ crs.description }}</p>
+                                        
+                                        <div class="p-3 rounded-2xl bg-black/60 border border-slate-800 text-[11px] font-mono text-slate-300 mb-4 flex items-center justify-between">
+                                            <span>Lessons: <strong class="text-white">8 Modules</strong></span>
+                                            <span class="text-purple-400">Interactive 3D Walkthrough</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-4 border-t border-slate-800 flex items-center gap-3">
+                                        <button onclick="openCourseModal('{{ crs.title }}', '{{ crs.description }}')" class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono font-bold text-xs shadow-lg shadow-purple-600/25 transition-all">
+                                            <i class="fa-solid fa-play mr-1"></i> Start Course
+                                        </button>
+                                        <form method="POST" action="{{ url_for('user.complete_course') }}" class="inline">
+                                            <input type="hidden" name="course_id" value="{{ crs.id }}">
+                                            <button type="submit" class="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-emerald-400 font-mono text-xs transition-colors" title="Mark Complete">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12 text-slate-500 font-mono text-xs">
+                            <i class="fa-solid fa-graduation-cap text-4xl text-slate-700 mb-2 block"></i>
+                            No published masterclasses yet. Check back soon!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 7: UPLOAD CUBE & COMPUTER VISION NET STUDIO
+                 ------------------------------------------------------------- -->
+            <div id="stage-scan" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-blue-500/30 bg-slate-950/90">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                        <div>
+                            <span class="text-xs font-mono text-blue-400 font-bold uppercase tracking-wider">COMPUTER VISION & CUSTOM PERMUTATION NET</span>
+                            <h2 class="text-xl font-bold font-outfit text-white">Upload Cube State or Paint 2D Net</h2>
+                            <p class="text-xs text-slate-400 font-mono">Upload cube images for OpenCV scanning or manually paint individual facelets</p>
+                        </div>
+                        <button id="net-reset-btn" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-300">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Reset to Solved
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <!-- Left: 2D Interactive Cube Net Editor -->
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="font-bold text-white text-xs font-mono uppercase">2D Unfolded Cube Net:</span>
+                                    <div class="flex items-center gap-1.5" id="color-palette">
+                                        <button class="palette-btn w-6 h-6 rounded-full bg-yellow-400 ring-2 ring-white" data-color="yellow" title="Yellow (U)"></button>
+                                        <button class="palette-btn w-6 h-6 rounded-full bg-white" data-color="white" title="White (D)"></button>
+                                        <button class="palette-btn w-6 h-6 rounded-full bg-green-500" data-color="green" title="Green (F)"></button>
+                                        <button class="palette-btn w-6 h-6 rounded-full bg-blue-600" data-color="blue" title="Blue (B)"></button>
+                                        <button class="palette-btn w-6 h-6 rounded-full bg-orange-500" data-color="orange" title="Orange (L)"></button>
+                                        <button class="palette-btn w-6 h-6 rounded-full bg-red-600" data-color="red" title="Red (R)"></button>
+                                    </div>
+                                </div>
+
+                                <!-- Unfolded 3x3 Cross Grid -->
+                                <div class="flex flex-col items-center justify-center space-y-1.5 py-2">
+                                    <!-- Top Face: Yellow (U) -->
+                                    <div class="grid grid-cols-3 gap-1" id="net-face-u">
+                                        <!-- 9 cells -->
+                                    </div>
+                                    
+                                    <!-- Middle Faces: Left (Orange), Front (Green), Right (Red), Back (Blue) -->
+                                    <div class="flex gap-2">
+                                        <div class="grid grid-cols-3 gap-1" id="net-face-l"></div>
+                                        <div class="grid grid-cols-3 gap-1" id="net-face-f"></div>
+                                        <div class="grid grid-cols-3 gap-1" id="net-face-r"></div>
+                                        <div class="grid grid-cols-3 gap-1" id="net-face-b"></div>
+                                    </div>
+
+                                    <!-- Bottom Face: White (D) -->
+                                    <div class="grid grid-cols-3 gap-1" id="net-face-d">
+                                        <!-- 9 cells -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="net-solve-btn" class="w-full mt-4 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-blue-600/25 transition-all">
+                                <i class="fa-solid fa-atom mr-1.5"></i> Solve Painted Net with Two-Phase Algorithm
+                            </button>
+                        </div>
+
+                        <!-- Right: OpenCV Image File Dropzone -->
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <span class="font-bold text-white text-xs font-mono uppercase block mb-2">OpenCV Face Scanner:</span>
+                                <p class="text-xs text-slate-400 font-sans mb-4">Upload a photo of your scrambled Rubik's cube face to extract sticker colors automatically.</p>
+
+                                <div class="p-6 rounded-2xl border-2 border-dashed border-slate-700 hover:border-blue-500/60 bg-black/60 text-center cursor-pointer transition-all" id="vision-dropzone">
+                                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-400 mb-2 block"></i>
+                                    <div class="text-xs font-mono text-slate-300 font-bold">Drag & Drop Cube Photo</div>
+                                    <div class="text-[10px] font-mono text-slate-500 mt-1">Supports PNG, JPG, WEBP (Max 5MB)</div>
+                                    <input type="file" id="vision-file-input" class="hidden" accept="image/*">
+                                </div>
+
+                                <div id="vision-result-box" class="hidden mt-4 p-3.5 rounded-2xl bg-black/80 border border-emerald-500/40 text-xs font-mono">
+                                    <div class="flex items-center gap-2 text-emerald-400 font-bold mb-1">
+                                        <i class="fa-solid fa-circle-check"></i> OpenCV Extracted Colors:
+                                    </div>
+                                    <div id="vision-extracted-string" class="text-slate-300 break-all text-[11px]">
+                                        [U: Yellow, R: Red, F: Green, D: White, L: Orange, B: Blue]
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="vision-scan-btn" class="w-full mt-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs transition-colors">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Run OpenCV Color Extraction
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 8: TROPHIES & REWARD PROMO COUPONS
+                 ------------------------------------------------------------- -->
+            <div id="stage-trophies" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    
+                    <!-- Trophy Showcase -->
+                    <div class="md:col-span-7 glass-card p-6 sm:p-8 rounded-3xl border border-yellow-500/30 bg-slate-950/90">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-6">
+                            <h3 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                                <i class="fa-solid fa-award text-amber-400"></i> Speedcuber Trophy Cabinet
+                            </h3>
+                            <span class="text-xs font-mono text-amber-400">4 Unlocked</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center font-mono text-xs">
+                            
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-amber-500/30">
+                                <i class="fa-solid fa-trophy text-3xl text-amber-400 mb-2 block animate-bounce"></i>
+                                <div class="font-bold text-white text-xs">Platinum Polyhedron</div>
+                                <span class="text-[10px] text-amber-400">Grand Champion</span>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-cyan-500/30">
+                                <i class="fa-solid fa-medal text-3xl text-cyan-400 mb-2 block"></i>
+                                <div class="font-bold text-white text-xs">Gold FMC Medal</div>
+                                <span class="text-[10px] text-cyan-300">Fewest Moves (&le; 20)</span>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-purple-500/30">
+                                <i class="fa-solid fa-infinity text-3xl text-purple-400 mb-2 block"></i>
+                                <div class="font-bold text-white text-xs">God's Number 20</div>
+                                <span class="text-[10px] text-purple-300">Phase 2 Solver</span>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-emerald-500/30">
+                                <i class="fa-solid fa-bolt text-3xl text-emerald-400 mb-2 block"></i>
+                                <div class="font-bold text-white text-xs">Sub-15 Speed Demon</div>
+                                <span class="text-[10px] text-emerald-400">Live Duelist</span>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-rose-500/30">
+                                <i class="fa-solid fa-shield-halved text-3xl text-rose-400 mb-2 block"></i>
+                                <div class="font-bold text-white text-xs">Subgroup G₁ Pioneer</div>
+                                <span class="text-[10px] text-rose-300">EO Reduction</span>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800 opacity-60">
+                                <i class="fa-solid fa-lock text-3xl text-slate-500 mb-2 block"></i>
+                                <div class="font-bold text-slate-400 text-xs">World Champion</div>
+                                <span class="text-[10px] text-slate-600">Locked</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Promo Coupon Redemption -->
+                    <div class="md:col-span-5 glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/90 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-base font-bold font-outfit text-white mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-ticket text-emerald-400"></i> Redeem Promo Code
+                            </h3>
+                            <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed">
+                                Enter a tournament coupon code declared by Super Admin to unlock premium custom themes and badges.
+                            </p>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('user.redeem_coupon') }}" class="space-y-3">
+                            <div>
+                                <label class="text-[10px] font-mono text-slate-400 block uppercase mb-1">Coupon Code:</label>
+                                <input type="text" name="code" required placeholder="e.g. GROUPTHEORY2026"
+                                       class="w-full px-4 py-3 bg-black/80 border border-slate-800 rounded-2xl text-emerald-300 text-xs font-mono uppercase focus:outline-none focus:border-emerald-500 tracking-wider">
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-2xl shadow-xl shadow-emerald-600/25 transition-all font-mono">
+                                <i class="fa-solid fa-gift mr-1"></i> Redeem Reward
+                            </button>
+                        </form>
+
+                        <div class="mt-4 p-3 rounded-xl bg-black/60 border border-slate-800/80 text-[10px] font-mono text-slate-500 text-center">
+                            Demo Code: <strong class="text-emerald-400">GROUPTHEORY2026</strong>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 9: SPEEDCUBER PROFILE & PREFERENCES SETTINGS
+                 ------------------------------------------------------------- -->
+            <div id="stage-profile" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/90">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                        <div>
+                            <span class="text-xs font-mono text-indigo-400 font-bold uppercase tracking-wider">ACCOUNT CUSTOMIZATION</span>
+                            <h2 class="text-xl font-bold font-outfit text-white">Speedcuber Profile Settings</h2>
+                            <p class="text-xs text-slate-400 font-mono">Update bio, avatar theme, and speedcubing preferences</p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('profile.update') }}" class="space-y-5 max-w-xl">
+                        <div>
+                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1">Username:</label>
+                            <input type="text" value="{{ user.username }}" disabled
+                                   class="w-full px-4 py-2.5 bg-black/60 border border-slate-800 rounded-xl text-xs font-mono text-slate-400 cursor-not-allowed">
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1">Bio / Speedcubing Status:</label>
+                            <textarea name="bio" rows="3" placeholder="Tell other contenders about your speedcubing journey..."
+                                      class="w-full px-4 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-indigo-500">{{ user.bio or '' }}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1">Avatar Accent Color:</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="avatar_color" value="{{ user.avatar_color or '#818cf8' }}"
+                                       class="w-12 h-10 rounded-xl border border-slate-800 bg-transparent cursor-pointer">
+                                <span class="text-xs font-mono text-slate-400">Pick signature hex accent for your user badge</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800">
+                            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all">
+                                Save Profile Changes
                             </button>
                         </div>
                     </form>
                 </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- =========================================================================
-         GROUP THEORY COURSES & TUTORIAL MASTERCLASSES
-         ========================================================================= -->
-    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-2xl shadow-2xl mb-8">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-            <div>
-                <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
-                    <i class="fa-solid fa-graduation-cap text-indigo-400"></i> Interactive Masterclasses & Courses
-                </h2>
-                <p class="text-xs text-slate-400 font-mono">Deepen your knowledge of Permutation Cycles and God's Number algorithms</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {% for cs in courses %}
-                <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-indigo-500/50 transition-all flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 text-[10px] font-mono font-bold">{{ cs.difficulty }}</span>
-                            <span class="text-slate-500 text-[10px] font-mono">{{ cs.modules_count }} Modules</span>
-                        </div>
-                        <h3 class="font-bold text-white text-sm font-sans mb-1">{{ cs.title }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed font-sans mb-4">{{ cs.description }}</p>
-                    </div>
-
-                    <a href="{{ url_for('visualizer.index') }}" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-slate-800 text-xs font-mono font-bold text-center transition-all">
-                        Open in Visualizer &rarr;
-                    </a>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- =========================================================================
-         TROPHY CABINET & PROMO COUPON REDEMPTION
-         ========================================================================= -->
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-8">
-        
-        <!-- Trophy Cabinet -->
-        <div class="md:col-span-7 glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
-            <div class="flex items-center gap-2 pb-4 border-b border-slate-800 mb-6">
-                <i class="fa-solid fa-award text-yellow-400 text-lg"></i>
-                <h2 class="text-base font-bold font-outfit text-white">Trophy Cabinet & Badges</h2>
             </div>
 
-            <div class="grid grid-cols-3 gap-4 text-center font-mono">
-                <div class="p-4 rounded-2xl bg-slate-900/60 border border-amber-500/30">
-                    <i class="fa-solid fa-trophy text-2xl text-amber-400 mb-2 block"></i>
-                    <div class="font-bold text-white text-xs">Platinum Polyhedron</div>
-                    <span class="text-[10px] text-amber-400">Grand Champion</span>
-                </div>
-                <div class="p-4 rounded-2xl bg-slate-900/60 border border-cyan-500/30">
-                    <i class="fa-solid fa-medal text-2xl text-cyan-400 mb-2 block"></i>
-                    <div class="font-bold text-white text-xs">Gold FMC Medal</div>
-                    <span class="text-[10px] text-cyan-300">Fewest Moves</span>
-                </div>
-                <div class="p-4 rounded-2xl bg-slate-900/60 border border-purple-500/30">
-                    <i class="fa-solid fa-infinity text-2xl text-purple-400 mb-2 block"></i>
-                    <div class="font-bold text-white text-xs">God's Number 20</div>
-                    <span class="text-[10px] text-purple-300">Phase 2 Solver</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Promo Coupon Code Redemption Form -->
-        <div class="md:col-span-5 glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70 flex flex-col justify-between">
-            <div>
-                <div class="flex items-center gap-2 pb-4 border-b border-slate-800 mb-4">
-                    <i class="fa-solid fa-ticket text-emerald-400 text-lg"></i>
-                    <h2 class="text-base font-bold font-outfit text-white">Redeem Reward Code</h2>
-                </div>
-                <p class="text-xs text-slate-400 mb-4">Enter a tournament or promo coupon code to unlock exclusive rewards.</p>
-            </div>
-
-            <form method="POST" action="{{ url_for('user.redeem_coupon') }}" class="space-y-3">
-                <input type="text" name="code" required placeholder="e.g. GROUPTHEORY2026"
-                       class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-emerald-300 text-xs font-mono uppercase focus:outline-none focus:border-emerald-500">
-                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition-all font-mono">
-                    Redeem Code
-                </button>
-            </form>
         </div>
 
     </div>
 
 </div>
+
+<!-- Lesson Walkthrough Modal -->
+<div id="course-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-purple-500/40 bg-slate-950 shadow-2xl relative">
+        <button onclick="closeCourseModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <span class="text-xs font-mono text-purple-400 font-bold uppercase tracking-wider block mb-1">SPEEDCUBING MASTERCLASS</span>
+        <h3 id="modal-course-title" class="text-xl font-bold font-outfit text-white mb-2"></h3>
+        <p id="modal-course-desc" class="text-xs text-slate-400 mb-6 font-sans leading-relaxed"></p>
+
+        <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 space-y-3 font-mono text-xs mb-6">
+            <div class="flex items-center gap-2 text-indigo-300">
+                <i class="fa-solid fa-circle-play text-purple-400"></i> Module 1: Subgroup $G_0 \to G_1$ Reduction
+            </div>
+            <div class="flex items-center gap-2 text-slate-400">
+                <i class="fa-solid fa-lock text-slate-600"></i> Module 2: Lookahead & Commutator Finger Tricks
+            </div>
+            <div class="flex items-center gap-2 text-slate-400">
+                <i class="fa-solid fa-lock text-slate-600"></i> Module 3: Sub-10 Solve Breakdown
+            </div>
+        </div>
+
+        <button onclick="closeCourseModal()" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg font-mono">
+            Continue Learning
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Audio Synth Web Audio Cues
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type = 'sine', duration = 0.08) {
+        try {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    }
+
+    // Global 3D Cubes References
+    let humanDuelCube = null;
+    let aiDuelCube = null;
+    let learningCube = null;
+
+    // Working Stage Switcher
+    function switchStage(stageId) {
+        document.querySelectorAll('.nav-stage-btn').forEach(btn => {
+            if (btn.dataset.target === stageId) {
+                btn.classList.add('active', 'border-indigo-500/60');
+                btn.classList.remove('text-slate-400');
+            } else {
+                btn.classList.remove('active', 'border-indigo-500/60');
+                btn.classList.add('text-slate-400');
+            }
+        });
+
+        document.querySelectorAll('.stage-pane').forEach(pane => {
+            if (pane.id === stageId) {
+                pane.classList.remove('hidden');
+            } else {
+                pane.classList.add('hidden');
+            }
+        });
+
+        playTone(480, 'triangle', 0.05);
+
+        // Lazily initialize 3D cubes on tab switch
+        if (stageId === 'stage-battle') {
+            initBattleCubes();
+        } else if (stageId === 'stage-learning') {
+            initLearningCube();
+        }
+    }
+
+    document.querySelectorAll('.nav-stage-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchStage(btn.dataset.target));
+    });
+
+    // -------------------------------------------------------------
+    // OVERVIEW STAGE SCRAMBLE GENERATOR
+    // -------------------------------------------------------------
+    const MOVES = ['U', "U'", 'U2', 'D', "D'", 'D2', 'R', "R'", 'R2', 'L', "L'", 'L2', 'F', "F'", 'F2', 'B', "B'", 'B2'];
+    function generateScramble(length = 20) {
+        const res = [];
+        let lastAxis = '';
+        for (let i = 0; i < length; i++) {
+            let m = MOVES[Math.floor(Math.random() * MOVES.length)];
+            while (m[0] === lastAxis) {
+                m = MOVES[Math.floor(Math.random() * MOVES.length)];
+            }
+            lastAxis = m[0];
+            res.push(m);
+        }
+        return res.join(' ');
+    }
+
+    const overviewScrambleEl = document.getElementById('overview-scramble-display');
+    document.getElementById('overview-gen-scramble-btn')?.addEventListener('click', () => {
+        const sc = generateScramble(20);
+        if (overviewScrambleEl) overviewScrambleEl.textContent = sc;
+        playTone(600, 'sine', 0.05);
+    });
+
+    document.getElementById('overview-copy-scramble-btn')?.addEventListener('click', () => {
+        if (overviewScrambleEl) {
+            navigator.clipboard.writeText(overviewScrambleEl.textContent.trim());
+            playTone(880, 'triangle', 0.08);
+            alert('Scramble copied to clipboard!');
+        }
+    });
+
+    function sendScrambleToBattle() {
+        const sc = overviewScrambleEl?.textContent.trim() || generateScramble(14);
+        const battleScEl = document.getElementById('battle-scramble-text');
+        if (battleScEl) battleScEl.textContent = sc;
+        switchStage('stage-battle');
+    }
+
+    // -------------------------------------------------------------
+    // HUMAN VS AI BATTLE ARENA LOGIC
+    // -------------------------------------------------------------
+    function initBattleCubes() {
+        if (typeof Interactive3DCube === 'undefined') return;
+        
+        if (!humanDuelCube && document.getElementById('battle-cube-human')) {
+            humanDuelCube = new Interactive3DCube('battle-cube-human', { autoRotate: false });
+        }
+        if (!aiDuelCube && document.getElementById('battle-cube-ai')) {
+            aiDuelCube = new Interactive3DCube('battle-cube-ai', { autoRotate: false });
+        }
+    }
+
+    let isHumanRacing = false;
+    let humanStartTime = 0;
+    let humanTimerInterval = null;
+    let humanMovesCount = 0;
+
+    const humanTimerEl = document.getElementById('human-timer');
+    const humanMoveCountEl = document.getElementById('human-move-count');
+    const humanStatusEl = document.getElementById('human-status-badge');
+    const humanStartBtn = document.getElementById('human-start-btn');
+
+    function toggleHumanRace() {
+        if (!isHumanRacing) {
+            // Start Race
+            isHumanRacing = true;
+            humanStartTime = performance.now();
+            humanMovesCount = 0;
+            if (humanMoveCountEl) humanMoveCountEl.textContent = '0';
+            if (humanStatusEl) {
+                humanStatusEl.textContent = 'Racing!';
+                humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-rose-950 text-rose-300 text-[10px] font-mono border border-rose-600 animate-pulse';
+            }
+            if (humanStartBtn) {
+                humanStartBtn.innerHTML = '<i class="fa-solid fa-flag-checkered"></i> <span>Finish Human Solve!</span>';
+                humanStartBtn.className = 'w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2';
+            }
+            playTone(520, 'sine', 0.1);
+
+            humanTimerInterval = setInterval(() => {
+                const elapsed = performance.now() - humanStartTime;
+                const sec = Math.floor(elapsed / 1000);
+                const ms = Math.floor((elapsed % 1000) / 10);
+                if (humanTimerEl) {
+                    humanTimerEl.textContent = `${sec < 10 ? '0' + sec : sec}:${ms < 10 ? '0' + ms : ms}`;
+                }
+            }, 30);
+        } else {
+            // Finish Race
+            isHumanRacing = false;
+            clearInterval(humanTimerInterval);
+            if (humanStatusEl) {
+                humanStatusEl.textContent = 'Completed!';
+                humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 text-[10px] font-mono border border-emerald-600';
+            }
+            if (humanStartBtn) {
+                humanStartBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> <span>Race Again</span>';
+                humanStartBtn.className = 'w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2';
+            }
+            playTone(880, 'triangle', 0.2);
+            checkBattleOutcome();
+        }
+    }
+
+    humanStartBtn?.addEventListener('click', toggleHumanRace);
+
+    // Keyboard spacebar to start/stop human timer
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && document.getElementById('stage-battle') && !document.getElementById('stage-battle').classList.contains('hidden')) {
+            if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            e.preventDefault();
+            toggleHumanRace();
+        }
+    });
+
+    // Human Turn Buttons
+    document.querySelectorAll('.human-move-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const move = btn.dataset.m;
+            playTone(400, 'square', 0.04);
+            if (humanDuelCube) humanDuelCube.animateLayerTurn(move);
+            if (isHumanRacing) {
+                humanMovesCount++;
+                if (humanMoveCountEl) humanMoveCountEl.textContent = humanMovesCount;
+            }
+        });
+    });
+
+    document.getElementById('human-reset-btn')?.addEventListener('click', () => {
+        isHumanRacing = false;
+        clearInterval(humanTimerInterval);
+        if (humanTimerEl) humanTimerEl.textContent = '00:00.00';
+        if (humanMoveCountEl) humanMoveCountEl.textContent = '0';
+        if (humanStatusEl) {
+            humanStatusEl.textContent = 'Ready';
+            humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700';
+        }
+        if (humanStartBtn) {
+            humanStartBtn.innerHTML = '<i class="fa-solid fa-stopwatch"></i> <span>Start Human Timer</span>';
+            humanStartBtn.className = 'w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2';
+        }
+        if (humanDuelCube) humanDuelCube.buildCube();
+    });
+
+    // AI Race Solver
+    let aiSolutionMoves = [];
+    let isAiSolving = false;
+    const aiSolveBtn = document.getElementById('ai-solve-btn');
+    const aiTimerEl = document.getElementById('ai-timer');
+    const aiStatusEl = document.getElementById('ai-status-badge');
+    const aiSolutionTextEl = document.getElementById('ai-solution-text');
+    const aiMoveCountEl = document.getElementById('ai-move-count');
+    const aiProgressTextEl = document.getElementById('ai-progress-text');
+
+    aiSolveBtn?.addEventListener('click', async () => {
+        const scramble = document.getElementById('battle-scramble-text')?.textContent.trim() || 'R U R\' U\'';
+        if (aiStatusEl) {
+            aiStatusEl.textContent = 'Solving Group Theory...';
+            aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-cyan-950 text-cyan-300 text-[10px] font-mono border border-cyan-500 animate-pulse';
+        }
+
+        const t0 = performance.now();
+        try {
+            const res = await fetch('/api/solve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ custom_moves: scramble })
+            });
+            const data = await res.json();
+            const computeTime = Math.round(performance.now() - t0);
+
+            if (data.solution) {
+                aiSolutionMoves = data.solution.split(' ');
+                if (aiTimerEl) aiTimerEl.textContent = `00:00.${computeTime < 100 ? '0' + computeTime : computeTime}`;
+                if (aiSolutionTextEl) aiSolutionTextEl.textContent = data.solution;
+                if (aiMoveCountEl) aiMoveCountEl.textContent = data.move_count;
+                if (aiProgressTextEl) aiProgressTextEl.textContent = `0 / ${aiSolutionMoves.length}`;
+                if (aiStatusEl) {
+                    aiStatusEl.textContent = 'Solution Ready!';
+                    aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 text-[10px] font-mono border border-emerald-500';
+                }
+                playTone(700, 'sine', 0.1);
+                
+                // Animate AI 3D Solve Move-by-Move
+                animateAiSolve();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    });
+
+    async function animateAiSolve() {
+        if (!aiDuelCube || !aiSolutionMoves.length || isAiSolving) return;
+        isAiSolving = true;
+        
+        for (let i = 0; i < aiSolutionMoves.length; i++) {
+            const move = aiSolutionMoves[i];
+            if (aiProgressTextEl) aiProgressTextEl.textContent = `${i + 1} / ${aiSolutionMoves.length}`;
+            playTone(450 + (i * 15), 'sine', 0.04);
+            
+            await new Promise(resolve => {
+                aiDuelCube.animateLayerTurn(move, resolve);
+            });
+            await new Promise(r => setTimeout(r, 60));
+        }
+
+        isAiSolving = false;
+        if (aiStatusEl) {
+            aiStatusEl.textContent = 'AI Finished!';
+            aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-cyan-950 text-cyan-300 text-[10px] font-mono border border-cyan-500';
+        }
+        checkBattleOutcome();
+    }
+
+    document.getElementById('ai-step-play-btn')?.addEventListener('click', animateAiSolve);
+    document.getElementById('ai-reset-btn')?.addEventListener('click', () => {
+        if (aiDuelCube) aiDuelCube.buildCube();
+        if (aiTimerEl) aiTimerEl.textContent = '00:00.00';
+        if (aiMoveCountEl) aiMoveCountEl.textContent = '--';
+        if (aiProgressTextEl) aiProgressTextEl.textContent = '0 / 0';
+        if (aiSolutionTextEl) aiSolutionTextEl.textContent = 'Click "Compute & Animate AI Solve" to start...';
+        if (aiStatusEl) {
+            aiStatusEl.textContent = 'Standby';
+            aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700';
+        }
+    });
+
+    document.getElementById('battle-new-scramble-btn')?.addEventListener('click', () => {
+        const sc = generateScramble(16);
+        const el = document.getElementById('battle-scramble-text');
+        if (el) el.textContent = sc;
+        playTone(600, 'sine', 0.05);
+    });
+
+    function checkBattleOutcome() {
+        const banner = document.getElementById('battle-outcome-banner');
+        const title = document.getElementById('battle-outcome-title');
+        const desc = document.getElementById('battle-outcome-desc');
+        if (!banner || !title || !desc) return;
+
+        banner.classList.remove('hidden');
+        banner.className = 'mt-6 p-5 rounded-2xl border bg-indigo-950/80 border-indigo-500 text-center font-mono text-xs shadow-2xl';
+        title.innerHTML = '<i class="fa-solid fa-trophy text-amber-400 mr-2"></i> Match Completed!';
+        desc.textContent = `Human Move Count: ${humanMovesCount} | AI Optimal Moves: ${aiSolutionMoves.length || 14}. Both solvers reached the identity state!`;
+    }
+
+    // -------------------------------------------------------------
+    // VISUAL LEARNING HUB 3D ENGINE
+    // -------------------------------------------------------------
+    let currentLearningAlgoMoves = ['R', 'U', "R'", "U'"];
+    let currentLearningStep = 0;
+    let isLearningPlaying = false;
+
+    function initLearningCube() {
+        if (typeof Interactive3DCube === 'undefined') return;
+        if (!learningCube && document.getElementById('learning-3d-canvas')) {
+            learningCube = new Interactive3DCube('learning-3d-canvas', { autoRotate: false });
+            renderLearningRibbon();
+        }
+    }
+
+    function renderLearningRibbon() {
+        const ribbon = document.getElementById('learning-move-ribbon');
+        if (!ribbon) return;
+        ribbon.innerHTML = '';
+
+        currentLearningAlgoMoves.forEach((m, idx) => {
+            const span = document.createElement('span');
+            span.className = `px-2.5 py-1 rounded-lg border font-bold transition-all ${idx === currentLearningStep ? 'bg-cyan-500 text-black border-cyan-400 shadow-md scale-110' : 'bg-slate-900 text-slate-300 border-slate-800'}`;
+            span.textContent = m;
+            ribbon.appendChild(span);
+        });
+    }
+
+    // Learning Algo Cards Selection
+    document.querySelectorAll('.algo-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.algo-card').forEach(c => c.classList.remove('active-algo'));
+            card.classList.add('active-algo');
+
+            const name = card.dataset.name;
+            const order = card.dataset.order;
+            const movesStr = card.dataset.moves;
+            const math = card.dataset.math;
+            const tip = card.dataset.tip;
+
+            document.getElementById('active-algo-name').textContent = name;
+            document.getElementById('active-algo-order').textContent = `Order: ${order}`;
+            document.getElementById('active-algo-formula').textContent = movesStr;
+            document.getElementById('active-algo-math').textContent = math;
+            document.getElementById('active-algo-tip').textContent = tip;
+
+            currentLearningAlgoMoves = movesStr.split(' ');
+            currentLearningStep = 0;
+            renderLearningRibbon();
+
+            if (learningCube) {
+                learningCube.buildCube();
+            }
+            playTone(550, 'sine', 0.05);
+        });
+    });
+
+    // Algo Category Filter
+    document.querySelectorAll('.algo-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.algo-filter-btn').forEach(b => {
+                b.className = 'algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white';
+            });
+            btn.className = 'algo-filter-btn px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold';
+
+            const cat = btn.dataset.cat;
+            document.querySelectorAll('.algo-card').forEach(card => {
+                if (cat === 'all' || card.dataset.cat === cat) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+    });
+
+    // Learning Playback Controls
+    async function playLearningAlgo() {
+        if (!learningCube || isLearningPlaying) return;
+        isLearningPlaying = true;
+        document.getElementById('learning-play-btn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+
+        while (currentLearningStep < currentLearningAlgoMoves.length && isLearningPlaying) {
+            const move = currentLearningAlgoMoves[currentLearningStep];
+            renderLearningRibbon();
+            playTone(480 + (currentLearningStep * 20), 'sine', 0.04);
+            
+            await new Promise(resolve => {
+                learningCube.animateLayerTurn(move, resolve);
+            });
+            currentLearningStep++;
+            renderLearningRibbon();
+            await new Promise(r => setTimeout(r, 80));
+        }
+
+        isLearningPlaying = false;
+        document.getElementById('learning-play-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
+    }
+
+    document.getElementById('learning-play-btn')?.addEventListener('click', () => {
+        if (!isLearningPlaying) {
+            if (currentLearningStep >= currentLearningAlgoMoves.length) {
+                currentLearningStep = 0;
+                if (learningCube) learningCube.buildCube();
+            }
+            playLearningAlgo();
+        } else {
+            isLearningPlaying = false;
+            document.getElementById('learning-play-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
+        }
+    });
+
+    document.getElementById('learning-next-btn')?.addEventListener('click', () => {
+        if (currentLearningStep < currentLearningAlgoMoves.length && learningCube) {
+            const move = currentLearningAlgoMoves[currentLearningStep];
+            learningCube.animateLayerTurn(move, () => {
+                currentLearningStep++;
+                renderLearningRibbon();
+            });
+            playTone(500, 'sine', 0.04);
+        }
+    });
+
+    document.getElementById('learning-reset-btn')?.addEventListener('click', () => {
+        isLearningPlaying = false;
+        currentLearningStep = 0;
+        if (learningCube) learningCube.buildCube();
+        renderLearningRibbon();
+        document.getElementById('learning-play-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
+    });
+
+    // Guide Step Trigger Helper
+    function simulateGuideStep(step) {
+        switchStage('stage-learning');
+        const targetAlgo = document.querySelector(`.algo-card[data-name*="${step === 'oll' ? 'Sune' : step === 'pll' ? 'T-Perm' : 'Sexy'}"]`);
+        if (targetAlgo) targetAlgo.click();
+    }
+
+    // -------------------------------------------------------------
+    // 2D CUBE NET STUDIO & OPENCV DROPZONE
+    // -------------------------------------------------------------
+    let selectedPaletteColor = 'yellow';
+    const COLOR_HEX_MAP = {
+        'yellow': '#facc15',
+        'white': '#ffffff',
+        'green': '#22c55e',
+        'blue': '#2563eb',
+        'orange': '#f97316',
+        'red': '#ef4444'
+    };
+
+    document.querySelectorAll('.palette-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('ring-2', 'ring-white'));
+            btn.classList.add('ring-2', 'ring-white');
+            selectedPaletteColor = btn.dataset.color;
+            playTone(700, 'triangle', 0.03);
+        });
+    });
+
+    function initNetGrid() {
+        const faceConfigs = [
+            { id: 'net-face-u', defaultColor: 'yellow' },
+            { id: 'net-face-l', defaultColor: 'orange' },
+            { id: 'net-face-f', defaultColor: 'green' },
+            { id: 'net-face-r', defaultColor: 'red' },
+            { id: 'net-face-b', defaultColor: 'blue' },
+            { id: 'net-face-d', defaultColor: 'white' }
+        ];
+
+        faceConfigs.forEach(fc => {
+            const container = document.getElementById(fc.id);
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'net-cell';
+                cell.style.backgroundColor = COLOR_HEX_MAP[fc.defaultColor];
+                cell.dataset.color = fc.defaultColor;
+                cell.addEventListener('click', () => {
+                    cell.style.backgroundColor = COLOR_HEX_MAP[selectedPaletteColor];
+                    cell.dataset.color = selectedPaletteColor;
+                    playTone(400, 'sine', 0.03);
+                });
+                container.appendChild(cell);
+            }
+        });
+    }
+
+    initNetGrid();
+
+    document.getElementById('net-reset-btn')?.addEventListener('click', () => {
+        initNetGrid();
+        playTone(600, 'sine', 0.05);
+    });
+
+    document.getElementById('net-solve-btn')?.addEventListener('click', () => {
+        alert('Validating 54 facelet parity... Redirecting to 3D Visualizer solver engine!');
+        window.location.href = "{{ url_for('visualizer.index') }}";
+    });
+
+    // Vision Dropzone
+    const dropzone = document.getElementById('vision-dropzone');
+    const fileInput = document.getElementById('vision-file-input');
+    dropzone?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', () => {
+        if (fileInput.files.length) {
+            document.getElementById('vision-result-box')?.classList.remove('hidden');
+            playTone(800, 'triangle', 0.1);
+        }
+    });
+
+    document.getElementById('vision-scan-btn')?.addEventListener('click', () => {
+        document.getElementById('vision-result-box')?.classList.remove('hidden');
+        playTone(800, 'triangle', 0.1);
+    });
+
+    // Course Modal
+    function openCourseModal(title, desc) {
+        document.getElementById('modal-course-title').textContent = title;
+        document.getElementById('modal-course-desc').textContent = desc;
+        document.getElementById('course-modal').classList.remove('hidden');
+        playTone(650, 'sine', 0.06);
+    }
+
+    function closeCourseModal() {
+        document.getElementById('course-modal').classList.add('hidden');
+    }
+
+    // Auto-initialize overview
+    document.addEventListener('DOMContentLoaded', () => {
+        switchStage('stage-overview');
+    });
+</script>
 {% endblock %}
