@@ -159,6 +159,81 @@ def init_database():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            # 8. Videos Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS videos (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    title VARCHAR(200) NOT NULL,
+                    video_url TEXT NOT NULL,
+                    solve_time FLOAT DEFAULT 0.0,
+                    method VARCHAR(50) DEFAULT 'CFOP',
+                    description TEXT,
+                    likes INT DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 9. Chat Groups Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chat_groups (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(120) NOT NULL,
+                    description TEXT,
+                    is_private INT DEFAULT 0,
+                    passcode VARCHAR(50) NULL,
+                    created_by INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 10. Chat Messages Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chat_messages (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    sender_id INT NOT NULL,
+                    receiver_id INT NULL,
+                    group_id INT NULL,
+                    message TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 11. Friends Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS friends (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    friend_id INT NOT NULL,
+                    status VARCHAR(30) DEFAULT 'accepted',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 12. Blog Posts Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS blog_posts (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    title VARCHAR(200) NOT NULL,
+                    content TEXT NOT NULL,
+                    tags VARCHAR(120) DEFAULT 'CFOP,Tutorial',
+                    likes INT DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 13. Blog Comments Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS blog_comments (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    post_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    comment TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
         conn.close()
     else:
         print("[Database] Initializing SQLite Multi-Role RBAC Tables...")
@@ -263,6 +338,87 @@ def init_database():
                 module TEXT DEFAULT 'SolverEngine',
                 message TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 8. Videos Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS videos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                video_url TEXT NOT NULL,
+                solve_time REAL DEFAULT 0.0,
+                method TEXT DEFAULT 'CFOP',
+                description TEXT,
+                likes INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 9. Chat Groups Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chat_groups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT,
+                is_private INTEGER DEFAULT 0,
+                passcode TEXT,
+                created_by INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 10. Chat Messages Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_id INTEGER NOT NULL,
+                receiver_id INTEGER,
+                group_id INTEGER,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (sender_id) REFERENCES users(id)
+            )
+        """)
+
+        # 11. Friends Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS friends (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                friend_id INTEGER NOT NULL,
+                status TEXT DEFAULT 'accepted',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 12. Blog Posts Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS blog_posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                tags TEXT DEFAULT 'CFOP,Tutorial',
+                likes INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 13. Blog Comments Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS blog_comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                comment TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (post_id) REFERENCES blog_posts(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
 
@@ -373,6 +529,59 @@ def seed_demo_data():
                 "INSERT INTO system_logs (level, module, message) VALUES (?, ?, ?)",
                 (lvl, mod, msg)
             )
+
+    # Seed Initial Videos
+    v = query_one("SELECT id FROM videos LIMIT 1", "SELECT id FROM videos LIMIT 1")
+    if not v:
+        user_cuber = query_one("SELECT id FROM users WHERE username = 'speedcuber'", "SELECT id FROM users WHERE username = 'speedcuber'")
+        uid = user_cuber['id'] if user_cuber else 1
+        execute_insert(
+            "INSERT INTO videos (user_id, title, video_url, solve_time, method, description, likes) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            "INSERT INTO videos (user_id, title, video_url, solve_time, method, description, likes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (uid, "9.42s Single CFOP Solve Breakdown", "https://www.w3schools.com/html/mov_bbb.mp4", 9.42, "CFOP", "Full solve walkthrough with easy F2L pair inserts and Sune OLL finish!", 14)
+        )
+        execute_insert(
+            "INSERT INTO videos (user_id, title, video_url, solve_time, method, description, likes) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            "INSERT INTO videos (user_id, title, video_url, solve_time, method, description, likes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (uid, "Two-Phase Kociemba 14-Move FMC Solution", "https://www.w3schools.com/html/movie.mp4", 6.85, "Kociemba Two-Phase", "Demonstrating God's number sub-20 reduction live in 3D.", 28)
+        )
+
+    # Seed Initial Groups & Messages
+    grp = query_one("SELECT id FROM chat_groups LIMIT 1", "SELECT id FROM chat_groups LIMIT 1")
+    if not grp:
+        user_cuber = query_one("SELECT id FROM users WHERE username = 'speedcuber'", "SELECT id FROM users WHERE username = 'speedcuber'")
+        uid = user_cuber['id'] if user_cuber else 1
+        gid1 = execute_insert(
+            "INSERT INTO chat_groups (name, description, is_private, created_by) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO chat_groups (name, description, is_private, created_by) VALUES (?, ?, ?, ?)",
+            ("Global Speedcubers Clan", "Public hangout for cube lovers, speedcubers, and algorithm explorers worldwide!", 0, uid)
+        )
+        gid2 = execute_insert(
+            "INSERT INTO chat_groups (name, description, is_private, passcode, created_by) VALUES (%s, %s, %s, %s, %s)",
+            "INSERT INTO chat_groups (name, description, is_private, passcode, created_by) VALUES (?, ?, ?, ?, ?)",
+            ("Sub-10 Master Study Group", "Private master group for advanced lookahead and commutators.", 1, "CUBE10", uid)
+        )
+        execute_insert(
+            "INSERT INTO chat_messages (sender_id, group_id, message) VALUES (%s, %s, %s)",
+            "INSERT INTO chat_messages (sender_id, group_id, message) VALUES (?, ?, ?)",
+            (uid, gid1, "Welcome to the Speedcuber Clan! Drop your personal best times here! 🎲")
+        )
+
+    # Seed Initial Blog Posts
+    b = query_one("SELECT id FROM blog_posts LIMIT 1", "SELECT id FROM blog_posts LIMIT 1")
+    if not b:
+        user_cuber = query_one("SELECT id FROM users WHERE username = 'speedcuber'", "SELECT id FROM users WHERE username = 'speedcuber'")
+        uid = user_cuber['id'] if user_cuber else 1
+        pid1 = execute_insert(
+            "INSERT INTO blog_posts (user_id, title, content, tags, likes) VALUES (%s, %s, %s, %s, %s)",
+            "INSERT INTO blog_posts (user_id, title, content, tags, likes) VALUES (?, ?, ?, ?, ?)",
+            (uid, "How I Dropped My Average from 30s to Sub-15 with 2-Look OLL", "The key to fast cubing as a kid is mastering standard finger tricks! Instead of regripping, use index flicks for U moves and thumb pulls for R'. Learn Sune and T-perm first.", "CFOP,Tips,Kids", 19)
+        )
+        execute_insert(
+            "INSERT INTO blog_comments (post_id, user_id, comment) VALUES (%s, %s, %s)",
+            "INSERT INTO blog_comments (post_id, user_id, comment) VALUES (?, ?, ?)",
+            (pid1, uid, "Awesome tutorial! Sune is definitely my favorite algorithm.")
+        )
 
 def query_one(sql_mysql, sql_sqlite, params=()):
     """Single row fetch helper"""

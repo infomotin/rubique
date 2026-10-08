@@ -202,8 +202,9 @@ class Interactive3DCube {
 
     onResize() {
         if (!this.container || !this.renderer || !this.camera) return;
-        const width = this.container.clientWidth;
-        const height = this.container.clientHeight;
+        const width = this.container.clientWidth || 360;
+        const height = this.container.clientHeight || 280;
+        if (width <= 0 || height <= 0) return;
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
@@ -222,19 +223,34 @@ class Interactive3DCube {
     }
 
     /**
-     * Smooth 3D Layer Twist Animation for Moves (U, D, F, B, L, R, M, E, S)
+     * Queued Layer Turn Animation for robust, non-blocking 3D moves
      */
     animateLayerTurn(move, onComplete) {
-        if (this.isAnimatingTurn) return;
+        if (!this.turnQueue) this.turnQueue = [];
+        this.turnQueue.push({ move, onComplete });
+        if (!this.isAnimatingTurn) {
+            this.processNextTurn();
+        }
+    }
+
+    processNextTurn() {
+        if (!this.turnQueue || this.turnQueue.length === 0) {
+            this.isAnimatingTurn = false;
+            return;
+        }
+
         this.isAnimatingTurn = true;
+        const item = this.turnQueue.shift();
+        const move = item.move;
+        const onComplete = item.onComplete;
 
         const base = move[0];
         const isPrime = move.includes("'");
         const isDouble = move.includes("2");
 
-        let axis = new THREE.Vector3(0, 1, 0); // Y axis default (U/D)
-        let layerCondition = (c) => c.position.y > 0.5; // U layer
-        let targetAngle = -Math.PI / 2; // Clockwise
+        let axis = new THREE.Vector3(0, 1, 0);
+        let layerCondition = (c) => c.position.y > 0.5;
+        let targetAngle = -Math.PI / 2;
 
         if (base === 'U') {
             axis = new THREE.Vector3(0, 1, 0);
@@ -267,11 +283,11 @@ class Interactive3DCube {
         } else if (base === 'E') {
             axis = new THREE.Vector3(0, 1, 0);
             layerCondition = (c) => Math.abs(c.position.y) < 0.5;
-            targetAngle = isPrime ? -Math.PI / 2 : Math.PI / 2;
+            targetAngle = isPrime ? Math.PI / 2 : -Math.PI / 2;
         } else if (base === 'S') {
             axis = new THREE.Vector3(0, 0, 1);
             layerCondition = (c) => Math.abs(c.position.z) < 0.5;
-            targetAngle = isPrime ? Math.PI / 2 : -Math.PI / 2;
+            targetAngle = isPrime ? -Math.PI / 2 : Math.PI / 2;
         }
 
         if (isDouble) {
@@ -288,13 +304,12 @@ class Interactive3DCube {
             pivotGroup.add(c);
         });
 
-        const duration = 280; // ms
+        const duration = 220; // ms
         const startTime = performance.now();
 
         const stepRotation = (now) => {
             const elapsed = now - startTime;
             const progress = Math.min(elapsed / duration, 1.0);
-            // Smooth ease-out cubic
             const ease = 1 - Math.pow(1 - progress, 3);
             const currentAngle = targetAngle * ease;
 
@@ -303,11 +318,9 @@ class Interactive3DCube {
             if (progress < 1.0) {
                 requestAnimationFrame(stepRotation);
             } else {
-                // Finalize position
                 pivotGroup.setRotationFromAxisAngle(axis, targetAngle);
                 pivotGroup.updateMatrixWorld();
 
-                // Re-attach cubies to main group with new world transforms
                 activeCubies.forEach(c => {
                     c.applyMatrix4(pivotGroup.matrix);
                     c.position.x = Math.round(c.position.x);
@@ -320,6 +333,8 @@ class Interactive3DCube {
                 this.scene.remove(pivotGroup);
                 this.isAnimatingTurn = false;
                 if (onComplete) onComplete();
+                // Process subsequent queued turns
+                this.processNextTurn();
             }
         };
 

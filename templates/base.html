@@ -115,6 +115,12 @@
                     </div>
                 </div>
 
+                <!-- Dark / Light Theme Toggle Button -->
+                <button id="theme-toggle-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-indigo-500/60 text-xs font-mono text-slate-200 transition-all shadow-md" title="Toggle Dark / Light Theme">
+                    <i id="theme-toggle-icon" class="fa-solid fa-moon text-indigo-400"></i>
+                    <span id="theme-toggle-label" class="hidden sm:inline text-[11px]">Dark</span>
+                </button>
+
                 {% if session.get('user_id') %}
                     <!-- Role-Specific Dashboard Link -->
                     {% if session.get('role') == 'super_admin' %}
@@ -261,6 +267,7 @@
         window.TRANSLATIONS = {{ translations_json | safe }};
     </script>
     <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 
     {% block extra_scripts %}{% endblock %}
 </body>

@@ -34,20 +34,58 @@
     --cube-red: #ef4444;
 }
 
-/* Global Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* Light Theme Variables */
+html.light, body.light {
+    --bg-pure: #f8fafc;
+    --bg-dark-0: #ffffff;
+    --bg-dark-1: #f1f5f9;
+    --bg-dark-2: #e2e8f0;
+    --bg-glass: rgba(255, 255, 255, 0.92);
+    --bg-glass-heavy: rgba(248, 250, 252, 0.98);
+    --border-subtle: rgba(203, 213, 225, 0.8);
+    --border-glow: rgba(99, 102, 241, 0.25);
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
 }
 
-html, body {
-    background-color: var(--bg-pure);
-    color: #f8fafc;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    overflow-x: hidden;
-    min-height: 100vh;
-    scroll-behavior: smooth;
+html.light .glass-card {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .navbar-glass {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+}
+
+html.light .text-white {
+    color: #0f172a !important;
+}
+
+html.light .text-slate-400 {
+    color: #475569 !important;
+}
+
+html.light .text-slate-300 {
+    color: #334155 !important;
+}
+
+html.light .bg-slate-950,
+html.light .bg-slate-900,
+html.light .bg-black {
+    background-color: #ffffff !important;
+}
+
+html.light .border-slate-800,
+html.light .border-slate-900 {
+    border-color: #e2e8f0 !important;
+}
+
+html.light .cyber-grid-bg {
+    background-image: 
+        linear-gradient(to right, rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
 }
 
 /* Typography */
