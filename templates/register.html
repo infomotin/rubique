@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Register - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-4 py-12">
+    <div class="glass-card w-full max-w-md p-8 rounded-2xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
+        
+        <!-- Glowing accent orb in background -->
+        <div class="absolute -top-24 -left-24 w-48 h-48 bg-purple-600/30 rounded-full blur-3xl pointer-events-none group-hover:bg-purple-600/40 transition-all duration-700"></div>
+        <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-600/30 transition-all duration-700"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-8 relative z-10">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-500 to-emerald-400 p-0.5 shadow-xl shadow-purple-500/20 mb-4">
+                <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                    <i class="fa-solid fa-user-plus text-purple-400 text-xl"></i>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold font-outfit text-white tracking-tight">Create Account</h1>
+            <p class="text-xs text-slate-400 mt-1 font-mono">Join the permutation group theory laboratory</p>
+        </div>
+
+        <!-- Register Form -->
+        <form method="POST" action="{{ url_for('register') }}" class="space-y-4 relative z-10">
+            <div>
+                <label for="username" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono">
+                    <i class="fa-solid fa-user text-purple-400 mr-1.5"></i> Username
+                </label>
+                <input type="text" id="username" name="username" required autocomplete="username"
+                       placeholder="Choose a unique username"
+                       class="w-full px-4 py-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm font-sans">
+            </div>
+
+            <div>
+                <label for="email" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono">
+                    <i class="fa-solid fa-envelope text-purple-400 mr-1.5"></i> Email (Optional)
+                </label>
+                <input type="email" id="email" name="email" autocomplete="email"
+                       placeholder="user@example.com"
+                       class="w-full px-4 py-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm font-sans">
+            </div>
+
+            <div>
+                <label for="password" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono">
+                    <i class="fa-solid fa-key text-purple-400 mr-1.5"></i> Password
+                </label>
+                <input type="password" id="password" name="password" required autocomplete="new-password"
+                       placeholder="At least 6 characters" minlength="6"
+                       class="w-full px-4 py-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm font-sans">
+            </div>
+
+            <div>
+                <label for="confirm_password" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono">
+                    <i class="fa-solid fa-shield-check text-purple-400 mr-1.5"></i> Confirm Password
+                </label>
+                <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password"
+                       placeholder="Re-enter your password" minlength="6"
+                       class="w-full px-4 py-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm font-sans">
+            </div>
+
+            <button type="submit"
+                    class="w-full mt-2 py-3.5 px-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-500 hover:from-purple-500 hover:to-emerald-400 text-white font-medium text-sm rounded-xl shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50 transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+                <span>Register & Begin Solving</span>
+                <i class="fa-solid fa-arrow-right group-hover/btn:translate-x-1 transition-transform"></i>
+            </button>
+        </form>
+
+        <!-- Footer link -->
+        <div class="mt-8 pt-6 border-t border-slate-800/80 text-center relative z-10">
+            <p class="text-xs text-slate-400">
+                Already have an account? 
+                <a href="{{ url_for('login') }}" class="text-purple-400 hover:text-purple-300 font-medium ml-1 hover:underline">
+                    Sign In
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

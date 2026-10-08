@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}Rubik's Cube as Permutations - Group Theory Visualizer{% endblock %}
+
+{% block content %}
+<div class="visualizer-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Top Action Toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-900">
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-950 border border-indigo-500/30 text-indigo-400">
+                <i class="fa-solid fa-atom animate-spin-slow"></i>
+            </span>
+            <div>
+                <h2 class="text-sm font-bold font-outfit text-white tracking-wide uppercase">Group Theory Laboratory</h2>
+                <p class="text-[11px] font-mono text-slate-400">Symmetric Group S₅₄ &bull; Alternating Group A₈ &bull; Mathieu M₁₂</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Scramble Button -->
+            <button id="btn-scramble" class="btn-action bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 px-3.5 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all shadow-sm">
+                <i class="fa-solid fa-shuffle text-indigo-400"></i>
+                <span>Scramble Cube</span>
+            </button>
+
+            <!-- AI Kociemba Solver Button -->
+            <button id="btn-solve" class="btn-action bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 hover:border-indigo-500 px-3.5 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all shadow-lg shadow-indigo-600/10">
+                <i class="fa-solid fa-wand-magic-sparkles text-cyan-300"></i>
+                <span>Two-Phase Solve</span>
+            </button>
+
+            <!-- OpenCV Image Scanner Button -->
+            <button id="btn-open-scanner" class="btn-action bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-300 border border-emerald-500/40 hover:border-emerald-500 px-3.5 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all shadow-sm">
+                <i class="fa-solid fa-camera text-emerald-400"></i>
+                <span>CV Face Scanner</span>
+            </button>
+
+            <!-- Group Theory Info Drawer Toggle -->
+            <button id="btn-toggle-math" class="btn-action bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 border border-purple-500/40 px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all">
+                <i class="fa-solid fa-square-root-variable text-purple-400"></i>
+                <span>Group Theory</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN TWO-COLUMN VISUALIZER LAYOUT -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- LEFT / MAIN COLUMN: THE MATHEMATICAL VISUALIZER CANVAS (Matches Reference Image) -->
+        <div class="lg:col-span-8 flex flex-col items-center">
+            
+            <div class="visualizer-stage w-full max-w-xl bg-black rounded-3xl p-6 sm:p-8 border border-slate-900 shadow-2xl relative overflow-hidden flex flex-col items-center justify-between min-h-[740px]">
+                
+                <!-- Ambient Subtle Radial Glow -->
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(99,102,241,0.06)_0%,rgba(0,0,0,1)_70%)] pointer-events-none"></div>
+
+                <!-- 1. Header: "Rubik's Cube as Permutations" -->
+                <div class="relative z-10 text-center w-full mt-1 mb-4">
+                    <h1 class="font-serif text-2xl sm:text-3xl tracking-tight text-white flex items-center justify-center gap-2">
+                        <span class="text-indigo-400 font-medium italic drop-shadow-[0_0_12px_rgba(129,140,248,0.5)]">Rubik's Cube</span>
+                        <span class="text-slate-200 font-light">as Permutations</span>
+                    </h1>
+                </div>
+
+                <!-- 2. TOP GRAPHIC: 3D ISOMETRIC RUBIK'S CUBE SVG -->
+                <div class="relative z-10 w-full flex items-center justify-center my-2">
+                    <div class="relative">
+                        <!-- 3D Isometric SVG Container -->
+                        <div id="isometric-cube-container" class="w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
+                            <svg id="isometric-cube-svg" viewBox="-180 -180 360 360" class="w-full h-full filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.9)]">
+                                <!-- Dynamic Cube Facelets and Animated Top Layer rendered via JS -->
+                            </svg>
+                        </div>
+                        
+                        <!-- Middle Right Graphic: MOVE INDICATOR & STEP COUNTER -->
+                        <div class="absolute -right-10 sm:-right-16 top-1/2 -translate-y-1/2 text-center select-none">
+                            <div id="active-move-letter" class="text-4xl sm:text-5xl font-serif text-indigo-400 drop-shadow-[0_0_16px_rgba(129,140,248,0.7)] font-bold transition-all duration-300">
+                                U
+                            </div>
+                            <div id="active-step-counter" class="text-xs sm:text-sm font-serif text-slate-400 mt-1 tracking-widest">
+                                13 / 15
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. BOTTOM GRAPHIC: CIRCULAR PERMUTATION ORBIT NETWORK (Group Theory Orbit Rings) -->
+                <div class="relative z-10 w-full flex items-center justify-center my-4">
+                    <div class="w-full max-w-md h-72 sm:h-80 relative flex items-center justify-center">
+                        <svg id="permutation-orbit-svg" viewBox="-220 -220 440 440" class="w-full h-full">
+                            <!-- Circular Orbits, Intersecting Rings, Nodes & Dynamic Glowing Highlight Arc rendered via JS -->
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 4. MOVE RIBBON: HORIZONTAL SEQUENCE WITH ACTIVE MOVE HIGHLIGHT -->
+                <div class="relative z-10 w-full mt-2 mb-2">
+                    <div id="move-ribbon" class="flex items-center justify-center flex-wrap gap-2.5 sm:gap-3.5 font-serif text-sm sm:text-base text-slate-400 tracking-wider py-2 px-4 rounded-xl bg-slate-950/60 border border-slate-900/80 max-w-lg mx-auto">
+                        <!-- Sequence items rendered via JS -->
+                        <span class="ribbon-item">F</span>
+                        <span class="ribbon-item">L'</span>
+                        <span class="ribbon-item">B'</span>
+                        <span class="ribbon-item">R'</span>
+                        <span class="ribbon-item">M</span>
+                        <span class="ribbon-item">U</span>
+                        <span class="ribbon-item">M'</span>
+                        <span class="ribbon-item">L'</span>
+                        <span class="ribbon-item">U</span>
+                        <span class="ribbon-item">E</span>
+                        <span class="ribbon-item">B</span>
+                        <span class="ribbon-item">M</span>
+                        <span class="ribbon-item active text-indigo-400 font-bold drop-shadow-[0_0_10px_rgba(129,140,248,0.8)]">U</span>
+                    </div>
+                </div>
+
+                <!-- 5. PLAYBACK CONTROLS DECK -->
+                <div class="relative z-10 w-full mt-4 pt-4 border-t border-slate-900/90 flex flex-wrap items-center justify-between gap-4">
+                    
+                    <!-- Step Navigation -->
+                    <div class="flex items-center gap-1 sm:gap-2 mx-auto sm:mx-0">
+                        <button id="ctrl-first" class="ctrl-btn" title="First Step (|<<)">
+                            <i class="fa-solid fa-backward-step"></i>
+                        </button>
+                        <button id="ctrl-prev" class="ctrl-btn" title="Previous Step (<)">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button id="ctrl-play" class="ctrl-btn-primary" title="Play / Pause Animation">
+                            <i id="play-icon" class="fa-solid fa-play"></i>
+                        </button>
+                        <button id="ctrl-next" class="ctrl-btn" title="Next Step (>)">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button id="ctrl-last" class="ctrl-btn" title="Last Step (>>|)">
+                            <i class="fa-solid fa-forward-step"></i>
+                        </button>
+                        <button id="ctrl-reset" class="ctrl-btn text-rose-400 hover:text-rose-300" title="Reset (↻)">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+
+                    <!-- Speed & Animation Selectors -->
+                    <div class="flex items-center gap-2 mx-auto sm:mx-0 font-mono text-xs">
+                        <span class="text-slate-500">Speed:</span>
+                        <div class="inline-flex rounded-lg bg-slate-950 p-0.5 border border-slate-800">
+                            <button class="speed-btn px-2 py-1 rounded text-slate-400 hover:text-white" data-speed="1200">0.5x</button>
+                            <button class="speed-btn active px-2 py-1 rounded bg-indigo-600 text-white font-bold" data-speed="650">1x</button>
+                            <button class="speed-btn px-2 py-1 rounded text-slate-400 hover:text-white" data-speed="350">2x</button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: INTERACTIVE CONTROL CENTER, MOVE GENERATORS & CV -->
+        <div class="lg:col-span-4 space-y-6">
+            
+            <!-- Quick Move Execution Deck -->
+            <div class="glass-card p-5 rounded-2xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-gamepad text-indigo-400"></i> Single Permutation Generator
+                    </h3>
+                    <span class="text-[10px] font-mono text-slate-500">G = &lang;U,D,R,L,F,B&rang;</span>
+                </div>
+                
+                <!-- Face Moves Buttons Grid -->
+                <div class="grid grid-cols-6 gap-1.5 font-mono text-xs mb-3">
+                    <button class="face-btn" data-move="U">U</button>
+                    <button class="face-btn" data-move="D">D</button>
+                    <button class="face-btn" data-move="F">F</button>
+                    <button class="face-btn" data-move="B">B</button>
+                    <button class="face-btn" data-move="L">L</button>
+                    <button class="face-btn" data-move="R">R</button>
+                    
+                    <button class="face-btn text-cyan-400" data-move="U'">U'</button>
+                    <button class="face-btn text-cyan-400" data-move="D'">D'</button>
+                    <button class="face-btn text-cyan-400" data-move="F'">F'</button>
+                    <button class="face-btn text-cyan-400" data-move="B'">B'</button>
+                    <button class="face-btn text-cyan-400" data-move="L'">L'</button>
+                    <button class="face-btn text-cyan-400" data-move="R'">R'</button>
+                    
+                    <button class="face-btn text-purple-400" data-move="U2">U2</button>
+                    <button class="face-btn text-purple-400" data-move="D2">D2</button>
+                    <button class="face-btn text-purple-400" data-move="F2">F2</button>
+                    <button class="face-btn text-purple-400" data-move="B2">B2</button>
+                    <button class="face-btn text-purple-400" data-move="L2">L2</button>
+                    <button class="face-btn text-purple-400" data-move="R2">R2</button>
+                    
+                    <button class="face-btn text-amber-400" data-move="M">M</button>
+                    <button class="face-btn text-amber-400" data-move="E">E</button>
+                    <button class="face-btn text-amber-400" data-move="S">S</button>
+                    <button class="face-btn text-amber-400" data-move="M'">M'</button>
+                    <button class="face-btn text-amber-400" data-move="E'">E'</button>
+                    <button class="face-btn text-amber-400" data-move="S'">S'</button>
+                </div>
+
+                <!-- Custom Move Input -->
+                <div class="mt-3">
+                    <label class="block text-[11px] font-mono text-slate-400 mb-1">Custom Permutation Sequence:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="custom-sequence-input" placeholder="e.g. R U R' U' F' U2"
+                               class="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500">
+                        <button id="btn-apply-custom" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-mono font-semibold transition-all">
+                            Load
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mathematical Group Theory Live Inspector -->
+            <div class="glass-card p-5 rounded-2xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-infinity text-purple-400"></i> Group Theory Invariants
+                    </h3>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/70 text-purple-300 border border-purple-800/50">
+                        |G| = 4.32 &times; 10¹⁹
+                    </span>
+                </div>
+
+                <div class="space-y-3 font-mono text-xs">
+                    <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800/80">
+                        <div class="text-[10px] text-slate-500 uppercase">Disjoint Cycle Decomposition</div>
+                        <div id="math-cycle-notation" class="text-cyan-300 font-mono text-[11px] mt-0.5 break-all">
+                            (U₁ U₃ U₉ U₇)(U₂ U₆ U₈ U₄)(F₁ R₁ B₁ L₁)
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                            <span class="text-[10px] text-slate-500 block">Subgroup Stage</span>
+                            <span id="math-subgroup-stage" class="text-emerald-400 font-bold text-xs">G₁ (Edge Oriented)</span>
+                        </div>
+                        <div class="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                            <span class="text-[10px] text-slate-500 block">Permutation Parity</span>
+                            <span id="math-parity-status" class="text-indigo-300 font-bold text-xs">Even (+1 sgn)</span>
+                        </div>
+                    </div>
+
+                    <div class="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                        <span class="text-[10px] text-slate-500 block">Current Move Orbit Invariant</span>
+                        <div id="math-orbit-info" class="text-slate-300 text-[11px] mt-0.5">
+                            Order: 4 &bull; Facelet Transposition Count: 8
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Solves History Card -->
+            <div class="glass-card p-5 rounded-2xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-xl">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i> Recent Solves
+                    </h3>
+                    <button id="btn-refresh-history" class="text-slate-500 hover:text-slate-300 text-xs">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
+                </div>
+                <div id="recent-solves-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs font-mono">
+                    <div class="text-slate-500 text-[11px] py-2 text-center">No solves recorded yet. Click Scramble & Solve!</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==============================================================================
+     MODAL 1: OPENCV COMPUTER VISION RUBIK'S CUBE IMAGE SCANNER
+     ============================================================================== -->
+<div id="scanner-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-card w-full max-w-2xl bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl relative">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+                <div>
+                    <h3 class="font-outfit font-bold text-lg text-white">OpenCV Facelet Scanner</h3>
+                    <p class="text-xs text-slate-400 font-mono">Upload cube photo &bull; HSV Segmentation &bull; Centroid Extraction</p>
+                </div>
+            </div>
+            <button id="btn-close-scanner" class="text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Upload Dropzone -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            
+            <!-- Left: Dropzone & File Input -->
+            <div id="scanner-dropzone" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-2xl p-6 text-center bg-slate-900/40 hover:bg-slate-900/70 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[220px]">
+                <input type="file" id="cube-image-input" accept="image/*" class="hidden">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-400 mb-3"></i>
+                <h4 class="text-sm font-semibold text-slate-200">Drag & Drop Cube Photo</h4>
+                <p class="text-xs text-slate-400 mt-1">or click to browse from device</p>
+                <span class="inline-block mt-3 px-2.5 py-1 rounded bg-slate-800 text-[10px] font-mono text-slate-400">PNG, JPG, WEBP (Max 16MB)</span>
+            </div>
+
+            <!-- Right: OpenCV Processing Preview & Detected 3x3 Grid -->
+            <div class="flex flex-col items-center justify-center min-h-[220px] bg-slate-900/30 rounded-2xl p-4 border border-slate-800/80">
+                <div id="scanner-preview-placeholder" class="text-center text-slate-500 text-xs font-mono">
+                    <i class="fa-solid fa-microchip text-2xl mb-2 text-slate-600 block"></i>
+                    Awaiting image upload for HSV facelet segmentation...
+                </div>
+
+                <div id="scanner-result-box" class="hidden w-full flex flex-col items-center">
+                    <img id="cv-annotated-image" src="" alt="OpenCV Annotation" class="w-40 h-40 rounded-xl object-cover border border-emerald-500/40 shadow-lg mb-3">
+                    <div class="text-xs font-mono text-emerald-400 font-semibold mb-2">Facelet Classification Successful!</div>
+                    <button id="btn-apply-scanned-face" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-lg shadow-emerald-600/30">
+                        Apply to Isometric Cube
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL 2: MATHEMATICAL GROUP THEORY EXPLORER DRAWER
+     ============================================================================== -->
+<div id="math-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-card w-full max-w-2xl bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-950 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                    <i class="fa-solid fa-infinity"></i>
+                </div>
+                <div>
+                    <h3 class="font-outfit font-bold text-lg text-white">Rubik's Cube Group Theory ($G \le S_{48}$)</h3>
+                    <p class="text-xs text-slate-400 font-mono">Mathematical Foundation of Permutation Networks</p>
+                </div>
+            </div>
+            <button id="btn-close-math" class="text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4 text-xs font-mono text-slate-300">
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="text-purple-300 font-bold text-sm font-sans mb-1">1. The Group Order & Structure</div>
+                <p class="text-slate-400 leading-relaxed">
+                    The Rubik's cube group $G$ has order:
+                    <br><span class="text-cyan-300 font-bold text-sm">|G| = (8! &times; 3⁷) &times; (12! &times; 2¹¹) / 2 = 43,252,003,274,489,856,000</span>
+                    <br>Representing permutations of 8 corner cubies and 12 edge cubies under parity and orientation constraints.
+                </p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="text-purple-300 font-bold text-sm font-sans mb-1">2. Two-Phase Algorithm Subgroups (Kociemba)</div>
+                <p class="text-slate-400 leading-relaxed">
+                    Kociemba's algorithm reduces the problem through a nested subgroup chain:
+                    <br><span class="text-emerald-400 font-semibold">G₀ = &lang;U, D, L, R, F, B&rang;</span> (All 4.3 &times; 10¹⁹ states)
+                    <br><span class="text-indigo-400 font-semibold">&darr; Phase 1 (Orientation invariant)</span>
+                    <br><span class="text-emerald-400 font-semibold">G₁ = &lang;U, D, L2, R2, F2, B2&rang;</span> (Subgroup of order ~1.95 &times; 10¹²)
+                    <br><span class="text-indigo-400 font-semibold">&darr; Phase 2 (Permutation reduction)</span>
+                    <br><span class="text-emerald-400 font-semibold">G₂ = { Identity / Solved }</span>
+                </p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="text-purple-300 font-bold text-sm font-sans mb-1">3. Permutation Cycles in Visualizer</div>
+                <p class="text-slate-400 leading-relaxed">
+                    Every face turn is an element of the symmetric group $S_{54}$ consisting of two 4-cycles on the face stickers and four 3-cycles on adjacent facelet edges. The circular orbit graph visually maps these permutations in real-time.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/visualizer.js') }}"></script>
+{% endblock %}
