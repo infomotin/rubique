@@ -12,6 +12,13 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
         with self.app.app_context():
             init_database()
 
+    def login(self, username, password):
+        """Opens an authenticated session for the given demo account"""
+        return self.client.post('/login', data={
+            'username': username,
+            'password': password
+        }, follow_redirects=True)
+
     def test_super_admin_role_access(self):
         """Test Super Admin login and executive command center access"""
         # 1. Login as Super Admin

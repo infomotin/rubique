@@ -3385,8 +3385,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    facelet_string: faceletStr,
-                    custom_moves: "R U R' U' F' U2 F R U R'"
+                    facelet_string: faceletStr
                 })
             });
             const data = await res.json();
@@ -3401,6 +3400,8 @@
                 renderNetSolutionRibbon(data.moves);
                 updateActiveStepCard(0);
                 playTone(850, 'triangle', 0.12);
+            } else if (data.error) {
+                alert('Solver warning: ' + data.error);
             } else {
                 alert('Solver completed! Cube is already in solved state or solution was optimal.');
             }

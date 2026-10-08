@@ -946,7 +946,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
 
-            if (data.solution) {
+            if (data.error) {
+                alert('Solver warning: ' + data.error);
+            } else if (data.solution) {
                 currentMoves = data.solution.split(' ');
                 currentStepIndex = 0;
                 reconstructCubeStateUpToStep(0);
@@ -954,6 +956,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 playSolveFanfare();
                 startPlayback();
                 loadRecentSolves();
+            } else {
+                alert('Cube is already in the solved state - nothing to apply.');
             }
         } catch (err) {
             console.error("Solve API Error:", err);

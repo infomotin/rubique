@@ -51,17 +51,12 @@ def register():
             flash('Ai username ti already ache! Onno username select korun.', 'error')
             return render_template('register.html')
 
-        # Create user in database (MySQL / SQLite) with selected role
-        role = request.form.get('role', 'user')
-        if role not in ['super_admin', 'developer', 'user']:
-            role = 'user'
-
+        # Create user in database (MySQL / SQLite).
+        # Public registration always creates a standard 'user' account so the
+        # RBAC roles (developer / super_admin) can only be granted by an admin.
         user_id = UserModel.create_user(username, email, password)
         if user_id:
-            # Update role if selected
-            from models.admin_model import AdminModel
-            AdminModel.update_user_role(user_id, role)
-            flash(f'Registration successful as {role.upper()}! Ekhon sign in korun.', 'success')
+            flash('Registration successful! Ekhon sign in korun.', 'success')
             return redirect(url_for('auth.login'))
         else:
             flash('Registration e somoshya hoyeche! Abar cheshta korun.', 'error')
@@ -93,7 +88,8 @@ def login():
             flash(f'Swagotom, {user["username"]} ({user.get("role", "user").upper()})!', 'success')
             
             next_url = request.args.get('next')
-            if next_url:
+            # Only honour same-origin relative paths (prevents open redirect)
+            if next_url and next_url.startswith('/') and not next_url.startswith('//'):
                 return redirect(next_url)
                 
             # Role-Specific Dashboard Redirection

@@ -37,23 +37,14 @@ class AdminModel:
     @staticmethod
     def get_all_users():
         """Fetches all registered users along with their individual solve counts"""
-        sql_mysql = """
+        # Sub-query form keeps the statement valid on MySQL ONLY_FULL_GROUP_BY mode
+        sql = """
             SELECT u.id, u.username, u.email, u.role, u.bio, u.avatar_color, u.created_at,
-                   COUNT(s.id) as solve_count
+                   (SELECT COUNT(*) FROM solves s WHERE s.user_id = u.id) as solve_count
             FROM users u
-            LEFT JOIN solves s ON u.id = s.user_id
-            GROUP BY u.id
             ORDER BY u.id DESC
         """
-        sql_sqlite = """
-            SELECT u.id, u.username, u.email, u.role, u.bio, u.avatar_color, u.created_at,
-                   COUNT(s.id) as solve_count
-            FROM users u
-            LEFT JOIN solves s ON u.id = s.user_id
-            GROUP BY u.id
-            ORDER BY u.id DESC
-        """
-        return query_all(sql_mysql, sql_sqlite)
+        return query_all(sql, sql)
 
     @staticmethod
     def update_user_role(user_id, new_role):
@@ -66,7 +57,25 @@ class AdminModel:
 
     @staticmethod
     def delete_user(user_id):
-        """Deletes user account and associated solve logs"""
+        """Deletes a user account together with every dependent relation row"""
+        # Child tables first (SQLite has no enforced cascade on legacy tables)
+        for sql_mysql, sql_sqlite, params in [
+            ("DELETE FROM solves WHERE user_id = %s", "DELETE FROM solves WHERE user_id = ?", (user_id,)),
+            ("DELETE FROM blog_comments WHERE user_id = %s", "DELETE FROM blog_comments WHERE user_id = ?", (user_id,)),
+            ("DELETE FROM blog_comments WHERE post_id IN (SELECT id FROM blog_posts WHERE user_id = %s)",
+             "DELETE FROM blog_comments WHERE post_id IN (SELECT id FROM blog_posts WHERE user_id = ?)", (user_id,)),
+            ("DELETE FROM blog_posts WHERE user_id = %s", "DELETE FROM blog_posts WHERE user_id = ?", (user_id,)),
+            ("DELETE FROM videos WHERE user_id = %s", "DELETE FROM videos WHERE user_id = ?", (user_id,)),
+            ("DELETE FROM competition_entries WHERE user_id = %s", "DELETE FROM competition_entries WHERE user_id = ?", (user_id,)),
+            ("DELETE FROM friends WHERE user_id = %s OR friend_id = %s", "DELETE FROM friends WHERE user_id = ? OR friend_id = ?", (user_id, user_id)),
+            ("DELETE FROM chat_messages WHERE sender_id = %s OR receiver_id = %s",
+             "DELETE FROM chat_messages WHERE sender_id = ? OR receiver_id = ?", (user_id, user_id)),
+            ("DELETE FROM chat_messages WHERE group_id IN (SELECT id FROM chat_groups WHERE created_by = %s)",
+             "DELETE FROM chat_messages WHERE group_id IN (SELECT id FROM chat_groups WHERE created_by = ?)", (user_id,)),
+            ("DELETE FROM chat_groups WHERE created_by = %s", "DELETE FROM chat_groups WHERE created_by = ?", (user_id,)),
+        ]:
+            execute_update(sql_mysql, sql_sqlite, params)
+
         return execute_update(
             "DELETE FROM users WHERE id = %s",
             "DELETE FROM users WHERE id = ?",
@@ -85,18 +94,23 @@ class AdminModel:
 
     @staticmethod
     def get_all_competitions():
-        """Lists all competitions with entry counts"""
+        """Lists all competitions with entry counts (ONLY_FULL_GROUP_BY safe)"""
         sql = """
-            SELECT c.*, COUNT(e.id) as entry_count
+            SELECT c.*,
+                   (SELECT COUNT(*) FROM competition_entries e WHERE e.competition_id = c.id) as entry_count
             FROM competitions c
-            LEFT JOIN competition_entries e ON c.id = e.competition_id
-            GROUP BY c.id
             ORDER BY c.id DESC
         """
         return query_all(sql, sql)
 
     @staticmethod
     def delete_competition(comp_id):
+        """Removes a competition together with all of its submitted entries"""
+        execute_update(
+            "DELETE FROM competition_entries WHERE competition_id = %s",
+            "DELETE FROM competition_entries WHERE competition_id = ?",
+            (comp_id,)
+        )
         return execute_update("DELETE FROM competitions WHERE id = %s", "DELETE FROM competitions WHERE id = ?", (comp_id,))
 
     # --- Courses & Tutorials Management ---

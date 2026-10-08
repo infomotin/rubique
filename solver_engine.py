@@ -170,30 +170,118 @@ def generate_step_explanations(moves_list):
         
     return steps
 
+def validate_facelet_state(facelets):
+    """
+    54-character facelet string validation:
+    Returns (True, '') when legal, else (False, reason).
+    """
+    if len(facelets) != 54:
+        return False, "Facelet string must contain exactly 54 characters (9 per face)."
+    if set(facelets) - set('URFDLB'):
+        return False, "Facelet string may only contain the letters U, R, F, D, L and B."
+
+    for idx, face in enumerate('URFDLB'):
+        block = facelets[idx * 9:(idx + 1) * 9]
+        if block.count(face) < 1:
+            return False, f"Face {face} is missing its own centre sticker."
+        if block[4] != face:
+            return False, f"Centre sticker of face {face} must be '{face}' (sticker colours cannot change)."
+        if block.count(face) > 9:
+            return False, f"Face {face} has more than 9 stickers of its own colour."
+
+    for face in 'URFDLB':
+        if facelets.count(face) != 9:
+            return False, f"Sticker balance broken: '{face}' appears {facelets.count(face)} times instead of 9."
+    return True, ''
+
+
+def solve_facelet_state(facelets):
+    """
+    Solves a 54-character facelet state with the first available engine:
+    1. Kociemba Two-Phase (optional 'kociemba' binding)
+    2. Pure-Python CFOP Two-Phase fallback (optional 'pycuber' binding)
+
+    Returns (solution, error). Exactly one of them is a non-None value.
+    """
+    ok, reason = validate_facelet_state(facelets)
+    if not ok:
+        return None, reason
+
+    # --- Engine 1: Herbert Kociemba's Two-Phase algorithm ---
+    try:
+        import kociemba
+        solution = kociemba.solve(facelets)
+        if solution is not None:
+            return " ".join(solution.split()), None
+    except ImportError:
+        pass
+    except Exception as exc:
+        return None, f"Kociemba Two-Phase engine rejected this cube state: {exc}"
+
+    # --- Engine 2: Pure-Python CFOP fallback ---
+    try:
+        from pycuber import Cube
+        from pycuber.helpers import array_to_cubies
+        from pycuber.solver import CFOPSolver
+    except ImportError:
+        return None, "No solving engine installed (install 'kociemba' or 'pycuber')."
+
+    try:
+        # pycuber expects the 54 stickers ordered L, U, F, D, R, B
+        reordered = (
+            facelets[36:45] + facelets[0:9] + facelets[18:27] +
+            facelets[27:36] + facelets[9:18] + facelets[45:54]
+        )
+        cube = Cube(array_to_cubies(reordered))
+        if not cube.is_valid():
+            return None, ("Illegal cube state: sticker counts match but the permutation/orientation "
+                          "is physically impossible (parity or piece mismatch).")
+        import contextlib
+        import io
+        capture = io.StringIO()
+        with contextlib.redirect_stdout(capture):
+            solution = CFOPSolver(cube).solve(suppress_progress_messages=True)
+        return " ".join(str(solution).split()), None
+    except ValueError as exc:
+        return None, f"Cube state rejected by the solver: {exc}"
+    except Exception as exc:
+        return None, f"Solving failed: {exc}"
+
+
+def solve_state(state_or_scramble):
+    """
+    Unified solve controller returning a structured result:
+    {'solution': str, 'moves': [...], 'error': str|None, 'engine': str}
+
+    - 54-character facelet states are solved by a real solving engine.
+    - Move sequences (scrambles / custom permutations) are group-inverted.
+    """
+    if state_or_scramble is None:
+        return {'solution': '', 'moves': [], 'error': None, 'engine': 'identity'}
+
+    if not isinstance(state_or_scramble, str) or not state_or_scramble.strip():
+        # Nothing applied to the cube -> already solved
+        return {'solution': '', 'moves': [], 'error': None, 'engine': 'identity'}
+
+    text = state_or_scramble.strip()
+
+    # 1. Facelet state (54 stickers, only URFDLB)
+    if len(text) == 54 and not (set(text) - set('URFDLB')):
+        solution, error = solve_facelet_state(text)
+        if error:
+            return {'solution': '', 'moves': [], 'error': error, 'engine': 'none'}
+        moves = solution.split()
+        return {'solution': solution, 'moves': moves, 'error': None, 'engine': 'two_phase'}
+
+    # 2. Move sequence (scramble / custom moves) -> inverse group element
+    moves = simplify_moves(invert_sequence(text).split())
+    return {'solution': " ".join(moves), 'moves': moves, 'error': None, 'engine': 'group_inversion'}
+
+
 def solve_cube(state_or_scramble):
     """
-    Main solve controller:
-    Attempts Kociemba Two-Phase optimal solver first (18-22 moves),
-    falls back to pure-Python group inversion & simplification.
+    Backward compatible solve controller:
+    Returns the solution string for the given facelet state or move sequence.
     """
-    # Check if 54-char facelet string provided
-    if isinstance(state_or_scramble, str) and len(state_or_scramble) == 54 and set(state_or_scramble).issubset(set('URFDLB')):
-        try:
-            import kociemba
-            sol = kociemba.solve(state_or_scramble)
-            if sol:
-                return sol
-        except Exception:
-            pass
-            
-    # If scramble sequence string provided
-    if isinstance(state_or_scramble, str) and (" " in state_or_scramble or any(m in state_or_scramble for m in ['U', 'R', 'F', 'D', 'L', 'B'])):
-        if len(state_or_scramble) != 54:
-            inv = invert_sequence(state_or_scramble)
-            cleaned = simplify_moves(inv.split())
-            return " ".join(cleaned)
-            
-    # Default Group Theory demo sequence
-    demo_solution = ["F", "L'", "B'", "R'", "M", "U", "M'", "L'", "U", "E", "B", "M", "U"]
-    return " ".join(demo_solution)
+    return solve_state(state_or_scramble)['solution']
 

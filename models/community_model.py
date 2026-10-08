@@ -136,19 +136,24 @@ class CommunityModel:
     # -------------------------------------------------------------
     @staticmethod
     def add_friend(user_id, friend_id):
-        """Adds or accepts a friend connection"""
-        existing = query_one(
-            "SELECT id FROM friends WHERE user_id = %s AND friend_id = %s",
-            "SELECT id FROM friends WHERE user_id = ? AND friend_id = ?",
-            (user_id, friend_id)
-        )
-        if not existing:
+        """Adds or accepts a friend connection (stored symmetrically for both users)"""
+        def link(a, b):
+            existing = query_one(
+                "SELECT id FROM friends WHERE user_id = %s AND friend_id = %s",
+                "SELECT id FROM friends WHERE user_id = ? AND friend_id = ?",
+                (a, b)
+            )
+            if existing:
+                return existing['id']
             return execute_insert(
                 "INSERT INTO friends (user_id, friend_id, status) VALUES (%s, %s, 'accepted')",
                 "INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'accepted')",
-                (user_id, friend_id)
+                (a, b)
             )
-        return existing['id']
+
+        friendship_id = link(user_id, friend_id)
+        link(friend_id, user_id)
+        return friendship_id
 
     @staticmethod
     def get_user_friends(user_id):

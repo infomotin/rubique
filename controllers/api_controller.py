@@ -181,25 +181,41 @@ def solve():
     data = request.get_json() or {}
     facelet_string = data.get('facelet_string') or data.get('cube_state')
     custom_moves = data.get('custom_moves')
-    
+
     # Choose solver target
-    target_state = facelet_string if (facelet_string and len(facelet_string) == 54) else (custom_moves or "R U R' U'")
-    
-    solution = solver_engine.solve_cube(target_state)
-    moves_list = solution.split() if solution else []
+    if facelet_string and len(str(facelet_string).strip()) == 54:
+        target_state = str(facelet_string).strip()
+    else:
+        target_state = (custom_moves or "").strip()
+
+    result = solver_engine.solve_state(target_state)
+
+    if result['error']:
+        return jsonify({
+            'success': False,
+            'error': result['error'],
+            'solution': '',
+            'moves': [],
+            'steps': [],
+            'move_count': 0
+        }), 422
+
+    solution = result['solution']
+    moves_list = result['moves']
     steps_data = solver_engine.generate_step_explanations(moves_list)
-    
+
     user_id = session.get('user_id')
     if user_id and moves_list:
         recorded_input = facelet_string or custom_moves or "Cube State"
         SolveModel.record_solve(user_id, recorded_input[:120], solution, len(moves_list))
-        
+
     return jsonify({
         'success': True,
         'solution': solution,
         'moves': moves_list,
         'steps': steps_data,
         'move_count': len(moves_list),
+        'engine': result['engine'],
         'method': 'Two-Phase Kociemba Minimal Step Solver'
     })
 
