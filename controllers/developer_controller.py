@@ -18,7 +18,7 @@ def developer_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Access denied! Please login first.', 'warning')
-            return redirect(url_for('auth.login', next=request.url))
+            return redirect(url_for('auth.login', next=request.full_path.rstrip('?')))
         if session.get('role') not in ['developer', 'super_admin']:
             flash('Unauthorized! Developer access is required.', 'error')
             return redirect(url_for('home.index'))

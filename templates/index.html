@@ -21,14 +21,14 @@
 
     <div class="flex items-center justify-center gap-4">
         {% if session.get('user_id') %}
-            <a href="{{ url_for('visualizer') }}" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm shadow-xl shadow-indigo-600/30 transition-all">
+            <a href="{{ url_for('visualizer.index') }}" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm shadow-xl shadow-indigo-600/30 transition-all">
                 Open Group Visualizer &rarr;
             </a>
         {% else %}
-            <a href="{{ url_for('login') }}" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm shadow-xl shadow-indigo-600/30 transition-all">
+            <a href="{{ url_for('auth.login') }}" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm shadow-xl shadow-indigo-600/30 transition-all">
                 Sign In to Explore &rarr;
             </a>
-            <a href="{{ url_for('register') }}" class="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium text-sm transition-all">
+            <a href="{{ url_for('auth.register') }}" class="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium text-sm transition-all">
                 Create Account
             </a>
         {% endif %}

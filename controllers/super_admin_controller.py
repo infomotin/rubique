@@ -18,7 +18,7 @@ def super_admin_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Access denied! Please login first.', 'warning')
-            return redirect(url_for('auth.login', next=request.url))
+            return redirect(url_for('auth.login', next=request.full_path.rstrip('?')))
         if session.get('role') != 'super_admin':
             flash('Unauthorized! Super Admin access is required.', 'error')
             return redirect(url_for('home.index'))
@@ -62,9 +62,14 @@ def change_role():
 @super_admin_bp.route('/users/delete', methods=['POST'])
 @super_admin_required
 def delete_user():
-    """Deletes a user account"""
-    target_user_id = request.form.get('user_id')
-    if target_user_id and int(target_user_id) != session.get('user_id'):
+    """Deletes a user account together with every dependent record"""
+    target_user_id = request.form.get('user_id', '')
+    try:
+        target_user_id = int(target_user_id)
+    except (TypeError, ValueError):
+        target_user_id = 0
+
+    if target_user_id and target_user_id != session.get('user_id'):
         AdminModel.delete_user(target_user_id)
         flash('User account deleted successfully.', 'info')
     else:
@@ -103,7 +108,11 @@ def create_course():
     title = request.form.get('title', '').strip()
     description = request.form.get('description', '').strip()
     difficulty = request.form.get('difficulty', 'Intermediate').strip()
-    modules_count = int(request.form.get('modules_count', 5))
+    try:
+        modules_count = int(request.form.get('modules_count', 5))
+    except (TypeError, ValueError):
+        modules_count = 5
+    modules_count = max(1, min(modules_count, 50))
 
     if title:
         AdminModel.create_course(title, description, difficulty, modules_count, session.get('username'))
@@ -125,11 +134,20 @@ def create_coupon():
     """Generates a reward promo coupon"""
     code = request.form.get('code', '').strip()
     reward_text = request.form.get('reward_text', '').strip()
-    discount_percent = int(request.form.get('discount_percent', 100))
+    try:
+        discount_percent = int(request.form.get('discount_percent', 100))
+    except (TypeError, ValueError):
+        discount_percent = 100
+    discount_percent = max(0, min(discount_percent, 100))
 
     if code and reward_text:
-        AdminModel.create_coupon(code, reward_text, discount_percent)
-        flash(f'Coupon {code.upper()} created successfully!', 'success')
+        if AdminModel.find_coupon(code.upper()):
+            flash(f'Coupon {code.upper()} already exists! Pick a different code.', 'error')
+        else:
+            AdminModel.create_coupon(code, reward_text, discount_percent)
+            flash(f'Coupon {code.upper()} created successfully!', 'success')
+    else:
+        flash('Coupon code and reward text are required!', 'error')
     return redirect(url_for('super_admin.dashboard'))
 
 @super_admin_bp.route('/coupons/delete', methods=['POST'])

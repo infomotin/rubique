@@ -108,7 +108,12 @@ def send_chat_message():
     user_id = session.get('user_id')
     message = request.form.get('message', '').strip()
     group_id = request.form.get('group_id')
-    
+
+    try:
+        group_id = int(group_id) if group_id not in (None, '') else None
+    except (TypeError, ValueError):
+        group_id = None
+
     if message:
         CommunityModel.send_message(user_id, message, group_id=group_id)
         return jsonify({'success': True, 'message': message, 'username': session.get('username')})
@@ -184,9 +189,16 @@ def add_blog_comment():
     post_id = request.form.get('post_id')
     comment = (request.form.get('comment') or request.form.get('content') or '').strip()
 
+    try:
+        post_id = int(post_id)
+    except (TypeError, ValueError):
+        post_id = 0
+
     if post_id and comment:
         CommunityModel.add_comment(post_id, user_id, comment)
         flash('Comment posted!', 'success')
+    else:
+        flash('Comment could not be posted.', 'error')
     return redirect(url_for('user.dashboard') + '#stage-blog')
 
 @user_bp.route('/courses/complete', methods=['POST'])
@@ -203,8 +215,16 @@ def submit_competition():
     comp_id = request.form.get('competition_id')
     solution = request.form.get('solution', '').strip()
     move_count = len(solution.split()) if solution else 0
-    time_seconds = float(request.form.get('time_seconds', 0.0))
+    try:
+        time_seconds = float(request.form.get('time_seconds', 0.0))
+    except (TypeError, ValueError):
+        time_seconds = 0.0
     user_id = session.get('user_id')
+
+    try:
+        comp_id = int(comp_id)
+    except (TypeError, ValueError):
+        comp_id = 0
 
     if comp_id and solution:
         execute_insert(

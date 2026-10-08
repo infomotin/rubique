@@ -16,7 +16,7 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Ai page access korte hole age login korun!', 'warning')
-            return redirect(url_for('auth.login', next=request.url))
+            return redirect(url_for('auth.login', next=request.full_path.rstrip('?')))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -54,7 +54,12 @@ def register():
         # Create user in database (MySQL / SQLite).
         # Public registration always creates a standard 'user' account so the
         # RBAC roles (developer / super_admin) can only be granted by an admin.
-        user_id = UserModel.create_user(username, email, password)
+        user_id = None
+        try:
+            user_id = UserModel.create_user(username, email, password)
+        except Exception:
+            user_id = None
+
         if user_id:
             flash('Registration successful! Ekhon sign in korun.', 'success')
             return redirect(url_for('auth.login'))
@@ -104,7 +109,7 @@ def login():
 
     return render_template('login.html')
 
-@auth_bp.route('/logout')
+@auth_bp.route('/logout', methods=['GET', 'POST'])
 def logout():
     """User Logout Controller"""
     session.clear()

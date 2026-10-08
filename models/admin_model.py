@@ -144,5 +144,14 @@ class AdminModel:
         return query_all("SELECT * FROM coupons ORDER BY id DESC", "SELECT * FROM coupons ORDER BY id DESC")
 
     @staticmethod
+    def find_coupon(code):
+        """Fetches a coupon row by its unique promo code"""
+        return query_one(
+            "SELECT * FROM coupons WHERE code = %s LIMIT 1",
+            "SELECT * FROM coupons WHERE code = ? LIMIT 1",
+            (code,)
+        )
+
+    @staticmethod
     def delete_coupon(coupon_id):
         return execute_update("DELETE FROM coupons WHERE id = %s", "DELETE FROM coupons WHERE id = ?", (coupon_id,))
