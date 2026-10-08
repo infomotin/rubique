@@ -64,14 +64,14 @@
             
             <!-- Brand Logo -->
             <a href="{{ url_for('home.index') }}" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-cyan-400 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 p-0.5 shadow-lg shadow-indigo-600/20 group-hover:bg-indigo-500 transition-all duration-300">
                     <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                        <i class="fa-solid fa-cube text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300 group-hover:rotate-12 transition-transform duration-300"></i>
+                        <i class="fa-solid fa-cube text-indigo-400 group-hover:rotate-12 transition-transform duration-300"></i>
                     </div>
                 </div>
                 <div>
-                    <span class="font-outfit font-bold text-lg tracking-tight bg-gradient-to-r from-indigo-300 via-purple-200 to-cyan-300 bg-clip-text text-transparent">
-                        CubePermutation <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 font-mono">AI</span>
+                    <span class="font-outfit font-bold text-lg tracking-tight text-white">
+                        CubePermutation <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/40 text-indigo-300 font-mono">AI</span>
                     </span>
                     <p class="text-[10px] font-mono text-slate-400 tracking-wider">MVC &bull; GROUP THEORY &bull; S₅₄</p>
                 </div>
@@ -162,7 +162,7 @@
                         <a href="{{ url_for('auth.login') }}" class="text-xs font-medium px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all" data-i18n="nav_sign_in">
                             {{ t('nav_sign_in') }}
                         </a>
-                        <a href="{{ url_for('auth.register') }}" class="text-xs font-medium px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white shadow-lg shadow-indigo-600/25 transition-all" data-i18n="nav_create_account">
+                        <a href="{{ url_for('auth.register') }}" class="text-xs font-medium px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all" data-i18n="nav_create_account">
                             {{ t('nav_create_account') }}
                         </a>
                     </div>

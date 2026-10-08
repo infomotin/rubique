@@ -183,7 +183,7 @@ code, pre, .font-mono {
 
 /* Master Visualizer Stage */
 .visualizer-stage {
-    background: radial-gradient(circle at 50% 35%, #0c101c 0%, #030408 75%);
+    background: #070a12;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 
         0 30px 80px -20px rgba(0, 0, 0, 0.95),
@@ -228,21 +228,22 @@ code, pre, .font-mono {
     width: 48px;
     height: 48px;
     border-radius: 14px;
-    background: linear-gradient(135deg, #6366f1, #38bdf8);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: #4f46e5;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #ffffff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 16px;
-    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ctrl-btn-primary:hover {
-    transform: scale(1.08);
-    box-shadow: 0 8px 30px rgba(56, 189, 248, 0.65);
+    background: #4338ca;
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
 }
 
 /* Generator Face Buttons */
@@ -286,11 +287,10 @@ code, pre, .font-mono {
 .ribbon-item.active {
     opacity: 1;
     color: #ffffff !important;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(56, 189, 248, 0.4));
-    border: 1px solid rgba(129, 140, 248, 0.7);
-    text-shadow: 0 0 16px rgba(129, 140, 248, 1);
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-    transform: scale(1.18);
+    background: #4f46e5;
+    border: 1px solid #818cf8;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    transform: scale(1.1);
 }
 
 /* 3D Isometric SVG Facelet Styles */
@@ -345,21 +345,10 @@ code, pre, .font-mono {
     animation: floatSlow 6s ease-in-out infinite;
 }
 
-/* Shimmer Gradient Text */
+/* Crisp Accent Text */
 .shimmer-text {
-    background: linear-gradient(
-        90deg,
-        #818cf8 0%,
-        #38bdf8 25%,
-        #ffffff 50%,
-        #38bdf8 75%,
-        #818cf8 100%
-    );
-    background-size: 200% auto;
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-    animation: shimmer 5s linear infinite;
+    color: #818cf8;
+    font-weight: 700;
 }
 
 @keyframes shimmer {

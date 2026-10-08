@@ -78,8 +78,8 @@ def upload_video():
 @login_required
 def like_video(video_id):
     """Likes a video"""
-    CommunityModel.like_video(video_id)
-    return jsonify({'success': True})
+    new_likes = CommunityModel.like_video(video_id)
+    return jsonify({'success': True, 'likes': new_likes})
 
 # -------------------------------------------------------------
 # CHAT & GROUPS ACTIONS
@@ -167,7 +167,7 @@ def add_blog_comment():
     """Adds a comment to a blog post"""
     user_id = session.get('user_id')
     post_id = request.form.get('post_id')
-    comment = request.form.get('comment', '').strip()
+    comment = (request.form.get('comment') or request.form.get('content') or '').strip()
 
     if post_id and comment:
         CommunityModel.add_comment(post_id, user_id, comment)

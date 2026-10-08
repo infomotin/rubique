@@ -9,8 +9,45 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================================
-    // 1. STATE MANAGEMENT & COLOR PALETTE
+    // 1. STATE MANAGEMENT, AUDIO SYNTHESIZER & COLOR PALETTE
     // =========================================================================
+
+    // Web Audio API Audio Synthesizer
+    let audioCtx = null;
+    function getAudioCtx() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.08, vol = 0.08) {
+        try {
+            const ctx = getAudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            gain.gain.setValueAtTime(vol, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+        } catch (e) {
+            // Audio context not allowed until interaction
+        }
+    }
+
+    function playSolveFanfare() {
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+            setTimeout(() => playTone(freq, 'triangle', 0.25, 0.12), idx * 90);
+        });
+    }
 
     // Rubik's Cube Facelet Standard Colors (Yellow, Green, Orange, Red, White, Blue)
     const COLOR_PALETTE = {
@@ -598,11 +635,13 @@ document.addEventListener('DOMContentLoaded', () => {
             currentStepIndex++;
             reconstructCubeStateUpToStep(currentStepIndex);
             updateVisualizerUI();
+            playTone(520, 'sine', 0.05);
             if (visualizer3DCube && currentMoves[currentStepIndex]) {
                 visualizer3DCube.animateLayerTurn(currentMoves[currentStepIndex]);
             }
         } else if (isPlaying) {
             pausePlayback();
+            playSolveFanfare();
         }
     }
 
@@ -611,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentStepIndex--;
             reconstructCubeStateUpToStep(currentStepIndex);
             updateVisualizerUI();
+            playTone(440, 'sine', 0.05);
         }
     }
 
@@ -619,6 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentStepIndex = idx;
             reconstructCubeStateUpToStep(currentStepIndex);
             updateVisualizerUI();
+            playTone(560, 'sine', 0.05);
             if (visualizer3DCube && currentMoves[currentStepIndex]) {
                 visualizer3DCube.animateLayerTurn(currentMoves[currentStepIndex]);
             }
@@ -638,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentStepIndex = -1; // Loop back to beginning
         }
         isPlaying = true;
+        playTone(600, 'triangle', 0.08);
         const playIcon = document.getElementById('play-icon');
         if (playIcon) {
             playIcon.classList.remove('fa-play');
@@ -664,6 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ctrl-last')?.addEventListener('click', () => { pausePlayback(); goToStep(currentMoves.length - 1); });
     document.getElementById('ctrl-reset')?.addEventListener('click', () => {
         pausePlayback();
+        playTone(350, 'sawtooth', 0.1);
         initSolvedState();
         currentStepIndex = 0;
         updateVisualizerUI();
@@ -672,6 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Speed Controls
     document.querySelectorAll('.speed-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
+            playTone(700, 'sine', 0.04);
             document.querySelectorAll('.speed-btn').forEach(b => {
                 b.classList.remove('active', 'bg-indigo-600', 'text-white', 'font-bold');
                 b.classList.add('text-slate-400');
@@ -691,10 +735,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             pausePlayback();
             const move = btn.dataset.move;
+            playTone(480, 'sine', 0.05);
             applyFaceTurn(move);
             currentMoves.push(move);
             currentStepIndex = currentMoves.length - 1;
             updateVisualizerUI();
+            if (visualizer3DCube) {
+                visualizer3DCube.animateLayerTurn(move);
+            }
         });
     });
 
@@ -703,6 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('custom-sequence-input');
         if (!input || !input.value.trim()) return;
         pausePlayback();
+        playTone(600, 'triangle', 0.08);
         const moves = input.value.trim().split(/\s+/);
         currentMoves = moves;
         currentStepIndex = 0;
@@ -717,6 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Scramble Generator API
     document.getElementById('btn-scramble')?.addEventListener('click', async () => {
         pausePlayback();
+        playTone(320, 'sine', 0.12);
         const btn = document.getElementById('btn-scramble');
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Scrambling...`;
         
@@ -729,6 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentStepIndex = currentMoves.length - 1;
                 reconstructCubeStateUpToStep(currentStepIndex);
                 updateVisualizerUI();
+                playTone(650, 'triangle', 0.1);
             }
         } catch (err) {
             console.error("Scramble API Error:", err);
@@ -740,6 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Two-Phase AI Solver API
     document.getElementById('btn-solve')?.addEventListener('click', async () => {
         pausePlayback();
+        playTone(400, 'triangle', 0.1);
         const btn = document.getElementById('btn-solve');
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-cyan-300"></i> Solving...`;
 
@@ -756,6 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentStepIndex = 0;
                 reconstructCubeStateUpToStep(0);
                 updateVisualizerUI();
+                playSolveFanfare();
                 startPlayback();
                 loadRecentSolves();
             }

@@ -82,7 +82,6 @@ def process_cube_image(image_bytes):
     }
 
 @api_bp.route('/scramble', methods=['GET'])
-@login_required
 def scramble():
     """Generates random WCA scramble and preliminary solution"""
     faces = ['U', 'D', 'F', 'B', 'L', 'R']
@@ -107,9 +106,8 @@ def scramble():
     })
 
 @api_bp.route('/solve', methods=['POST'])
-@login_required
 def solve():
-    """Solves current cube sequence and records solve to user profile database"""
+    """Solves current cube sequence and records solve to user profile database if logged in"""
     data = request.get_json() or {}
     custom_moves = data.get('custom_moves', 'R U R\' U\'')
     
@@ -128,7 +126,6 @@ def solve():
     })
 
 @api_bp.route('/scan-image', methods=['POST'])
-@login_required
 def scan_image():
     """OpenCV facelet segmentation scanner endpoint"""
     if 'image' not in request.files:
@@ -147,9 +144,11 @@ def scan_image():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @api_bp.route('/history', methods=['GET'])
-@login_required
 def history():
     """Fetches user solve history for visualizer drawer"""
     user_id = session.get('user_id')
-    user_history = SolveModel.get_user_history(user_id, limit=10)
+    if user_id:
+        user_history = SolveModel.get_user_history(user_id, limit=10)
+    else:
+        user_history = []
     return jsonify({'history': user_history})

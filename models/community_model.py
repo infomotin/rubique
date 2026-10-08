@@ -13,13 +13,25 @@ class CommunityModel:
     # -------------------------------------------------------------
     @staticmethod
     def upload_video(user_id, title, video_url, solve_time=0.0, method='CFOP', description=''):
-        """Saves a speedcubing solve video"""
+        """Saves a speedcubing solve video with robust solve_time normalization"""
+        clean_time = 0.0
+        try:
+            if isinstance(solve_time, (int, float)):
+                clean_time = float(solve_time)
+            elif isinstance(solve_time, str):
+                import re
+                matched = re.search(r'[\d\.]+', solve_time.strip())
+                if matched:
+                    clean_time = float(matched.group(0))
+        except Exception:
+            clean_time = 0.0
+
         return execute_insert(
             """INSERT INTO videos (user_id, title, video_url, solve_time, method, description, likes)
                VALUES (%s, %s, %s, %s, %s, %s, 0)""",
             """INSERT INTO videos (user_id, title, video_url, solve_time, method, description, likes)
                VALUES (?, ?, ?, ?, ?, ?, 0)""",
-            (user_id, title, video_url, float(solve_time), method, description)
+            (user_id, title, video_url, clean_time, method, description)
         )
 
     @staticmethod
@@ -40,9 +52,24 @@ class CommunityModel:
     @staticmethod
     def like_video(video_id):
         """Increments like counter on a video"""
-        return execute_update(
+        execute_update(
             "UPDATE videos SET likes = likes + 1 WHERE id = %s",
             "UPDATE videos SET likes = likes + 1 WHERE id = ?",
+            (video_id,)
+        )
+        row = query_one(
+            "SELECT likes FROM videos WHERE id = %s",
+            "SELECT likes FROM videos WHERE id = ?",
+            (video_id,)
+        )
+        return row['likes'] if row and 'likes' in row else 1
+
+    @staticmethod
+    def get_video_by_id(video_id):
+        """Fetches single video by ID"""
+        return query_one(
+            "SELECT * FROM videos WHERE id = %s",
+            "SELECT * FROM videos WHERE id = ?",
             (video_id,)
         )
 

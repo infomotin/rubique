@@ -14,10 +14,10 @@
         <!-- =========================================================================
              LEFT PANEL: HIGH-GRAPHIC 3D SHOWCASE & GROUP THEORY AMBIENCE
              ========================================================================= -->
-        <div class="lg:col-span-6 p-8 sm:p-10 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-gradient-to-br from-indigo-950/40 via-slate-950/60 to-black/90">
+        <div class="lg:col-span-6 p-8 sm:p-10 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-slate-950">
             
             <!-- Atmospheric glow inside left panel -->
-            <div class="absolute top-12 left-12 w-48 h-48 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute top-12 left-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <!-- Top Brand & Tag -->
             <div class="relative z-10">
@@ -27,7 +27,7 @@
                 </div>
                 <h2 class="text-3xl sm:text-4xl font-extrabold font-outfit text-white tracking-tight leading-tight">
                     Explore Rubik's Cube as <br>
-                    <span class="shimmer-text">Permutations</span>
+                    <span class="text-indigo-400 font-serif italic">Permutations</span>
                 </h2>
                 <p class="text-xs sm:text-sm text-slate-400 mt-2 font-sans leading-relaxed">
                     Sign in to track your group orbits, run OpenCV facelet scans, and compute optimal solutions using the Two-Phase Kociemba algorithm.
@@ -46,9 +46,9 @@
 
                     <!-- Center 3D Isometric Cube Icon -->
                     <div class="absolute inset-0 flex flex-col items-center justify-center text-center select-none">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 shadow-2xl shadow-indigo-500/40 animate-float">
+                        <div class="w-16 h-16 rounded-2xl bg-indigo-600 p-0.5 shadow-2xl shadow-indigo-500/40 animate-float">
                             <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                                <i class="fa-solid fa-cube text-2xl text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300"></i>
+                                <i class="fa-solid fa-cube text-2xl text-indigo-400"></i>
                             </div>
                         </div>
                         <span class="font-mono text-[10px] text-cyan-300 font-bold mt-2 tracking-widest uppercase">|G| &approx; 4.3 &times; 10¹⁹</span>
@@ -130,7 +130,7 @@
 
                 <!-- Submit Button -->
                 <button type="submit"
-                        class="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm rounded-xl shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-[1.01] transition-all duration-300 flex items-center justify-center gap-2 group">
+                        class="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-xl shadow-indigo-600/30 hover:scale-[1.01] transition-all duration-300 flex items-center justify-center gap-2 group">
                     <span data-i18n="sign_in_btn">{{ t('sign_in_btn') }}</span>
                     <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                 </button>
