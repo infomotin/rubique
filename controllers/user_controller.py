@@ -121,6 +121,21 @@ def get_group_messages(group_id):
     msgs = CommunityModel.get_group_messages(group_id)
     return jsonify({'success': True, 'messages': msgs})
 
+@user_bp.route('/chat/mentions')
+@login_required
+def get_chat_mentions():
+    """Returns candidate users and clan tags for @mention autocomplete"""
+    users = query_all(
+        "SELECT id, username, role, avatar_color FROM users ORDER BY username ASC LIMIT 50",
+        "SELECT id, username, role, avatar_color FROM users ORDER BY username ASC LIMIT 50"
+    )
+    clan_tags = [
+        {'id': 0, 'username': 'all', 'role': 'broadcast', 'avatar_color': '#14b8a6', 'is_tag': True, 'label': 'Broadcast All Members'},
+        {'id': -1, 'username': 'clan', 'role': 'group', 'avatar_color': '#06b6d4', 'is_tag': True, 'label': 'Current Clan Group'},
+        {'id': -2, 'username': 'champions', 'role': 'tier', 'avatar_color': '#f59e0b', 'is_tag': True, 'label': 'Top Speedcubers'}
+    ]
+    return jsonify({'success': True, 'users': users or [], 'tags': clan_tags})
+
 # -------------------------------------------------------------
 # FRIENDS ACTIONS
 # -------------------------------------------------------------

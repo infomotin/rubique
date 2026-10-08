@@ -186,6 +186,84 @@ class Interactive3DCube {
         this.scene.add(this.cubeGroup);
     }
 
+    /**
+     * Updates 3D cube facelet stickers dynamically from 2D Net / OpenCV state
+     * @param {Object} faceletMap - e.g. { U: ['yellow',...], L: [...], F: [...], R: [...], B: [...], D: [...] }
+     */
+    applyFaceletMap(faceletMap) {
+        if (!faceletMap || !this.cubies.length) return;
+
+        const hexMap = {
+            'yellow': 0xfacc15, 'Y': 0xfacc15, 'U': 0xfacc15,
+            'white': 0xffffff, 'W': 0xffffff, 'D': 0xffffff,
+            'green': 0x16a34a, 'G': 0x16a34a, 'F': 0x16a34a,
+            'blue': 0x2563eb, 'B': 0x2563eb,
+            'orange': 0xf97316, 'O': 0xf97316, 'L': 0xf97316,
+            'red': 0xdc2626, 'R': 0xdc2626
+        };
+
+        const getColor = (c) => hexMap[c] || hexMap[c?.toLowerCase?.()] || 0x111318;
+
+        this.cubies.forEach(cubie => {
+            const x = Math.round(cubie.position.x);
+            const y = Math.round(cubie.position.y);
+            const z = Math.round(cubie.position.z);
+
+            // Right (+X)
+            if (x === 1 && faceletMap.R && cubie.material[0]) {
+                const idx = (1 - y) * 3 + (1 - z);
+                if (faceletMap.R[idx]) cubie.material[0].color.setHex(getColor(faceletMap.R[idx]));
+            }
+            // Left (-X)
+            if (x === -1 && faceletMap.L && cubie.material[1]) {
+                const idx = (1 - y) * 3 + (z + 1);
+                if (faceletMap.L[idx]) cubie.material[1].color.setHex(getColor(faceletMap.L[idx]));
+            }
+            // Top (+Y)
+            if (y === 1 && faceletMap.U && cubie.material[2]) {
+                const idx = (z + 1) * 3 + (x + 1);
+                if (faceletMap.U[idx]) cubie.material[2].color.setHex(getColor(faceletMap.U[idx]));
+            }
+            // Bottom (-Y)
+            if (y === -1 && faceletMap.D && cubie.material[3]) {
+                const idx = (1 - z) * 3 + (x + 1);
+                if (faceletMap.D[idx]) cubie.material[3].color.setHex(getColor(faceletMap.D[idx]));
+            }
+            // Front (+Z)
+            if (z === 1 && faceletMap.F && cubie.material[4]) {
+                const idx = (1 - y) * 3 + (x + 1);
+                if (faceletMap.F[idx]) cubie.material[4].color.setHex(getColor(faceletMap.F[idx]));
+            }
+            // Back (-Z)
+            if (z === -1 && faceletMap.B && cubie.material[5]) {
+                const idx = (1 - y) * 3 + (1 - x);
+                if (faceletMap.B[idx]) cubie.material[5].color.setHex(getColor(faceletMap.B[idx]));
+            }
+        });
+    }
+
+    resetToSolved() {
+        this.buildCube();
+    }
+
+    lookAtFace(face) {
+        if (!this.controls || !this.camera) return;
+        const dist = 5.8;
+        const targets = {
+            'U': { x: 0, y: dist, z: 0.001 },
+            'D': { x: 0, y: -dist, z: 0.001 },
+            'F': { x: 0, y: 0.2, z: dist },
+            'B': { x: 0, y: 0.2, z: -dist },
+            'L': { x: -dist, y: 0.2, z: 0 },
+            'R': { x: dist, y: 0.2, z: 0 },
+            'ISO': { x: 3.8, y: 3.2, z: 4.2 }
+        };
+        const pos = targets[face] || targets.ISO;
+        this.camera.position.set(pos.x, pos.y, pos.z);
+        this.controls.target.set(0, 0, 0);
+        this.controls.update();
+    }
+
     setupMouseTracking() {
         this.container.addEventListener('mousemove', (e) => {
             const rect = this.container.getBoundingClientRect();
