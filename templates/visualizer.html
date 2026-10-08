@@ -233,6 +233,52 @@
                 </div>
             </div>
 
+            <!-- Live Move Step Walkthrough & "Why & How" Inspector -->
+            <div id="vis-step-walkthrough-card" class="glass-card p-5 rounded-3xl border border-indigo-500/40 bg-slate-950/90 backdrop-blur-xl shadow-xl space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <h3 class="text-xs font-bold font-mono uppercase tracking-wider text-slate-200">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400 mr-1"></i> Live Move Explanation
+                        </h3>
+                    </div>
+                    <span id="vis-active-step-badge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-700/50 font-bold">
+                        Move 1 / 13
+                    </span>
+                </div>
+
+                <!-- Active Move Indicator & Arrow -->
+                <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
+                    <div id="vis-active-move-letter" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-lg border border-indigo-400/50">
+                        U
+                    </div>
+                    <div>
+                        <div id="vis-active-arrow" class="text-xs font-bold text-slate-200">↻ 90° Clockwise</div>
+                        <div id="vis-active-phase" class="text-[10px] text-emerald-400 font-semibold mt-0.5">Phase 1: Subgroup Orientation</div>
+                    </div>
+                </div>
+
+                <!-- Why this Move is Made -->
+                <div class="p-3 rounded-2xl bg-black/60 border border-slate-800/80 space-y-1">
+                    <div class="text-[10px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                        <i class="fa-solid fa-circle-question"></i> Why this move:
+                    </div>
+                    <p id="vis-active-why" class="text-xs text-slate-300 font-sans leading-relaxed">
+                        Rotates Up face 90° to cycle top-layer facelets into position for commutator pairing.
+                    </p>
+                </div>
+
+                <!-- How to Hold & Turn -->
+                <div class="p-3 rounded-2xl bg-black/60 border border-slate-800/80 space-y-1">
+                    <div class="text-[10px] font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1">
+                        <i class="fa-solid fa-hand"></i> How to turn:
+                    </div>
+                    <p id="vis-active-how" class="text-xs text-slate-300 font-sans leading-relaxed">
+                        Flick top layer from right to left using right index finger (clockwise).
+                    </p>
+                </div>
+            </div>
+
             <!-- Mathematical Group Theory Live Inspector -->
             <div class="glass-card p-5 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl shadow-xl">
                 <div class="flex items-center justify-between mb-3">
@@ -761,12 +807,12 @@
      MODAL 1: OPENCV COMPUTER VISION RUBIK'S CUBE IMAGE SCANNER
      ============================================================================== -->
 <div id="scanner-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="glass-card w-full max-w-2xl bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl relative">
+    <div class="glass-card w-full max-w-3xl bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
         
         <!-- Modal Header -->
-        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-md">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-md">
                     <i class="fa-solid fa-camera"></i>
                 </div>
                 <div>
@@ -774,37 +820,89 @@
                     <p class="text-xs text-slate-400 font-mono" data-i18n="scanner_modal_sub">{{ t('scanner_modal_sub') }}</p>
                 </div>
             </div>
-            <button id="btn-close-scanner" class="text-slate-400 hover:text-white text-lg">
+            <button id="btn-close-scanner" class="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-base transition-all">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
-        <!-- Upload Dropzone -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <!-- Target Face Selector Toolbar -->
+        <div class="mb-5 p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-mono font-bold text-slate-300"><i class="fa-solid fa-crosshairs text-indigo-400 mr-1"></i> Apply to Face:</span>
+            </div>
+            <div class="grid grid-cols-6 gap-1.5 w-full sm:w-auto" id="vis-scanner-face-tabs">
+                <button class="vis-face-tab px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-amber-500 text-black border border-amber-300 active-tab shadow-md" data-face="U">U (Yellow)</button>
+                <button class="vis-face-tab px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-800 text-orange-400 border border-slate-700 hover:bg-slate-700" data-face="L">L (Orange)</button>
+                <button class="vis-face-tab px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-800 text-emerald-400 border border-slate-700 hover:bg-slate-700" data-face="F">F (Green)</button>
+                <button class="vis-face-tab px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-800 text-rose-400 border border-slate-700 hover:bg-slate-700" data-face="R">R (Red)</button>
+                <button class="vis-face-tab px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-800 text-blue-400 border border-slate-700 hover:bg-slate-700" data-face="B">B (Blue)</button>
+                <button class="vis-face-tab px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-800 text-white border border-slate-700 hover:bg-slate-700" data-face="D">D (White)</button>
+            </div>
+        </div>
+
+        <!-- Quick 1-Click Test Samples Bar -->
+        <div class="mb-5 flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
+            <span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-flask-vial text-cyan-400"></i> Instant Test Presets:</span>
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <button id="btn-sample-u" class="px-2.5 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 font-bold transition-all text-[11px]">
+                    ✨ Sample U Face
+                </button>
+                <button id="btn-sample-f" class="px-2.5 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 font-bold transition-all text-[11px]">
+                    ✨ Sample F Face
+                </button>
+                <button id="btn-sample-r" class="px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/40 text-rose-300 font-bold transition-all text-[11px]">
+                    ✨ Sample R Face
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Scanner Body (Dropzone & Detected Preview Grid) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
             
-            <!-- Left: Dropzone & File Input -->
-            <div id="scanner-dropzone" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-2xl p-6 text-center bg-slate-900/40 hover:bg-slate-900/70 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[220px]">
-                <input type="file" id="cube-image-input" accept="image/*" class="hidden">
-                <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-400 mb-3"></i>
-                <h4 class="text-sm font-semibold text-slate-200" data-i18n="dropzone_title">{{ t('dropzone_title') }}</h4>
-                <p class="text-xs text-slate-400 mt-1" data-i18n="dropzone_sub">{{ t('dropzone_sub') }}</p>
-                <span class="inline-block mt-3 px-2.5 py-1 rounded-md bg-slate-800 text-[10px] font-mono text-slate-400">PNG, JPG, WEBP (Max 16MB)</span>
+            <!-- Left: Dropzone & File Input (Col 5) -->
+            <div class="md:col-span-5 flex flex-col gap-3">
+                <div id="scanner-dropzone" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-3xl p-6 text-center bg-slate-900/40 hover:bg-slate-900/70 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[220px]">
+                    <input type="file" id="cube-image-input" accept="image/*" class="hidden">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-400 mb-3"></i>
+                    <h4 class="text-sm font-semibold text-slate-200" data-i18n="dropzone_title">{{ t('dropzone_title') }}</h4>
+                    <p class="text-xs text-slate-400 mt-1" data-i18n="dropzone_sub">{{ t('dropzone_sub') }}</p>
+                    <span class="inline-block mt-3 px-2.5 py-1 rounded-md bg-slate-800 text-[10px] font-mono text-slate-400">PNG, JPG, WEBP (Max 16MB)</span>
+                </div>
             </div>
 
-            <!-- Right: OpenCV Processing Preview & Detected 3x3 Grid -->
-            <div class="flex flex-col items-center justify-center min-h-[220px] bg-slate-900/30 rounded-2xl p-4 border border-slate-800/80">
-                <div id="scanner-preview-placeholder" class="text-center text-slate-500 text-xs font-mono">
-                    <i class="fa-solid fa-microchip text-2xl mb-2 text-slate-600 block"></i>
-                    Awaiting image upload for HSV facelet segmentation...
+            <!-- Right: OpenCV Processing Preview & Interactive 3x3 Color Editor (Col 7) -->
+            <div class="md:col-span-7 flex flex-col justify-between min-h-[220px] bg-slate-900/40 rounded-3xl p-4 border border-slate-800">
+                
+                <div id="scanner-preview-placeholder" class="text-center text-slate-500 text-xs font-mono py-10">
+                    <i class="fa-solid fa-microchip text-3xl mb-2 text-slate-600 block"></i>
+                    Upload photo or click an Instant Test Sample above...
                 </div>
 
-                <div id="scanner-result-box" class="hidden w-full flex flex-col items-center">
-                    <img id="cv-annotated-image" src="" alt="OpenCV Annotation" class="w-40 h-40 rounded-xl object-cover border border-emerald-500/40 shadow-lg mb-3">
-                    <div class="text-xs font-mono text-emerald-400 font-semibold mb-2">Facelet Classification Successful!</div>
-                    <button id="btn-apply-scanned-face" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-lg shadow-emerald-600/30" data-i18n="btn_apply_scan">
-                        {{ t('btn_apply_scan') }}
-                    </button>
+                <div id="scanner-result-box" class="hidden w-full space-y-3">
+                    <div class="flex items-center justify-between text-xs font-mono text-emerald-400 font-bold pb-2 border-b border-slate-800">
+                        <span><i class="fa-solid fa-circle-check"></i> Facelet Centroid Extraction:</span>
+                        <span id="cv-detected-center-badge" class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] border border-emerald-500/40">Center: U</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                        <!-- OpenCV Image -->
+                        <img id="cv-annotated-image" src="" alt="OpenCV Annotation" class="w-full h-36 rounded-2xl object-cover border border-emerald-500/40 shadow-lg">
+                        
+                        <!-- Interactive 3x3 Grid Editor -->
+                        <div class="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-slate-950/90 border border-slate-800">
+                            <div class="text-[10px] text-slate-400 font-mono mb-1.5">Click to Edit Color:</div>
+                            <div class="grid grid-cols-3 gap-1.5" id="cv-interactive-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-2 flex items-center gap-2">
+                        <button id="btn-apply-scanned-face" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-check"></i> <span id="btn-apply-face-text">Apply to Face (U)</span>
+                        </button>
+                    </div>
                 </div>
+
             </div>
 
         </div>

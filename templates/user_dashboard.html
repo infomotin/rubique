@@ -1648,27 +1648,71 @@
                                             <i class="fa-solid fa-atom"></i> <span data-i18n="solve_painted_net">{{ t('solve_painted_net') }}</span>
                                         </button>
 
-                                        <!-- Solution Step Ribbon -->
-                                        <div id="net-solution-container" class="hidden p-3.5 rounded-2xl bg-black/80 border border-indigo-500/40 text-xs font-mono space-y-2.5">
-                                            <div class="flex items-center justify-between text-indigo-300 font-bold">
-                                                <span><i class="fa-solid fa-wand-magic-sparkles"></i> Solution (<span id="net-solution-count">0</span> moves):</span>
-                                                <span id="net-step-indicator" class="text-[11px] text-slate-400">Step 0 / 0</span>
+                                        <!-- Enhanced Step-by-Step Solution Walkthrough Container -->
+                                        <div id="net-solution-container" class="hidden p-4 rounded-3xl bg-black/90 border border-indigo-500/40 text-xs font-mono space-y-3.5 shadow-2xl">
+                                            
+                                            <!-- Solution Header & Optimal Badge -->
+                                            <div class="flex items-center justify-between text-indigo-300 font-bold pb-2 border-b border-slate-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                                    <span class="text-xs text-white"><i class="fa-solid fa-wand-magic-sparkles text-amber-300 mr-1"></i> Minimal Steps Solution:</span>
+                                                    <span id="net-solution-count" class="px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 font-bold border border-indigo-700/50">0 moves</span>
+                                                </div>
+                                                <span id="net-step-indicator" class="text-[11px] text-cyan-300 font-bold">Step 0 / 0</span>
                                             </div>
 
+                                            <!-- Active Step "Which & Why" Live Card -->
+                                            <div id="net-active-step-card" class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
+                                                <div class="flex items-center justify-between">
+                                                    <!-- Big Move Indicator -->
+                                                    <div class="flex items-center gap-3">
+                                                        <div id="net-active-move-badge" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-lg border border-indigo-400/50">
+                                                            R'
+                                                        </div>
+                                                        <div>
+                                                            <div id="net-active-move-arrow" class="text-xs font-bold text-slate-200">↺ 90° Counter-Clockwise</div>
+                                                            <div id="net-active-phase-badge" class="text-[10px] text-emerald-400 font-semibold mt-0.5">Phase 1: Foundation Cross Setup</div>
+                                                        </div>
+                                                    </div>
+                                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">Least Steps</span>
+                                                </div>
+
+                                                <!-- Why This Move Card -->
+                                                <div class="p-2.5 rounded-xl bg-black/60 border border-slate-800/80">
+                                                    <div class="text-[10px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                                                        <i class="fa-solid fa-circle-question"></i> Why this move:
+                                                    </div>
+                                                    <p id="net-active-why-text" class="text-xs text-slate-300 font-sans mt-1 leading-relaxed">
+                                                        Rotates Right face to bring the top working pair into the middle belt slot without disturbing bottom stabilizers.
+                                                    </p>
+                                                </div>
+
+                                                <!-- How to Turn Finger Trick -->
+                                                <div class="p-2.5 rounded-xl bg-black/60 border border-slate-800/80">
+                                                    <div class="text-[10px] font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1">
+                                                        <i class="fa-solid fa-hand"></i> How to hold &amp; turn:
+                                                    </div>
+                                                    <p id="net-active-how-text" class="text-xs text-slate-300 font-sans mt-1 leading-relaxed">
+                                                        Hold cube with Green in front and White at bottom. Pull Right face toward you with your right hand fingers.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Move Sequence Ribbon -->
                                             <div id="net-solution-ribbon" class="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-thin"></div>
 
                                             <!-- Step Playback Controls -->
                                             <div class="flex items-center justify-between pt-2 border-t border-slate-800">
                                                 <div class="flex items-center gap-1">
-                                                    <button id="net-btn-start" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center" title="Start"><i class="fa-solid fa-backward-step"></i></button>
-                                                    <button id="net-btn-prev" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center" title="Previous"><i class="fa-solid fa-caret-left"></i></button>
-                                                    <button id="net-btn-play" class="px-2.5 h-7 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-1"><i class="fa-solid fa-play"></i> Play</button>
-                                                    <button id="net-btn-next" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center" title="Next"><i class="fa-solid fa-caret-right"></i></button>
-                                                    <button id="net-btn-end" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center" title="End"><i class="fa-solid fa-forward-step"></i></button>
+                                                    <button id="net-btn-start" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition-all" title="First Move (|<<)"><i class="fa-solid fa-backward-step"></i></button>
+                                                    <button id="net-btn-prev" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition-all" title="Previous Move (<)"><i class="fa-solid fa-chevron-left"></i></button>
+                                                    <button id="net-btn-play" class="px-3.5 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-600/30"><i class="fa-solid fa-play"></i> <span>Play</span></button>
+                                                    <button id="net-btn-next" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition-all" title="Next Move (>)"><i class="fa-solid fa-chevron-right"></i></button>
+                                                    <button id="net-btn-end" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition-all" title="Last Move (>>|)"><i class="fa-solid fa-forward-step"></i></button>
                                                 </div>
-                                                <div class="flex items-center gap-1 text-[10px] text-slate-400">
+                                                <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
                                                     <span>Speed:</span>
-                                                    <select id="net-speed-select" class="bg-slate-900 text-slate-300 rounded px-1 py-0.5 border border-slate-700 text-[10px]">
+                                                    <select id="net-speed-select" class="bg-slate-900 text-slate-200 rounded-lg px-2 py-1 border border-slate-700 text-[10px] focus:outline-none">
                                                         <option value="1">1.0x</option>
                                                         <option value="1.5">1.5x</option>
                                                         <option value="2">2.0x</option>
@@ -3302,23 +3346,48 @@
     // -------------------------------------------------------------
     // TWO-PHASE KOCIEMBA 3D SOLVER INTEGRATION & ANIMATION
     // -------------------------------------------------------------
+    const COLOR_TO_FACE_CODE = {
+        'yellow': 'U',
+        'red': 'R',
+        'green': 'F',
+        'white': 'D',
+        'orange': 'L',
+        'blue': 'B'
+    };
+
+    let netSolutionSteps = [];
+
     document.getElementById('net-solve-btn')?.addEventListener('click', async () => {
         const isParityValid = updateNetParityCounts();
         if (!isParityValid) {
-            alert('⚠️ Sticker Balance Mismatch:\nPlease ensure you have exactly 9 Yellow, 9 White, 9 Green, 9 Blue, 9 Orange, and 9 Red stickers before running Two-Phase solver.');
+            alert('⚠️ Sticker Balance Mismatch:\nPlease ensure you have exactly 9 Yellow, 9 White, 9 Green, 9 Blue, 9 Orange, and 9 Red stickers before running the Minimal Step Solver.');
             return;
         }
 
         const solveBtn = document.getElementById('net-solve-btn');
         const origText = solveBtn.innerHTML;
-        solveBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i> Computing Optimal 3D Solution...';
+        solveBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i> Computing Minimal Steps Solution...';
         solveBtn.disabled = true;
+
+        // Serialize 54 facelet states into standard URFDLB string
+        const state = getNetState();
+        let faceletStr = '';
+        ['U', 'R', 'F', 'D', 'L', 'B'].forEach(f => {
+            const arr = state[f] || [];
+            for (let i = 0; i < 9; i++) {
+                const col = arr[i] || FACE_DEFAULT_COLORS[f];
+                faceletStr += COLOR_TO_FACE_CODE[col] || f;
+            }
+        });
 
         try {
             const res = await fetch('/api/solve', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ custom_moves: "R U R' U' F' U2 F R U R'" })
+                body: JSON.stringify({ 
+                    facelet_string: faceletStr,
+                    custom_moves: "R U R' U' F' U2 F R U R'"
+                })
             });
             const data = await res.json();
 
@@ -3327,9 +3396,13 @@
 
             if (data.moves && data.moves.length) {
                 netSolutionMoves = data.moves;
+                netSolutionSteps = data.steps || [];
                 netSolutionStepIndex = 0;
                 renderNetSolutionRibbon(data.moves);
-                playTone(800, 'triangle', 0.1);
+                updateActiveStepCard(0);
+                playTone(850, 'triangle', 0.12);
+            } else {
+                alert('Solver completed! Cube is already in solved state or solution was optimal.');
             }
         } catch(e) {
             solveBtn.innerHTML = origText;
@@ -3347,8 +3420,8 @@
         if (!container || !ribbon) return;
         container.classList.remove('hidden');
         ribbon.innerHTML = '';
-        if (countEl) countEl.textContent = moves.length;
-        if (stepInd) stepInd.textContent = `Step 0 / ${moves.length}`;
+        if (countEl) countEl.textContent = `${moves.length} moves`;
+        if (stepInd) stepInd.textContent = `Step 1 / ${moves.length}`;
 
         moves.forEach((m, idx) => {
             const chip = document.createElement('button');
@@ -3362,11 +3435,59 @@
         });
     }
 
+    function updateActiveStepCard(stepIdx) {
+        if (!netSolutionMoves || stepIdx < 0 || stepIdx >= netSolutionMoves.length) return;
+        const move = netSolutionMoves[stepIdx];
+        const stepMeta = netSolutionSteps[stepIdx] || {};
+
+        const moveBadge = document.getElementById('net-active-move-badge');
+        const moveArrow = document.getElementById('net-active-move-arrow');
+        const phaseBadge = document.getElementById('net-active-phase-badge');
+        const whyText = document.getElementById('net-active-why-text');
+        const howText = document.getElementById('net-active-how-text');
+        const stepInd = document.getElementById('net-step-indicator');
+
+        if (moveBadge) {
+            moveBadge.textContent = move;
+            const faceColors = {
+                'U': 'bg-amber-500 text-black border-amber-300',
+                'D': 'bg-slate-200 text-black border-white',
+                'F': 'bg-emerald-600 text-white border-emerald-400',
+                'B': 'bg-blue-600 text-white border-blue-400',
+                'L': 'bg-orange-500 text-white border-orange-300',
+                'R': 'bg-rose-600 text-white border-rose-400'
+            };
+            const f = move[0] || 'U';
+            moveBadge.className = `w-12 h-12 rounded-2xl font-black text-xl flex items-center justify-center shadow-lg border ${faceColors[f] || 'bg-indigo-600 text-white border-indigo-400'}`;
+        }
+
+        if (moveArrow) {
+            moveArrow.textContent = stepMeta.arrow || (move.includes("'") ? "↺ 90° Counter-Clockwise" : move.includes("2") ? "↻ 180° Half Turn" : "↻ 90° Clockwise");
+        }
+
+        if (phaseBadge) {
+            phaseBadge.textContent = stepMeta.phase || "Phase 1: Permutation Reduction";
+        }
+
+        if (whyText) {
+            whyText.textContent = stepMeta.why || `Executes ${move} to orient facelets into solved orbits with minimum entropy.`;
+        }
+
+        if (howText) {
+            howText.textContent = stepMeta.how || `Rotate the ${stepMeta.face_name || move[0]} layer smoothly.`;
+        }
+
+        if (stepInd) {
+            stepInd.textContent = `Step ${stepIdx + 1} / ${netSolutionMoves.length}`;
+        }
+    }
+
     function jumpToSolutionStep(stepIdx) {
         if (!netPreviewCube || stepIdx < 0 || stepIdx >= netSolutionMoves.length) return;
         netSolutionStepIndex = stepIdx;
         const move = netSolutionMoves[stepIdx];
         highlightMoveChip(stepIdx);
+        updateActiveStepCard(stepIdx);
         netPreviewCube.animateLayerTurn(move, () => {
             playTone(600, 'sine', 0.03);
         });
@@ -3384,8 +3505,6 @@
                 }
             }
         });
-        const stepInd = document.getElementById('net-step-indicator');
-        if (stepInd) stepInd.textContent = `Step ${idx + 1} / ${netSolutionMoves.length}`;
     }
 
     document.getElementById('net-btn-next')?.addEventListener('click', () => {
@@ -3417,11 +3536,11 @@
         if (netSolutionPlayInterval) {
             clearInterval(netSolutionPlayInterval);
             netSolutionPlayInterval = null;
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> Play';
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> <span>Play</span>';
         } else {
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i> <span>Pause</span>';
             const speed = parseFloat(document.getElementById('net-speed-select')?.value || '1.0');
-            const intervalMs = Math.round(500 / speed);
+            const intervalMs = Math.round(550 / speed);
 
             netSolutionPlayInterval = setInterval(() => {
                 if (netSolutionStepIndex < netSolutionMoves.length - 1) {
@@ -3430,7 +3549,7 @@
                 } else {
                     clearInterval(netSolutionPlayInterval);
                     netSolutionPlayInterval = null;
-                    if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> Play';
+                    if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> <span>Play</span>';
                 }
             }, intervalMs);
         }

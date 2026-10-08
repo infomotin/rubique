@@ -17,23 +17,86 @@ import solver_engine
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 def classify_hsv_color(h, s, v):
-    """HSV color classifier helper for OpenCV pipeline"""
-    if s < 65 and v > 130:
+    """HSV color classifier with adaptive illumination thresholds"""
+    # White detection: Low saturation, medium-to-high value
+    if s < 65 and v > 115:
         return 'W'
-    if 20 <= h <= 38:
+    # Yellow vs Orange vs Red
+    if 20 <= h <= 36 and s >= 65:
         return 'Y'
-    elif 39 <= h <= 88:
+    elif 37 <= h <= 85 and s >= 60:
         return 'G'
-    elif 89 <= h <= 138:
+    elif 86 <= h <= 138 and s >= 55:
         return 'B'
-    elif 7 <= h <= 19:
+    elif 6 <= h <= 19 and s >= 65:
         return 'O'
-    elif (0 <= h <= 6) or (160 <= h <= 180):
+    elif ((0 <= h <= 5) or (158 <= h <= 180)) and s >= 60:
         return 'R'
-    return 'W'
+    # Fallback to Brightness
+    if v > 160:
+        return 'W'
+    return 'Y'
+
+SAMPLE_PRESETS = {
+    'sample_u': [
+        ['Y', 'G', 'Y'],
+        ['O', 'Y', 'R'],
+        ['Y', 'B', 'W']
+    ],
+    'sample_f': [
+        ['G', 'Y', 'G'],
+        ['R', 'G', 'O'],
+        ['W', 'G', 'Y']
+    ],
+    'sample_r': [
+        ['R', 'B', 'R'],
+        ['Y', 'R', 'W'],
+        ['R', 'G', 'O']
+    ],
+    'sample_solved': [
+        ['G', 'G', 'G'],
+        ['G', 'G', 'G'],
+        ['G', 'G', 'G']
+    ]
+}
+
+def generate_annotated_sample_image(grid):
+    """Generates an annotated 3x3 synthetic image preview for sample presets"""
+    size = 360
+    img = np.zeros((size, size, 3), dtype=np.uint8)
+    img[:] = (15, 23, 42) # Slate-950 background
+    
+    bgr_colors = {
+        'Y': (21, 204, 250), # Yellow
+        'W': (248, 250, 252), # White
+        'G': (94, 197, 34), # Green
+        'B': (235, 99, 37), # Blue
+        'O': (60, 146, 251), # Orange
+        'R': (68, 68, 239) # Red
+    }
+    
+    margin = 30
+    grid_size = size - 2 * margin
+    cell = grid_size // 3
+    
+    for r in range(3):
+        for c in range(3):
+            code = grid[r][c]
+            col = bgr_colors.get(code, (200, 200, 200))
+            x1 = margin + c * cell + 4
+            y1 = margin + r * cell + 4
+            x2 = margin + (c + 1) * cell - 4
+            y2 = margin + (r + 1) * cell - 4
+            cv2.rectangle(img, (x1, y1), (x2, y2), col, -1)
+            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 255, 255), 2)
+            cv2.putText(img, code, (x1 + cell // 2 - 8, y1 + cell // 2 + 8), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
+            
+    _, buffer = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 90])
+    encoded = base64.b64encode(buffer).decode('utf-8')
+    return f"data:image/jpeg;base64,{encoded}"
 
 def process_cube_image(image_bytes):
-    """OpenCV 3x3 facelet grid extractor"""
+    """OpenCV 3x3 facelet grid extractor with CLAHE preprocessing & contour adaptive warping"""
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if img is None:
@@ -41,13 +104,20 @@ def process_cube_image(image_bytes):
         
     target_size = 500
     img = cv2.resize(img, (target_size, target_size), interpolation=cv2.INTER_AREA)
-    hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    
+    # Illumination Normalization with CLAHE on LAB color space
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    cl = clahe.apply(l)
+    normalized_bgr = cv2.cvtColor(cv2.merge((cl, a, b)), cv2.COLOR_LAB2BGR)
+    hsv_img = cv2.cvtColor(normalized_bgr, cv2.COLOR_BGR2HSV)
     debug_img = img.copy()
     
-    margin = int(target_size * 0.15)
+    margin = int(target_size * 0.16)
     grid_size = target_size - (2 * margin)
     cell_size = grid_size // 3
-    sample_radius = int(cell_size * 0.22)
+    sample_radius = int(cell_size * 0.24)
     
     detected_face = []
     for row in range(3):
@@ -67,12 +137,12 @@ def process_cube_image(image_bytes):
             x1, y1 = margin + col * cell_size + 4, margin + row * cell_size + 4
             x2, y2 = margin + (col + 1) * cell_size - 4, margin + (row + 1) * cell_size - 4
             cv2.rectangle(debug_img, (x1, y1), (x2, y2), (255, 255, 255), 2)
-            cv2.circle(debug_img, (cx, cy), sample_radius, (20, 20, 20), 2)
-            cv2.putText(debug_img, color_code, (cx - 7, cy + 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+            cv2.circle(debug_img, (cx, cy), sample_radius, (10, 10, 10), 2)
+            cv2.putText(debug_img, color_code, (cx - 8, cy + 8), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), 2)
 
         detected_face.append(row_colors)
         
-    _, buffer = cv2.imencode('.jpg', debug_img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+    _, buffer = cv2.imencode('.jpg', debug_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
     encoded_img = base64.b64encode(buffer).decode('utf-8')
     
     return {
@@ -107,41 +177,83 @@ def scramble():
 
 @api_bp.route('/solve', methods=['POST'])
 def solve():
-    """Solves current cube sequence and records solve to user profile database if logged in"""
+    """Solves current cube sequence or 54-facelet state with optimal Two-Phase solver and step explanations"""
     data = request.get_json() or {}
-    custom_moves = data.get('custom_moves', 'R U R\' U\'')
+    facelet_string = data.get('facelet_string') or data.get('cube_state')
+    custom_moves = data.get('custom_moves')
     
-    solution = solver_engine.solve_cube(custom_moves)
-    moves_list = solution.split()
+    # Choose solver target
+    target_state = facelet_string if (facelet_string and len(facelet_string) == 54) else (custom_moves or "R U R' U'")
+    
+    solution = solver_engine.solve_cube(target_state)
+    moves_list = solution.split() if solution else []
+    steps_data = solver_engine.generate_step_explanations(moves_list)
     
     user_id = session.get('user_id')
-    if user_id:
-        SolveModel.record_solve(user_id, custom_moves, solution, len(moves_list))
+    if user_id and moves_list:
+        recorded_input = facelet_string or custom_moves or "Cube State"
+        SolveModel.record_solve(user_id, recorded_input[:120], solution, len(moves_list))
         
     return jsonify({
         'success': True,
         'solution': solution,
         'moves': moves_list,
-        'move_count': len(moves_list)
+        'steps': steps_data,
+        'move_count': len(moves_list),
+        'method': 'Two-Phase Kociemba Minimal Step Solver'
     })
 
 @api_bp.route('/scan-image', methods=['POST'])
 def scan_image():
-    """OpenCV facelet segmentation scanner endpoint"""
-    if 'image' not in request.files:
-        return jsonify({'success': False, 'error': 'No image uploaded!'}), 400
-        
-    file = request.files['image']
-    try:
-        res = process_cube_image(file.read())
-        return jsonify({
-            'success': True,
-            'face_grid': res['face_grid'],
-            'annotated_image': res['annotated_image'],
-            'center_color': res['center_color']
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+    """OpenCV facelet segmentation scanner endpoint supporting files, base64, and sample presets"""
+    # 1. Handle Sample Presets
+    if request.is_json:
+        data = request.get_json() or {}
+        sample_id = data.get('sample_id')
+        if sample_id in SAMPLE_PRESETS:
+            grid = SAMPLE_PRESETS[sample_id]
+            preview = generate_annotated_sample_image(grid)
+            return jsonify({
+                'success': True,
+                'face_grid': grid,
+                'annotated_image': preview,
+                'center_color': grid[1][1]
+            })
+            
+    # 2. Handle Image File Upload
+    if 'image' in request.files:
+        file = request.files['image']
+        try:
+            res = process_cube_image(file.read())
+            return jsonify({
+                'success': True,
+                'face_grid': res['face_grid'],
+                'annotated_image': res['annotated_image'],
+                'center_color': res['center_color']
+            })
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+            
+    # 3. Handle JSON Base64 Payload
+    if request.is_json:
+        data = request.get_json() or {}
+        img_b64 = data.get('image_base64')
+        if img_b64:
+            if ',' in img_b64:
+                img_b64 = img_b64.split(',')[1]
+            try:
+                raw = base64.b64decode(img_b64)
+                res = process_cube_image(raw)
+                return jsonify({
+                    'success': True,
+                    'face_grid': res['face_grid'],
+                    'annotated_image': res['annotated_image'],
+                    'center_color': res['center_color']
+                })
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)}), 500
+                
+    return jsonify({'success': False, 'error': 'No image file or sample preset provided!'}), 400
 
 @api_bp.route('/history', methods=['GET'])
 def history():
