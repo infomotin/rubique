@@ -51,10 +51,17 @@ def register():
             flash('Ai username ti already ache! Onno username select korun.', 'error')
             return render_template('register.html')
 
-        # Create user in database (MySQL / SQLite)
+        # Create user in database (MySQL / SQLite) with selected role
+        role = request.form.get('role', 'user')
+        if role not in ['super_admin', 'developer', 'user']:
+            role = 'user'
+
         user_id = UserModel.create_user(username, email, password)
         if user_id:
-            flash('Registration successful! Ekhon sign in korun.', 'success')
+            # Update role if selected
+            from models.admin_model import AdminModel
+            AdminModel.update_user_role(user_id, role)
+            flash(f'Registration successful as {role.upper()}! Ekhon sign in korun.', 'success')
             return redirect(url_for('auth.login'))
         else:
             flash('Registration e somoshya hoyeche! Abar cheshta korun.', 'error')
@@ -63,9 +70,14 @@ def register():
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """Separate User Login Controller"""
+    """Separate User Login Controller with Role Redirection"""
     if 'user_id' in session:
-        return redirect(url_for('visualizer.index'))
+        role = session.get('role', 'user')
+        if role == 'super_admin':
+            return redirect(url_for('super_admin.dashboard'))
+        elif role == 'developer':
+            return redirect(url_for('developer.dashboard'))
+        return redirect(url_for('user.dashboard'))
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -76,12 +88,21 @@ def login():
             session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
-            flash(f'Swagotom, {user["username"]}! Permutation Lab e apnake welcome.', 'success')
+            session['role'] = user.get('role', 'user')
+            
+            flash(f'Swagotom, {user["username"]} ({user.get("role", "user").upper()})!', 'success')
             
             next_url = request.args.get('next')
             if next_url:
                 return redirect(next_url)
-            return redirect(url_for('visualizer.index'))
+                
+            # Role-Specific Dashboard Redirection
+            if session['role'] == 'super_admin':
+                return redirect(url_for('super_admin.dashboard'))
+            elif session['role'] == 'developer':
+                return redirect(url_for('developer.dashboard'))
+            else:
+                return redirect(url_for('user.dashboard'))
             
         flash('Invalid username ba password! Sothik tottho din.', 'error')
 

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Developer Telemetry HUD - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Cyber DevOps Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-0.5 shadow-2xl shadow-cyan-500/30">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-cyan-400 text-2xl font-mono">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span>DEVELOPER HUD &bull; REAL-TIME TELEMETRY</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">System & Diagnostics Telemetry</h1>
+                    <p class="text-xs text-slate-400 font-mono">Inspect solver latencies, OpenCV pipelines, MySQL performance, and system stack traces</p>
+                </div>
+            </div>
+
+            <!-- Diagnostics Action Button -->
+            <button id="btn-run-diagnostics" class="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-mono font-bold text-xs shadow-xl shadow-cyan-600/30 hover:scale-[1.02] transition-all flex items-center gap-2">
+                <i class="fa-solid fa-microchip text-sm"></i>
+                <span>Run Full Self-Diagnostics Suite</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Telemetry Metrics Gauges Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <!-- Metric 1: CPU Load -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+                <span>CPU LOAD</span>
+                <i class="fa-solid fa-gauge-high text-cyan-400"></i>
+            </div>
+            <div class="text-3xl font-bold text-cyan-300 mt-2 flex items-baseline gap-1">
+                <span>{{ telemetry.cpu_load_percent }}</span><span class="text-sm text-slate-500">%</span>
+            </div>
+            <div class="w-full bg-slate-900 h-1.5 rounded-full mt-3 overflow-hidden">
+                <div class="h-full bg-cyan-400" style="width: {{ telemetry.cpu_load_percent }}%;"></div>
+            </div>
+        </div>
+
+        <!-- Metric 2: Memory Usage -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+                <span>PROCESS RAM</span>
+                <i class="fa-solid fa-memory text-emerald-400"></i>
+            </div>
+            <div class="text-3xl font-bold text-emerald-400 mt-2 flex items-baseline gap-1">
+                <span>{{ telemetry.memory_mb }}</span><span class="text-sm text-slate-500">MB</span>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-2 font-mono">PID: {{ telemetry.process_id }} &bull; 4 Threads</div>
+        </div>
+
+        <!-- Metric 3: Kociemba Solver Latency -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+                <span>TWO-PHASE LATENCY</span>
+                <i class="fa-solid fa-bolt text-indigo-400"></i>
+            </div>
+            <div class="text-3xl font-bold text-indigo-300 mt-2 flex items-baseline gap-1">
+                <span>{{ telemetry.solver_latency_ms }}</span><span class="text-sm text-slate-500">ms</span>
+            </div>
+            <div class="text-[11px] text-emerald-400 mt-2 flex items-center gap-1 font-mono">
+                <i class="fa-solid fa-circle-check"></i> Subgroup $G_0 \to G_1 \to G_2$
+            </div>
+        </div>
+
+        <!-- Metric 4: OpenCV CV Pipeline Latency -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+                <span>OPENCV VISION</span>
+                <i class="fa-solid fa-eye text-amber-400"></i>
+            </div>
+            <div class="text-3xl font-bold text-amber-400 mt-2 flex items-baseline gap-1">
+                <span>{{ telemetry.opencv_latency_ms }}</span><span class="text-sm text-slate-500">ms</span>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-2 font-mono">HSV Median Segmentation</div>
+        </div>
+
+    </div>
+
+    <!-- Diagnostic Suite Results Modal / Output Card -->
+    <div id="diagnostics-output-box" class="glass-card p-6 rounded-3xl border border-emerald-500/40 bg-slate-950/90 mb-8 hidden font-mono">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+            <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                <i class="fa-solid fa-shield-check"></i> Automated Self-Diagnostics Results
+            </div>
+            <button onclick="this.parentElement.parentElement.classList.add('hidden')" class="text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="diagnostics-results-list" class="space-y-2 text-xs"></div>
+    </div>
+
+    <!-- Runtime Environment & Technical Specs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 font-mono text-xs">
+        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-400">Python Runtime:</span>
+            <span class="text-white font-bold">{{ telemetry.python_version }}</span>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-400">Host OS:</span>
+            <span class="text-cyan-300 font-bold">{{ telemetry.os_name }}</span>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-400">Database Engine:</span>
+            <span class="text-emerald-400 font-bold">{{ telemetry.database_engine }}</span>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         TECHNICAL SYSTEM LOGS STREAM & BUG TRACKER
+         ========================================================================= -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-2xl shadow-2xl mb-8">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-6">
+            <div>
+                <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                    <i class="fa-solid fa-scroll text-cyan-400"></i> Live Technical Logs & Event Stream
+                </h2>
+                <p class="text-xs text-slate-400 font-mono">Stream of server events, solver invocations, and database transactions</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <form method="POST" action="{{ url_for('developer.clear_logs') }}">
+                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900 border border-rose-500/30 text-rose-300 text-xs font-mono transition-all">
+                        <i class="fa-solid fa-trash mr-1"></i> Clear Logs
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Terminal Log Box -->
+        <div class="bg-black/90 p-4 rounded-2xl border border-slate-800/90 font-mono text-xs max-h-96 overflow-y-auto space-y-2">
+            {% for log in logs %}
+                <div class="flex items-start gap-3 py-1 border-b border-slate-900/60 hover:bg-slate-900/40 transition-colors">
+                    <span class="text-slate-500 text-[10px] whitespace-nowrap">{{ log.created_at }}</span>
+                    {% if log.level == 'INFO' %}
+                        <span class="px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 text-[10px] font-bold">INFO</span>
+                    {% elif log.level == 'DEBUG' %}
+                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold">DEBUG</span>
+                    {% elif log.level == 'DIAGNOSTIC' %}
+                        <span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] font-bold">DIAGNOSTIC</span>
+                    {% else %}
+                        <span class="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px] font-bold">{{ log.level }}</span>
+                    {% endif %}
+                    <span class="text-cyan-400 font-bold">[{{ log.module }}]</span>
+                    <span class="text-slate-300 flex-grow">{{ log.message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Inject Test Log Form -->
+        <div class="mt-6 pt-4 border-t border-slate-900">
+            <span class="text-xs font-mono text-slate-400 block mb-2">Inject Custom Diagnostic Log:</span>
+            <form method="POST" action="{{ url_for('developer.create_log') }}" class="flex flex-wrap items-center gap-3">
+                <select name="level" class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-mono text-white">
+                    <option value="INFO">INFO</option>
+                    <option value="DEBUG">DEBUG</option>
+                    <option value="WARNING">WARNING</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+                <input type="text" name="module" value="CustomTest" placeholder="Module" class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-mono text-white w-32">
+                <input type="text" name="message" required placeholder="Log message text..." class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-mono text-white flex-grow">
+                <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 font-mono text-xs rounded-xl font-bold">
+                    Inject Log
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const diagBtn = document.getElementById('btn-run-diagnostics');
+        const outputBox = document.getElementById('diagnostics-output-box');
+        const resultsList = document.getElementById('diagnostics-results-list');
+
+        diagBtn?.addEventListener('click', async () => {
+            diagBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Running Diagnostics...`;
+            
+            try {
+                const res = await fetch('{{ url_for("developer.run_diagnostics") }}', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success && data.results) {
+                    resultsList.innerHTML = '';
+                    data.results.forEach(r => {
+                        const row = document.createElement('div');
+                        row.className = 'p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between';
+                        row.innerHTML = `
+                            <div>
+                                <span class="font-bold text-white text-xs">${r.test}</span>
+                                <div class="text-slate-400 text-[11px] mt-0.5">${r.output}</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">${r.status}</span>
+                                <div class="text-slate-400 text-[11px] mt-1">${r.latency}</div>
+                            </div>
+                        `;
+                        resultsList.appendChild(row);
+                    });
+                    outputBox.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Diagnostics failed to execute.");
+            } finally {
+                diagBtn.innerHTML = `<i class="fa-solid fa-microchip text-sm"></i> <span>Run Full Self-Diagnostics Suite</span>`;
+            }
+        });
+    });
+</script>
+{% endblock %}

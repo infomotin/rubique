@@ -63,22 +63,38 @@
                     </h1>
                 </div>
 
-                <!-- 2. TOP GRAPHIC: 3D ISOMETRIC RUBIK'S CUBE SVG -->
-                <div class="relative z-10 w-full flex items-center justify-center my-2">
-                    <div class="relative">
+                <!-- 2. TOP GRAPHIC: 3D ISOMETRIC / WEBGL RUBIK'S CUBE -->
+                <div class="relative z-10 w-full flex flex-col items-center justify-center my-2">
+                    
+                    <!-- 3D Mode Switcher -->
+                    <div class="flex items-center gap-1.5 mb-2 p-1 rounded-full bg-slate-950/90 border border-slate-800 text-[11px] font-mono z-20">
+                        <button id="view-mode-iso" class="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold transition-all">
+                            3D Isometric
+                        </button>
+                        <button id="view-mode-webgl" class="px-2.5 py-0.5 rounded-full text-slate-400 hover:text-white transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-cube text-emerald-400"></i> 3D WebGL Free Orbit
+                        </button>
+                    </div>
+
+                    <div class="relative w-full flex items-center justify-center">
                         <!-- 3D Isometric SVG Container -->
                         <div id="isometric-cube-container" class="w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
                             <svg id="isometric-cube-svg" viewBox="-180 -180 360 360" class="w-full h-full filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.9)]">
                                 <!-- Dynamic Cube Facelets and Animated Top Layer rendered via JS -->
                             </svg>
                         </div>
+
+                        <!-- 3D WebGL Three.js Container (Hidden by default, toggled on click) -->
+                        <div id="webgl-cube-container" class="w-64 h-64 sm:w-72 sm:h-72 hidden items-center justify-center cursor-grab active:cursor-grabbing">
+                            <div id="visualizer-3d-cube" class="w-full h-full"></div>
+                        </div>
                         
                         <!-- Middle Right Graphic: MOVE INDICATOR & STEP COUNTER -->
-                        <div class="absolute -right-10 sm:-right-16 top-1/2 -translate-y-1/2 text-center select-none">
-                            <div id="active-move-letter" class="text-4xl sm:text-5xl font-serif text-indigo-400 drop-shadow-[0_0_16px_rgba(129,140,248,0.7)] font-bold transition-all duration-300">
+                        <div class="absolute -right-6 sm:-right-14 top-1/2 -translate-y-1/2 text-center select-none">
+                            <div id="active-move-letter" class="text-4xl sm:text-5xl font-serif text-indigo-400 drop-shadow-[0_0_16px_rgba(129,140,248,0.8)] font-bold transition-all duration-300">
                                 U
                             </div>
-                            <div id="active-step-counter" class="text-xs sm:text-sm font-serif text-slate-400 mt-1 tracking-widest">
+                            <div id="active-step-counter" class="text-xs sm:text-sm font-serif text-slate-400 mt-1 tracking-widest font-semibold">
                                 13 / 15
                             </div>
                         </div>
@@ -380,5 +396,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/cube3d.js') }}"></script>
 <script src="{{ url_for('static', filename='js/visualizer.js') }}"></script>
 {% endblock %}

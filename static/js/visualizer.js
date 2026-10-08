@@ -887,6 +887,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // =========================================================================
+    // 9. 3D WEBGL INTERACTIVE THREE.JS CUBE TOGGLE & SYNCHRONIZATION
+    // =========================================================================
+    let visualizer3DCube = null;
+    if (document.getElementById('visualizer-3d-cube') && typeof Interactive3DCube !== 'undefined') {
+        visualizer3DCube = new Interactive3DCube('visualizer-3d-cube', {
+            autoRotate: false
+        });
+    }
+
+    const btnModeIso = document.getElementById('view-mode-iso');
+    const btnModeWebGL = document.getElementById('view-mode-webgl');
+    const isoContainer = document.getElementById('isometric-cube-container');
+    const webglContainer = document.getElementById('webgl-cube-container');
+
+    btnModeIso?.addEventListener('click', () => {
+        btnModeIso.className = "px-2.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold transition-all";
+        btnModeWebGL.className = "px-2.5 py-0.5 rounded-full text-slate-400 hover:text-white transition-all flex items-center gap-1";
+        isoContainer?.classList.remove('hidden');
+        webglContainer?.classList.add('hidden');
+        webglContainer?.classList.remove('flex');
+    });
+
+    btnModeWebGL?.addEventListener('click', () => {
+        btnModeWebGL.className = "px-2.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold transition-all flex items-center gap-1";
+        btnModeIso.className = "px-2.5 py-0.5 rounded-full text-slate-400 hover:text-white transition-all";
+        isoContainer?.classList.add('hidden');
+        webglContainer?.classList.remove('hidden');
+        webglContainer?.classList.add('flex');
+        if (visualizer3DCube) {
+            visualizer3DCube.onResize();
+        }
+    });
+
+    // Hook WebGL 3D cube turn animation on every step update
+    const originalNextStep = nextStep;
+    window.addEventListener('moveApplied', (e) => {
+        if (visualizer3DCube && e.detail && e.detail.move) {
+            visualizer3DCube.animateLayerTurn(e.detail.move);
+        }
+    });
+
     // Initial Render
     reconstructCubeStateUpToStep(currentStepIndex);
     updateVisualizerUI();

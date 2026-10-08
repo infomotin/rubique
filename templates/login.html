@@ -3,60 +3,191 @@
 {% block title %}Sign In - CubePermutation AI{% endblock %}
 
 {% block content %}
-<div class="min-h-[75vh] flex items-center justify-center px-4 py-12">
-    <div class="glass-card w-full max-w-md p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
-        
-        <!-- Glowing accent orb in background -->
-        <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-600/30 rounded-full blur-3xl pointer-events-none group-hover:bg-indigo-600/40 transition-all duration-700"></div>
-        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none group-hover:bg-cyan-600/30 transition-all duration-700"></div>
+<div class="cyber-grid-bg min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+    
+    <!-- Ambient Radial Glows -->
+    <div class="absolute top-1/3 -left-32 w-96 h-96 bg-indigo-600/25 rounded-full blur-[110px] pointer-events-none -z-10 animate-pulse-glow"></div>
+    <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-[110px] pointer-events-none -z-10"></div>
 
-        <!-- Header -->
-        <div class="text-center mb-8 relative z-10">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 shadow-xl shadow-indigo-500/20 mb-4">
-                <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                    <i class="fa-solid fa-lock text-indigo-400 text-xl"></i>
+    <div class="w-full max-w-5xl glass-card rounded-3xl border border-indigo-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-[0_25px_80px_-15px_rgba(0,0,0,0.95)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative">
+        
+        <!-- =========================================================================
+             LEFT PANEL: HIGH-GRAPHIC 3D SHOWCASE & GROUP THEORY AMBIENCE
+             ========================================================================= -->
+        <div class="lg:col-span-6 p-8 sm:p-10 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-gradient-to-br from-indigo-950/40 via-slate-950/60 to-black/90">
+            
+            <!-- Atmospheric glow inside left panel -->
+            <div class="absolute top-12 left-12 w-48 h-48 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Top Brand & Tag -->
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950/90 border border-indigo-500/40 text-indigo-300 text-xs font-mono mb-6 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span>GROUP THEORY LABORATORY</span>
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold font-outfit text-white tracking-tight leading-tight">
+                    Explore Rubik's Cube as <br>
+                    <span class="shimmer-text">Permutations</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-400 mt-2 font-sans leading-relaxed">
+                    Sign in to track your group orbits, run OpenCV facelet scans, and compute optimal solutions using the Two-Phase Kociemba algorithm.
+                </p>
+            </div>
+
+            <!-- Middle Interactive Mini 3D / Orbit Visual Graphic -->
+            <div class="relative z-10 my-8 py-4 flex items-center justify-center">
+                <div class="relative w-48 h-48 flex items-center justify-center">
+                    <!-- High-Tech Rotating Holographic Rings -->
+                    <svg viewBox="-100 -100 200 200" class="w-full h-full animate-spin-slow">
+                        <circle cx="0" cy="0" r="85" fill="none" stroke="rgba(99, 102, 241, 0.25)" stroke-width="1.5" stroke-dasharray="8 6" />
+                        <circle cx="0" cy="0" r="65" fill="none" stroke="rgba(56, 189, 248, 0.35)" stroke-width="2" stroke-dasharray="14 10" />
+                        <circle cx="0" cy="0" r="45" fill="none" stroke="rgba(192, 132, 252, 0.3)" stroke-width="1.5" />
+                    </svg>
+
+                    <!-- Center 3D Isometric Cube Icon -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center select-none">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 shadow-2xl shadow-indigo-500/40 animate-float">
+                            <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                                <i class="fa-solid fa-cube text-2xl text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300"></i>
+                            </div>
+                        </div>
+                        <span class="font-mono text-[10px] text-cyan-300 font-bold mt-2 tracking-widest uppercase">|G| &approx; 4.3 &times; 10¹⁹</span>
+                    </div>
                 </div>
             </div>
-            <h1 class="text-2xl font-bold font-outfit text-white tracking-tight">Sign In to Permutation AI</h1>
-            <p class="text-xs text-slate-400 mt-1 font-mono">Access your group theory orbits & saved solve history</p>
-        </div>
 
-        <!-- Login Form -->
-        <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" class="space-y-5 relative z-10">
-            <div>
-                <label for="username" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono">
-                    <i class="fa-solid fa-user text-indigo-400 mr-1.5"></i> Username
-                </label>
-                <input type="text" id="username" name="username" required autocomplete="username"
-                       placeholder="Enter your username"
-                       class="w-full px-4 py-3 bg-slate-900/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm font-sans">
+            <!-- Bottom Feature Bullet Badges -->
+            <div class="relative z-10 space-y-2.5 font-mono text-xs text-slate-300 pt-4 border-t border-slate-900/80">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-5 h-5 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-[10px]">
+                        <i class="fa-solid fa-bolt"></i>
+                    </span>
+                    <span>Subgroup Chain: $G_0 \to G_1 \to G_2$</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="w-5 h-5 rounded-lg bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-[10px]">
+                        <i class="fa-solid fa-camera"></i>
+                    </span>
+                    <span>OpenCV 4.8 Automatic Facelet Extraction</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="w-5 h-5 rounded-lg bg-purple-950/80 border border-purple-500/40 flex items-center justify-center text-purple-400 text-[10px]">
+                        <i class="fa-solid fa-database"></i>
+                    </span>
+                    <span>MySQL Persistent Solve Log & Analytics</span>
+                </div>
             </div>
 
-            <div>
-                <label for="password" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono">
-                    <i class="fa-solid fa-key text-indigo-400 mr-1.5"></i> Password
-                </label>
-                <input type="password" id="password" name="password" required autocomplete="current-password"
-                       placeholder="Enter your password"
-                       class="w-full px-4 py-3 bg-slate-900/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm font-sans">
+        </div>
+
+        <!-- =========================================================================
+             RIGHT PANEL: ULTRA-SLEEK GLASSMORPHIC LOGIN FORM
+             ========================================================================= -->
+        <div class="lg:col-span-6 p-8 sm:p-10 flex flex-col justify-center relative">
+            
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-2">
+                    <h1 class="text-2xl font-bold font-outfit text-white tracking-tight">Sign In</h1>
+                    <span class="text-xs font-mono text-slate-500">Secure MVC Session</span>
+                </div>
+                <p class="text-xs text-slate-400 font-sans">
+                    Enter your username and password to access your laboratory.
+                </p>
             </div>
 
-            <button type="submit"
-                    class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-medium text-sm rounded-xl shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all duration-300 flex items-center justify-center gap-2 group/btn">
-                <span>Sign In & Launch Lab</span>
-                <i class="fa-solid fa-arrow-right group-hover/btn:translate-x-1 transition-transform"></i>
-            </button>
-        </form>
+            <!-- Login Form -->
+            <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" class="space-y-5">
+                
+                <!-- Username Input -->
+                <div>
+                    <label for="username" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono flex items-center justify-between">
+                        <span><i class="fa-solid fa-user text-indigo-400 mr-1.5"></i> Username</span>
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="username" name="username" required autocomplete="username"
+                               placeholder="e.g. rubikmaster"
+                               class="w-full px-4 py-3 bg-slate-900/90 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all text-sm font-sans">
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+                            <i class="fa-solid fa-at text-xs"></i>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Footer link -->
-        <div class="mt-8 pt-6 border-t border-slate-800/80 text-center relative z-10">
-            <p class="text-xs text-slate-400">
-                Don't have an account yet? 
-                <a href="{{ url_for('auth.register') }}" class="text-cyan-400 hover:text-cyan-300 font-medium ml-1 hover:underline">
-                    Create Account
-                </a>
-            </p>
+                <!-- Password Input with Visibility Toggle -->
+                <div>
+                    <label for="password" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono flex items-center justify-between">
+                        <span><i class="fa-solid fa-key text-indigo-400 mr-1.5"></i> Password</span>
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="password" name="password" required autocomplete="current-password"
+                               placeholder="Enter your password"
+                               class="w-full px-4 py-3 bg-slate-900/90 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all text-sm font-sans pr-10">
+                        <button type="button" id="toggle-pw-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                            <i id="toggle-pw-icon" class="fa-solid fa-eye text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                        class="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm rounded-xl shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-[1.01] transition-all duration-300 flex items-center justify-center gap-2 group">
+                    <span>Authenticate & Enter Lab</span>
+                    <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </button>
+
+            </form>
+
+            <!-- Quick Demo Credentials Filler Button -->
+            <div class="mt-4 p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                <span class="text-slate-400">Need a quick test?</span>
+                <button type="button" id="fill-demo-btn" class="text-indigo-400 hover:text-indigo-300 font-semibold underline flex items-center gap-1">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Fill Demo Account
+                </button>
+            </div>
+
+            <!-- Footer Switcher Link -->
+            <div class="mt-6 pt-5 border-t border-slate-800/80 text-center">
+                <p class="text-xs text-slate-400">
+                    Don't have an account yet? 
+                    <a href="{{ url_for('auth.register') }}" class="text-cyan-400 hover:text-cyan-300 font-bold ml-1 hover:underline">
+                        Create Free Account &rarr;
+                    </a>
+                </p>
+            </div>
+
         </div>
+
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Password toggle visibility
+        const toggleBtn = document.getElementById('toggle-pw-btn');
+        const pwInput = document.getElementById('password');
+        const pwIcon = document.getElementById('toggle-pw-icon');
+
+        toggleBtn?.addEventListener('click', () => {
+            if (pwInput.type === 'password') {
+                pwInput.type = 'text';
+                pwIcon.classList.remove('fa-eye');
+                pwIcon.classList.add('fa-eye-slash');
+            } else {
+                pwInput.type = 'password';
+                pwIcon.classList.remove('fa-eye-slash');
+                pwIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Demo account autofill helper
+        const demoBtn = document.getElementById('fill-demo-btn');
+        const usernameInput = document.getElementById('username');
+        demoBtn?.addEventListener('click', () => {
+            usernameInput.value = 'rubikmaster';
+            pwInput.value = 'password123';
+        });
+    });
+</script>
 {% endblock %}
