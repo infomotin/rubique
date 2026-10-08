@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Speedcuber Working Hub - CubePermutation AI{% endblock %}
+{% block title %}{{ t('speedcuber_title') }} - {{ t('app_title') }}{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -77,13 +77,13 @@
                 <div>
                     <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 text-[11px] font-mono mb-1">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span class="tracking-widest">SPEEDCUBER STUDIO &bull; {{ user.role|upper }}</span>
+                        <span class="tracking-widest" data-i18n="speedcuber_studio">{{ t('speedcuber_studio') }}</span>
                     </div>
                     <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight flex items-center gap-2">
                         <span>{{ user.username }}</span>
                         <span class="text-xs px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-slate-400 font-mono font-normal">WCA ID: {{ user.id }}</span>
                     </h1>
-                    <p class="text-xs text-slate-400 font-mono">{{ user.bio or 'Speedcubing Enthusiast & Mathematical Permutation Explorer' }}</p>
+                    <p class="text-xs text-slate-400 font-mono" data-i18n="speedcuber_desc">{{ user.bio or t('speedcuber_desc') }}</p>
                 </div>
             </div>
 
@@ -91,11 +91,11 @@
             <div class="flex items-center flex-wrap gap-2.5">
                 <button onclick="switchStage('stage-battle')" class="px-4 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 font-mono text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-swords text-rose-400"></i>
-                    <span>Quick Duel</span>
+                    <span data-i18n="quick_duel">{{ t('quick_duel') }}</span>
                 </button>
                 <a href="{{ url_for('visualizer.index') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs shadow-xl shadow-indigo-600/30 hover:scale-[1.02] transition-all flex items-center gap-2">
                     <i class="fa-solid fa-cube text-sm"></i>
-                    <span>3D Visualizer Lab &rarr;</span>
+                    <span data-i18n="open_visualizer_lab">{{ t('open_visualizer_lab') }} &rarr;</span>
                 </a>
             </div>
         </div>
@@ -111,7 +111,7 @@
              ========================================================================= -->
         <div class="lg:col-span-3 glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/85 backdrop-blur-xl sticky top-20 z-20 shadow-2xl">
             <div class="flex items-center justify-between px-3 py-1 mb-3 border-b border-slate-900 pb-2">
-                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">WORKING STAGES</span>
+                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold" data-i18n="working_stages">{{ t('working_stages') }}</span>
                 <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
             </div>
             
@@ -121,8 +121,8 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left active border border-transparent" data-target="stage-overview">
                     <i class="tab-icon fa-solid fa-chart-line text-sm w-5 text-center text-indigo-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Overview & Stats</div>
-                        <div class="text-[10px] text-slate-500 font-sans">Metrics & Solve Log</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_overview">{{ t('stage_overview') }}</div>
+                        <div class="text-[10px] text-slate-500 font-sans" data-i18n="stage_overview_sub">{{ t('stage_overview_sub') }}</div>
                     </div>
                 </button>
 
@@ -130,8 +130,8 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-battle">
                     <i class="tab-icon fa-solid fa-swords text-sm w-5 text-center text-rose-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Human vs AI Battle</div>
-                        <div class="text-[10px] text-rose-400/80 font-sans">Live 3D Speed Race</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_battle">{{ t('stage_battle') }}</div>
+                        <div class="text-[10px] text-rose-400/80 font-sans" data-i18n="stage_battle_sub">{{ t('stage_battle_sub') }}</div>
                     </div>
                 </button>
 
@@ -139,8 +139,8 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-learning">
                     <i class="tab-icon fa-solid fa-graduation-cap text-sm w-5 text-center text-cyan-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Visual Learning Hub</div>
-                        <div class="text-[10px] text-cyan-400/80 font-sans">3D Algorithm Lab</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_learning">{{ t('stage_learning') }}</div>
+                        <div class="text-[10px] text-cyan-400/80 font-sans" data-i18n="stage_learning_sub">{{ t('stage_learning_sub') }}</div>
                     </div>
                 </button>
 
@@ -148,8 +148,8 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-guide">
                     <i class="tab-icon fa-solid fa-book-open text-sm w-5 text-center text-emerald-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Solving Guide</div>
-                        <div class="text-[10px] text-emerald-400/80 font-sans">CFOP 4-Phase System</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_guide">{{ t('stage_guide') }}</div>
+                        <div class="text-[10px] text-emerald-400/80 font-sans" data-i18n="stage_guide_sub">{{ t('stage_guide_sub') }}</div>
                     </div>
                 </button>
 
@@ -157,7 +157,7 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-competitions">
                     <i class="tab-icon fa-solid fa-trophy text-sm w-5 text-center text-amber-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Competitions Arena</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_competitions">{{ t('stage_competitions') }}</div>
                         <div class="text-[10px] text-amber-400/80 font-sans">{{ competitions|length }} Active Tournaments</div>
                     </div>
                 </button>
@@ -166,7 +166,7 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-courses">
                     <i class="tab-icon fa-solid fa-chalkboard-user text-sm w-5 text-center text-purple-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Masterclasses</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_courses">{{ t('stage_courses') }}</div>
                         <div class="text-[10px] text-purple-400/80 font-sans">{{ courses|length }} Video Courses</div>
                     </div>
                 </button>
@@ -175,7 +175,7 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-scan">
                     <i class="tab-icon fa-solid fa-camera text-sm w-5 text-center text-blue-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Upload & Net Studio</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_scan">{{ t('stage_scan') }}</div>
                         <div class="text-[10px] text-blue-400/80 font-sans">OpenCV & Custom Net</div>
                     </div>
                 </button>
@@ -184,7 +184,7 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-trophies">
                     <i class="tab-icon fa-solid fa-award text-sm w-5 text-center text-yellow-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Trophies & Coupons</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_trophies">{{ t('stage_trophies') }}</div>
                         <div class="text-[10px] text-yellow-400/80 font-sans">Cabinet & Rewards</div>
                     </div>
                 </button>
@@ -193,7 +193,7 @@
                 <button class="nav-stage-btn w-full px-3.5 py-3 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-profile">
                     <i class="tab-icon fa-solid fa-user-gear text-sm w-5 text-center text-slate-400"></i>
                     <div class="flex-grow">
-                        <div class="font-bold text-slate-200">Profile Settings</div>
+                        <div class="font-bold text-slate-200" data-i18n="stage_profile">{{ t('stage_profile') }}</div>
                         <div class="text-[10px] text-slate-500 font-sans">Preferences & Avatar</div>
                     </div>
                 </button>
@@ -230,21 +230,21 @@
                     
                     <div class="glass-card p-5 rounded-2xl border border-indigo-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
                         <div class="flex items-center justify-between text-xs text-slate-400">
-                            <span>TOTAL SOLVES</span>
+                            <span data-i18n="total_solves">{{ t('total_solves') }}</span>
                             <i class="fa-solid fa-cube text-indigo-400 text-sm"></i>
                         </div>
                         <div class="text-3xl font-extrabold text-white mt-2">{{ stats.total_solves }}</div>
                         <div class="text-[11px] text-indigo-400 mt-1 flex items-center gap-1">
-                            <i class="fa-solid fa-database"></i> Relational MySQL Logged
+                            <i class="fa-solid fa-database"></i> MySQL Logged
                         </div>
                     </div>
 
                     <div class="glass-card p-5 rounded-2xl border border-emerald-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
                         <div class="flex items-center justify-between text-xs text-slate-400">
-                            <span>BEST SOLUTION</span>
+                            <span data-i18n="best_solution">{{ t('best_solution') }}</span>
                             <i class="fa-solid fa-bolt text-emerald-400 text-sm"></i>
                         </div>
-                        <div class="text-3xl font-extrabold text-emerald-400 mt-2">{{ stats.min_moves }} <span class="text-xs text-slate-500">moves</span></div>
+                        <div class="text-3xl font-extrabold text-emerald-400 mt-2">{{ stats.min_moves }} <span class="text-xs text-slate-500" data-i18n="moves">{{ t('moves') }}</span></div>
                         <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
                             <i class="fa-solid fa-circle-check"></i> Optimal Two-Phase
                         </div>
@@ -252,23 +252,23 @@
 
                     <div class="glass-card p-5 rounded-2xl border border-cyan-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
                         <div class="flex items-center justify-between text-xs text-slate-400">
-                            <span>AVG EFFICIENCY</span>
+                            <span data-i18n="avg_efficiency">{{ t('avg_efficiency') }}</span>
                             <i class="fa-solid fa-chart-line text-cyan-400 text-sm"></i>
                         </div>
-                        <div class="text-3xl font-extrabold text-cyan-300 mt-2">{{ stats.avg_moves }} <span class="text-xs text-slate-500">moves</span></div>
+                        <div class="text-3xl font-extrabold text-cyan-300 mt-2">{{ stats.avg_moves }} <span class="text-xs text-slate-500" data-i18n="moves">{{ t('moves') }}</span></div>
                         <div class="text-[11px] text-cyan-400 mt-1 flex items-center gap-1">
-                            <i class="fa-solid fa-infinity"></i> God's Number Compliant
+                            <i class="fa-solid fa-infinity"></i> God's Number
                         </div>
                     </div>
 
                     <div class="glass-card p-5 rounded-2xl border border-amber-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
                         <div class="flex items-center justify-between text-xs text-slate-400">
-                            <span>GLOBAL RANK</span>
+                            <span data-i18n="global_rank">{{ t('global_rank') }}</span>
                             <i class="fa-solid fa-crown text-amber-400 text-sm"></i>
                         </div>
                         <div class="text-3xl font-extrabold text-amber-300 mt-2">#{{ (user.id % 25) + 1 }}</div>
                         <div class="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
-                            <i class="fa-solid fa-fire"></i> Top 5% Speedcuber
+                            <i class="fa-solid fa-fire"></i> Top 5% Contender
                         </div>
                     </div>
 
@@ -278,15 +278,15 @@
                 <div class="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-slate-950/80">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-800 mb-4">
                         <div>
-                            <span class="text-[10px] font-mono text-indigo-400 font-bold uppercase tracking-wider">OFFICIAL WCA SCRAMBLE GENERATOR</span>
-                            <h3 class="text-base font-bold font-outfit text-white">Generate Random Permutation State</h3>
+                            <span class="text-[10px] font-mono text-indigo-400 font-bold uppercase tracking-wider" data-i18n="wca_scramble_title">{{ t('wca_scramble_title') }}</span>
+                            <h3 class="text-base font-bold font-outfit text-white" data-i18n="wca_scramble_subtitle">{{ t('wca_scramble_subtitle') }}</h3>
                         </div>
                         <div class="flex gap-2">
                             <button id="overview-gen-scramble-btn" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-indigo-600/25">
-                                <i class="fa-solid fa-arrows-rotate"></i> New Scramble
+                                <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="new_scramble">{{ t('new_scramble') }}</span>
                             </button>
                             <button id="overview-copy-scramble-btn" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono transition-all">
-                                <i class="fa-solid fa-copy mr-1"></i> Copy
+                                <i class="fa-solid fa-copy mr-1"></i> <span data-i18n="copy_scramble">{{ t('copy_scramble') }}</span>
                             </button>
                         </div>
                     </div>
@@ -301,10 +301,10 @@
                         <span>Move Length: <strong class="text-white">20 moves</strong> (God's Metric)</span>
                         <div class="flex gap-2">
                             <button onclick="sendScrambleToBattle()" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 transition-colors">
-                                <i class="fa-solid fa-swords mr-1"></i> Send to Battle Arena
+                                <i class="fa-solid fa-swords mr-1"></i> <span data-i18n="send_to_battle">{{ t('send_to_battle') }}</span>
                             </button>
                             <a href="{{ url_for('visualizer.index') }}" class="px-3 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-300 transition-colors">
-                                <i class="fa-solid fa-play mr-1"></i> Open in Visualizer
+                                <i class="fa-solid fa-play mr-1"></i> <span data-i18n="open_in_visualizer">{{ t('open_in_visualizer') }}</span>
                             </a>
                         </div>
                     </div>
@@ -314,7 +314,7 @@
                 <div class="glass-card p-6 rounded-3xl border border-slate-800/80 bg-slate-950/70">
                     <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
                         <h3 class="text-base font-bold font-outfit text-white flex items-center gap-2">
-                            <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> Speedcubing Solve History
+                            <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> <span data-i18n="solve_history_title">{{ t('solve_history_title') }}</span>
                         </h3>
                         <span class="text-xs font-mono text-slate-400">{{ history|length }} Solves Logged</span>
                     </div>
@@ -324,10 +324,10 @@
                             <table class="w-full text-left text-xs font-mono">
                                 <thead>
                                     <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
-                                        <th class="py-2.5 px-3">Date / Timestamp</th>
-                                        <th class="py-2.5 px-3">Scramble Sequence</th>
-                                        <th class="py-2.5 px-3">Two-Phase Solution</th>
-                                        <th class="py-2.5 px-3 text-center">Move Count</th>
+                                        <th class="py-2.5 px-3" data-i18n="date_time">{{ t('date_time') }}</th>
+                                        <th class="py-2.5 px-3" data-i18n="scramble_seq">{{ t('scramble_seq') }}</th>
+                                        <th class="py-2.5 px-3" data-i18n="two_phase_sol">{{ t('two_phase_sol') }}</th>
+                                        <th class="py-2.5 px-3 text-center" data-i18n="move_count">{{ t('move_count') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-900">
@@ -349,7 +349,7 @@
                     {% else %}
                         <div class="text-center py-10 text-slate-500 font-mono text-xs">
                             <i class="fa-solid fa-cube text-3xl text-slate-700 mb-2 block"></i>
-                            No solves logged in your profile yet. Launch the Visualizer or compete in the Battle Arena!
+                            <span data-i18n="no_solves_yet">{{ t('no_solves_yet') }}</span>
                         </div>
                     {% endif %}
                 </div>
@@ -365,19 +365,19 @@
                         <div>
                             <span class="text-xs font-mono text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                                LIVE COMPETITIVE SPEED DUEL
+                                <span data-i18n="live_speed_duel">{{ t('live_speed_duel') }}</span>
                             </span>
-                            <h2 class="text-xl font-bold font-outfit text-white">Human vs Kociemba Two-Phase AI</h2>
-                            <p class="text-xs text-slate-400 font-mono">Race your speedcubing execution against group-theory optimal AI</p>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="battle_title">{{ t('battle_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="battle_subtitle">{{ t('battle_subtitle') }}</p>
                         </div>
                         <button id="battle-new-scramble-btn" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-shuffle text-rose-400"></i> New Match Scramble
+                            <i class="fa-solid fa-shuffle text-rose-400"></i> <span data-i18n="new_match_scramble">{{ t('new_match_scramble') }}</span>
                         </button>
                     </div>
 
                     <!-- Battle Scramble Bar -->
                     <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 font-mono text-center mb-6">
-                        <span class="text-[10px] text-slate-500 block uppercase">Match Scramble Sequence:</span>
+                        <span class="text-[10px] text-slate-500 block uppercase" data-i18n="match_scramble_label">{{ t('match_scramble_label') }}</span>
                         <div id="battle-scramble-text" class="text-indigo-300 font-bold text-sm sm:text-base mt-1 tracking-wider break-all">
                             R U R' U' F' U2 F U R U' R' F'
                         </div>
@@ -397,11 +397,11 @@
                                             <i class="fa-solid fa-user"></i>
                                         </div>
                                         <div>
-                                            <span class="font-bold font-outfit text-white text-sm block">{{ user.username }} (Human)</span>
-                                            <span class="text-[10px] text-slate-400 font-mono">Keyboard / Click Mode</span>
+                                            <span class="font-bold font-outfit text-white text-sm block">{{ user.username }}</span>
+                                            <span class="text-[10px] text-slate-400 font-mono" data-i18n="keyboard_mode">{{ t('keyboard_mode') }}</span>
                                         </div>
                                     </div>
-                                    <span id="human-status-badge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700">Ready</span>
+                                    <span id="human-status-badge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700" data-i18n="ready">{{ t('ready') }}</span>
                                 </div>
 
                                 <!-- Human 3D Cube Canvas -->
@@ -413,13 +413,13 @@
                                 <div class="text-center py-3.5 bg-black/70 rounded-2xl border border-slate-800 mb-4">
                                     <div id="human-timer" class="text-3xl sm:text-4xl font-mono font-black text-white tracking-widest">00:00.00</div>
                                     <div class="text-[11px] text-slate-400 font-mono mt-1">
-                                        Moves Applied: <span id="human-move-count" class="text-indigo-400 font-bold">0</span> moves
+                                        <span data-i18n="moves_applied">{{ t('moves_applied') }}</span> <span id="human-move-count" class="text-indigo-400 font-bold">0</span> <span data-i18n="moves">{{ t('moves') }}</span>
                                     </div>
                                 </div>
 
                                 <!-- Human Interactive Quick Face Buttons -->
                                 <div class="mb-4">
-                                    <div class="text-[10px] font-mono text-slate-400 mb-1.5 uppercase">Interactive Layer Turns (Click or Key):</div>
+                                    <div class="text-[10px] font-mono text-slate-400 mb-1.5 uppercase" data-i18n="interactive_layer_turns">{{ t('interactive_layer_turns') }}</div>
                                     <div class="grid grid-cols-6 gap-1.5 font-mono text-xs">
                                         <button class="human-move-btn face-btn turn-btn" data-m="R">R</button>
                                         <button class="human-move-btn face-btn turn-btn" data-m="U">U</button>
@@ -441,10 +441,10 @@
                             <div class="space-y-2">
                                 <button id="human-start-btn" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-stopwatch"></i>
-                                    <span>Start Human Timer (or Spacebar)</span>
+                                    <span data-i18n="start_human_timer">{{ t('start_human_timer') }}</span>
                                 </button>
-                                <button id="human-reset-btn" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white font-mono text-xs transition-colors">
-                                    Reset Human State
+                                <button id="human-reset-btn" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white font-mono text-xs transition-colors" data-i18n="reset_human">
+                                    {{ t('reset_human') }}
                                 </button>
                             </div>
                         </div>
@@ -460,11 +460,11 @@
                                             <i class="fa-solid fa-robot"></i>
                                         </div>
                                         <div>
-                                            <span class="font-bold font-outfit text-white text-sm block">Kociemba Two-Phase AI</span>
-                                            <span class="text-[10px] text-cyan-400 font-mono">Optimal Subgroup G₁ &rarr; G₂</span>
+                                            <span class="font-bold font-outfit text-white text-sm block" data-i18n="ai_solver">{{ t('ai_solver') }}</span>
+                                            <span class="text-[10px] text-cyan-400 font-mono" data-i18n="ai_subgroup">{{ t('ai_subgroup') }}</span>
                                         </div>
                                     </div>
-                                    <span id="ai-status-badge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700">Standby</span>
+                                    <span id="ai-status-badge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700" data-i18n="standby">{{ t('standby') }}</span>
                                 </div>
 
                                 <!-- AI 3D Cube Canvas -->
@@ -476,14 +476,14 @@
                                 <div class="text-center py-3.5 bg-black/70 rounded-2xl border border-slate-800 mb-4">
                                     <div id="ai-timer" class="text-3xl sm:text-4xl font-mono font-black text-cyan-300 tracking-widest">00:00.00</div>
                                     <div class="text-[11px] text-slate-400 font-mono mt-1">
-                                        Optimal Moves: <span id="ai-move-count" class="text-cyan-400 font-bold">--</span> moves
+                                        <span data-i18n="optimal_moves">{{ t('optimal_moves') }}</span> <span id="ai-move-count" class="text-cyan-400 font-bold">--</span> <span data-i18n="moves">{{ t('moves') }}</span>
                                     </div>
                                 </div>
 
                                 <!-- Calculated AI Move Sequence Display -->
                                 <div class="p-3.5 rounded-2xl bg-black/80 border border-slate-800 text-xs font-mono text-emerald-400 min-h-[96px] mb-4">
                                     <div class="flex items-center justify-between text-[10px] text-slate-500 uppercase mb-1">
-                                        <span>Calculated Solution:</span>
+                                        <span data-i18n="calculated_ai_solution">{{ t('calculated_ai_solution') }}</span>
                                         <span id="ai-progress-text" class="text-cyan-400 font-bold">0 / 0</span>
                                     </div>
                                     <div id="ai-solution-text" class="text-emerald-300 font-bold break-all leading-relaxed">
@@ -496,14 +496,14 @@
                             <div class="space-y-2">
                                 <button id="ai-solve-btn" class="w-full py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs shadow-xl shadow-cyan-600/30 transition-all flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-microchip"></i>
-                                    <span>Compute & Animate AI Solve</span>
+                                    <span data-i18n="run_ai_solver">{{ t('run_ai_solver') }}</span>
                                 </button>
                                 <div class="flex gap-2">
                                     <button id="ai-step-play-btn" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-cyan-300 font-mono text-xs transition-colors">
-                                        <i class="fa-solid fa-play mr-1"></i> Step-by-Step 3D
+                                        <i class="fa-solid fa-play mr-1"></i> <span data-i18n="step_by_step_3d">{{ t('step_by_step_3d') }}</span>
                                     </button>
-                                    <button id="ai-reset-btn" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white font-mono text-xs transition-colors">
-                                        Reset AI State
+                                    <button id="ai-reset-btn" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white font-mono text-xs transition-colors" data-i18n="reset_ai">
+                                        {{ t('reset_ai') }}
                                     </button>
                                 </div>
                             </div>
@@ -511,7 +511,7 @@
 
                     </div>
 
-                    <!-- Duel Outcome / Winner Declaration Banner (Hidden by default) -->
+                    <!-- Duel Outcome / Winner Declaration Banner -->
                     <div id="battle-outcome-banner" class="hidden mt-6 p-4 rounded-2xl border text-center font-mono text-xs">
                         <div id="battle-outcome-title" class="text-base font-bold font-outfit mb-1"></div>
                         <div id="battle-outcome-desc" class="text-slate-300"></div>
@@ -526,17 +526,17 @@
                 <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/90 relative overflow-hidden">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
                         <div>
-                            <span class="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">3D INTERACTIVE ALGORITHM PLAYBOOK</span>
-                            <h2 class="text-xl font-bold font-outfit text-white">Visual Speedcubing Laboratory</h2>
-                            <p class="text-xs text-slate-400 font-mono">Select any algorithm to simulate its 3D permutation cycle in real-time</p>
+                            <span class="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider" data-i18n="learning_title">{{ t('learning_title') }}</span>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="learning_sub">{{ t('learning_sub') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="learning_desc">{{ t('learning_desc') }}</p>
                         </div>
                         <!-- Algo Category Switcher -->
                         <div class="flex items-center gap-1.5 flex-wrap font-mono text-[11px]">
-                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold" data-cat="all">All</button>
-                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="cfop">CFOP</button>
-                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="oll">OLL</button>
-                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="pll">PLL</button>
-                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="math">Group Commutators</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold" data-cat="all" data-i18n="cat_all">{{ t('cat_all') }}</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="cfop" data-i18n="cat_cfop">{{ t('cat_cfop') }}</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="oll" data-i18n="cat_oll">{{ t('cat_oll') }}</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="pll" data-i18n="cat_pll">{{ t('cat_pll') }}</button>
+                            <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="math" data-i18n="cat_math">{{ t('cat_math') }}</button>
                         </div>
                     </div>
 
@@ -548,7 +548,7 @@
                             <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
                                 <span class="flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                                    <span id="active-algo-name" class="font-bold text-white">Sexy Move (Basic Commutator)</span>
+                                    <span id="active-algo-name" class="font-bold text-white">Sexy Move (Basic Generator)</span>
                                 </span>
                                 <span id="active-algo-order" class="text-indigo-400">Order: 6</span>
                             </div>
@@ -574,7 +574,7 @@
                                         <button id="learning-reset-btn" class="ctrl-btn text-xs" title="Reset Cube"><i class="fa-solid fa-rotate-left"></i></button>
                                     </div>
                                     <div class="text-[11px] font-mono text-slate-500">
-                                        Speed: <span class="text-cyan-400 font-bold">Normal</span>
+                                        <span data-i18n="speed_label">{{ t('speed_label') }}</span> <span class="text-cyan-400 font-bold" data-i18n="normal">{{ t('normal') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -584,21 +584,21 @@
                         <div class="lg:col-span-5 rounded-3xl bg-slate-900/60 border border-slate-800 p-5 flex flex-col justify-between">
                             <div class="space-y-4 font-mono text-xs">
                                 <div>
-                                    <span class="text-[10px] text-slate-500 uppercase block">Algorithm Formula Notation:</span>
+                                    <span class="text-[10px] text-slate-500 uppercase block" data-i18n="algo_formula_label">{{ t('algo_formula_label') }}</span>
                                     <div id="active-algo-formula" class="text-cyan-300 font-bold text-base mt-1 break-all bg-black/60 p-3 rounded-xl border border-slate-800">
                                         R U R' U'
                                     </div>
                                 </div>
 
                                 <div>
-                                    <span class="text-[10px] text-slate-500 uppercase block">Mathematical Group Theory Interpretation:</span>
+                                    <span class="text-[10px] text-slate-500 uppercase block" data-i18n="group_theory_label">{{ t('group_theory_label') }}</span>
                                     <p id="active-algo-math" class="text-slate-300 text-xs font-sans mt-1 leading-relaxed">
-                                        Standard group commutator $[A, B] = A B A^{-1} B^{-1}$. Generates subgroup of order 6, meaning applying this permutation sequence 6 times restores the solved identity state $I$.
+                                        Standard group commutator $[A, B] = A B A^{-1} B^{-1}$. Generates subgroup of order 6.
                                     </p>
                                 </div>
 
                                 <div>
-                                    <span class="text-[10px] text-slate-500 uppercase block">Speedcubing Finger-Trick Cue:</span>
+                                    <span class="text-[10px] text-slate-500 uppercase block" data-i18n="finger_trick_label">{{ t('finger_trick_label') }}</span>
                                     <p id="active-algo-tip" class="text-emerald-400 text-xs font-sans mt-1">
                                         Right hand flick: Push R with right thumb, index flick U, pull back R' with thumb, index flick U'.
                                     </p>
@@ -607,7 +607,7 @@
 
                             <div class="mt-4 pt-4 border-t border-slate-800/80">
                                 <a href="{{ url_for('visualizer.index') }}" class="w-full py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 font-mono text-xs text-center block transition-colors">
-                                    <i class="fa-solid fa-cube mr-1"></i> Inspect in Full Visualizer Lab
+                                    <i class="fa-solid fa-cube mr-1"></i> <span data-i18n="inspect_full_visualizer">{{ t('inspect_full_visualizer') }}</span>
                                 </a>
                             </div>
                         </div>
@@ -706,9 +706,9 @@
                 <div class="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/90">
                     <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
                         <div>
-                            <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">SPEEDCUBING METHODOLOGY & CFOP SYSTEM</span>
-                            <h2 class="text-xl font-bold font-outfit text-white">4-Phase Speedcubing Blueprint</h2>
-                            <p class="text-xs text-slate-400 font-mono">Master the Fridrich (CFOP) method from Cross to Permutation</p>
+                            <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider" data-i18n="guide_badge">{{ t('guide_badge') }}</span>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="guide_title">{{ t('guide_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="guide_desc">{{ t('guide_desc') }}</p>
                         </div>
                     </div>
 
@@ -723,18 +723,18 @@
                                         1
                                     </div>
                                     <div>
-                                        <h3 class="font-bold text-white text-base font-outfit">Phase 1: The White Cross (EO Alignment)</h3>
-                                        <span class="text-xs font-mono text-emerald-400">Target Move Budget: &le; 8 moves</span>
+                                        <h3 class="font-bold text-white text-base font-outfit" data-i18n="phase_1_title">{{ t('phase_1_title') }}</h3>
+                                        <span class="text-xs font-mono text-emerald-400">Target: &le; 8 moves</span>
                                     </div>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 font-mono text-[10px]">Intuitive Phase</span>
+                                <span class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 font-mono text-[10px]">Step 1</span>
                             </div>
-                            <p class="text-slate-300 leading-relaxed mt-3">
-                                Orient 4 white edge pieces around the white center piece while ensuring side colors match adjacent Red, Blue, Orange, and Green centers. In group theory, this restricts the search tree to states where bottom edge orientations are invariant.
+                            <p class="text-slate-300 leading-relaxed mt-3" data-i18n="phase_1_desc">
+                                {{ t('phase_1_desc') }}
                             </p>
                             <div class="mt-3 p-3 rounded-xl bg-black/60 border border-slate-800 font-mono text-xs text-indigo-300 flex items-center justify-between">
-                                <span>Key Triggers: <strong class="text-white">F R' D' R F2</strong> or intuitive bottom face insertions</span>
-                                <button onclick="simulateGuideStep('cross')" class="text-emerald-400 hover:underline">Preview in 3D &rarr;</button>
+                                <span>Key Triggers: <strong class="text-white">F R' D' R F2</strong></span>
+                                <button onclick="simulateGuideStep('cross')" class="text-emerald-400 hover:underline" data-i18n="preview_in_3d">{{ t('preview_in_3d') }}</button>
                             </div>
                         </div>
 
@@ -746,18 +746,18 @@
                                         2
                                     </div>
                                     <div>
-                                        <h3 class="font-bold text-white text-base font-outfit">Phase 2: First Two Layers (F2L)</h3>
-                                        <span class="text-xs font-mono text-indigo-400">41 Standard Algorithms / Slot Pairing</span>
+                                        <h3 class="font-bold text-white text-base font-outfit" data-i18n="phase_2_title">{{ t('phase_2_title') }}</h3>
+                                        <span class="text-xs font-mono text-indigo-400">41 Algorithms / Intuitive Pairs</span>
                                     </div>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-full bg-indigo-950 text-indigo-300 font-mono text-[10px]">Efficiency Core</span>
+                                <span class="px-2.5 py-1 rounded-full bg-indigo-950 text-indigo-300 font-mono text-[10px]">Step 2</span>
                             </div>
-                            <p class="text-slate-300 leading-relaxed mt-3">
-                                Solve the 4 corner-edge slots simultaneously without disturbing the white cross. Pair a corner piece with its matching edge in the top layer and insert both into their bottom slot in a single fluid motion.
+                            <p class="text-slate-300 leading-relaxed mt-3" data-i18n="phase_2_desc">
+                                {{ t('phase_2_desc') }}
                             </p>
                             <div class="mt-3 p-3 rounded-xl bg-black/60 border border-slate-800 font-mono text-xs text-indigo-300 flex items-center justify-between">
-                                <span>Standard Pair Insertion: <strong class="text-white">U R U' R'</strong> (Right) &bull; <strong class="text-white">U' L' U L</strong> (Left)</span>
-                                <button onclick="simulateGuideStep('f2l')" class="text-indigo-400 hover:underline">Preview in 3D &rarr;</button>
+                                <span>Standard Pair Insertion: <strong class="text-white">U R U' R'</strong></span>
+                                <button onclick="simulateGuideStep('f2l')" class="text-indigo-400 hover:underline" data-i18n="preview_in_3d">{{ t('preview_in_3d') }}</button>
                             </div>
                         </div>
 
@@ -769,18 +769,18 @@
                                         3
                                     </div>
                                     <div>
-                                        <h3 class="font-bold text-white text-base font-outfit">Phase 3: Orientation of Last Layer (OLL)</h3>
-                                        <span class="text-xs font-mono text-yellow-400">2-Look OLL / 57 Full Cases</span>
+                                        <h3 class="font-bold text-white text-base font-outfit" data-i18n="phase_3_title">{{ t('phase_3_title') }}</h3>
+                                        <span class="text-xs font-mono text-yellow-400">2-Look OLL / 57 Cases</span>
                                     </div>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-full bg-yellow-950 text-yellow-300 font-mono text-[10px]">Yellow Face Complete</span>
+                                <span class="px-2.5 py-1 rounded-full bg-yellow-950 text-yellow-300 font-mono text-[10px]">Step 3</span>
                             </div>
-                            <p class="text-slate-300 leading-relaxed mt-3">
-                                Orient all 9 yellow facelets facing upwards on the top layer. 2-Look OLL breaks this down into two sub-steps: (1) Form a yellow top cross via <code class="text-yellow-300">F R U R' U' F'</code>, then (2) Orient the remaining 4 corners using Sune (<code class="text-yellow-300">R U R' U R U2 R'</code>).
+                            <p class="text-slate-300 leading-relaxed mt-3" data-i18n="phase_3_desc">
+                                {{ t('phase_3_desc') }}
                             </p>
                             <div class="mt-3 p-3 rounded-xl bg-black/60 border border-slate-800 font-mono text-xs text-yellow-300 flex items-center justify-between">
                                 <span>Yellow Edge Cross: <strong class="text-white">F (R U R' U') F'</strong></span>
-                                <button onclick="simulateGuideStep('oll')" class="text-yellow-400 hover:underline">Preview in 3D &rarr;</button>
+                                <button onclick="simulateGuideStep('oll')" class="text-yellow-400 hover:underline" data-i18n="preview_in_3d">{{ t('preview_in_3d') }}</button>
                             </div>
                         </div>
 
@@ -792,18 +792,18 @@
                                         4
                                     </div>
                                     <div>
-                                        <h3 class="font-bold text-white text-base font-outfit">Phase 4: Permutation of Last Layer (PLL)</h3>
-                                        <span class="text-xs font-mono text-emerald-400">2-Look PLL / 21 Full Permutations</span>
+                                        <h3 class="font-bold text-white text-base font-outfit" data-i18n="phase_4_title">{{ t('phase_4_title') }}</h3>
+                                        <span class="text-xs font-mono text-emerald-400">2-Look PLL / 21 Perms</span>
                                     </div>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 font-mono text-[10px]">Final Solved State</span>
+                                <span class="px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 font-mono text-[10px]">Step 4</span>
                             </div>
-                            <p class="text-slate-300 leading-relaxed mt-3">
-                                Permute all pieces on the top layer into their solved target locations while preserving orientation. 2-Look PLL first solves the 4 corner positions with T-Perm or Y-Perm, then cycles the 3/4 edge pieces with U-Perm or H-Perm to reach the identity permutation $\{1\}$.
+                            <p class="text-slate-300 leading-relaxed mt-3" data-i18n="phase_4_desc">
+                                {{ t('phase_4_desc') }}
                             </p>
                             <div class="mt-3 p-3 rounded-xl bg-black/60 border border-slate-800 font-mono text-xs text-emerald-300 flex items-center justify-between">
-                                <span>Adjacent Corner Swap: <strong class="text-white">T-Perm</strong> &bull; Edge 3-Cycle: <strong class="text-white">Ua / Ub Perm</strong></span>
-                                <button onclick="simulateGuideStep('pll')" class="text-emerald-400 hover:underline">Preview in 3D &rarr;</button>
+                                <span>Corner Swap: <strong class="text-white">T-Perm</strong> &bull; Edges: <strong class="text-white">U-Perm</strong></span>
+                                <button onclick="simulateGuideStep('pll')" class="text-emerald-400 hover:underline" data-i18n="preview_in_3d">{{ t('preview_in_3d') }}</button>
                             </div>
                         </div>
 
@@ -818,9 +818,9 @@
                 <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/90">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
                         <div>
-                            <span class="text-xs font-mono text-amber-400 font-bold uppercase tracking-wider">OFFICIAL WCA & GROUP THEORY TOURNAMENTS</span>
-                            <h2 class="text-xl font-bold font-outfit text-white">Active Competitions Arena</h2>
-                            <p class="text-xs text-slate-400 font-mono">Solve official scrambles, submit solutions, and win champion trophies</p>
+                            <span class="text-xs font-mono text-amber-400 font-bold uppercase tracking-wider" data-i18n="competitions_badge">{{ t('competitions_badge') }}</span>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="competitions_title">{{ t('competitions_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="competitions_desc">{{ t('competitions_desc') }}</p>
                         </div>
                     </div>
 
@@ -838,7 +838,7 @@
                                         <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed">{{ c.description }}</p>
                                         
                                         <div class="p-3.5 rounded-2xl bg-black/80 border border-slate-800 font-mono text-xs text-indigo-300 mb-4 break-all">
-                                            <span class="text-[10px] text-slate-500 block uppercase mb-1">Official Tournament Scramble:</span>
+                                            <span class="text-[10px] text-slate-500 block uppercase mb-1" data-i18n="official_scramble">{{ t('official_scramble') }}</span>
                                             {{ c.scramble }}
                                         </div>
                                     </div>
@@ -849,17 +849,19 @@
                                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
                                             <div class="sm:col-span-8">
                                                 <input type="text" name="solution" required placeholder="Enter solution moves (e.g. U R U' R')..."
+                                                       data-i18n-placeholder="enter_solution"
                                                        class="w-full px-3.5 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-xs font-mono text-emerald-300 focus:outline-none focus:border-amber-500">
                                             </div>
                                             <div class="sm:col-span-4">
                                                 <input type="number" step="0.01" name="time_seconds" placeholder="Time (s)"
+                                                       data-i18n-placeholder="time_seconds"
                                                        class="w-full px-3 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-xs font-mono text-cyan-300 focus:outline-none focus:border-amber-500">
                                             </div>
                                         </div>
 
                                         <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-black font-bold text-xs font-mono rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-600/25">
                                             <i class="fa-solid fa-paper-plane"></i>
-                                            <span>Submit Solution for Judging</span>
+                                            <span data-i18n="submit_solution">{{ t('submit_solution') }}</span>
                                         </button>
                                     </form>
                                 </div>
@@ -868,7 +870,7 @@
                     {% else %}
                         <div class="text-center py-12 text-slate-500 font-mono text-xs">
                             <i class="fa-solid fa-trophy text-4xl text-slate-700 mb-2 block"></i>
-                            No active tournaments open right now. Check back soon for Super Admin announcements!
+                            <span data-i18n="no_competitions">{{ t('no_competitions') }}</span>
                         </div>
                     {% endif %}
                 </div>
@@ -881,9 +883,9 @@
                 <div class="glass-card p-6 sm:p-8 rounded-3xl border border-purple-500/30 bg-slate-950/90">
                     <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
                         <div>
-                            <span class="text-xs font-mono text-purple-400 font-bold uppercase tracking-wider">OFFICIAL CURRICULUM</span>
-                            <h2 class="text-xl font-bold font-outfit text-white">Speedcubing Masterclasses</h2>
-                            <p class="text-xs text-slate-400 font-mono">Structured courses declared by Super Admin & Grandmasters</p>
+                            <span class="text-xs font-mono text-purple-400 font-bold uppercase tracking-wider" data-i18n="courses_badge">{{ t('courses_badge') }}</span>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="courses_title">{{ t('courses_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="courses_desc">{{ t('courses_desc') }}</p>
                         </div>
                     </div>
 
@@ -908,7 +910,7 @@
 
                                     <div class="pt-4 border-t border-slate-800 flex items-center gap-3">
                                         <button onclick="openCourseModal('{{ crs.title }}', '{{ crs.description }}')" class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono font-bold text-xs shadow-lg shadow-purple-600/25 transition-all">
-                                            <i class="fa-solid fa-play mr-1"></i> Start Course
+                                            <i class="fa-solid fa-play mr-1"></i> <span data-i18n="start_course">{{ t('start_course') }}</span>
                                         </button>
                                         <form method="POST" action="{{ url_for('user.complete_course') }}" class="inline">
                                             <input type="hidden" name="course_id" value="{{ crs.id }}">
@@ -923,7 +925,7 @@
                     {% else %}
                         <div class="text-center py-12 text-slate-500 font-mono text-xs">
                             <i class="fa-solid fa-graduation-cap text-4xl text-slate-700 mb-2 block"></i>
-                            No published masterclasses yet. Check back soon!
+                            <span data-i18n="no_courses">{{ t('no_courses') }}</span>
                         </div>
                     {% endif %}
                 </div>
@@ -936,12 +938,12 @@
                 <div class="glass-card p-6 sm:p-8 rounded-3xl border border-blue-500/30 bg-slate-950/90">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
                         <div>
-                            <span class="text-xs font-mono text-blue-400 font-bold uppercase tracking-wider">COMPUTER VISION & CUSTOM PERMUTATION NET</span>
-                            <h2 class="text-xl font-bold font-outfit text-white">Upload Cube State or Paint 2D Net</h2>
-                            <p class="text-xs text-slate-400 font-mono">Upload cube images for OpenCV scanning or manually paint individual facelets</p>
+                            <span class="text-xs font-mono text-blue-400 font-bold uppercase tracking-wider" data-i18n="upload_badge">{{ t('upload_badge') }}</span>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="upload_title">{{ t('upload_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="upload_desc">{{ t('upload_desc') }}</p>
                         </div>
                         <button id="net-reset-btn" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-300">
-                            <i class="fa-solid fa-rotate-left mr-1"></i> Reset to Solved
+                            <i class="fa-solid fa-rotate-left mr-1"></i> <span data-i18n="reset_to_solved">{{ t('reset_to_solved') }}</span>
                         </button>
                     </div>
 
@@ -951,7 +953,7 @@
                         <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between mb-4">
-                                    <span class="font-bold text-white text-xs font-mono uppercase">2D Unfolded Cube Net:</span>
+                                    <span class="font-bold text-white text-xs font-mono uppercase" data-i18n="unfolded_net_label">{{ t('unfolded_net_label') }}</span>
                                     <div class="flex items-center gap-1.5" id="color-palette">
                                         <button class="palette-btn w-6 h-6 rounded-full bg-yellow-400 ring-2 ring-white" data-color="yellow" title="Yellow (U)"></button>
                                         <button class="palette-btn w-6 h-6 rounded-full bg-white" data-color="white" title="White (D)"></button>
@@ -965,11 +967,9 @@
                                 <!-- Unfolded 3x3 Cross Grid -->
                                 <div class="flex flex-col items-center justify-center space-y-1.5 py-2">
                                     <!-- Top Face: Yellow (U) -->
-                                    <div class="grid grid-cols-3 gap-1" id="net-face-u">
-                                        <!-- 9 cells -->
-                                    </div>
+                                    <div class="grid grid-cols-3 gap-1" id="net-face-u"></div>
                                     
-                                    <!-- Middle Faces: Left (Orange), Front (Green), Right (Red), Back (Blue) -->
+                                    <!-- Middle Faces: Left, Front, Right, Back -->
                                     <div class="flex gap-2">
                                         <div class="grid grid-cols-3 gap-1" id="net-face-l"></div>
                                         <div class="grid grid-cols-3 gap-1" id="net-face-f"></div>
@@ -978,26 +978,24 @@
                                     </div>
 
                                     <!-- Bottom Face: White (D) -->
-                                    <div class="grid grid-cols-3 gap-1" id="net-face-d">
-                                        <!-- 9 cells -->
-                                    </div>
+                                    <div class="grid grid-cols-3 gap-1" id="net-face-d"></div>
                                 </div>
                             </div>
 
                             <button id="net-solve-btn" class="w-full mt-4 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-blue-600/25 transition-all">
-                                <i class="fa-solid fa-atom mr-1.5"></i> Solve Painted Net with Two-Phase Algorithm
+                                <i class="fa-solid fa-atom mr-1.5"></i> <span data-i18n="solve_painted_net">{{ t('solve_painted_net') }}</span>
                             </button>
                         </div>
 
                         <!-- Right: OpenCV Image File Dropzone -->
                         <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
                             <div>
-                                <span class="font-bold text-white text-xs font-mono uppercase block mb-2">OpenCV Face Scanner:</span>
-                                <p class="text-xs text-slate-400 font-sans mb-4">Upload a photo of your scrambled Rubik's cube face to extract sticker colors automatically.</p>
+                                <span class="font-bold text-white text-xs font-mono uppercase block mb-2" data-i18n="opencv_scanner_title">{{ t('opencv_scanner_title') }}</span>
+                                <p class="text-xs text-slate-400 font-sans mb-4" data-i18n="opencv_scanner_desc">{{ t('opencv_scanner_desc') }}</p>
 
                                 <div class="p-6 rounded-2xl border-2 border-dashed border-slate-700 hover:border-blue-500/60 bg-black/60 text-center cursor-pointer transition-all" id="vision-dropzone">
                                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-400 mb-2 block"></i>
-                                    <div class="text-xs font-mono text-slate-300 font-bold">Drag & Drop Cube Photo</div>
+                                    <div class="text-xs font-mono text-slate-300 font-bold" data-i18n="drag_drop_photo">{{ t('drag_drop_photo') }}</div>
                                     <div class="text-[10px] font-mono text-slate-500 mt-1">Supports PNG, JPG, WEBP (Max 5MB)</div>
                                     <input type="file" id="vision-file-input" class="hidden" accept="image/*">
                                 </div>
@@ -1013,7 +1011,7 @@
                             </div>
 
                             <button id="vision-scan-btn" class="w-full mt-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs transition-colors">
-                                <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Run OpenCV Color Extraction
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> <span data-i18n="run_opencv">{{ t('run_opencv') }}</span>
                             </button>
                         </div>
 
@@ -1031,9 +1029,9 @@
                     <div class="md:col-span-7 glass-card p-6 sm:p-8 rounded-3xl border border-yellow-500/30 bg-slate-950/90">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-6">
                             <h3 class="text-base font-bold font-outfit text-white flex items-center gap-2">
-                                <i class="fa-solid fa-award text-amber-400"></i> Speedcuber Trophy Cabinet
+                                <i class="fa-solid fa-award text-amber-400"></i> <span data-i18n="trophies_title">{{ t('trophies_title') }}</span>
                             </h3>
-                            <span class="text-xs font-mono text-amber-400">4 Unlocked</span>
+                            <span class="text-xs font-mono text-amber-400">4 <span data-i18n="unlocked_count">{{ t('unlocked_count') }}</span></span>
                         </div>
 
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center font-mono text-xs">
@@ -1081,26 +1079,26 @@
                     <div class="md:col-span-5 glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/90 flex flex-col justify-between">
                         <div>
                             <h3 class="text-base font-bold font-outfit text-white mb-2 flex items-center gap-2">
-                                <i class="fa-solid fa-ticket text-emerald-400"></i> Redeem Promo Code
+                                <i class="fa-solid fa-ticket text-emerald-400"></i> <span data-i18n="redeem_code_title">{{ t('redeem_code_title') }}</span>
                             </h3>
-                            <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed">
-                                Enter a tournament coupon code declared by Super Admin to unlock premium custom themes and badges.
+                            <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed" data-i18n="redeem_code_desc">
+                                {{ t('redeem_code_desc') }}
                             </p>
                         </div>
 
                         <form method="POST" action="{{ url_for('user.redeem_coupon') }}" class="space-y-3">
                             <div>
-                                <label class="text-[10px] font-mono text-slate-400 block uppercase mb-1">Coupon Code:</label>
+                                <label class="text-[10px] font-mono text-slate-400 block uppercase mb-1" data-i18n="coupon_code_label">{{ t('coupon_code_label') }}</label>
                                 <input type="text" name="code" required placeholder="e.g. GROUPTHEORY2026"
                                        class="w-full px-4 py-3 bg-black/80 border border-slate-800 rounded-2xl text-emerald-300 text-xs font-mono uppercase focus:outline-none focus:border-emerald-500 tracking-wider">
                             </div>
                             <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-2xl shadow-xl shadow-emerald-600/25 transition-all font-mono">
-                                <i class="fa-solid fa-gift mr-1"></i> Redeem Reward
+                                <i class="fa-solid fa-gift mr-1"></i> <span data-i18n="redeem_button">{{ t('redeem_button') }}</span>
                             </button>
                         </form>
 
-                        <div class="mt-4 p-3 rounded-xl bg-black/60 border border-slate-800/80 text-[10px] font-mono text-slate-500 text-center">
-                            Demo Code: <strong class="text-emerald-400">GROUPTHEORY2026</strong>
+                        <div class="mt-4 p-3 rounded-xl bg-black/60 border border-slate-800/80 text-[10px] font-mono text-slate-500 text-center" data-i18n="demo_coupon_hint">
+                            {{ t('demo_coupon_hint') }}
                         </div>
                     </div>
 
@@ -1114,27 +1112,27 @@
                 <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/90">
                     <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
                         <div>
-                            <span class="text-xs font-mono text-indigo-400 font-bold uppercase tracking-wider">ACCOUNT CUSTOMIZATION</span>
-                            <h2 class="text-xl font-bold font-outfit text-white">Speedcuber Profile Settings</h2>
-                            <p class="text-xs text-slate-400 font-mono">Update bio, avatar theme, and speedcubing preferences</p>
+                            <span class="text-xs font-mono text-indigo-400 font-bold uppercase tracking-wider" data-i18n="profile_badge">{{ t('profile_badge') }}</span>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="profile_title">{{ t('profile_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="profile_desc">{{ t('profile_desc') }}</p>
                         </div>
                     </div>
 
                     <form method="POST" action="{{ url_for('profile.update') }}" class="space-y-5 max-w-xl">
                         <div>
-                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1">Username:</label>
+                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1" data-i18n="username_label">{{ t('username_label') }}</label>
                             <input type="text" value="{{ user.username }}" disabled
                                    class="w-full px-4 py-2.5 bg-black/60 border border-slate-800 rounded-xl text-xs font-mono text-slate-400 cursor-not-allowed">
                         </div>
 
                         <div>
-                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1">Bio / Speedcubing Status:</label>
+                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1" data-i18n="bio_label">{{ t('bio_label') }}</label>
                             <textarea name="bio" rows="3" placeholder="Tell other contenders about your speedcubing journey..."
                                       class="w-full px-4 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-indigo-500">{{ user.bio or '' }}</textarea>
                         </div>
 
                         <div>
-                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1">Avatar Accent Color:</label>
+                            <label class="text-xs font-mono text-slate-400 block uppercase mb-1" data-i18n="avatar_color_label">{{ t('avatar_color_label') }}</label>
                             <div class="flex items-center gap-3">
                                 <input type="color" name="avatar_color" value="{{ user.avatar_color or '#818cf8' }}"
                                        class="w-12 h-10 rounded-xl border border-slate-800 bg-transparent cursor-pointer">
@@ -1143,8 +1141,8 @@
                         </div>
 
                         <div class="pt-4 border-t border-slate-800">
-                            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all">
-                                Save Profile Changes
+                            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all" data-i18n="save_profile">
+                                {{ t('save_profile') }}
                             </button>
                         </div>
                     </form>
@@ -1317,11 +1315,11 @@
             humanMovesCount = 0;
             if (humanMoveCountEl) humanMoveCountEl.textContent = '0';
             if (humanStatusEl) {
-                humanStatusEl.textContent = 'Racing!';
+                humanStatusEl.textContent = window.getTranslation ? window.getTranslation('racing') : 'Racing!';
                 humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-rose-950 text-rose-300 text-[10px] font-mono border border-rose-600 animate-pulse';
             }
             if (humanStartBtn) {
-                humanStartBtn.innerHTML = '<i class="fa-solid fa-flag-checkered"></i> <span>Finish Human Solve!</span>';
+                humanStartBtn.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> <span>${window.getTranslation ? window.getTranslation('finish_human_solve') : 'Finish Human Solve!'}</span>`;
                 humanStartBtn.className = 'w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2';
             }
             playTone(520, 'sine', 0.1);
@@ -1339,11 +1337,11 @@
             isHumanRacing = false;
             clearInterval(humanTimerInterval);
             if (humanStatusEl) {
-                humanStatusEl.textContent = 'Completed!';
+                humanStatusEl.textContent = window.getTranslation ? window.getTranslation('completed') : 'Completed!';
                 humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 text-[10px] font-mono border border-emerald-600';
             }
             if (humanStartBtn) {
-                humanStartBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> <span>Race Again</span>';
+                humanStartBtn.innerHTML = `<i class="fa-solid fa-rotate"></i> <span>${window.getTranslation ? window.getTranslation('race_again') : 'Race Again'}</span>`;
                 humanStartBtn.className = 'w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2';
             }
             playTone(880, 'triangle', 0.2);
@@ -1381,11 +1379,11 @@
         if (humanTimerEl) humanTimerEl.textContent = '00:00.00';
         if (humanMoveCountEl) humanMoveCountEl.textContent = '0';
         if (humanStatusEl) {
-            humanStatusEl.textContent = 'Ready';
+            humanStatusEl.textContent = window.getTranslation ? window.getTranslation('ready') : 'Ready';
             humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700';
         }
         if (humanStartBtn) {
-            humanStartBtn.innerHTML = '<i class="fa-solid fa-stopwatch"></i> <span>Start Human Timer</span>';
+            humanStartBtn.innerHTML = `<i class="fa-solid fa-stopwatch"></i> <span>${window.getTranslation ? window.getTranslation('start_human_timer') : 'Start Human Timer'}</span>`;
             humanStartBtn.className = 'w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2';
         }
         if (humanDuelCube) humanDuelCube.buildCube();
@@ -1469,7 +1467,7 @@
         if (aiProgressTextEl) aiProgressTextEl.textContent = '0 / 0';
         if (aiSolutionTextEl) aiSolutionTextEl.textContent = 'Click "Compute & Animate AI Solve" to start...';
         if (aiStatusEl) {
-            aiStatusEl.textContent = 'Standby';
+            aiStatusEl.textContent = window.getTranslation ? window.getTranslation('standby') : 'Standby';
             aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700';
         }
     });
@@ -1489,7 +1487,7 @@
 
         banner.classList.remove('hidden');
         banner.className = 'mt-6 p-5 rounded-2xl border bg-indigo-950/80 border-indigo-500 text-center font-mono text-xs shadow-2xl';
-        title.innerHTML = '<i class="fa-solid fa-trophy text-amber-400 mr-2"></i> Match Completed!';
+        title.innerHTML = `<i class="fa-solid fa-trophy text-amber-400 mr-2"></i> ${window.getTranslation ? window.getTranslation('match_completed') : 'Match Completed!'}`;
         desc.textContent = `Human Move Count: ${humanMovesCount} | AI Optimal Moves: ${aiSolutionMoves.length || 14}. Both solvers reached the identity state!`;
     }
 

@@ -14,12 +14,17 @@ from controllers import (
     user_bp, visualizer_bp, profile_bp, api_bp
 )
 
+import json
+from flask import session, request, redirect, jsonify
+from translations import TRANSLATIONS, get_text
+
 def create_app():
     """
-    Flask Application Factory (Modular MVC Setup with Multi-Role RBAC):
+    Flask Application Factory (Modular MVC Setup with Multi-Role RBAC & i18n):
     1. Configuration load kore
     2. MySQL / SQLite database schema initialize kore
     3. Multi-Role Blueprints (Controllers) register kore
+    4. Multi-Language (i18n) Engine context processor register kore
     """
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -37,6 +42,28 @@ def create_app():
     app.register_blueprint(visualizer_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(api_bp)
+
+    # Multi-Language (i18n) Context Processor
+    @app.context_processor
+    def inject_i18n():
+        lang = session.get('lang', 'en')
+        def t(key, default=''):
+            return get_text(key, lang, default)
+        return {
+            'current_lang': lang,
+            't': t,
+            'translations_json': json.dumps(TRANSLATIONS)
+        }
+
+    # Language Switcher Route
+    @app.route('/set-language/<lang>', methods=['GET', 'POST'])
+    def set_language(lang):
+        if lang in TRANSLATIONS:
+            session['lang'] = lang
+        if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'lang': session.get('lang', 'en')})
+        referrer = request.referrer or '/'
+        return redirect(referrer)
 
     return app
 

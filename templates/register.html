@@ -87,11 +87,11 @@
             
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-1.5">
-                    <h1 class="text-2xl font-bold font-outfit text-white tracking-tight">Create Account</h1>
+                    <h1 class="text-2xl font-bold font-outfit text-white tracking-tight" data-i18n="join_title">{{ t('join_title') }}</h1>
                     <span class="text-xs font-mono text-slate-500">Free Access</span>
                 </div>
-                <p class="text-xs text-slate-400 font-sans">
-                    Register a unique username to start logging your optimal solves.
+                <p class="text-xs text-slate-400 font-sans" data-i18n="join_desc">
+                    {{ t('join_desc') }}
                 </p>
             </div>
 
@@ -101,7 +101,7 @@
                 <!-- Username -->
                 <div>
                     <label for="username" class="block text-xs font-medium text-slate-300 mb-1 uppercase tracking-wider font-mono">
-                        <i class="fa-solid fa-user text-purple-400 mr-1.5"></i> Username
+                        <i class="fa-solid fa-user text-purple-400 mr-1.5"></i> <span data-i18n="username">{{ t('username') }}</span>
                     </label>
                     <input type="text" id="username" name="username" required autocomplete="username"
                            placeholder="Choose a unique username"
@@ -111,7 +111,7 @@
                 <!-- Email (Optional) -->
                 <div>
                     <label for="email" class="block text-xs font-medium text-slate-300 mb-1 uppercase tracking-wider font-mono">
-                        <i class="fa-solid fa-envelope text-purple-400 mr-1.5"></i> Email (Optional)
+                        <i class="fa-solid fa-envelope text-purple-400 mr-1.5"></i> <span data-i18n="email_address">{{ t('email_address') }}</span>
                     </label>
                     <input type="email" id="email" name="email" autocomplete="email"
                            placeholder="user@speedcube.com"
@@ -121,7 +121,7 @@
                 <!-- Password -->
                 <div>
                     <label for="password" class="block text-xs font-medium text-slate-300 mb-1 uppercase tracking-wider font-mono flex items-center justify-between">
-                        <span><i class="fa-solid fa-key text-purple-400 mr-1.5"></i> Password</span>
+                        <span><i class="fa-solid fa-key text-purple-400 mr-1.5"></i> <span data-i18n="password">{{ t('password') }}</span></span>
                         <span id="pw-strength-label" class="text-[10px] text-slate-500 font-normal">Min 6 chars</span>
                     </label>
                     <div class="relative">
@@ -142,7 +142,7 @@
                 <!-- Confirm Password -->
                 <div>
                     <label for="confirm_password" class="block text-xs font-medium text-slate-300 mb-1 uppercase tracking-wider font-mono">
-                        <i class="fa-solid fa-shield-check text-purple-400 mr-1.5"></i> Confirm Password
+                        <i class="fa-solid fa-shield-check text-purple-400 mr-1.5"></i> <span data-i18n="confirm_password">{{ t('confirm_password') }}</span>
                     </label>
                     <input type="password" id="confirm_password" name="confirm_password" required minlength="6" autocomplete="new-password"
                            placeholder="Re-enter your password"
@@ -152,7 +152,7 @@
                 <!-- Submit Button -->
                 <button type="submit"
                         class="w-full mt-2 py-3.5 px-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-500 hover:from-purple-500 hover:to-emerald-400 text-white font-bold text-sm rounded-xl shadow-xl shadow-purple-600/30 hover:shadow-purple-600/50 hover:scale-[1.01] transition-all duration-300 flex items-center justify-center gap-2 group">
-                    <span>Complete Registration</span>
+                    <span data-i18n="register_btn">{{ t('register_btn') }}</span>
                     <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                 </button>
 
@@ -163,7 +163,7 @@
                 <p class="text-xs text-slate-400">
                     Already registered? 
                     <a href="{{ url_for('auth.login') }}" class="text-purple-400 hover:text-purple-300 font-bold ml-1 hover:underline">
-                        Sign In to Your Account &rarr;
+                        <span data-i18n="nav_sign_in">{{ t('nav_sign_in') }}</span> &rarr;
                     </a>
                 </p>
             </div>

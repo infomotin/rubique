@@ -87,11 +87,11 @@
             
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-2">
-                    <h1 class="text-2xl font-bold font-outfit text-white tracking-tight">Sign In</h1>
+                    <h1 class="text-2xl font-bold font-outfit text-white tracking-tight" data-i18n="nav_sign_in">{{ t('nav_sign_in') }}</h1>
                     <span class="text-xs font-mono text-slate-500">Secure MVC Session</span>
                 </div>
-                <p class="text-xs text-slate-400 font-sans">
-                    Enter your username and password to access your laboratory.
+                <p class="text-xs text-slate-400 font-sans" data-i18n="enter_credentials">
+                    {{ t('enter_credentials') }}
                 </p>
             </div>
 
@@ -101,11 +101,11 @@
                 <!-- Username Input -->
                 <div>
                     <label for="username" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono flex items-center justify-between">
-                        <span><i class="fa-solid fa-user text-indigo-400 mr-1.5"></i> Username</span>
+                        <span><i class="fa-solid fa-user text-indigo-400 mr-1.5"></i> <span data-i18n="username">{{ t('username') }}</span></span>
                     </label>
                     <div class="relative">
                         <input type="text" id="username" name="username" required autocomplete="username"
-                               placeholder="e.g. rubikmaster"
+                               placeholder="e.g. speedcuber"
                                class="w-full px-4 py-3 bg-slate-900/90 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all text-sm font-sans">
                         <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
                             <i class="fa-solid fa-at text-xs"></i>
@@ -116,7 +116,7 @@
                 <!-- Password Input with Visibility Toggle -->
                 <div>
                     <label for="password" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono flex items-center justify-between">
-                        <span><i class="fa-solid fa-key text-indigo-400 mr-1.5"></i> Password</span>
+                        <span><i class="fa-solid fa-key text-indigo-400 mr-1.5"></i> <span data-i18n="password">{{ t('password') }}</span></span>
                     </label>
                     <div class="relative">
                         <input type="password" id="password" name="password" required autocomplete="current-password"
@@ -131,7 +131,7 @@
                 <!-- Submit Button -->
                 <button type="submit"
                         class="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm rounded-xl shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-[1.01] transition-all duration-300 flex items-center justify-center gap-2 group">
-                    <span>Authenticate & Enter Lab</span>
+                    <span data-i18n="sign_in_btn">{{ t('sign_in_btn') }}</span>
                     <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                 </button>
 
@@ -148,9 +148,9 @@
             <!-- Footer Switcher Link -->
             <div class="mt-6 pt-5 border-t border-slate-800/80 text-center">
                 <p class="text-xs text-slate-400">
-                    Don't have an account yet? 
+                    <span data-i18n="dont_have_account">{{ t('dont_have_account') }}</span> 
                     <a href="{{ url_for('auth.register') }}" class="text-cyan-400 hover:text-cyan-300 font-bold ml-1 hover:underline">
-                        Create Free Account &rarr;
+                        <span data-i18n="create_account_btn">{{ t('create_account_btn') }}</span> &rarr;
                     </a>
                 </p>
             </div>
