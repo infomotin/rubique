@@ -1,59 +1,68 @@
 import unittest
 import json
-from app import app, init_db
+from app import create_app
+from models.db import init_database
 
-class CubePermutationTestCase(unittest.TestCase):
+class CubePermutationMVCTestCase(unittest.TestCase):
     def setUp(self):
-        app.config['TESTING'] = True
-        app.config['SECRET_KEY'] = 'test_key'
-        self.client = app.test_client()
-        with app.app_context():
-            init_db()
+        self.app = create_app()
+        self.app.config['TESTING'] = True
+        self.app.config['SECRET_KEY'] = 'test_secret_key_mvc'
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            init_database()
 
-    def test_routes_redirect(self):
-        # Unauthenticated access to / should redirect to login
+    def test_landing_page(self):
+        """Test home landing page renders high-graphic content"""
         res = self.client.get('/')
-        self.assertEqual(res.status_code, 302)
-        self.assertIn('/login', res.headers['Location'])
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"Permutation Network", res.data)
+        self.assertIn(b"Abstract Algebra", res.data)
 
-    def test_registration_and_login(self):
-        # Register user
+    def test_auth_and_profile_flow(self):
+        """Test full user registration, login, profile view and history"""
+        import time
+        unique_user = f"user_{int(time.time())}"
+        
+        # 1. Register
         res = self.client.post('/register', data={
-            'username': 'maththeorist',
-            'email': 'math@example.com',
+            'username': unique_user,
+            'email': f'{unique_user}@example.com',
             'password': 'password123',
             'confirm_password': 'password123'
         }, follow_redirects=True)
         self.assertEqual(res.status_code, 200)
 
-        # Login user
+        # 2. Login
         res = self.client.post('/login', data={
-            'username': 'maththeorist',
+            'username': unique_user,
             'password': 'password123'
         }, follow_redirects=True)
         self.assertEqual(res.status_code, 200)
 
-        # Access visualizer
-        res = self.client.get('/visualizer')
+        # 3. Access Profile
+        res = self.client.get('/profile/')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(unique_user.encode(), res.data)
+        self.assertIn(b"Total Solves", res.data)
+
+        # 4. Access Visualizer
+        res = self.client.get('/visualizer/')
         self.assertEqual(res.status_code, 200)
         self.assertIn(b"Rubik's Cube", res.data)
 
-        # Test API Scramble
-        res = self.client.get('/api/scramble')
-        self.assertEqual(res.status_code, 200)
-        data = json.loads(res.data)
-        self.assertIn('scramble', data)
-        self.assertIn('solution', data)
-        print("API Scramble test passed:", data['scramble'])
-
-        # Test API Solve
+        # 5. Solve and record to MySQL/SQLite
         res = self.client.post('/api/solve', json={
-            'custom_moves': "R U R' U'"
+            'custom_moves': "R U R' U' F' U2"
         })
         self.assertEqual(res.status_code, 200)
         solve_data = json.loads(res.data)
         self.assertTrue(solve_data['success'])
-        print("API Solve test passed:", solve_data['solution'])
+
+        # 6. Verify solve history in Profile
+        res = self.client.get('/profile/')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"R U R' U' F' U2", res.data)
 
 if __name__ == '__main__':
     unittest.main()

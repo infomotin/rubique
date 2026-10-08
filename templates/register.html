@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Register - CubePermutation AI{% endblock %}
+{% block title %}Create Account - CubePermutation AI{% endblock %}
 
 {% block content %}
-<div class="min-h-[80vh] flex items-center justify-center px-4 py-12">
-    <div class="glass-card w-full max-w-md p-8 rounded-2xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
+<div class="min-h-[75vh] flex items-center justify-center px-4 py-12">
+    <div class="glass-card w-full max-w-md p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
         
         <!-- Glowing accent orb in background -->
         <div class="absolute -top-24 -left-24 w-48 h-48 bg-purple-600/30 rounded-full blur-3xl pointer-events-none group-hover:bg-purple-600/40 transition-all duration-700"></div>
@@ -17,12 +17,12 @@
                     <i class="fa-solid fa-user-plus text-purple-400 text-xl"></i>
                 </div>
             </div>
-            <h1 class="text-2xl font-bold font-outfit text-white tracking-tight">Create Account</h1>
-            <p class="text-xs text-slate-400 mt-1 font-mono">Join the permutation group theory laboratory</p>
+            <h1 class="text-2xl font-bold font-outfit text-white tracking-tight">Create User Account</h1>
+            <p class="text-xs text-slate-400 mt-1 font-mono">Store your personal solves in MySQL & explore Group Theory</p>
         </div>
 
         <!-- Register Form -->
-        <form method="POST" action="{{ url_for('register') }}" class="space-y-4 relative z-10">
+        <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4 relative z-10">
             <div>
                 <label for="username" class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wider font-mono">
                     <i class="fa-solid fa-user text-purple-400 mr-1.5"></i> Username
@@ -61,7 +61,7 @@
 
             <button type="submit"
                     class="w-full mt-2 py-3.5 px-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-500 hover:from-purple-500 hover:to-emerald-400 text-white font-medium text-sm rounded-xl shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50 transition-all duration-300 flex items-center justify-center gap-2 group/btn">
-                <span>Register & Begin Solving</span>
+                <span>Register & Access Profile</span>
                 <i class="fa-solid fa-arrow-right group-hover/btn:translate-x-1 transition-transform"></i>
             </button>
         </form>
@@ -69,8 +69,8 @@
         <!-- Footer link -->
         <div class="mt-8 pt-6 border-t border-slate-800/80 text-center relative z-10">
             <p class="text-xs text-slate-400">
-                Already have an account? 
-                <a href="{{ url_for('login') }}" class="text-purple-400 hover:text-purple-300 font-medium ml-1 hover:underline">
+                Already registered? 
+                <a href="{{ url_for('auth.login') }}" class="text-purple-400 hover:text-purple-300 font-medium ml-1 hover:underline">
                     Sign In
                 </a>
             </p>
