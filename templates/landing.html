@@ -1,66 +1,69 @@
 {% extends "base.html" %}
 
-{% block title %}CubePermutation AI - Group Theory & Permutation Networks{% endblock %}
+{% block title %}CubePermutation AI - Mathematical Group Theory & Visualizer{% endblock %}
 
 {% block content %}
-<div class="landing-page overflow-hidden">
+<div class="landing-page cyber-grid-bg relative overflow-hidden">
 
     <!-- =========================================================================
-         1. HERO SECTION: HIGH GRAPHICAL INTRODUCTION
+         1. ULTRA-MODERN HERO SECTION WITH INTERACTIVE CUBE PREVIEW
          ========================================================================= -->
     <section class="relative pt-12 pb-24 lg:pt-20 lg:pb-32">
         
-        <!-- Glowing background gradient orbs -->
-        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] bg-gradient-to-tr from-indigo-600/20 via-purple-600/15 to-cyan-500/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
-        <div class="absolute top-1/3 -left-32 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
-        <div class="absolute top-1/3 -right-32 w-96 h-96 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
+        <!-- Glowing Atmospheric Light Orbs -->
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-indigo-600/25 via-purple-600/20 to-cyan-400/20 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-glow"></div>
+        <div class="absolute top-1/3 -left-40 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+        <div class="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[100px] pointer-events-none -z-10"></div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 
-                <!-- Left Hero Text Content -->
+                <!-- Left Hero Column -->
                 <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
                     
-                    <!-- Innovation Badge -->
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-indigo-500/30 text-indigo-300 text-xs font-mono backdrop-blur-md shadow-lg shadow-indigo-500/10">
+                    <!-- High-Tech Neon Pill Badge -->
+                    <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full neon-pill text-xs font-mono backdrop-blur-xl shadow-lg">
                         <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-                        <span>MATHEMATICAL GROUP THEORY &bull; S₅₄ PERMUTATION NETWORK</span>
+                        <span class="text-indigo-300 font-semibold tracking-wide">GROUP THEORY &bull; SYMMETRIC GROUP S₅₄</span>
+                        <span class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-indigo-950 text-[10px] text-cyan-300 border border-indigo-700/50">v2.0 MVC</span>
                     </div>
 
-                    <!-- Main Hero Title -->
+                    <!-- Main Hero Title with Shimmer Animation -->
                     <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-outfit text-white tracking-tight leading-[1.12]">
                         Every Turn of a Rubik's Cube is a <br>
-                        <span class="bg-gradient-to-r from-indigo-400 via-purple-300 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(129,140,248,0.4)]">
+                        <span class="shimmer-text drop-shadow-[0_0_40px_rgba(129,140,248,0.5)]">
                             Permutation Network
                         </span>
                     </h1>
 
                     <!-- Description -->
-                    <p class="text-slate-400 text-sm sm:text-base lg:text-lg max-w-2xl font-sans leading-relaxed">
-                        Step beyond simple puzzle solving. Discover the profound mathematics of 
-                        <strong class="text-slate-200">Abstract Algebra</strong>, explore dynamic 
-                        <strong class="text-indigo-300">circular group orbits</strong>, scan cube facelets via 
-                        <strong class="text-emerald-300">OpenCV Vision</strong>, and compute optimal solutions using 
-                        <strong class="text-cyan-300">Kociemba's Two-Phase Algorithm</strong>.
+                    <p class="text-slate-300 text-sm sm:text-base lg:text-lg max-w-2xl font-sans leading-relaxed">
+                        Unveil the deep mathematical beauty of 
+                        <span class="text-white font-semibold">Abstract Algebra</span>. Visualize dynamic 
+                        <span class="text-indigo-300 font-semibold">circular group orbits</span>, extract cube stickers with 
+                        <span class="text-emerald-300 font-semibold">OpenCV Computer Vision</span>, and compute optimal solutions using 
+                        <span class="text-cyan-300 font-semibold">Kociemba's Two-Phase Algorithm</span>.
                     </p>
 
                     <!-- CTA Action Buttons -->
-                    <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
+                    <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-3">
                         {% if session.get('user_id') %}
-                            <a href="{{ url_for('visualizer.index') }}" class="px-7 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-[1.02] transition-all duration-300 flex items-center gap-2.5">
-                                <i class="fa-solid fa-cube"></i>
-                                <span>Launch Visualizer Laboratory</span>
+                            <a href="{{ url_for('visualizer.index') }}" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm shadow-2xl shadow-indigo-600/40 hover:shadow-indigo-600/60 hover:scale-[1.03] transition-all duration-300 flex items-center gap-3 group">
+                                <i class="fa-solid fa-cube text-lg group-hover:rotate-12 transition-transform"></i>
+                                <span>Launch Group Visualizer</span>
+                                <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                             </a>
-                            <a href="{{ url_for('profile.index') }}" class="px-6 py-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium text-sm transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-user text-indigo-400"></i>
+                            <a href="{{ url_for('profile.index') }}" class="px-6 py-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-semibold text-sm transition-all flex items-center gap-2.5 backdrop-blur-xl">
+                                <i class="fa-solid fa-user-astronaut text-indigo-400"></i>
                                 <span>My Profile & Solves</span>
                             </a>
                         {% else %}
-                            <a href="{{ url_for('auth.register') }}" class="px-7 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-[1.02] transition-all duration-300 flex items-center gap-2.5">
-                                <i class="fa-solid fa-sparkles"></i>
+                            <a href="{{ url_for('auth.register') }}" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm shadow-2xl shadow-indigo-600/40 hover:shadow-indigo-600/60 hover:scale-[1.03] transition-all duration-300 flex items-center gap-3 group">
+                                <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
                                 <span>Create Free Account</span>
+                                <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                             </a>
-                            <a href="{{ url_for('auth.login') }}" class="px-6 py-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium text-sm transition-all flex items-center gap-2">
+                            <a href="{{ url_for('auth.login') }}" class="px-6 py-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-semibold text-sm transition-all flex items-center gap-2.5 backdrop-blur-xl">
                                 <i class="fa-solid fa-right-to-bracket text-indigo-400"></i>
                                 <span>Sign In</span>
                             </a>
@@ -68,71 +71,72 @@
                     </div>
 
                     <!-- Tech Pillars Badges -->
-                    <div class="pt-6 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-mono text-slate-400">
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-400"></i> Modular MVC</span>
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-database text-cyan-400"></i> MySQL Relational Engine</span>
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-camera text-purple-400"></i> OpenCV 4.8 Vision</span>
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-infinity text-indigo-400"></i> |G| &approx; 4.3 &times; 10¹⁹</span>
+                    <div class="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-mono text-slate-400">
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800"><i class="fa-solid fa-circle-check text-emerald-400"></i> Modular MVC</span>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800"><i class="fa-solid fa-database text-cyan-400"></i> MySQL Engine</span>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800"><i class="fa-solid fa-camera text-purple-400"></i> OpenCV Vision</span>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800"><i class="fa-solid fa-infinity text-indigo-400"></i> |G| &approx; 4.3 &times; 10¹⁹</span>
                     </div>
 
                 </div>
 
-                <!-- Right Hero Visual: 3D Isometric & Circular Orbit Showcase Card -->
+                <!-- Right Hero Interactive Visual Card -->
                 <div class="lg:col-span-5 flex justify-center">
-                    <div class="glass-card w-full max-w-md p-6 rounded-3xl border border-slate-800/90 bg-slate-950/80 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
+                    <div class="glass-card w-full max-w-md p-6 sm:p-7 rounded-3xl border border-indigo-500/30 bg-slate-950/80 backdrop-blur-2xl shadow-2xl relative overflow-hidden animate-float">
                         
                         <!-- Header inside Hero Card -->
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
-                            <div class="flex items-center gap-2 text-xs font-mono text-slate-300">
-                                <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                                <span>LIVE ORBIT SIMULATION</span>
+                        <div class="flex items-center justify-between pb-3.5 border-b border-slate-800/80 mb-4">
+                            <div class="flex items-center gap-2 text-xs font-mono text-slate-200">
+                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                <span class="font-bold tracking-wider">LIVE PERMUTATION LAB</span>
                             </div>
-                            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800/40">Step 13 / 15</span>
+                            <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-indigo-950/90 text-indigo-300 border border-indigo-600/50 font-bold">Step 13 / 15</span>
                         </div>
 
-                        <!-- 3D Isometric SVG Mini Visual -->
+                        <!-- 3D Isometric SVG Graphic -->
                         <div class="relative w-full h-44 flex items-center justify-center">
-                            <svg viewBox="-150 -150 300 300" class="w-full h-full filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
-                                <!-- Top Yellow Isometric Face -->
-                                <g transform="rotate(20, 0, -45)">
-                                    <polygon points="0,-80 52,-50 0,-20 -52,-50" fill="#facc15" stroke="#111827" stroke-width="2"/>
-                                    <polygon points="26,-65 78,-35 26,-5 -26,-35" fill="#facc15" stroke="#111827" stroke-width="2"/>
-                                    <polygon points="-26,-65 26,-35 -26,-5 -78,-35" fill="#facc15" stroke="#111827" stroke-width="2"/>
-                                    <polygon points="52,-50 104,-20 52,10 0,-20" fill="#22c55e" stroke="#111827" stroke-width="2"/>
+                            <svg viewBox="-150 -150 300 300" class="w-full h-full filter drop-shadow-[0_15px_25px_rgba(0,0,0,0.9)]">
+                                <!-- Top Yellow Isometric Face with Layer Rotation -->
+                                <g transform="rotate(22, 0, -45)">
+                                    <polygon points="0,-80 52,-50 0,-20 -52,-50" fill="#facc15" stroke="#05070c" stroke-width="2.2"/>
+                                    <polygon points="26,-65 78,-35 26,-5 -26,-35" fill="#facc15" stroke="#05070c" stroke-width="2.2"/>
+                                    <polygon points="-26,-65 26,-35 -26,-5 -78,-35" fill="#facc15" stroke="#05070c" stroke-width="2.2"/>
+                                    <polygon points="52,-50 104,-20 52,10 0,-20" fill="#22c55e" stroke="#05070c" stroke-width="2.2"/>
                                 </g>
-                                <!-- Front Green & Right Orange Faces -->
-                                <polygon points="-78,-35 0,10 0,65 -78,20" fill="#22c55e" stroke="#111827" stroke-width="2"/>
-                                <polygon points="0,10 78,-35 78,20 0,65" fill="#fb923c" stroke="#111827" stroke-width="2"/>
-                                <polygon points="-78,20 0,65 0,120 -78,75" fill="#ef4444" stroke="#111827" stroke-width="2"/>
-                                <polygon points="0,65 78,20 78,75 0,120" fill="#f8fafc" stroke="#111827" stroke-width="2"/>
+                                <!-- Front & Right Isometric Faces -->
+                                <polygon points="-78,-35 0,10 0,65 -78,20" fill="#22c55e" stroke="#05070c" stroke-width="2.2"/>
+                                <polygon points="0,10 78,-35 78,20 0,65" fill="#fb923c" stroke="#05070c" stroke-width="2.2"/>
+                                <polygon points="-78,20 0,65 0,120 -78,75" fill="#ef4444" stroke="#05070c" stroke-width="2.2"/>
+                                <polygon points="0,65 78,20 78,75 0,120" fill="#ffffff" stroke="#05070c" stroke-width="2.2"/>
                             </svg>
-                            <div class="absolute right-3 top-1/2 -translate-y-1/2 font-serif text-3xl text-indigo-400 font-bold drop-shadow-[0_0_12px_rgba(129,140,248,0.8)]">
+                            <!-- Big Glow Letter -->
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 font-serif text-4xl text-indigo-400 font-bold drop-shadow-[0_0_16px_rgba(129,140,248,0.9)]">
                                 U
                             </div>
                         </div>
 
-                        <!-- Orbit Track Ring Teaser -->
+                        <!-- Orbit Track Ring Graphic -->
                         <div class="relative w-full h-36 flex items-center justify-center mt-2 border-t border-slate-900 pt-2">
                             <svg viewBox="-120 -120 240 240" class="w-full h-full">
-                                <circle cx="0" cy="-10" r="50" fill="none" stroke="#334155" stroke-width="1.5" />
-                                <circle cx="-30" cy="20" r="50" fill="none" stroke="#334155" stroke-width="1.5" />
-                                <circle cx="30" cy="20" r="50" fill="none" stroke="#334155" stroke-width="1.5" />
-                                <!-- Active Arc -->
-                                <path d="M -45,-30 A 50 50 0 0 1 45,-30" fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round" />
-                                <path d="M 45,-30 A 50 50 0 0 1 30,35" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
-                                <!-- Node dots -->
-                                <circle cx="-10" cy="-25" r="3.5" fill="#facc15" />
-                                <circle cx="10" cy="-25" r="3.5" fill="#facc15" />
-                                <circle cx="45" cy="-30" r="3.5" fill="#38bdf8" />
-                                <circle cx="50" cy="0" r="3.5" fill="#fb923c" />
-                                <circle cx="-50" cy="0" r="3.5" fill="#ef4444" />
-                                <circle cx="0" cy="70" r="3.5" fill="#ffffff" />
+                                <circle cx="0" cy="-10" r="50" fill="none" stroke="#243044" stroke-width="1.6" />
+                                <circle cx="-30" cy="20" r="50" fill="none" stroke="#243044" stroke-width="1.6" />
+                                <circle cx="30" cy="20" r="50" fill="none" stroke="#243044" stroke-width="1.6" />
+                                <!-- Glowing active arcs -->
+                                <path d="M -45,-30 A 50 50 0 0 1 45,-30" fill="none" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" filter="drop-shadow(0 0 6px #38bdf8)" />
+                                <path d="M 45,-30 A 50 50 0 0 1 30,35" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" filter="drop-shadow(0 0 6px #ffffff)" />
+                                <!-- Orbit Colored Nodes -->
+                                <circle cx="-10" cy="-25" r="4" fill="#facc15" stroke="#000" stroke-width="1"/>
+                                <circle cx="10" cy="-25" r="4" fill="#facc15" stroke="#000" stroke-width="1"/>
+                                <circle cx="45" cy="-30" r="4" fill="#38bdf8" stroke="#000" stroke-width="1"/>
+                                <circle cx="50" cy="0" r="4" fill="#fb923c" stroke="#000" stroke-width="1"/>
+                                <circle cx="-50" cy="0" r="4" fill="#ef4444" stroke="#000" stroke-width="1"/>
+                                <circle cx="0" cy="70" r="4" fill="#ffffff" stroke="#000" stroke-width="1"/>
                             </svg>
                         </div>
 
                         <!-- Sequence Ribbon Preview -->
-                        <div class="mt-3 p-2 rounded-xl bg-slate-900/90 border border-slate-800 text-center font-serif text-xs text-slate-400 tracking-wider">
-                            F &bull; L' &bull; B' &bull; R' &bull; M &bull; <span class="text-indigo-400 font-bold drop-shadow-[0_0_8px_rgba(129,140,248,0.8)]">U</span> &bull; M' &bull; L' &bull; U
+                        <div class="mt-3 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center font-serif text-xs text-slate-300 tracking-wider">
+                            F &bull; L' &bull; B' &bull; R' &bull; M &bull; <span class="text-indigo-400 font-bold px-1.5 py-0.5 rounded bg-indigo-950/80 border border-indigo-600/50 drop-shadow-[0_0_10px_rgba(129,140,248,0.9)]">U</span> &bull; M' &bull; L' &bull; U
                         </div>
                     </div>
                 </div>
@@ -144,60 +148,60 @@
     <!-- =========================================================================
          2. FOUR CORE APPLICATION PILLARS (FEATURES SHOWCASE)
          ========================================================================= -->
-    <section class="py-20 border-t border-slate-900 bg-slate-950/40 relative">
+    <section class="py-24 border-t border-slate-900 bg-slate-950/40 relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div class="text-center max-w-3xl mx-auto mb-16">
-                <span class="text-xs font-mono text-indigo-400 tracking-widest uppercase">System Capabilities</span>
-                <h2 class="text-3xl sm:text-4xl font-bold font-outfit text-white tracking-tight mt-2">
+                <span class="text-xs font-mono text-indigo-400 tracking-widest uppercase font-bold">System Capabilities</span>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-outfit text-white tracking-tight mt-2">
                     Four Pillars of Mathematical Speedcubing
                 </h2>
-                <p class="text-slate-400 text-sm mt-3">
+                <p class="text-slate-400 text-sm sm:text-base mt-3 font-sans">
                     Engineered from group theory first principles, integrated with modern computer vision, and structured with clean MVC architecture.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 
-                <!-- Card 1: Group Theory Visualizer -->
-                <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all duration-300 group">
-                    <div class="w-12 h-12 rounded-xl bg-indigo-950 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-xl mb-4 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all">
+                <!-- Pillar 1: Group Theory Orbits -->
+                <div class="glass-card glow-card-purple p-7 rounded-3xl group">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-2xl mb-5 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all">
                         <i class="fa-solid fa-atom"></i>
                     </div>
-                    <h3 class="text-base font-bold font-outfit text-white mb-2">Permutation Orbits</h3>
+                    <h3 class="text-lg font-bold font-outfit text-white mb-2">Permutation Orbits</h3>
                     <p class="text-xs text-slate-400 leading-relaxed font-sans">
                         Dynamic circular orbit networks depicting cyclic decomposition $(U_1 U_3 U_9 U_7)$ and parity conservation in $S_{54}$.
                     </p>
                 </div>
 
-                <!-- Card 2: OpenCV Computer Vision -->
-                <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 hover:border-emerald-500/50 hover:bg-slate-900/40 transition-all duration-300 group">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl mb-4 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-all">
+                <!-- Pillar 2: OpenCV Computer Vision -->
+                <div class="glass-card glow-card-emerald p-7 rounded-3xl group">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-2xl mb-5 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-all">
                         <i class="fa-solid fa-camera"></i>
                     </div>
-                    <h3 class="text-base font-bold font-outfit text-white mb-2">OpenCV CV Scanner</h3>
+                    <h3 class="text-lg font-bold font-outfit text-white mb-2">OpenCV CV Scanner</h3>
                     <p class="text-xs text-slate-400 leading-relaxed font-sans">
                         Upload or snap cube photos. Automated 3x3 ROI segmentation, HSV color space clustering, and facelet mapping.
                     </p>
                 </div>
 
-                <!-- Card 3: Kociemba Two-Phase Solver -->
-                <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 hover:border-cyan-500/50 hover:bg-slate-900/40 transition-all duration-300 group">
-                    <div class="w-12 h-12 rounded-xl bg-cyan-950 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-xl mb-4 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-cyan-500/30 transition-all">
+                <!-- Pillar 3: Kociemba Two-Phase Solver -->
+                <div class="glass-card glow-card-cyan p-7 rounded-3xl group">
+                    <div class="w-14 h-14 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-2xl mb-5 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-cyan-500/30 transition-all">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                     </div>
-                    <h3 class="text-base font-bold font-outfit text-white mb-2">Two-Phase Solver</h3>
+                    <h3 class="text-lg font-bold font-outfit text-white mb-2">Two-Phase Solver</h3>
                     <p class="text-xs text-slate-400 leading-relaxed font-sans">
                         Reduces through subgroup chain $G_0 \to G_1 \to G_2$, computing optimal solution sequences in under 20 moves.
                     </p>
                 </div>
 
-                <!-- Card 4: MySQL Profile Analytics -->
-                <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 hover:border-purple-500/50 hover:bg-slate-900/40 transition-all duration-300 group">
-                    <div class="w-12 h-12 rounded-xl bg-purple-950 border border-purple-500/40 flex items-center justify-center text-purple-400 text-xl mb-4 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-all">
+                <!-- Pillar 4: MySQL Profile Analytics -->
+                <div class="glass-card glow-card-purple p-7 rounded-3xl group">
+                    <div class="w-14 h-14 rounded-2xl bg-purple-950/80 border border-purple-500/40 flex items-center justify-center text-purple-400 text-2xl mb-5 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-all">
                         <i class="fa-solid fa-database"></i>
                     </div>
-                    <h3 class="text-base font-bold font-outfit text-white mb-2">MySQL User Profiles</h3>
+                    <h3 class="text-lg font-bold font-outfit text-white mb-2">MySQL User Profiles</h3>
                     <p class="text-xs text-slate-400 leading-relaxed font-sans">
                         Personal user profiles storing solve logs, average move metrics, custom avatars, and timestamped solution history.
                     </p>
@@ -211,62 +215,64 @@
     <!-- =========================================================================
          3. MATHEMATICAL GROUP THEORY BREAKDOWN
          ========================================================================= -->
-    <section class="py-20 border-t border-slate-900 bg-black relative">
+    <section class="py-24 border-t border-slate-900 bg-black relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 
-                <div class="lg:col-span-6 space-y-5">
-                    <span class="text-xs font-mono text-purple-400 tracking-widest uppercase">Abstract Algebra</span>
-                    <h2 class="text-3xl font-bold font-outfit text-white tracking-tight">
-                        The Group of the Rubik's Cube
+                <div class="lg:col-span-6 space-y-6">
+                    <span class="text-xs font-mono text-purple-400 tracking-widest uppercase font-bold">Abstract Algebra</span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold font-outfit text-white tracking-tight">
+                        The Group Structure of the Rubik's Cube
                     </h2>
-                    <p class="text-slate-400 text-sm leading-relaxed">
+                    <p class="text-slate-300 text-sm leading-relaxed">
                         The Rubik's cube group $G$ is generated by 6 face turns $\langle U, D, L, R, F, B \rangle$. 
                         It is isomorphic to a semi-direct product of abelian orientation groups with the alternating and symmetric groups:
                     </p>
 
-                    <div class="p-4 rounded-xl bg-slate-950 border border-purple-900/40 text-purple-300 font-mono text-xs sm:text-sm">
-                        $$G \cong (\mathbb{Z}_3^7 \times \mathbb{Z}_2^{11}) \rtimes (A_8 \times M_{12})$$
-                        <div class="text-[11px] text-slate-400 mt-2">
-                            Total distinct states: <strong>43,252,003,274,489,856,000</strong>
+                    <div class="p-5 rounded-2xl bg-slate-950 border border-purple-900/50 text-purple-300 font-mono text-sm shadow-xl">
+                        <div class="text-center font-bold text-base text-cyan-300 mb-2">
+                            $$G \cong (\mathbb{Z}_3^7 \times \mathbb{Z}_2^{11}) \rtimes (A_8 \times M_{12})$$
+                        </div>
+                        <div class="text-xs text-slate-400 text-center">
+                            Total distinct states: <strong class="text-white">43,252,003,274,489,856,000</strong>
                         </div>
                     </div>
 
-                    <ul class="space-y-2 text-xs font-mono text-slate-300">
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-cyan-400"></i>
+                    <ul class="space-y-3 text-xs font-mono text-slate-300">
+                        <li class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
+                            <i class="fa-solid fa-circle-check text-cyan-400"></i>
                             <span>Corner Orientation Invariant: $\sum_{i=1}^8 x_i \equiv 0 \pmod 3$</span>
                         </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-cyan-400"></i>
+                        <li class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
+                            <i class="fa-solid fa-circle-check text-cyan-400"></i>
                             <span>Edge Orientation Invariant: $\sum_{i=1}^{12} y_i \equiv 0 \pmod 2$</span>
                         </li>
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-check text-cyan-400"></i>
+                        <li class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/50 border border-slate-800">
+                            <i class="fa-solid fa-circle-check text-cyan-400"></i>
                             <span>Permutation Parity: $\text{sgn}(\text{corners}) = \text{sgn}(\text{edges})$</span>
                         </li>
                     </ul>
                 </div>
 
-                <div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800">
-                        <div class="text-indigo-400 font-bold font-mono text-lg mb-1">Phase 1: $G_0 \to G_1$</div>
-                        <p class="text-xs text-slate-400">
+                <div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="p-6 rounded-3xl bg-slate-950/80 border border-indigo-900/40 shadow-xl">
+                        <div class="text-indigo-400 font-bold font-mono text-lg mb-1.5">Phase 1: $G_0 \to G_1$</div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
                             Edge and corner orientations are preserved. Restricts available moves to $\langle U, D, L2, R2, F2, B2 \rangle$.
                         </p>
                     </div>
 
-                    <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800">
-                        <div class="text-cyan-400 font-bold font-mono text-lg mb-1">Phase 2: $G_1 \to G_2$</div>
-                        <p class="text-xs text-slate-400">
+                    <div class="p-6 rounded-3xl bg-slate-950/80 border border-cyan-900/40 shadow-xl">
+                        <div class="text-cyan-400 font-bold font-mono text-lg mb-1.5">Phase 2: $G_1 \to G_2$</div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
                             Permutes corners and edges within subgroups, resolving the state to the identity element $\{1\}$.
                         </p>
                     </div>
 
-                    <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 sm:col-span-2">
-                        <div class="text-emerald-400 font-bold font-mono text-lg mb-1">God's Number $= 20$</div>
-                        <p class="text-xs text-slate-400">
+                    <div class="p-6 rounded-3xl bg-slate-950/80 border border-emerald-900/40 shadow-xl sm:col-span-2">
+                        <div class="text-emerald-400 font-bold font-mono text-lg mb-1.5">God's Number $= 20$ Moves</div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
                             Every single one of the 43 quintillion permutations can be solved in 20 moves or fewer in the Half-Turn Metric (HTM).
                         </p>
                     </div>
@@ -280,25 +286,25 @@
     <!-- =========================================================================
          4. CALL TO ACTION SECTION
          ========================================================================= -->
-    <section class="py-20 border-t border-slate-900 bg-gradient-to-b from-slate-950 to-black text-center relative">
+    <section class="py-24 border-t border-slate-900 bg-gradient-to-b from-slate-950 via-black to-black text-center relative">
         <div class="max-w-4xl mx-auto px-4">
-            <h2 class="text-3xl sm:text-4xl font-bold font-outfit text-white tracking-tight mb-4">
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-outfit text-white tracking-tight mb-4">
                 Ready to Experience Permutation Group Theory?
             </h2>
-            <p class="text-slate-400 text-sm max-w-xl mx-auto mb-8 font-sans">
+            <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto mb-8 font-sans">
                 Register your personal profile to start logging solves, visualizing circular permutation tracks, and exploring group orbits in real-time.
             </p>
 
-            <div class="flex items-center justify-center gap-4">
+            <div class="flex flex-wrap items-center justify-center gap-4">
                 {% if session.get('user_id') %}
-                    <a href="{{ url_for('visualizer.index') }}" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold text-sm shadow-xl shadow-indigo-600/30 transition-all">
+                    <a href="{{ url_for('visualizer.index') }}" class="px-9 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm shadow-2xl shadow-indigo-600/40 transition-all">
                         Launch Visualizer &rarr;
                     </a>
                 {% else %}
-                    <a href="{{ url_for('auth.register') }}" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold text-sm shadow-xl shadow-indigo-600/30 transition-all">
+                    <a href="{{ url_for('auth.register') }}" class="px-9 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-sm shadow-2xl shadow-indigo-600/40 transition-all">
                         Get Started Now &rarr;
                     </a>
-                    <a href="{{ url_for('auth.login') }}" class="px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium text-sm transition-all">
+                    <a href="{{ url_for('auth.login') }}" class="px-7 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-semibold text-sm transition-all">
                         Sign In
                     </a>
                 {% endif %}
