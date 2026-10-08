@@ -26,19 +26,30 @@
         const badgeRes = document.getElementById('device-hud-res');
 
         const activeMode = currentViewMode === 'auto' ? autoCat.mode : currentViewMode;
-        const activeCat = activeMode === 'desktop' ? { name: 'Desktop', icon: 'fa-desktop' } :
-                          activeMode === 'tablet' ? { name: 'Tablet', icon: 'fa-tablet-screen-button' } :
-                          { name: 'Mobile', icon: 'fa-mobile-screen-button' };
+        const activeCat = activeMode === 'desktop' ? { name: 'Desktop Mode', icon: 'fa-desktop' } :
+                          activeMode === 'tablet' ? { name: 'Tablet Mode', icon: 'fa-tablet-screen-button' } :
+                          { name: 'Mobile Phone', icon: 'fa-mobile-screen-button' };
 
         if (badgeIcon) badgeIcon.className = `fa-solid ${activeCat.icon} text-cyan-400`;
-        if (badgeLabel) badgeLabel.textContent = currentViewMode === 'auto' ? `${activeCat.name}` : `${activeCat.name} (Sim)`;
+        if (badgeLabel) badgeLabel.textContent = currentViewMode === 'auto' ? `Auto (${autoCat.name})` : activeCat.name;
         if (badgeRes) badgeRes.textContent = `${w}×${h}`;
 
-        // Set body class
+        // Set body and html classes
         document.body.classList.remove('view-mode-auto', 'view-mode-desktop', 'view-mode-tablet', 'view-mode-mobile');
         document.body.classList.add(`view-mode-${currentViewMode}`);
         document.documentElement.setAttribute('data-device-category', autoCat.mode);
         document.documentElement.setAttribute('data-active-view-mode', activeMode);
+        document.documentElement.setAttribute('data-view-mode', currentViewMode);
+
+        // Update dropdown menu active states
+        document.querySelectorAll('.device-mode-option').forEach(opt => {
+            const isMatch = opt.dataset.mode === currentViewMode;
+            if (isMatch) {
+                opt.classList.add('bg-cyan-950/80', 'font-bold', 'border', 'border-cyan-500/40');
+            } else {
+                opt.classList.remove('bg-cyan-950/80', 'font-bold', 'border', 'border-cyan-500/40');
+            }
+        });
     }
 
     window.setViewMode = function(mode) {

@@ -236,9 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Circular Permutation Orbit SVG Renderer:
      * Mathematical Group Theory visualizer matching the exact reference diagram:
-     * - Overlapping symmetric orbit rings (subgroup generators).
-     * - Node vertex clusters organized in geometric orbits for 6 colors (Yellow, Blue, Orange, White, Green, Red).
-     * - Glowing animated highlight arcs indicating current active permutation cycle ($g \in G$).
+     * - Intersecting tri-fold symmetric Cayley orbit rings.
+     * - Outer glowing dashed curved inflow/outflow trajectories with directional arrowheads.
+     * - High-contrast center move badge with turn direction & angle: (B') ↺ -90°.
+     * - Precise node vertex clusters organized in geometric orbits for 6 colors.
      */
     function renderPermutationOrbit(activeMove = 'U', progress = 0) {
         const svg = document.getElementById('permutation-orbit-svg');
@@ -253,254 +254,241 @@ document.addEventListener('DOMContentLoaded', () => {
         // Defs for glowing gradients, filters, and markers
         const defs = document.createElementNS(ns, "defs");
         defs.innerHTML = `
-            <filter id="glow-cyan" x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="6" result="blur" />
+            <filter id="orbit-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
                 <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
                 </feMerge>
             </filter>
-            <filter id="glow-gold" x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="6" result="blur" />
+            <filter id="glow-cyan-light" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
                 <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
                 </feMerge>
             </filter>
-            <filter id="glow-emerald" x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="6" result="blur" />
-                <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
-            <filter id="glow-crimson" x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="6" result="blur" />
-                <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
-            <marker id="arrow-cyan" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <marker id="inflow-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto">
                 <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38bdf8" />
             </marker>
         `;
         svg.appendChild(defs);
 
-        // 1. Defined Group Orbit Rings with Wide, Clearly Visible Strokes
-        const orbitRings = [
-            { id: 'U', cx: 0, cy: -30, r: 80, color: '#facc15', name: 'U-Orbit' },
-            { id: 'D', cx: 0, cy: 50, r: 80, color: '#f8fafc', name: 'D-Orbit' },
-            { id: 'F', cx: 0, cy: 10, r: 90, color: '#22c55e', name: 'F-Orbit' },
-            { id: 'B', cx: 0, cy: -10, r: 145, color: '#3b82f6', name: 'B-Orbit' },
-            { id: 'L', cx: -60, cy: 10, r: 85, color: '#fb923c', name: 'L-Orbit' },
-            { id: 'R', cx: 60, cy: 10, r: 85, color: '#ef4444', name: 'R-Orbit' },
-            { id: 'HORIZON', cx: 0, cy: 0, r: 185, color: '#6366f1', name: 'S54 Horizon' }
+        // 1. Concentric & Intersecting Subgroup Orbit Rings (Cayley Graph Lenses)
+        const gRings = document.createElementNS(ns, "g");
+        gRings.setAttribute("class", "orbit-rings-group");
+
+        // Outer Horizon Circle
+        const cOuter = document.createElementNS(ns, "circle");
+        cOuter.setAttribute("cx", "0");
+        cOuter.setAttribute("cy", "20");
+        cOuter.setAttribute("r", "145");
+        cOuter.setAttribute("fill", "none");
+        cOuter.setAttribute("stroke", "rgba(148, 163, 184, 0.22)");
+        cOuter.setAttribute("stroke-width", "1.5");
+        gRings.appendChild(cOuter);
+
+        // Mid Outer Horizon Ring
+        const cMid = document.createElementNS(ns, "circle");
+        cMid.setAttribute("cx", "0");
+        cMid.setAttribute("cy", "20");
+        cMid.setAttribute("r", "120");
+        cMid.setAttribute("fill", "none");
+        cMid.setAttribute("stroke", "rgba(148, 163, 184, 0.35)");
+        cMid.setAttribute("stroke-width", "2");
+        gRings.appendChild(cMid);
+
+        // Intersecting 3-Lens Circles (Venn / Cayley Tri-Fold)
+        const triFoldRings = [
+            { cx: 0, cy: -25, r: 70 },   // Top (U-Face Orbit)
+            { cx: -42, cy: 35, r: 70 },  // Bottom Left (L-Face Orbit)
+            { cx: 42, cy: 35, r: 70 }    // Bottom Right (R-Face Orbit)
         ];
 
-        orbitRings.forEach(r => {
-            const isActive = (r.id === baseFace);
-            const circle = document.createElementNS(ns, "circle");
-            circle.setAttribute("cx", r.cx);
-            circle.setAttribute("cy", r.cy);
-            circle.setAttribute("r", r.r);
-            circle.setAttribute("fill", "none");
-            
-            if (isActive) {
-                circle.setAttribute("stroke", r.color);
-                circle.setAttribute("stroke-width", "4.5");
-                circle.setAttribute("class", "orbit-track active-orbit animate-pulse-glow");
-                circle.setAttribute("filter", "url(#glow-cyan)");
-            } else {
-                circle.setAttribute("stroke", r.color);
-                circle.setAttribute("stroke-width", "2.2");
-                circle.setAttribute("stroke-opacity", r.id === 'HORIZON' ? "0.3" : "0.55");
-                circle.setAttribute("class", "orbit-track");
-                if (r.id === 'HORIZON') circle.setAttribute("stroke-dasharray", "6, 6");
-            }
-            svg.appendChild(circle);
-
-            // Orbit Label
-            if (r.id !== 'HORIZON') {
-                const lbl = document.createElementNS(ns, "text");
-                lbl.setAttribute("x", r.cx - 5);
-                lbl.setAttribute("y", r.cy - r.r + 14);
-                lbl.setAttribute("fill", isActive ? r.color : "rgba(255,255,255,0.45)");
-                lbl.setAttribute("font-size", isActive ? "12" : "10");
-                lbl.setAttribute("font-weight", "bold");
-                lbl.setAttribute("font-family", "monospace");
-                lbl.textContent = r.id;
-                svg.appendChild(lbl);
-            }
+        triFoldRings.forEach(ring => {
+            const c = document.createElementNS(ns, "circle");
+            c.setAttribute("cx", ring.cx);
+            c.setAttribute("cy", ring.cy);
+            c.setAttribute("r", ring.r);
+            c.setAttribute("fill", "none");
+            c.setAttribute("stroke", "rgba(148, 163, 184, 0.28)");
+            c.setAttribute("stroke-width", "1.6");
+            gRings.appendChild(c);
         });
 
-        // 2. Active Dynamic Permutation Flow Arc with Flowing Dash Particles
-        const activeRing = orbitRings.find(r => r.id === baseFace) || orbitRings[0];
-        const gActiveFlow = document.createElementNS(ns, "g");
-        
-        // Dynamic Glowing Arc Overlay on Active Orbit
-        const flowArc = document.createElementNS(ns, "path");
-        const arcRadius = activeRing.r;
-        
-        function polarToCartesian(cx, cy, radius, angleInDegrees) {
-            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
-            return {
-                x: cx + (radius * Math.cos(angleInRadians)),
-                y: cy + (radius * Math.sin(angleInRadians))
-            };
-        }
+        // Center Intersecting Ellipse
+        const centerEllipse = document.createElementNS(ns, "ellipse");
+        centerEllipse.setAttribute("cx", "0");
+        centerEllipse.setAttribute("cy", "25");
+        centerEllipse.setAttribute("rx", "65");
+        centerEllipse.setAttribute("ry", "85");
+        centerEllipse.setAttribute("fill", "none");
+        centerEllipse.setAttribute("stroke", "rgba(148, 163, 184, 0.2)");
+        centerEllipse.setAttribute("stroke-width", "1.5");
+        gRings.appendChild(centerEllipse);
 
-        function describeArc(x, y, radius, startAngle, endAngle) {
-            const start = polarToCartesian(x, y, radius, endAngle);
-            const end = polarToCartesian(x, y, radius, startAngle);
-            const largeArcFlag = Math.abs(endAngle - startAngle) <= 180 ? "0" : "1";
-            return [
-                "M", start.x, start.y, 
-                "A", radius, radius, 0, largeArcFlag, isCounter ? 1 : 0, end.x, end.y
-            ].join(" ");
-        }
+        // Radial dotted axis lines
+        const axis1 = document.createElementNS(ns, "line");
+        axis1.setAttribute("x1", "-120");
+        axis1.setAttribute("y1", "20");
+        axis1.setAttribute("x2", "120");
+        axis1.setAttribute("y2", "20");
+        axis1.setAttribute("stroke", "rgba(148, 163, 184, 0.15)");
+        axis1.setAttribute("stroke-dasharray", "4,4");
+        gRings.appendChild(axis1);
 
-        // Primary Glowing Arc
-        flowArc.setAttribute("d", describeArc(activeRing.cx, activeRing.cy, arcRadius, 0, isDouble ? 359 : 270));
-        flowArc.setAttribute("fill", "none");
-        flowArc.setAttribute("stroke", activeRing.color || "#38bdf8");
-        flowArc.setAttribute("stroke-width", "5.5");
-        flowArc.setAttribute("stroke-linecap", "round");
-        flowArc.setAttribute("class", "orbit-flow-line");
-        flowArc.setAttribute("filter", "url(#glow-cyan)");
-        gActiveFlow.appendChild(flowArc);
+        const axis2 = document.createElementNS(ns, "line");
+        axis2.setAttribute("x1", "0");
+        axis2.setAttribute("y1", "-120");
+        axis2.setAttribute("x2", "0");
+        axis2.setAttribute("y2", "160");
+        axis2.setAttribute("stroke", "rgba(148, 163, 184, 0.15)");
+        axis2.setAttribute("stroke-dasharray", "4,4");
+        gRings.appendChild(axis2);
 
-        // Direction Arrow Marker on Active Orbit
-        const arrowMarker = document.createElementNS(ns, "path");
-        arrowMarker.setAttribute("d", describeArc(activeRing.cx, activeRing.cy, arcRadius, 260, 275));
-        arrowMarker.setAttribute("fill", "none");
-        arrowMarker.setAttribute("stroke", "#ffffff");
-        arrowMarker.setAttribute("stroke-width", "4");
-        arrowMarker.setAttribute("marker-end", "url(#arrow-cyan)");
-        gActiveFlow.appendChild(arrowMarker);
+        svg.appendChild(gRings);
 
-        svg.appendChild(gActiveFlow);
-
-        // 3. Move Generator HUD Badge in Center
-        const badgeG = document.createElementNS(ns, "g");
-        const badgeBg = document.createElementNS(ns, "rect");
-        badgeBg.setAttribute("x", "-40");
-        badgeBg.setAttribute("y", "-100");
-        badgeBg.setAttribute("width", "80");
-        badgeBg.setAttribute("height", "26");
-        badgeBg.setAttribute("rx", "13");
-        badgeBg.setAttribute("fill", "rgba(15, 23, 42, 0.9)");
-        badgeBg.setAttribute("stroke", activeRing.color || "#818cf8");
-        badgeBg.setAttribute("stroke-width", "2");
-        badgeG.appendChild(badgeBg);
-
-        const moveText = document.createElementNS(ns, "text");
-        moveText.setAttribute("x", "0");
-        moveText.setAttribute("y", "-83");
-        moveText.setAttribute("text-anchor", "middle");
-        moveText.setAttribute("fill", activeRing.color || "#ffffff");
-        moveText.setAttribute("font-family", "monospace");
-        moveText.setAttribute("font-size", "13");
-        moveText.setAttribute("font-weight", "bold");
-        moveText.textContent = `⟨${activeMove}⟩ ${isCounter ? '↺ -90°' : isDouble ? '↻ 180°' : '↻ +90°'}`;
-        badgeG.appendChild(moveText);
-        svg.appendChild(badgeG);
-
-        // 4. Enhanced High-Visibility Orbit Node Vertices with Connections
-        const nodeClusters = [
-            // Top Center Cluster (Yellow Nodes - U Face)
-            { x: -22, y: -50, color: '#facc15', id: 'U1' },
-            { x: 0, y: -50, color: '#facc15', id: 'U2' },
-            { x: 22, y: -50, color: '#facc15', id: 'U3' },
-            { x: -12, y: -32, color: '#facc15', id: 'U4' },
-            { x: 12, y: -32, color: '#facc15', id: 'U6' },
-
-            // Upper Arc Outer Nodes (Cyan / Blue boundary)
-            { x: 28, y: -105, color: '#38bdf8', id: 'B1' },
-            { x: 48, y: -95, color: '#38bdf8', id: 'B2' },
-            { x: 62, y: -78, color: '#facc15', id: 'U9' },
-
-            // Right Upper Cluster (Blue Nodes - B Face)
-            { x: 88, y: -55, color: '#3b82f6', id: 'B3' },
-            { x: 105, y: -38, color: '#3b82f6', id: 'B4' },
-            { x: 118, y: -20, color: '#3b82f6', id: 'B6' },
-            { x: 132, y: -2, color: '#3b82f6', id: 'B7' },
-            { x: 115, y: 18, color: '#facc15', id: 'U8' },
-
-            // Right Middle Arc (Orange/Red Nodes - R Face)
-            { x: 68, y: -18, color: '#ef4444', id: 'R1' },
-            { x: 72, y: 2, color: '#ef4444', id: 'R2' },
-            { x: 74, y: 22, color: '#ef4444', id: 'R3' },
-            { x: 70, y: 42, color: '#ef4444', id: 'R6' },
-            { x: 64, y: 60, color: '#fb923c', id: 'L3' },
-            { x: 54, y: 78, color: '#fb923c', id: 'L6' },
-
-            // Center Ring Inner Nodes (Green/Yellow/Red Center)
-            { x: -10, y: -16, color: '#facc15', id: 'U5' },
-            { x: 10, y: -16, color: '#22c55e', id: 'F2' },
-            { x: 0, y: 4, color: '#22c55e', id: 'F5' },
-
-            // Left Middle Arc (Green & Red Nodes - F/L Face)
-            { x: -62, y: 72, color: '#22c55e', id: 'F7' },
-            { x: -44, y: 86, color: '#22c55e', id: 'F8' },
-            { x: -24, y: 92, color: '#22c55e', id: 'F9' },
-            { x: -68, y: 50, color: '#fb923c', id: 'L1' },
-            { x: -74, y: 30, color: '#fb923c', id: 'L2' },
-            { x: -74, y: 10, color: '#fb923c', id: 'L4' },
-            { x: -68, y: -10, color: '#fb923c', id: 'L7' },
-            { x: -60, y: -28, color: '#ef4444', id: 'R7' },
-
-            // Left Outer Boundary Nodes (Red/Blue)
-            { x: -88, y: -50, color: '#ef4444', id: 'R4' },
-            { x: -105, y: -32, color: '#ef4444', id: 'R8' },
-            { x: -118, y: -14, color: '#3b82f6', id: 'B8' },
-            { x: -132, y: 5, color: '#3b82f6', id: 'B9' },
-
-            // Bottom Diamond / Cluster (White & Blue Nodes - D Face)
-            { x: 0, y: 118, color: '#ffffff', id: 'D1' },
-            { x: -18, y: 134, color: '#ffffff', id: 'D2' },
-            { x: 0, y: 134, color: '#ffffff', id: 'D5' },
-            { x: 18, y: 134, color: '#ffffff', id: 'D3' },
-            { x: -35, y: 150, color: '#3b82f6', id: 'D4' },
-            { x: -18, y: 150, color: '#ffffff', id: 'D7' },
-            { x: 0, y: 150, color: '#ffffff', id: 'D8' },
-            { x: 18, y: 150, color: '#ffffff', id: 'D9' },
-            { x: 35, y: 150, color: '#3b82f6', id: 'D6' }
+        // 2. Cardinal Face Labels (B, U, F, D, L, R)
+        const labels = [
+            { text: 'B', x: 0, y: -98 },
+            { text: 'U', x: 0, y: -45 },
+            { text: 'F', x: 0, y: -10 },
+            { text: 'D', x: 0, y: 48 },
+            { text: 'L', x: -50, y: 0 },
+            { text: 'R', x: 50, y: 0 }
         ];
 
-        // Draw connecting permutation flow lines between adjacent nodes in active cluster
-        const gNodeLinks = document.createElementNS(ns, "g");
-        for (let i = 0; i < nodeClusters.length - 1; i += 2) {
-            const p1 = nodeClusters[i];
-            const p2 = nodeClusters[i + 1];
-            const line = document.createElementNS(ns, "line");
-            line.setAttribute("x1", p1.x);
-            line.setAttribute("y1", p1.y);
-            line.setAttribute("x2", p2.x);
-            line.setAttribute("y2", p2.y);
-            line.setAttribute("stroke", "rgba(148, 163, 184, 0.25)");
-            line.setAttribute("stroke-width", "1.5");
-            line.setAttribute("stroke-dasharray", "3, 3");
-            gNodeLinks.appendChild(line);
-        }
-        svg.appendChild(gNodeLinks);
+        labels.forEach(lbl => {
+            const t = document.createElementNS(ns, "text");
+            t.setAttribute("x", lbl.x);
+            t.setAttribute("y", lbl.y);
+            t.setAttribute("text-anchor", "middle");
+            t.setAttribute("fill", lbl.text === baseFace ? "#38bdf8" : "rgba(148, 163, 184, 0.6)");
+            t.setAttribute("font-size", lbl.text === baseFace ? "11" : "9");
+            t.setAttribute("font-weight", "bold");
+            t.setAttribute("font-family", "sans-serif");
+            t.textContent = lbl.text;
+            svg.appendChild(t);
+        });
 
-        // Draw High-Visibility Nodes with Glowing Outlines
-        nodeClusters.forEach((node) => {
+        // 3. Dynamic Curved Inflow & Outflow Dashed Trajectory Arcs (Matches Reference Image Exactly)
+        const gTrajectories = document.createElementNS(ns, "g");
+
+        // Left incoming dashed trajectory arc with glowing arrowhead
+        const leftInflow = document.createElementNS(ns, "path");
+        leftInflow.setAttribute("d", "M -160 -120 C -180 -20, -160 50, -118 35");
+        leftInflow.setAttribute("fill", "none");
+        leftInflow.setAttribute("stroke", "#38bdf8");
+        leftInflow.setAttribute("stroke-width", "2.8");
+        leftInflow.setAttribute("stroke-dasharray", "7, 5");
+        leftInflow.setAttribute("marker-end", "url(#inflow-arrow)");
+        leftInflow.setAttribute("filter", "url(#orbit-glow)");
+        gTrajectories.appendChild(leftInflow);
+
+        // Top right outgoing dashed trajectory arc
+        const rightOutflow = document.createElementNS(ns, "path");
+        rightOutflow.setAttribute("d", "M -8 -120 C -5 -150, 20 -170, 45 -180");
+        rightOutflow.setAttribute("fill", "none");
+        rightOutflow.setAttribute("stroke", "#38bdf8");
+        rightOutflow.setAttribute("stroke-width", "2.2");
+        rightOutflow.setAttribute("stroke-dasharray", "6, 4");
+        gTrajectories.appendChild(rightOutflow);
+
+        svg.appendChild(gTrajectories);
+
+        // 4. Center Move Pill Badge: e.g. "(B') ↺ -90°"
+        const gBadge = document.createElementNS(ns, "g");
+        const badgeBox = document.createElementNS(ns, "rect");
+        badgeBox.setAttribute("x", "-46");
+        badgeBox.setAttribute("y", "-34");
+        badgeBox.setAttribute("width", "92");
+        badgeBox.setAttribute("height", "22");
+        badgeBox.setAttribute("rx", "11");
+        badgeBox.setAttribute("fill", "rgba(15, 23, 42, 0.95)");
+        badgeBox.setAttribute("stroke", "#38bdf8");
+        badgeBox.setAttribute("stroke-width", "1.8");
+        badgeBox.setAttribute("filter", "url(#glow-cyan-light)");
+        gBadge.appendChild(badgeBox);
+
+        const badgeText = document.createElementNS(ns, "text");
+        badgeText.setAttribute("x", "0");
+        badgeText.setAttribute("y", "-19");
+        badgeText.setAttribute("text-anchor", "middle");
+        badgeText.setAttribute("fill", "#ffffff");
+        badgeText.setAttribute("font-family", "monospace");
+        badgeText.setAttribute("font-size", "11");
+        badgeText.setAttribute("font-weight", "bold");
+        const turnSymbol = isCounter ? '↺ -90°' : isDouble ? '↻ 180°' : '↻ +90°';
+        badgeText.textContent = `(${activeMove}) ${turnSymbol}`;
+        gBadge.appendChild(badgeText);
+
+        svg.appendChild(gBadge);
+
+        // 5. Precise Node Vertex Clustered Beads (Matches Reference Diagram Layout)
+        const nodeVertices = [
+            // Top Face Arc (Yellow / Green)
+            { x: -18, y: -4, color: '#facc15' },
+            { x: 0, y: -4, color: '#facc15' },
+            { x: 18, y: -4, color: '#facc15' },
+            { x: 0, y: 12, color: '#facc15' },
+            { x: 0, y: 28, color: '#22c55e' },
+
+            // Left Inner Arc (Orange Nodes - L)
+            { x: -44, y: -12, color: '#fb923c' },
+            { x: -50, y: 6, color: '#fb923c' },
+            { x: -52, y: 26, color: '#fb923c' },
+            { x: -48, y: 46, color: '#fb923c' },
+            { x: -40, y: 64, color: '#fb923c' },
+
+            // Left Bottom Arc (Green Nodes - F)
+            { x: -46, y: 84, color: '#22c55e' },
+            { x: -32, y: 94, color: '#22c55e' },
+            { x: -16, y: 100, color: '#22c55e' },
+
+            // Left Outer Arc (Red Nodes)
+            { x: -68, y: -14, color: '#ef4444' },
+            { x: -78, y: 4, color: '#ef4444' },
+            { x: -88, y: 22, color: '#ef4444' },
+            { x: -115, y: 35, color: '#38bdf8' }, // Outer cyan entry dot
+
+            // Right Inner Arc (Red Nodes - R)
+            { x: 50, y: 24, color: '#ef4444' },
+            { x: 55, y: 42, color: '#ef4444' },
+            { x: 54, y: 60, color: '#ef4444' },
+            { x: 48, y: 78, color: '#ef4444' },
+            { x: 38, y: 92, color: '#fb923c' },
+
+            // Right Outer Arc (Blue Nodes - B)
+            { x: 22, y: -30, color: '#38bdf8' },
+            { x: 35, y: -26, color: '#3b82f6' },
+            { x: 50, y: -14, color: '#facc15' },
+            { x: 68, y: 2, color: '#3b82f6' },
+            { x: 80, y: 16, color: '#3b82f6' },
+            { x: 92, y: 32, color: '#3b82f6' },
+            { x: 82, y: 52, color: '#facc15' },
+
+            // Bottom Triangular Foundation Grid (White & Blue Nodes - D Face)
+            { x: 0, y: 130, color: '#ffffff' },
+            { x: -14, y: 144, color: '#ffffff' },
+            { x: 0, y: 144, color: '#ffffff' },
+            { x: 14, y: 144, color: '#ffffff' },
+            { x: -26, y: 158, color: '#3b82f6' },
+            { x: -14, y: 158, color: '#ffffff' },
+            { x: 0, y: 158, color: '#ffffff' },
+            { x: 14, y: 158, color: '#ffffff' },
+            { x: 26, y: 158, color: '#3b82f6' }
+        ];
+
+        // Draw Nodes with crisp border outlines
+        nodeVertices.forEach(node => {
             const circle = document.createElementNS(ns, "circle");
             circle.setAttribute("cx", node.x);
             circle.setAttribute("cy", node.y);
-            circle.setAttribute("r", "5.5");
+            circle.setAttribute("r", "5");
             circle.setAttribute("fill", node.color);
-            circle.setAttribute("class", "orbit-node");
-            circle.setAttribute("stroke", "#020617");
+            circle.setAttribute("stroke", "#0a0f1d");
             circle.setAttribute("stroke-width", "1.8");
-
-            // Tooltip title
-            const title = document.createElementNS(ns, "title");
-            title.textContent = `Permutation Vertex ${node.id} (${node.color})`;
-            circle.appendChild(title);
-
+            circle.setAttribute("class", "orbit-node transition-all hover:scale-125");
             svg.appendChild(circle);
         });
     }

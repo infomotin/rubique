@@ -100,3 +100,18 @@ class DevModel:
         })
 
         return results
+
+    @staticmethod
+    def get_database_stats():
+        """Returns record counts and health stats for all major tables"""
+        tables = ['users', 'solves', 'competitions', 'forum_topics', 'forum_replies', 'courses', 'coupons', 'system_logs']
+        stats = []
+        for t in tables:
+            try:
+                row = query_one(f"SELECT COUNT(*) as cnt FROM {t}", f"SELECT COUNT(*) as cnt FROM {t}")
+                cnt = row['cnt'] if row else 0
+                stats.append({'table': t, 'count': cnt, 'status': 'ONLINE'})
+            except Exception:
+                stats.append({'table': t, 'count': 0, 'status': 'STANDBY'})
+        return stats
+

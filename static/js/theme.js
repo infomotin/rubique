@@ -44,10 +44,31 @@
         window.dispatchEvent(new Event('resize'));
     }
 
+    const ACCENT_META = {
+        'indigo': { name: 'Cosmic Indigo', color: '#6366f1', textClass: 'text-indigo-400' },
+        'emerald': { name: 'Emerald Meadow', color: '#10b981', textClass: 'text-emerald-400' },
+        'amber': { name: 'Solar Gold', color: '#f59e0b', textClass: 'text-amber-400' },
+        'rose': { name: 'Bubblegum Rose', color: '#f43f5e', textClass: 'text-rose-400' },
+        'purple': { name: 'Magic Violet', color: '#8b5cf6', textClass: 'text-purple-400' },
+        'cyan': { name: 'Cyber Aqua', color: '#06b6d4', textClass: 'text-cyan-400' }
+    };
+
     function applyAccent(accent) {
+        if (!ACCENT_META[accent]) accent = 'indigo';
         currentAccent = accent;
         localStorage.setItem('cube_ai_accent', accent);
         document.documentElement.setAttribute('data-accent', accent);
+        document.body.setAttribute('data-accent', accent);
+
+        // Update accent dropdown options UI
+        document.querySelectorAll('.accent-select-option').forEach(opt => {
+            const isMatch = opt.dataset.accent === accent;
+            if (isMatch) {
+                opt.classList.add('bg-white/10', 'font-bold', 'border', 'border-white/20');
+            } else {
+                opt.classList.remove('bg-white/10', 'font-bold', 'border', 'border-white/20');
+            }
+        });
 
         // Update active rings on accent buttons if present
         document.querySelectorAll('.accent-picker-btn').forEach(btn => {
@@ -57,6 +78,15 @@
                 btn.classList.remove('ring-2', 'ring-white', 'scale-110');
             }
         });
+
+        // Update accent toggle icon/label color
+        const accentIcon = document.querySelector('#accent-toggle-btn i.fa-palette');
+        if (accentIcon) {
+            accentIcon.style.color = ACCENT_META[accent].color;
+        }
+
+        // Dispatch custom event for 3D canvases & SVGs
+        window.dispatchEvent(new CustomEvent('accentChanged', { detail: { accent, meta: ACCENT_META[accent] } }));
     }
 
     window.toggleTheme = function() {

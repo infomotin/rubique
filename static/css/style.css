@@ -42,6 +42,16 @@
 }
 
 /* Accent Themes */
+[data-accent="indigo"] {
+    --accent-main: #6366f1;
+    --accent-main-hover: #4f46e5;
+    --accent-glow: rgba(99, 102, 241, 0.4);
+    --accent-ring: rgba(99, 102, 241, 0.6);
+    --accent-bg-soft: rgba(99, 102, 241, 0.15);
+    --border-glow: rgba(99, 102, 241, 0.45);
+    --accent-color: #818cf8;
+}
+
 [data-accent="emerald"] {
     --accent-main: #10b981;
     --accent-main-hover: #059669;
@@ -49,6 +59,7 @@
     --accent-ring: rgba(16, 185, 129, 0.6);
     --accent-bg-soft: rgba(16, 185, 129, 0.15);
     --border-glow: rgba(16, 185, 129, 0.45);
+    --accent-color: #34d399;
 }
 
 [data-accent="amber"] {
@@ -58,6 +69,7 @@
     --accent-ring: rgba(245, 158, 11, 0.6);
     --accent-bg-soft: rgba(245, 158, 11, 0.15);
     --border-glow: rgba(245, 158, 11, 0.45);
+    --accent-color: #fbbf24;
 }
 
 [data-accent="rose"] {
@@ -67,6 +79,7 @@
     --accent-ring: rgba(244, 63, 94, 0.6);
     --accent-bg-soft: rgba(244, 63, 94, 0.15);
     --border-glow: rgba(244, 63, 94, 0.45);
+    --accent-color: #fb7185;
 }
 
 [data-accent="purple"] {
@@ -76,6 +89,7 @@
     --accent-ring: rgba(139, 92, 246, 0.6);
     --accent-bg-soft: rgba(139, 92, 246, 0.15);
     --border-glow: rgba(139, 92, 246, 0.45);
+    --accent-color: #c084fc;
 }
 
 [data-accent="cyan"] {
@@ -85,6 +99,43 @@
     --accent-ring: rgba(6, 182, 212, 0.6);
     --accent-bg-soft: rgba(6, 182, 212, 0.15);
     --border-glow: rgba(6, 182, 212, 0.45);
+    --accent-color: #38bdf8;
+}
+
+/* Dynamic Accent Theme Application across UI elements */
+.btn-action-primary,
+.ctrl-btn-primary,
+#btn-solve,
+.lab-tab-btn.active,
+.btn-apply-primary {
+    background-color: var(--accent-main) !important;
+    border-color: var(--accent-main-hover) !important;
+    box-shadow: 0 10px 25px -5px var(--accent-glow) !important;
+    color: #ffffff !important;
+}
+
+.btn-action-primary:hover,
+.ctrl-btn-primary:hover,
+#btn-solve:hover {
+    background-color: var(--accent-main-hover) !important;
+}
+
+.text-accent-glow,
+#active-move-letter {
+    color: var(--accent-color, var(--accent-main)) !important;
+    filter: drop-shadow(0 0 12px var(--accent-glow));
+}
+
+.badge-accent {
+    background-color: var(--accent-bg-soft) !important;
+    border-color: var(--border-glow) !important;
+    color: var(--accent-color, var(--accent-main)) !important;
+}
+
+.ribbon-item.active {
+    color: var(--accent-color, var(--accent-main)) !important;
+    border-bottom: 2px solid var(--accent-main) !important;
+    text-shadow: 0 0 12px var(--accent-glow);
 }
 
 /* Light Theme Variables */

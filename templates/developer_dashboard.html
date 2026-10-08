@@ -1,98 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}Developer Telemetry HUD - CubePermutation AI{% endblock %}
+{% block title %}Developer Telemetry HUD & Diagnostics Suite - CubePermutation AI{% endblock %}
 
 {% block content %}
-<div class="cyber-grid-bg min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
     
-    <!-- Top Cyber DevOps Banner -->
+    <!-- Top Cyber DevOps Master Banner -->
     <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
-        <div class="absolute -top-24 -right-24 w-72 h-72 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
             <div class="flex items-center gap-4">
-                <div class="w-16 h-16 rounded-2xl bg-cyan-600 p-0.5 shadow-2xl shadow-cyan-500/30">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-indigo-600 p-0.5 shadow-2xl shadow-cyan-500/30 shrink-0">
                     <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-cyan-400 text-2xl font-mono">
-                        <i class="fa-solid fa-terminal"></i>
+                        <i class="fa-solid fa-terminal animate-pulse"></i>
                     </div>
                 </div>
                 <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-[11px] font-mono mb-1">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono mb-2 shadow-inner">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                        <span>DEVELOPER HUD &bull; REAL-TIME TELEMETRY</span>
+                        <span class="font-bold">DEVELOPER HUD &bull; V3.4.2 &bull; KOCIEMBA TWO-PHASE + OPENCV</span>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">System & Diagnostics Telemetry</h1>
-                    <p class="text-xs text-slate-400 font-mono">Inspect solver latencies, OpenCV pipelines, MySQL performance, and system stack traces</p>
+                    <h1 class="text-2xl sm:text-3xl font-black font-outfit text-white tracking-tight flex items-center gap-2">
+                        <span>DevOps System &amp; Engine Diagnostic Suite</span>
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-400 font-mono mt-1">
+                        Real-time process profiling, sub-millisecond solver benchmarks, HSV centroid extraction, and SQL table metrics
+                    </p>
                 </div>
             </div>
 
-            <!-- Diagnostics Action Button -->
-            <button id="btn-run-diagnostics" class="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs shadow-xl shadow-cyan-600/30 hover:scale-[1.02] transition-all flex items-center gap-2">
-                <i class="fa-solid fa-microchip text-sm"></i>
-                <span>Run Full Self-Diagnostics Suite</span>
-            </button>
+            <!-- Master Action Controls -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <button id="btn-run-diagnostics" class="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs shadow-xl shadow-cyan-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-microchip text-sm"></i>
+                    <span>Run Full System Diagnostics</span>
+                </button>
+                <a href="{{ url_for('visualizer.index') }}" class="px-4 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 font-mono text-xs flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-cube text-indigo-400"></i>
+                    <span>Launch 3D Lab</span>
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Telemetry Metrics Gauges Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        
-        <!-- Metric 1: CPU Load -->
-        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
-            <div class="flex items-center justify-between text-xs text-slate-400">
-                <span>CPU LOAD</span>
-                <i class="fa-solid fa-gauge-high text-cyan-400"></i>
-            </div>
-            <div class="text-3xl font-bold text-cyan-300 mt-2 flex items-baseline gap-1">
-                <span>{{ telemetry.cpu_load_percent }}</span><span class="text-sm text-slate-500">%</span>
-            </div>
-            <div class="w-full bg-slate-900 h-1.5 rounded-full mt-3 overflow-hidden">
-                <div class="h-full bg-cyan-400" style="width: {{ telemetry.cpu_load_percent }}%;"></div>
-            </div>
-        </div>
-
-        <!-- Metric 2: Memory Usage -->
-        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
-            <div class="flex items-center justify-between text-xs text-slate-400">
-                <span>PROCESS RAM</span>
-                <i class="fa-solid fa-memory text-emerald-400"></i>
-            </div>
-            <div class="text-3xl font-bold text-emerald-400 mt-2 flex items-baseline gap-1">
-                <span>{{ telemetry.memory_mb }}</span><span class="text-sm text-slate-500">MB</span>
-            </div>
-            <div class="text-[11px] text-slate-500 mt-2 font-mono">PID: {{ telemetry.process_id }} &bull; 4 Threads</div>
-        </div>
-
-        <!-- Metric 3: Kociemba Solver Latency -->
-        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
-            <div class="flex items-center justify-between text-xs text-slate-400">
-                <span>TWO-PHASE LATENCY</span>
-                <i class="fa-solid fa-bolt text-indigo-400"></i>
-            </div>
-            <div class="text-3xl font-bold text-indigo-300 mt-2 flex items-baseline gap-1">
-                <span>{{ telemetry.solver_latency_ms }}</span><span class="text-sm text-slate-500">ms</span>
-            </div>
-            <div class="text-[11px] text-emerald-400 mt-2 flex items-center gap-1 font-mono">
-                <i class="fa-solid fa-circle-check"></i> Subgroup $G_0 \to G_1 \to G_2$
-            </div>
-        </div>
-
-        <!-- Metric 4: OpenCV CV Pipeline Latency -->
-        <div class="glass-card p-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 font-mono">
-            <div class="flex items-center justify-between text-xs text-slate-400">
-                <span>OPENCV VISION</span>
-                <i class="fa-solid fa-eye text-amber-400"></i>
-            </div>
-            <div class="text-3xl font-bold text-amber-400 mt-2 flex items-baseline gap-1">
-                <span>{{ telemetry.opencv_latency_ms }}</span><span class="text-sm text-slate-500">ms</span>
-            </div>
-            <div class="text-[11px] text-slate-500 mt-2 font-mono">HSV Median Segmentation</div>
-        </div>
-
-    </div>
-
-    <!-- Diagnostic Suite Results Modal / Output Card -->
-    <div id="diagnostics-output-box" class="glass-card p-6 rounded-3xl border border-emerald-500/40 bg-slate-950/90 mb-8 hidden font-mono">
+    <!-- Diagnostic Suite Results Output Overlay -->
+    <div id="diagnostics-output-box" class="glass-card p-6 rounded-3xl border border-emerald-500/40 bg-slate-950/95 mb-8 hidden font-mono shadow-2xl">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
             <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
                 <i class="fa-solid fa-shield-check"></i> Automated Self-Diagnostics Results
@@ -101,83 +55,400 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div id="diagnostics-results-list" class="space-y-2 text-xs"></div>
-    </div>
-
-    <!-- Runtime Environment & Technical Specs -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 font-mono text-xs">
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
-            <span class="text-slate-400">Python Runtime:</span>
-            <span class="text-white font-bold">{{ telemetry.python_version }}</span>
-        </div>
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
-            <span class="text-slate-400">Host OS:</span>
-            <span class="text-cyan-300 font-bold">{{ telemetry.os_name }}</span>
-        </div>
-        <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
-            <span class="text-slate-400">Database Engine:</span>
-            <span class="text-emerald-400 font-bold">{{ telemetry.database_engine }}</span>
-        </div>
+        <div id="diagnostics-results-list" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"></div>
     </div>
 
     <!-- =========================================================================
-         TECHNICAL SYSTEM LOGS STREAM & BUG TRACKER
+         DEVELOPER HUD MAIN TWO-COLUMN LAYOUT (SIDEBAR + ACTIVE TAB PANEL)
          ========================================================================= -->
-    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-2xl shadow-2xl mb-8">
-        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-6">
-            <div>
-                <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
-                    <i class="fa-solid fa-scroll text-cyan-400"></i> Live Technical Logs & Event Stream
-                </h2>
-                <p class="text-xs text-slate-400 font-mono">Stream of server events, solver invocations, and database transactions</p>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <form method="POST" action="{{ url_for('developer.clear_logs') }}">
-                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900 border border-rose-500/30 text-rose-300 text-xs font-mono transition-all">
-                        <i class="fa-solid fa-trash mr-1"></i> Clear Logs
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Terminal Log Box -->
-        <div class="bg-black/90 p-4 rounded-2xl border border-slate-800/90 font-mono text-xs max-h-96 overflow-y-auto space-y-2">
-            {% for log in logs %}
-                <div class="flex items-start gap-3 py-1 border-b border-slate-900/60 hover:bg-slate-900/40 transition-colors">
-                    <span class="text-slate-500 text-[10px] whitespace-nowrap">{{ log.created_at }}</span>
-                    {% if log.level == 'INFO' %}
-                        <span class="px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 text-[10px] font-bold">INFO</span>
-                    {% elif log.level == 'DEBUG' %}
-                        <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold">DEBUG</span>
-                    {% elif log.level == 'DIAGNOSTIC' %}
-                        <span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] font-bold">DIAGNOSTIC</span>
-                    {% else %}
-                        <span class="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px] font-bold">{{ log.level }}</span>
-                    {% endif %}
-                    <span class="text-cyan-400 font-bold">[{{ log.module }}]</span>
-                    <span class="text-slate-300 flex-grow">{{ log.message }}</span>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- LEFT SIDEBAR MENU (Col 4 / 3) -->
+        <div class="lg:col-span-4 flex flex-col gap-3">
+            
+            <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl shadow-xl space-y-1.5 font-mono text-xs">
+                
+                <div class="px-3 py-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-900 mb-2">
+                    Developer Workspaces
                 </div>
-            {% endfor %}
+
+                <button class="dev-nav-btn active w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20 transition-all text-left" data-tab="tab-telemetry">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-chart-line text-cyan-200 text-sm"></i>
+                        <span>Telemetry &amp; Gauges</span>
+                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 font-mono">LIVE</span>
+                </button>
+
+                <button class="dev-nav-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 transition-all text-left" data-tab="tab-solver">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 text-sm"></i>
+                        <span>Two-Phase Solver Bench</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500 font-mono">Kociemba</span>
+                </button>
+
+                <button class="dev-nav-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 transition-all text-left" data-tab="tab-opencv">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-camera text-emerald-400 text-sm"></i>
+                        <span>OpenCV Vision Sandbox</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500 font-mono">HSV</span>
+                </button>
+
+                <button class="dev-nav-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 transition-all text-left" data-tab="tab-database">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-database text-amber-400 text-sm"></i>
+                        <span>Database Schema &amp; Stats</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500 font-mono">{{ db_stats|length }} Tables</span>
+                </button>
+
+                <button class="dev-nav-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 transition-all text-left" data-tab="tab-logs">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-scroll text-rose-400 text-sm"></i>
+                        <span>Event Stream &amp; Terminal</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500 font-mono">{{ logs|length }} Logs</span>
+                </button>
+
+                <button class="dev-nav-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 transition-all text-left" data-tab="tab-system">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-server text-purple-400 text-sm"></i>
+                        <span>Environment &amp; Stack</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500 font-mono">Py 3.12</span>
+                </button>
+
+            </div>
+
+            <!-- Quick Engine Status Card -->
+            <div class="glass-card p-5 rounded-3xl border border-slate-800/80 bg-slate-950/60 font-mono text-xs space-y-3">
+                <div class="flex items-center justify-between text-slate-400 pb-2 border-b border-slate-900">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Server Health Matrix</span>
+                    <span class="text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px]"></i> Normal</span>
+                </div>
+                <div class="space-y-2 text-[11px]">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Core Architecture:</span>
+                        <span class="text-slate-200 font-bold">MVC + REST API</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Primary DB Engine:</span>
+                        <span class="text-cyan-300 font-bold">{{ telemetry.database_engine }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Server PID:</span>
+                        <span class="text-slate-300">{{ telemetry.process_id }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Uptime Reliability:</span>
+                        <span class="text-emerald-400 font-bold">{{ telemetry.server_uptime }}</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Inject Test Log Form -->
-        <div class="mt-6 pt-4 border-t border-slate-900">
-            <span class="text-xs font-mono text-slate-400 block mb-2">Inject Custom Diagnostic Log:</span>
-            <form method="POST" action="{{ url_for('developer.create_log') }}" class="flex flex-wrap items-center gap-3">
-                <select name="level" class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-mono text-white">
-                    <option value="INFO">INFO</option>
-                    <option value="DEBUG">DEBUG</option>
-                    <option value="WARNING">WARNING</option>
-                    <option value="ERROR">ERROR</option>
-                </select>
-                <input type="text" name="module" value="CustomTest" placeholder="Module" class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-mono text-white w-32">
-                <input type="text" name="message" required placeholder="Log message text..." class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-mono text-white flex-grow">
-                <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 font-mono text-xs rounded-xl font-bold">
-                    Inject Log
-                </button>
-            </form>
+        <!-- RIGHT MAIN WORKSPACE (Col 8) -->
+        <div class="lg:col-span-8">
+
+            <!-- =========================================================================
+                 TAB 1: TELEMETRY & METRIC GAUGES
+                 ========================================================================= -->
+            <div id="tab-telemetry" class="dev-tab-panel space-y-6">
+                
+                <!-- 4 Real-time Gauges Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono">
+                    
+                    <!-- CPU Load Gauge -->
+                    <div class="glass-card p-6 rounded-3xl border border-cyan-500/20 bg-slate-950/80 shadow-lg">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span class="font-bold">SYSTEM CPU LOAD</span>
+                            <i class="fa-solid fa-gauge-high text-cyan-400 text-lg"></i>
+                        </div>
+                        <div class="text-4xl font-black text-cyan-300 mt-3 flex items-baseline gap-1">
+                            <span>{{ telemetry.cpu_load_percent }}</span><span class="text-sm text-slate-500">%</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-2 rounded-full mt-4 overflow-hidden border border-slate-800">
+                            <div class="h-full bg-gradient-to-r from-cyan-500 to-indigo-500" style="width: {{ telemetry.cpu_load_percent }}%;"></div>
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-2">Dynamic multiprocess load monitoring</div>
+                    </div>
+
+                    <!-- Process Memory Gauge -->
+                    <div class="glass-card p-6 rounded-3xl border border-emerald-500/20 bg-slate-950/80 shadow-lg">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span class="font-bold">PROCESS MEMORY (RSS)</span>
+                            <i class="fa-solid fa-memory text-emerald-400 text-lg"></i>
+                        </div>
+                        <div class="text-4xl font-black text-emerald-400 mt-3 flex items-baseline gap-1">
+                            <span>{{ telemetry.memory_mb }}</span><span class="text-sm text-slate-500">MB</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-2 rounded-full mt-4 overflow-hidden border border-slate-800">
+                            <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400" style="width: 32%;"></div>
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-2">Heap allocations &bull; 4 active worker threads</div>
+                    </div>
+
+                    <!-- Two-Phase Latency -->
+                    <div class="glass-card p-6 rounded-3xl border border-indigo-500/20 bg-slate-950/80 shadow-lg">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span class="font-bold">KOCIEMBA SOLVER LATENCY</span>
+                            <i class="fa-solid fa-bolt text-indigo-400 text-lg"></i>
+                        </div>
+                        <div class="text-4xl font-black text-indigo-300 mt-3 flex items-baseline gap-1">
+                            <span>{{ telemetry.solver_latency_ms }}</span><span class="text-sm text-slate-500">ms</span>
+                        </div>
+                        <div class="text-[11px] text-emerald-400 mt-3 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check"></i> Subgroup $G_0 \to G_1 \to G_2$ pruning tables cached
+                        </div>
+                    </div>
+
+                    <!-- OpenCV Segmentation Latency -->
+                    <div class="glass-card p-6 rounded-3xl border border-amber-500/20 bg-slate-950/80 shadow-lg">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span class="font-bold">OPENCV 4.8 HSV PIPELINE</span>
+                            <i class="fa-solid fa-eye text-amber-400 text-lg"></i>
+                        </div>
+                        <div class="text-4xl font-black text-amber-400 mt-3 flex items-baseline gap-1">
+                            <span>{{ telemetry.opencv_latency_ms }}</span><span class="text-sm text-slate-500">ms</span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 mt-3 font-mono">
+                            CLAHE normalizer + adaptive median color reduce
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- =========================================================================
+                 TAB 2: TWO-PHASE SOLVER BENCHMARK & API TESTER
+                 ========================================================================= -->
+            <div id="tab-solver" class="dev-tab-panel space-y-6 hidden">
+                <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 font-mono shadow-xl">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-950 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-base">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Interactive Two-Phase Solver Testbench</h3>
+                                <p class="text-xs text-slate-400">Test Singmaster sequence solves or 54-facelet permutation reductions</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div>
+                            <label class="text-slate-300 font-bold block mb-1">Custom Scramble or Sequence:</label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="dev-solver-input" value="R U R' U' F' U2 F U R U' R'" class="flex-grow px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-indigo-300 font-mono font-bold focus:border-indigo-500">
+                                <button id="dev-btn-solve" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/30">
+                                    <i class="fa-solid fa-play"></i> Solve
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Solver Output Display -->
+                        <div id="dev-solver-output-box" class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+                            <div class="flex items-center justify-between text-slate-400">
+                                <span class="font-bold text-slate-300">Solver Output JSON:</span>
+                                <span id="dev-solver-time-badge" class="text-emerald-400 font-bold">Ready</span>
+                            </div>
+                            <pre id="dev-solver-json" class="text-[11px] text-cyan-300 overflow-x-auto p-3 bg-black/80 rounded-xl border border-slate-800/80">{"status": "Awaiting execution..."}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========================================================================
+                 TAB 3: OPENCV VISION SANDBOX
+                 ========================================================================= -->
+            <div id="tab-opencv" class="dev-tab-panel space-y-6 hidden">
+                <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 font-mono shadow-xl space-y-5">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-base">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">OpenCV Computer Vision Sandbox</h3>
+                                <p class="text-xs text-slate-400">HSV color segmentation thresholds, CLAHE illumination correction</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                            <h4 class="font-bold text-emerald-400">HSV Calibration Matrix</h4>
+                            <ul class="space-y-1 text-slate-300 text-[11px]">
+                                <li>&bull; <span class="text-amber-400 font-bold">Yellow (Y):</span> H: 20-36, S &ge; 65, V &ge; 115</li>
+                                <li>&bull; <span class="text-white font-bold">White (W):</span> S &lt; 65, V &gt; 115</li>
+                                <li>&bull; <span class="text-emerald-400 font-bold">Green (G):</span> H: 37-85, S &ge; 60</li>
+                                <li>&bull; <span class="text-blue-400 font-bold">Blue (B):</span> H: 86-138, S &ge; 55</li>
+                                <li>&bull; <span class="text-orange-400 font-bold">Orange (O):</span> H: 6-19, S &ge; 65</li>
+                                <li>&bull; <span class="text-rose-400 font-bold">Red (R):</span> H: 0-5 || 158-180, S &ge; 60</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 flex flex-col justify-between">
+                            <div>
+                                <h4 class="font-bold text-cyan-400">Test Instant Preset Scanner API</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Simulate instant OpenCV synthetic facelet parsing directly</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="testDevScanPreset('sample_u')" class="px-3 py-2 rounded-xl bg-amber-950 border border-amber-500/40 text-amber-300 font-bold text-xs hover:bg-amber-900 transition-all">U-Preset</button>
+                                <button onclick="testDevScanPreset('sample_f')" class="px-3 py-2 rounded-xl bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-bold text-xs hover:bg-emerald-900 transition-all">F-Preset</button>
+                                <button onclick="testDevScanPreset('sample_r')" class="px-3 py-2 rounded-xl bg-rose-950 border border-rose-500/40 text-rose-300 font-bold text-xs hover:bg-rose-900 transition-all">R-Preset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="dev-cv-output-box" class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hidden">
+                        <span class="font-bold text-xs text-slate-300 block mb-2">OpenCV API Response:</span>
+                        <pre id="dev-cv-json" class="text-[11px] text-emerald-300 overflow-x-auto p-3 bg-black/80 rounded-xl border border-slate-800/80"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========================================================================
+                 TAB 4: DATABASE SCHEMA & STATS
+                 ========================================================================= -->
+            <div id="tab-database" class="dev-tab-panel space-y-6 hidden">
+                <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 font-mono shadow-xl space-y-4">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-950 border border-amber-500/40 flex items-center justify-center text-amber-400 text-base">
+                                <i class="fa-solid fa-database"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Database Table Monitor &amp; Records</h3>
+                                <p class="text-xs text-slate-400">{{ telemetry.database_engine }} relational storage schema</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        {% for table in db_stats %}
+                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+                                <div class="flex items-center justify-between text-slate-400">
+                                    <span class="font-bold text-slate-200 uppercase text-[11px]">{{ table.table }}</span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold {% if table.status == 'ONLINE' %}bg-emerald-950 text-emerald-300 border border-emerald-500/30{% else %}bg-slate-800 text-slate-400{% endif %}">
+                                        {{ table.status }}
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-black text-amber-400 mt-2">{{ table.count }}</div>
+                                <div class="text-[10px] text-slate-500 mt-1">Records indexed</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========================================================================
+                 TAB 5: TECHNICAL LOG STREAM & INJECTOR
+                 ========================================================================= -->
+            <div id="tab-logs" class="dev-tab-panel space-y-6 hidden">
+                <div class="glass-card p-6 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-2xl shadow-2xl">
+                    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-4">
+                        <div>
+                            <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                                <i class="fa-solid fa-scroll text-rose-400"></i> Live Technical Logs &amp; Event Stream
+                            </h2>
+                            <p class="text-xs text-slate-400 font-mono">Stream of server events, solver invocations, and database transactions</p>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <form method="POST" action="{{ url_for('developer.clear_logs') }}">
+                                <button type="submit" class="px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900 border border-rose-500/30 text-rose-300 text-xs font-mono transition-all">
+                                    <i class="fa-solid fa-trash mr-1"></i> Clear Logs
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Terminal Log Box -->
+                    <div class="bg-black/90 p-4 rounded-2xl border border-slate-800/90 font-mono text-xs max-h-96 overflow-y-auto space-y-2">
+                        {% for log in logs %}
+                            <div class="flex items-start gap-3 py-1 border-b border-slate-900/60 hover:bg-slate-900/40 transition-colors">
+                                <span class="text-slate-500 text-[10px] whitespace-nowrap">{{ log.created_at }}</span>
+                                {% if log.level == 'INFO' %}
+                                    <span class="px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 text-[10px] font-bold">INFO</span>
+                                {% elif log.level == 'DEBUG' %}
+                                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold">DEBUG</span>
+                                {% elif log.level == 'DIAGNOSTIC' %}
+                                    <span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] font-bold">DIAG</span>
+                                {% else %}
+                                    <span class="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px] font-bold">{{ log.level }}</span>
+                                {% endif %}
+                                <span class="text-cyan-400 font-bold">[{{ log.module }}]</span>
+                                <span class="text-slate-300 flex-grow">{{ log.message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Inject Test Log Form -->
+                    <div class="mt-6 pt-4 border-t border-slate-900 font-mono">
+                        <span class="text-xs text-slate-400 block mb-2 font-bold">Inject Custom Diagnostic Log:</span>
+                        <form method="POST" action="{{ url_for('developer.create_log') }}" class="flex flex-wrap items-center gap-3">
+                            <select name="level" class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white">
+                                <option value="INFO">INFO</option>
+                                <option value="DEBUG">DEBUG</option>
+                                <option value="WARNING">WARNING</option>
+                                <option value="ERROR">ERROR</option>
+                            </select>
+                            <input type="text" name="module" value="DevConsole" placeholder="Module" class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white w-32">
+                            <input type="text" name="message" required placeholder="Log message text..." class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white flex-grow">
+                            <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs rounded-xl font-bold">
+                                Inject Log
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========================================================================
+                 TAB 6: ENVIRONMENT & STACK SPECS
+                 ========================================================================= -->
+            <div id="tab-system" class="dev-tab-panel space-y-6 hidden">
+                <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 font-mono shadow-xl space-y-4 text-xs">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-purple-950 border border-purple-500/40 flex items-center justify-center text-purple-400 text-base">
+                                <i class="fa-solid fa-server"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Environment &amp; Stack Runtime Matrix</h3>
+                                <p class="text-xs text-slate-400">Server runtime versions and process thread configurations</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-400">Python Runtime Version:</span>
+                            <span class="text-white font-bold">{{ telemetry.python_version }}</span>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-400">Host Operating System:</span>
+                            <span class="text-cyan-300 font-bold">{{ telemetry.os_name }}</span>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-400">Active Database Adapter:</span>
+                            <span class="text-emerald-400 font-bold">{{ telemetry.database_engine }}</span>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                            <span class="text-slate-400">Process Threads:</span>
+                            <span class="text-purple-300 font-bold">{{ telemetry.active_threads }} Threads</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
     </div>
 
 </div>
@@ -186,6 +457,32 @@
 {% block extra_scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Tab switching logic
+        const navBtns = document.querySelectorAll('.dev-nav-btn');
+        const panels = document.querySelectorAll('.dev-tab-panel');
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.getAttribute('data-tab');
+
+                // Update button styles
+                navBtns.forEach(b => {
+                    b.className = "dev-nav-btn w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 transition-all text-left";
+                });
+                btn.className = "dev-nav-btn active w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20 transition-all text-left";
+
+                // Show target panel
+                panels.forEach(p => {
+                    if (p.id === targetTab) {
+                        p.classList.remove('hidden');
+                    } else {
+                        p.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Run Diagnostics Button
         const diagBtn = document.getElementById('btn-run-diagnostics');
         const outputBox = document.getElementById('diagnostics-output-box');
         const resultsList = document.getElementById('diagnostics-results-list');
@@ -200,29 +497,77 @@
                 if (data.success && data.results) {
                     resultsList.innerHTML = '';
                     data.results.forEach(r => {
-                        const row = document.createElement('div');
-                        row.className = 'p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between';
-                        row.innerHTML = `
-                            <div>
-                                <span class="font-bold text-white text-xs">${r.test}</span>
-                                <div class="text-slate-400 text-[11px] mt-0.5">${r.output}</div>
+                        const item = document.createElement('div');
+                        item.className = "p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between";
+                        item.innerHTML = `
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-slate-200">${r.test}</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] font-bold">${r.status}</span>
                             </div>
-                            <div class="text-right">
-                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">${r.status}</span>
-                                <div class="text-slate-400 text-[11px] mt-1">${r.latency}</div>
-                            </div>
+                            <div class="text-[11px] text-slate-400">${r.output}</div>
+                            <div class="text-[10px] text-cyan-400 mt-2 font-mono"><i class="fa-solid fa-bolt"></i> Latency: ${r.latency}</div>
                         `;
-                        resultsList.appendChild(row);
+                        resultsList.appendChild(item);
                     });
                     outputBox.classList.remove('hidden');
                 }
             } catch (err) {
-                console.error(err);
-                alert("Diagnostics failed to execute.");
+                console.error("Diagnostics error:", err);
             } finally {
-                diagBtn.innerHTML = `<i class="fa-solid fa-microchip text-sm"></i> <span>Run Full Self-Diagnostics Suite</span>`;
+                diagBtn.innerHTML = `<i class="fa-solid fa-microchip text-sm"></i> <span>Run Full System Diagnostics</span>`;
+            }
+        });
+
+        // Two-Phase Solver Sandbox Trigger
+        const btnSolve = document.getElementById('dev-btn-solve');
+        const solverInput = document.getElementById('dev-solver-input');
+        const solverJson = document.getElementById('dev-solver-json');
+        const solverTimeBadge = document.getElementById('dev-solver-time-badge');
+
+        btnSolve?.addEventListener('click', async () => {
+            const inputVal = solverInput.value.trim();
+            if (!inputVal) return;
+
+            btnSolve.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Solving...`;
+            const t0 = performance.now();
+
+            try {
+                const res = await fetch('/api/solve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ custom_moves: inputVal })
+                });
+                const data = await res.json();
+                const dt = Math.round(performance.now() - t0);
+                
+                if (solverJson) solverJson.textContent = JSON.stringify(data, null, 2);
+                if (solverTimeBadge) solverTimeBadge.textContent = `Completed in ${dt}ms (${data.move_count || 0} moves)`;
+            } catch (err) {
+                if (solverJson) solverJson.textContent = `Error: ${err.message}`;
+            } finally {
+                btnSolve.innerHTML = `<i class="fa-solid fa-play"></i> Solve`;
             }
         });
     });
+
+    // Global helper for testing scan presets
+    async function testDevScanPreset(sampleId) {
+        const outBox = document.getElementById('dev-cv-output-box');
+        const outJson = document.getElementById('dev-cv-json');
+        if (outBox) outBox.classList.remove('hidden');
+        if (outJson) outJson.textContent = 'Requesting OpenCV segmentation for ' + sampleId + '...';
+
+        try {
+            const res = await fetch('/api/scan-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sample_id: sampleId })
+            });
+            const data = await res.json();
+            if (outJson) outJson.textContent = JSON.stringify(data, null, 2);
+        } catch(e) {
+            if (outJson) outJson.textContent = 'Error: ' + e.message;
+        }
+    }
 </script>
 {% endblock %}

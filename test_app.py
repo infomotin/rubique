@@ -173,7 +173,13 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
 
     def test_visualizer_lab_and_api(self):
         """Test the 3D Visualizer Lab, Kociemba Two-Phase API, Scramble and History endpoints"""
-        # 1. Access Visualizer Page
+        # 1. Access Visualizer Page without Auth -> Must Redirect to Login
+        res_guest = self.client.get('/visualizer/')
+        self.assertEqual(res_guest.status_code, 302)
+        self.assertIn('/login', res_guest.headers.get('Location', ''))
+
+        # 2. Access Visualizer Page with Logged in Session
+        self.login('speedcuber', 'user123')
         res = self.client.get('/visualizer/')
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'id="isometric-cube-svg"', res.data)

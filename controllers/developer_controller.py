@@ -28,17 +28,19 @@ def developer_required(f):
 @developer_bp.route('/dashboard')
 @developer_required
 def dashboard():
-    """Developer HUD Telemetry View"""
+    """Developer HUD Telemetry View with Full Cyber Suite & Diagnostics"""
     user_id = session.get('user_id')
     user = UserModel.find_by_id(user_id)
     telemetry = DevModel.get_telemetry()
-    logs = DevModel.get_logs(limit=30)
+    logs = DevModel.get_logs(limit=40)
+    db_stats = DevModel.get_database_stats()
     
     return render_template(
         'developer_dashboard.html',
         user=user,
         telemetry=telemetry,
-        logs=logs
+        logs=logs,
+        db_stats=db_stats
     )
 
 @developer_bp.route('/diagnostics', methods=['POST'])
