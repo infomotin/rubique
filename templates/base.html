@@ -121,6 +121,66 @@
                     <span id="theme-toggle-label" class="hidden sm:inline text-[11px]">Dark</span>
                 </button>
 
+                <!-- Playful Color Theme Accent Selector Dropdown -->
+                <div class="relative inline-block text-left">
+                    <button id="accent-toggle-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-indigo-500/60 text-xs font-mono text-slate-200 transition-all shadow-md" title="Pick Theme Accent Colors">
+                        <i class="fa-solid fa-palette text-pink-400"></i>
+                        <span class="hidden sm:inline text-[11px]">Colors</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                    </button>
+                    <div id="accent-dropdown-menu" class="hidden absolute right-0 mt-2 w-44 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-1.5 z-50 font-mono text-xs backdrop-blur-xl">
+                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-indigo-600/20 text-slate-200 hover:text-indigo-300 transition-colors" data-accent="indigo">
+                            <span class="w-3 h-3 rounded-full bg-indigo-500 shadow-sm"></span> <span>Cosmic Indigo</span>
+                        </a>
+                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-emerald-600/20 text-slate-200 hover:text-emerald-300 transition-colors" data-accent="emerald">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></span> <span>Emerald Meadow</span>
+                        </a>
+                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-amber-600/20 text-slate-200 hover:text-amber-300 transition-colors" data-accent="amber">
+                            <span class="w-3 h-3 rounded-full bg-amber-400 shadow-sm"></span> <span>Solar Gold</span>
+                        </a>
+                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-rose-600/20 text-slate-200 hover:text-rose-300 transition-colors" data-accent="rose">
+                            <span class="w-3 h-3 rounded-full bg-rose-500 shadow-sm"></span> <span>Bubblegum Rose</span>
+                        </a>
+                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-purple-600/20 text-slate-200 hover:text-purple-300 transition-colors" data-accent="purple">
+                            <span class="w-3 h-3 rounded-full bg-purple-500 shadow-sm"></span> <span>Magic Violet</span>
+                        </a>
+                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-accent="cyan">
+                            <span class="w-3 h-3 rounded-full bg-cyan-400 shadow-sm"></span> <span>Cyber Aqua</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Device Resolution & 3-Mode Viewport Dropdown -->
+                <div class="relative inline-block text-left">
+                    <button id="device-mode-toggle-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-cyan-500/60 text-xs font-mono text-slate-200 transition-all shadow-md" title="Screen Resolution & Viewport Mode">
+                        <i id="device-hud-icon" class="fa-solid fa-desktop text-cyan-400"></i>
+                        <span id="device-hud-label" class="hidden md:inline text-[11px] font-bold text-cyan-300">Desktop</span>
+                        <span id="device-hud-res" class="hidden lg:inline text-[10px] text-slate-400 font-mono">1920×1080</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                    </button>
+                    <div id="device-mode-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-1.5 z-50 font-mono text-xs backdrop-blur-xl">
+                        <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 mb-1">
+                            Screen Modes & Viewports
+                        </div>
+                        <a href="#" class="device-mode-option flex items-center justify-between px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-mode="auto">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-400"></i> <span>Auto Screen Fit</span></span>
+                            <span class="text-[10px] text-slate-500">Native</span>
+                        </a>
+                        <a href="#" class="device-mode-option flex items-center justify-between px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-mode="desktop">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-desktop text-indigo-400"></i> <span>Desktop Mode</span></span>
+                            <span class="text-[10px] text-slate-500">1280px+</span>
+                        </a>
+                        <a href="#" class="device-mode-option flex items-center justify-between px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-mode="tablet">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-tablet-screen-button text-purple-400"></i> <span>Tablet Mode</span></span>
+                            <span class="text-[10px] text-slate-500">768px</span>
+                        </a>
+                        <a href="#" class="device-mode-option flex items-center justify-between px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-mode="mobile">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-mobile-screen-button text-rose-400"></i> <span>Mobile Phone</span></span>
+                            <span class="text-[10px] text-slate-500">390px</span>
+                        </a>
+                    </div>
+                </div>
+
                 {% if session.get('user_id') %}
                     <!-- Role-Specific Dashboard Link -->
                     {% if session.get('role') == 'super_admin' %}
@@ -268,6 +328,7 @@
     </script>
     <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/responsive_engine.js') }}"></script>
 
     {% block extra_scripts %}{% endblock %}
 </body>

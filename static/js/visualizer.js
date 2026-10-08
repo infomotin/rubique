@@ -988,8 +988,86 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // =========================================================================
+    // 10. VISUAL SPEEDCUBING LABORATORY & PROBLEM DIAGNOSTIC HUB ENGINE
+    // =========================================================================
+
+    const tabEasy = document.getElementById('tab-btn-easy');
+    const tabMath = document.getElementById('tab-btn-math');
+    const tabDoctor = document.getElementById('tab-btn-doctor');
+
+    const panelEasy = document.getElementById('panel-easy');
+    const panelMath = document.getElementById('panel-math');
+    const panelDoctor = document.getElementById('panel-doctor');
+
+    function switchLabTab(activeTab, activePanel) {
+        [tabEasy, tabMath, tabDoctor].forEach(tab => {
+            if (tab) {
+                tab.className = "lab-tab-btn px-3.5 py-2 rounded-xl text-xs font-bold font-mono text-slate-400 hover:text-white transition-all flex items-center gap-2";
+            }
+        });
+        [panelEasy, panelMath, panelDoctor].forEach(panel => {
+            if (panel) panel.classList.add('hidden');
+        });
+
+        if (activeTab) {
+            activeTab.className = "lab-tab-btn active px-3.5 py-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-md";
+        }
+        if (activePanel) {
+            activePanel.classList.remove('hidden');
+        }
+        playTone(550, 'sine', 0.05);
+    }
+
+    tabEasy?.addEventListener('click', () => switchLabTab(tabEasy, panelEasy));
+    tabMath?.addEventListener('click', () => switchLabTab(tabMath, panelMath));
+    tabDoctor?.addEventListener('click', () => switchLabTab(tabDoctor, panelDoctor));
+
+    // Universal Sequence Loader & 3D Playback Dispatcher
+    window.loadAndPlaySequence = function(seqStr, autoPlay = true) {
+        if (!seqStr || !seqStr.trim()) return;
+        pausePlayback();
+        playTone(520, 'triangle', 0.1);
+
+        const moves = seqStr.trim().split(/\s+/);
+        currentMoves = moves;
+        currentStepIndex = 0;
+        
+        // Reset cube state and prepare 1st step
+        initSolvedState();
+        reconstructCubeStateUpToStep(0);
+        updateVisualizerUI();
+
+        // Smooth scroll to visualizer stage if below view
+        const stage = document.getElementById('cube-visualizer-stage') || document.getElementById('isometric-cube-container');
+        if (stage) {
+            const rect = stage.getBoundingClientRect();
+            if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                stage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        if (autoPlay) {
+            setTimeout(() => {
+                startPlayback();
+            }, 350);
+        }
+    };
+
+    // Attach click handlers to all Laboratory Simulation Buttons
+    document.querySelectorAll('.btn-play-lab-seq').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetBtn = e.currentTarget;
+            const seq = targetBtn.getAttribute('data-seq');
+            if (seq) {
+                window.loadAndPlaySequence(seq, true);
+            }
+        });
+    });
+
     // Initial Render
     reconstructCubeStateUpToStep(currentStepIndex);
     updateVisualizerUI();
 
 });
+

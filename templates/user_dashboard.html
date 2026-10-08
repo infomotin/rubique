@@ -114,10 +114,10 @@
                 <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
             </div>
             
-            <nav class="space-y-1 font-mono text-xs" id="sidebar-nav">
+            <nav class="flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-1.5 lg:gap-1 scrollbar-none font-mono text-xs" id="sidebar-nav">
                 
                 <!-- 1. Overview & Analytics -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left active border border-transparent" data-target="stage-overview">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left active border border-transparent" data-target="stage-overview">
                     <i class="tab-icon fa-solid fa-chart-line text-sm w-5 text-center text-indigo-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_overview">{{ t('stage_overview') }}</div>
@@ -126,7 +126,7 @@
                 </button>
 
                 <!-- 2. Human vs AI Battle -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-battle">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-battle">
                     <i class="tab-icon fa-solid fa-swords text-sm w-5 text-center text-rose-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_battle">{{ t('stage_battle') }}</div>
@@ -135,7 +135,7 @@
                 </button>
 
                 <!-- 3. Visual Learning Hub -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-learning">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-learning">
                     <i class="tab-icon fa-solid fa-graduation-cap text-sm w-5 text-center text-cyan-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_learning">{{ t('stage_learning') }}</div>
@@ -144,7 +144,7 @@
                 </button>
 
                 <!-- 4. Solving Guide (CFOP) -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-guide">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-guide">
                     <i class="tab-icon fa-solid fa-book-open text-sm w-5 text-center text-emerald-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_guide">{{ t('stage_guide') }}</div>
@@ -153,7 +153,7 @@
                 </button>
 
                 <!-- 5. Video Showcase (NEW!) -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-videos">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-videos">
                     <i class="tab-icon fa-solid fa-video text-sm w-5 text-center text-pink-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_videos">{{ t('stage_videos') }}</div>
@@ -162,7 +162,7 @@
                 </button>
 
                 <!-- 6. Speedcuber Chat & Groups (NEW!) -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-chat">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-chat">
                     <i class="tab-icon fa-solid fa-comments text-sm w-5 text-center text-teal-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_chat">{{ t('stage_chat') }}</div>
@@ -171,7 +171,7 @@
                 </button>
 
                 <!-- 7. Friends & Buddies (NEW!) -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-friends">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-friends">
                     <i class="tab-icon fa-solid fa-user-group text-sm w-5 text-center text-indigo-300"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_friends">{{ t('stage_friends') }}</div>
@@ -180,7 +180,7 @@
                 </button>
 
                 <!-- 8. Community Blog & Tips Feed (NEW!) -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-blog">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-blog">
                     <i class="tab-icon fa-solid fa-newspaper text-sm w-5 text-center text-orange-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_blog">{{ t('stage_blog') }}</div>
@@ -189,16 +189,16 @@
                 </button>
 
                 <!-- 9. Competitions Arena -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-competitions">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-competitions">
                     <i class="tab-icon fa-solid fa-trophy text-sm w-5 text-center text-amber-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_competitions">{{ t('stage_competitions') }}</div>
-                        <div class="text-[10px] text-amber-400/80 font-sans">{{ competitions|length }} Active Tournaments</div>
+                        <div class="text-[10px] text-amber-400/80 font-sans">{{ competitions|length }} Tournaments</div>
                     </div>
                 </button>
 
                 <!-- 10. Masterclasses & Courses -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-courses">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-courses">
                     <i class="tab-icon fa-solid fa-chalkboard-user text-sm w-5 text-center text-purple-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_courses">{{ t('stage_courses') }}</div>
@@ -207,7 +207,7 @@
                 </button>
 
                 <!-- 11. Upload Cube / Vision Studio -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-scan">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-scan">
                     <i class="tab-icon fa-solid fa-camera text-sm w-5 text-center text-blue-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_scan">{{ t('stage_scan') }}</div>
@@ -216,7 +216,7 @@
                 </button>
 
                 <!-- 12. Trophies & Coupons -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-trophies">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-trophies">
                     <i class="tab-icon fa-solid fa-award text-sm w-5 text-center text-yellow-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_trophies">{{ t('stage_trophies') }}</div>
@@ -225,7 +225,7 @@
                 </button>
 
                 <!-- 13. Profile Settings -->
-                <button class="nav-stage-btn w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-profile">
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-profile">
                     <i class="tab-icon fa-solid fa-user-gear text-sm w-5 text-center text-slate-400"></i>
                     <div class="flex-grow">
                         <div class="font-bold text-slate-200" data-i18n="stage_profile">{{ t('stage_profile') }}</div>
