@@ -42,124 +42,1112 @@
 
         <!-- Right Workspace: Scanner & Net Studio -->
         <div class="lg:col-span-9 space-y-6">
-            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-blue-500/30 bg-slate-950/90 shadow-2xl">
-                
-                <!-- Header Controls -->
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
-                    <div>
-                        <h2 class="text-lg font-bold font-outfit text-white">Interactive 2D Cube Net &amp; OpenCV Vision</h2>
-                        <p class="text-xs text-slate-400 font-mono">Paint 54 facelets, inspect mathematical parity, or upload cube face photos</p>
-                    </div>
 
-                    <div class="flex items-center gap-2 font-mono text-xs">
-                        <button onclick="resetNetToSolved()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-arrows-rotate"></i> Reset Solved
-                        </button>
-                        <button onclick="scrambleNet()" class="px-3 py-1.5 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-300 font-bold transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-shuffle"></i> Scramble Net
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Parity Status Ribbon -->
-                <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 mb-6 flex items-center justify-between font-mono text-xs">
-                    <div class="flex items-center gap-2 text-emerald-400 font-bold">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>Parity &amp; Sticker Orbit: Valid 54-Sticker Permutation</span>
-                    </div>
-                    <span class="text-slate-400">9 Yellow &bull; 9 White &bull; 9 Green &bull; 9 Blue &bull; 9 Orange &bull; 9 Red</span>
-                </div>
-
-                <!-- Unfolded 2D Cube Net Interactive Studio -->
-                <div class="p-6 rounded-3xl bg-black/60 border border-slate-800 mb-6 flex flex-col items-center select-none font-mono text-xs">
+            <div id="stage-scan" class="space-y-6">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-blue-500/30 bg-slate-950/90 shadow-2xl">
                     
-                    <!-- Top Face U -->
-                    <div class="flex flex-col items-center mb-2">
-                        <span class="text-[11px] text-yellow-400 font-bold mb-1">U (Up / Yellow)</span>
-                        <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800" id="net-face-u">
-                            {% for i in range(9) %}
-                            <div class="w-8 h-8 rounded bg-yellow-400 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="U" data-idx="{{ i }}"></div>
-                            {% endfor %}
+                    <!-- Header & Action Bar -->
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-4">
+                        <div>
+                            <span class="text-xs font-mono text-blue-400 font-bold uppercase tracking-wider flex items-center gap-1.5" data-i18n="upload_badge">
+                                <i class="fa-solid fa-camera-retro"></i> {{ t('upload_badge') }}
+                            </span>
+                            <h2 class="text-xl sm:text-2xl font-bold font-outfit text-white" data-i18n="upload_title">{{ t('upload_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="upload_desc">{{ t('upload_desc') }}</p>
+                        </div>
+                        
+                        <!-- Quick Presets & Control Action Bar -->
+                        <div class="flex items-center flex-wrap gap-2">
+                            <!-- Preset Dropdown -->
+                            <div class="relative">
+                                <select id="net-preset-select" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                    <option value="solved" data-i18n="reset_to_solved">✨ Solved State</option>
+                                    <option value="superflip" data-i18n="net_superflip">🔄 Superflip (All Edges Flipped)</option>
+                                    <option value="checkerboard" data-i18n="net_checkerboard">🏁 Checkerboard Pattern</option>
+                                    <option value="cube_in_cube" data-i18n="net_cube_in_cube">📦 Cube in a Cube</option>
+                                    <option value="cross_dots" data-i18n="net_cross_dots">🎯 Cross-Dots Pattern</option>
+                                </select>
+                            </div>
+
+                            <button id="net-scramble-btn" class="px-3 py-1.5 rounded-xl bg-indigo-950/80 hover:bg-indigo-900/80 border border-indigo-500/40 text-xs font-mono text-indigo-300 font-bold flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-shuffle"></i> <span>Scramble Net</span>
+                            </button>
+
+                            <button id="net-reset-btn" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-300 flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-rotate-left"></i> <span data-i18n="reset_to_solved">{{ t('reset_to_solved') }}</span>
+                            </button>
+
+                            <button id="net-clear-btn" class="px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/40 border border-rose-500/30 text-xs font-mono text-rose-300 flex items-center gap-1.5 transition-all" title="Clear all facelets">
+                                <i class="fa-solid fa-trash-can"></i> <span data-i18n="net_clear">{{ t('net_clear') }}</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Middle Row: L, F, R, B -->
-                    <div class="flex items-start gap-2 sm:gap-3 mb-2">
-                        <!-- L -->
-                        <div class="flex flex-col items-center">
-                            <span class="text-[11px] text-orange-400 font-bold mb-1">L</span>
-                            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800">
-                                {% for i in range(9) %}
-                                <div class="w-8 h-8 rounded bg-orange-500 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="L" data-idx="{{ i }}"></div>
-                                {% endfor %}
-                            </div>
+                    <!-- Live Parity & Facelet Balance HUD -->
+                    <div class="mb-6 p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex items-center flex-wrap gap-2 sm:gap-3 text-xs font-mono">
+                            <span class="text-slate-400 font-bold uppercase mr-1">Facelet Counts:</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 flex items-center gap-1.5 font-bold">
+                                <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> U (Yellow): <span id="count-yellow">9</span>/9
+                            </span>
+                            <span class="px-2.5 py-1 rounded-lg bg-slate-200/20 border border-slate-400/50 text-white flex items-center gap-1.5 font-bold">
+                                <span class="w-2.5 h-2.5 rounded-full bg-white"></span> D (White): <span id="count-white">9</span>/9
+                            </span>
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 flex items-center gap-1.5 font-bold">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> F (Green): <span id="count-green">9</span>/9
+                            </span>
+                            <span class="px-2.5 py-1 rounded-lg bg-blue-500/20 border border-blue-500/50 text-blue-300 flex items-center gap-1.5 font-bold">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> B (Blue): <span id="count-blue">9</span>/9
+                            </span>
+                            <span class="px-2.5 py-1 rounded-lg bg-orange-500/20 border border-orange-500/50 text-orange-300 flex items-center gap-1.5 font-bold">
+                                <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> L (Orange): <span id="count-orange">9</span>/9
+                            </span>
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-500/50 text-rose-300 flex items-center gap-1.5 font-bold">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> R (Red): <span id="count-red">9</span>/9
+                            </span>
                         </div>
-
-                        <!-- F -->
-                        <div class="flex flex-col items-center">
-                            <span class="text-[11px] text-emerald-400 font-bold mb-1">F</span>
-                            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800">
-                                {% for i in range(9) %}
-                                <div class="w-8 h-8 rounded bg-emerald-500 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="F" data-idx="{{ i }}"></div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- R -->
-                        <div class="flex flex-col items-center">
-                            <span class="text-[11px] text-rose-400 font-bold mb-1">R</span>
-                            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800">
-                                {% for i in range(9) %}
-                                <div class="w-8 h-8 rounded bg-rose-600 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="R" data-idx="{{ i }}"></div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- B -->
-                        <div class="flex flex-col items-center">
-                            <span class="text-[11px] text-blue-400 font-bold mb-1">B</span>
-                            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800">
-                                {% for i in range(9) %}
-                                <div class="w-8 h-8 rounded bg-blue-600 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="B" data-idx="{{ i }}"></div>
-                                {% endfor %}
-                            </div>
+                        
+                        <!-- Parity Status Badge -->
+                        <div id="net-parity-badge" class="px-3.5 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold flex items-center gap-2 shadow-sm whitespace-nowrap">
+                            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                            <span id="net-parity-text" data-i18n="net_parity_valid">{{ t('net_parity_valid') }}</span>
                         </div>
                     </div>
 
-                    <!-- Bottom Face D -->
-                    <div class="flex flex-col items-center">
-                        <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800" id="net-face-d">
-                            {% for i in range(9) %}
-                            <div class="w-8 h-8 rounded bg-white cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="D" data-idx="{{ i }}"></div>
-                            {% endfor %}
-                        </div>
-                        <span class="text-[11px] text-slate-300 font-bold mt-1">D (Down / White)</span>
-                    </div>
+                    <!-- Main Workspace: 2D Net Editor & Right Studio Tabs -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <!-- Left: 2D Interactive Cube Net Editor (Col 7) -->
+                        <div class="lg:col-span-7 p-5 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <!-- Palette and Tool Mode Selector -->
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-800/80">
+                                    <!-- Tool Modes -->
+                                    <div class="flex items-center gap-1.5" id="net-tool-modes">
+                                        <button id="tool-brush" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-mono font-bold flex items-center gap-1 transition-all" title="Paint Brush (Click or drag)">
+                                            <i class="fa-solid fa-paintbrush"></i> <span>Brush</span>
+                                        </button>
+                                        <button id="tool-fill" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono flex items-center gap-1 transition-all" title="Fill entire 3x3 face">
+                                            <i class="fa-solid fa-fill-drip"></i> <span>Fill Face</span>
+                                        </button>
+                                        <button id="tool-picker" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono flex items-center gap-1 transition-all" title="Eyedropper color picker">
+                                            <i class="fa-solid fa-eye-dropper"></i> <span>Pick</span>
+                                        </button>
+                                    </div>
 
+                                    <!-- Color Palette -->
+                                    <div class="flex items-center gap-2" id="color-palette">
+                                        <button class="palette-btn w-7 h-7 rounded-full bg-yellow-400 ring-2 ring-white shadow-md relative group transition-transform active:scale-95" data-color="yellow" title="Yellow (U) - Key [1]">
+                                            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 text-[8px] font-mono text-yellow-300 flex items-center justify-center font-bold">1</span>
+                                        </button>
+                                        <button class="palette-btn w-7 h-7 rounded-full bg-white shadow-md relative group transition-transform active:scale-95" data-color="white" title="White (D) - Key [2]">
+                                            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 text-[8px] font-mono text-white flex items-center justify-center font-bold">2</span>
+                                        </button>
+                                        <button class="palette-btn w-7 h-7 rounded-full bg-green-500 shadow-md relative group transition-transform active:scale-95" data-color="green" title="Green (F) - Key [3]">
+                                            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 text-[8px] font-mono text-green-400 flex items-center justify-center font-bold">3</span>
+                                        </button>
+                                        <button class="palette-btn w-7 h-7 rounded-full bg-blue-600 shadow-md relative group transition-transform active:scale-95" data-color="blue" title="Blue (B) - Key [4]">
+                                            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 text-[8px] font-mono text-blue-300 flex items-center justify-center font-bold">4</span>
+                                        </button>
+                                        <button class="palette-btn w-7 h-7 rounded-full bg-orange-500 shadow-md relative group transition-transform active:scale-95" data-color="orange" title="Orange (L) - Key [5]">
+                                            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 text-[8px] font-mono text-orange-400 flex items-center justify-center font-bold">5</span>
+                                        </button>
+                                        <button class="palette-btn w-7 h-7 rounded-full bg-red-600 shadow-md relative group transition-transform active:scale-95" data-color="red" title="Red (R) - Key [6]">
+                                            <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-slate-900 text-[8px] font-mono text-red-300 flex items-center justify-center font-bold">6</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Unfolded 2D Cube Net Layout -->
+                                <div class="flex flex-col items-center justify-center py-2 select-none overflow-x-auto">
+                                    <!-- Top Face: U -->
+                                    <div class="flex flex-col items-center mb-1">
+                                        <div class="text-[11px] font-mono text-yellow-400 font-bold flex items-center gap-1.5 mb-1">
+                                            <span>U (Up / Yellow)</span>
+                                            <button onclick="fillFaceDirect('U')" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white" title="Fill entire U face">Fill</button>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800" id="net-face-u"></div>
+                                    </div>
+
+                                    <!-- Middle Row: L, F, R, B -->
+                                    <div class="flex items-start gap-2 sm:gap-3">
+                                        <!-- L Face -->
+                                        <div class="flex flex-col items-center">
+                                            <div class="text-[10px] font-mono text-orange-400 font-bold mb-1 flex items-center gap-1">
+                                                <span>L</span>
+                                                <button onclick="fillFaceDirect('L')" class="text-[9px] px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">Fill</button>
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800" id="net-face-l"></div>
+                                        </div>
+
+                                        <!-- F Face -->
+                                        <div class="flex flex-col items-center">
+                                            <div class="text-[10px] font-mono text-emerald-400 font-bold mb-1 flex items-center gap-1">
+                                                <span>F</span>
+                                                <button onclick="fillFaceDirect('F')" class="text-[9px] px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">Fill</button>
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800" id="net-face-f"></div>
+                                        </div>
+
+                                        <!-- R Face -->
+                                        <div class="flex flex-col items-center">
+                                            <div class="text-[10px] font-mono text-rose-400 font-bold mb-1 flex items-center gap-1">
+                                                <span>R</span>
+                                                <button onclick="fillFaceDirect('R')" class="text-[9px] px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">Fill</button>
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800" id="net-face-r"></div>
+                                        </div>
+
+                                        <!-- B Face -->
+                                        <div class="flex flex-col items-center">
+                                            <div class="text-[10px] font-mono text-blue-400 font-bold mb-1 flex items-center gap-1">
+                                                <span>B</span>
+                                                <button onclick="fillFaceDirect('B')" class="text-[9px] px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">Fill</button>
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800" id="net-face-b"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bottom Face: D -->
+                                    <div class="flex flex-col items-center mt-1">
+                                        <div class="text-[11px] font-mono text-white font-bold flex items-center gap-1.5 mb-1">
+                                            <span>D (Down / White)</span>
+                                            <button onclick="fillFaceDirect('D')" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white" title="Fill entire D face">Fill</button>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800" id="net-face-d"></div>
+                                    </div>
+                                </div>
+
+                                <!-- 3D Camera Focus Controls Bar -->
+                                <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
+                                    <span class="text-slate-400 flex items-center gap-1"><i class="fa-solid fa-video"></i> Focus 3D Face:</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <button onclick="focus3DFace('U')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-yellow-400 font-bold">U</button>
+                                        <button onclick="focus3DFace('L')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-orange-400 font-bold">L</button>
+                                        <button onclick="focus3DFace('F')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold">F</button>
+                                        <button onclick="focus3DFace('R')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-rose-400 font-bold">R</button>
+                                        <button onclick="focus3DFace('B')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold">B</button>
+                                        <button onclick="focus3DFace('D')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-white font-bold">D</button>
+                                        <button onclick="focus3DFace('ISO')" class="px-2 py-0.5 rounded bg-indigo-900/60 hover:bg-indigo-800 text-indigo-300 font-bold">3D Orbit</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Dual Studio (3D Preview & OpenCV Scanner) (Col 5) -->
+                        <div class="lg:col-span-5 p-5 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <!-- Tab Switcher -->
+                                <div class="flex items-center gap-2 p-1 rounded-2xl bg-slate-950/80 border border-slate-800 mb-4">
+                                    <button id="tab-btn-3d-preview" onclick="switchNetTab('3d')" class="flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all bg-indigo-600 text-white shadow-md flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-cube"></i> <span data-i18n="net_3d_preview">{{ t('net_3d_preview') }}</span>
+                                    </button>
+                                    <button id="tab-btn-cv-scanner" onclick="switchNetTab('cv')" class="flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-camera"></i> <span data-i18n="opencv_scanner_title">{{ t('opencv_scanner_title') }}</span>
+                                    </button>
+                                </div>
+
+                                <!-- Tab Pane 1: Live 3D Preview Cube & Solver Ribbon -->
+                                <div id="net-tab-3d" class="space-y-4">
+                                    <!-- 3D Canvas -->
+                                    <div class="relative w-full h-[260px] rounded-2xl overflow-hidden bg-slate-950 border border-slate-800/80 shadow-inner flex items-center justify-center">
+                                        <div id="net-3d-preview-canvas" class="w-full h-full"></div>
+                                        <span class="absolute top-2 left-2.5 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800 text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 3D Live Sync
+                                        </span>
+                                        <span class="absolute bottom-2 right-2.5 px-2 py-0.5 rounded-md bg-slate-900/80 text-[10px] font-mono text-slate-500">
+                                            Drag to Orbit • Scroll to Zoom
+                                        </span>
+                                    </div>
+
+                                    <!-- Solver Ribbon & Controls -->
+                                    <div class="space-y-2.5">
+                                        <button id="net-solve-btn" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/25 transition-all flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-atom"></i> <span data-i18n="solve_painted_net">{{ t('solve_painted_net') }}</span>
+                                        </button>
+
+                                        <!-- Enhanced Step-by-Step Solution Walkthrough Container -->
+                                        <div id="net-solution-container" class="hidden p-4 rounded-3xl bg-black/90 border border-indigo-500/40 text-xs font-mono space-y-3.5 shadow-2xl">
+                                            
+                                            <!-- Solution Header & Optimal Badge -->
+                                            <div class="flex items-center justify-between text-indigo-300 font-bold pb-2 border-b border-slate-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                                    <span class="text-xs text-white"><i class="fa-solid fa-wand-magic-sparkles text-amber-300 mr-1"></i> Minimal Steps Solution:</span>
+                                                    <span id="net-solution-count" class="px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 font-bold border border-indigo-700/50">0 moves</span>
+                                                </div>
+                                                <span id="net-step-indicator" class="text-[11px] text-cyan-300 font-bold">Step 0 / 0</span>
+                                            </div>
+
+                                            <!-- Active Step "Which & Why" Live Card -->
+                                            <div id="net-active-step-card" class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
+                                                <div class="flex items-center justify-between">
+                                                    <!-- Big Move Indicator -->
+                                                    <div class="flex items-center gap-3">
+                                                        <div id="net-active-move-badge" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-lg border border-indigo-400/50">
+                                                            R'
+                                                        </div>
+                                                        <div>
+                                                            <div id="net-active-move-arrow" class="text-xs font-bold text-slate-200">↺ 90° Counter-Clockwise</div>
+                                                            <div id="net-active-phase-badge" class="text-[10px] text-emerald-400 font-semibold mt-0.5">Phase 1: Foundation Cross Setup</div>
+                                                        </div>
+                                                    </div>
+                                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">Least Steps</span>
+                                                </div>
+
+                                                <!-- Why This Move Card -->
+                                                <div class="p-2.5 rounded-xl bg-black/60 border border-slate-800/80">
+                                                    <div class="text-[10px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                                                        <i class="fa-solid fa-circle-question"></i> Why this move:
+                                                    </div>
+                                                    <p id="net-active-why-text" class="text-xs text-slate-300 font-sans mt-1 leading-relaxed">
+                                                        Rotates Right face to bring the top working pair into the middle belt slot without disturbing bottom stabilizers.
+                                                    </p>
+                                                </div>
+
+                                                <!-- How to Turn Finger Trick -->
+                                                <div class="p-2.5 rounded-xl bg-black/60 border border-slate-800/80">
+                                                    <div class="text-[10px] font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1">
+                                                        <i class="fa-solid fa-hand"></i> How to hold &amp; turn:
+                                                    </div>
+                                                    <p id="net-active-how-text" class="text-xs text-slate-300 font-sans mt-1 leading-relaxed">
+                                                        Hold cube with Green in front and White at bottom. Pull Right face toward you with your right hand fingers.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Move Sequence Ribbon -->
+                                            <div id="net-solution-ribbon" class="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-thin"></div>
+
+                                            <!-- Step Playback Controls -->
+                                            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                                                <div class="flex items-center gap-1">
+                                                    <button id="net-btn-start" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition-all" title="First Move (|<<)"><i class="fa-solid fa-backward-step"></i></button>
+                                                    <button id="net-btn-prev" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition-all" title="Previous Move (<)"><i class="fa-solid fa-chevron-left"></i></button>
+                                                    <button id="net-btn-play" class="px-3.5 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-600/30"><i class="fa-solid fa-play"></i> <span>Play</span></button>
+                                                    <button id="net-btn-next" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition-all" title="Next Move (>)"><i class="fa-solid fa-chevron-right"></i></button>
+                                                    <button id="net-btn-end" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition-all" title="Last Move (>>|)"><i class="fa-solid fa-forward-step"></i></button>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                                    <span>Speed:</span>
+                                                    <select id="net-speed-select" class="bg-slate-900 text-slate-200 rounded-lg px-2 py-1 border border-slate-700 text-[10px] focus:outline-none">
+                                                        <option value="1">1.0x</option>
+                                                        <option value="1.5">1.5x</option>
+                                                        <option value="2">2.0x</option>
+                                                        <option value="0.5">0.5x</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tab Pane 2: OpenCV Computer Vision Scanner -->
+                                <div id="net-tab-cv" class="hidden space-y-4">
+                                    <!-- Target Face Selector -->
+                                    <div class="space-y-1.5">
+                                        <label class="text-xs font-mono text-slate-300 font-bold block" data-i18n="net_face_select">{{ t('net_face_select') }}:</label>
+                                        <div class="grid grid-cols-6 gap-1" id="cv-face-selector">
+                                            <button onclick="selectCVTargetFace('U')" class="cv-target-btn py-1.5 rounded-lg bg-indigo-600 text-white font-mono text-xs font-bold border border-indigo-400" data-face="U">U</button>
+                                            <button onclick="selectCVTargetFace('L')" class="cv-target-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-700" data-face="L">L</button>
+                                            <button onclick="selectCVTargetFace('F')" class="cv-target-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-700" data-face="F">F</button>
+                                            <button onclick="selectCVTargetFace('R')" class="cv-target-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-700" data-face="R">R</button>
+                                            <button onclick="selectCVTargetFace('B')" class="cv-target-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-700" data-face="B">B</button>
+                                            <button onclick="selectCVTargetFace('D')" class="cv-target-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-700" data-face="D">D</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- OpenCV Upload Dropzone -->
+                                    <div class="p-5 rounded-2xl border-2 border-dashed border-slate-700 hover:border-blue-500/60 bg-black/60 text-center cursor-pointer transition-all relative" id="vision-dropzone">
+                                        <div id="vision-dropzone-content">
+                                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-400 mb-2 block"></i>
+                                            <div class="text-xs font-mono text-slate-200 font-bold" data-i18n="drag_drop_photo">{{ t('drag_drop_photo') }}</div>
+                                            <div class="text-[10px] font-mono text-slate-500 mt-1">Supports PNG, JPG, WEBP • Auto HSV Detection</div>
+                                        </div>
+                                        <div id="vision-scanning-spinner" class="hidden flex-col items-center justify-center py-4">
+                                            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-400 mb-2"></i>
+                                            <div class="text-xs font-mono text-blue-300">Processing HSV Segmentation...</div>
+                                        </div>
+                                        <input type="file" id="vision-file-input" class="hidden" accept="image/*">
+                                    </div>
+
+                                    <!-- OpenCV Results & Annotation Box -->
+                                    <div id="vision-result-box" class="hidden space-y-3 p-3.5 rounded-2xl bg-black/80 border border-emerald-500/40 text-xs font-mono">
+                                        <div class="flex items-center justify-between text-emerald-400 font-bold">
+                                            <span><i class="fa-solid fa-circle-check"></i> OpenCV Segmentation:</span>
+                                            <span id="cv-center-badge" class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] border border-emerald-500/30">Center: U</span>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3 items-center">
+                                            <img id="vision-annotated-img" src="" alt="Annotated Preview" class="w-full h-32 rounded-xl object-cover border border-emerald-500/30 shadow-md">
+                                            
+                                            <!-- Detected 3x3 Grid Classification -->
+                                            <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-950/80 border border-slate-800">
+                                                <div class="text-[10px] text-slate-400 mb-1.5">Detected 3x3 Face:</div>
+                                                <div class="grid grid-cols-3 gap-1" id="cv-detected-grid"></div>
+                                            </div>
+                                        </div>
+
+                                        <button id="btn-apply-cv-face" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-1.5" data-i18n="net_apply_to_face">
+                                            <i class="fa-solid fa-check-double"></i> {{ t('net_apply_to_face') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-
-                <!-- Launch Solver Button -->
-                <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
-                    <span class="text-xs font-mono text-slate-400">Ready to solve this configuration with Kociemba Two-Phase AI</span>
-                    <a href="{{ url_for('visualizer.index') }}" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>Solve in 3D Visualizer Lab &rarr;</span>
-                    </a>
-                </div>
-
             </div>
+
         </div>
 
     </div>
 
 </div>
 
+<script src="{{ url_for('static', filename='js/cube3d.js') }}?v=2.0.2"></script>
 <script>
-    function resetNetToSolved() {
-        alert('Net reset to standard solved state.');
+    function playTone(freq, type = 'sine', duration = 0.08) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+        } catch (e) {}
     }
-    function scrambleNet() {
-        alert('Net scrambled with random permutation.');
+
+    // -------------------------------------------------------------
+    // 2D CUBE NET STUDIO, 3D PREVIEW & OPENCV SCANNER ENGINE
+    // -------------------------------------------------------------
+    let netPreviewCube = null;
+    let netPaintMode = 'brush'; // 'brush' | 'fill' | 'picker'
+    let selectedPaletteColor = 'yellow';
+    let currentCVTargetFace = 'U';
+    let detectedCVGrid = [];
+    let netSolutionMoves = [];
+    let netSolutionStepIndex = 0;
+    let netSolutionPlayInterval = null;
+
+    const COLOR_HEX_MAP = {
+        'yellow': '#facc15',
+        'white': '#ffffff',
+        'green': '#22c55e',
+        'blue': '#2563eb',
+        'orange': '#f97316',
+        'red': '#ef4444',
+        'gray': '#334155'
+    };
+
+    const FACE_DEFAULT_COLORS = {
+        'U': 'yellow',
+        'L': 'orange',
+        'F': 'green',
+        'R': 'red',
+        'B': 'blue',
+        'D': 'white'
+    };
+
+    const FACE_SEQUENCE = ['U', 'L', 'F', 'R', 'B', 'D'];
+
+    // Tool Mode selection
+    const toolModes = ['tool-brush', 'tool-fill', 'tool-picker'];
+    toolModes.forEach(tId => {
+        document.getElementById(tId)?.addEventListener('click', () => {
+            toolModes.forEach(id => {
+                const b = document.getElementById(id);
+                if (b) {
+                    b.className = 'px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono flex items-center gap-1 transition-all';
+                }
+            });
+            const activeBtn = document.getElementById(tId);
+            if (activeBtn) {
+                activeBtn.className = 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-mono font-bold flex items-center gap-1 transition-all';
+            }
+            netPaintMode = tId.replace('tool-', '');
+            playTone(720, 'triangle', 0.04);
+        });
+    });
+
+    // Palette Color selection
+    document.querySelectorAll('.palette-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectPaletteColor(btn.dataset.color);
+        });
+    });
+
+    function selectPaletteColor(color) {
+        if (!COLOR_HEX_MAP[color]) return;
+        selectedPaletteColor = color;
+        document.querySelectorAll('.palette-btn').forEach(b => {
+            if (b.dataset.color === color) {
+                b.classList.add('ring-2', 'ring-white', 'scale-110');
+            } else {
+                b.classList.remove('ring-2', 'ring-white', 'scale-110');
+            }
+        });
+        playTone(650, 'triangle', 0.03);
     }
+
+    // Keyboard Shortcuts: 1-6 for colors
+    window.addEventListener('keydown', (e) => {
+        const keyMap = {
+            '1': 'yellow', '2': 'white', '3': 'green',
+            '4': 'blue', '5': 'orange', '6': 'red'
+        };
+        if (keyMap[e.key] && document.getElementById('stage-scan') && !document.getElementById('stage-scan').classList.contains('hidden')) {
+            selectPaletteColor(keyMap[e.key]);
+        }
+    });
+
+    // Initialize 3D Preview Cube
+    function initNetPreviewCube() {
+        if (typeof Interactive3DCube === 'undefined') return;
+        try {
+            if (!netPreviewCube && document.getElementById('net-3d-preview-canvas')) {
+                netPreviewCube = new Interactive3DCube('net-3d-preview-canvas', { autoRotate: false });
+            }
+        } catch (err) {
+            console.warn('[Net] Preview cube init skipped:', err);
+        }
+        updateNet3DPreview();
+    }
+
+    function getNetState() {
+        const state = {};
+        FACE_SEQUENCE.forEach(f => {
+            const container = document.getElementById(`net-face-${f.toLowerCase()}`);
+            if (container) {
+                const cells = container.querySelectorAll('.net-cell');
+                state[f] = Array.from(cells).map(c => c.dataset.color || FACE_DEFAULT_COLORS[f]);
+            } else {
+                state[f] = Array(9).fill(FACE_DEFAULT_COLORS[f]);
+            }
+        });
+        return state;
+    }
+
+    function updateNet3DPreview() {
+        if (!netPreviewCube) return;
+        const state = getNetState();
+        netPreviewCube.applyFaceletMap(state);
+    }
+
+    function updateNetParityCounts() {
+        const state = getNetState();
+        const counts = { yellow: 0, white: 0, green: 0, blue: 0, orange: 0, red: 0, gray: 0 };
+        
+        Object.values(state).forEach(arr => {
+            arr.forEach(c => {
+                if (counts[c] !== undefined) counts[c]++;
+                else counts.gray++;
+            });
+        });
+
+        const setCnt = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
+
+        setCnt('count-yellow', counts.yellow);
+        setCnt('count-white', counts.white);
+        setCnt('count-green', counts.green);
+        setCnt('count-blue', counts.blue);
+        setCnt('count-orange', counts.orange);
+        setCnt('count-red', counts.red);
+
+        const isValid = counts.yellow === 9 && counts.white === 9 && counts.green === 9 &&
+                        counts.blue === 9 && counts.orange === 9 && counts.red === 9;
+
+        const badge = document.getElementById('net-parity-badge');
+        const text = document.getElementById('net-parity-text');
+        if (badge && text) {
+            if (isValid) {
+                badge.className = 'px-3.5 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold flex items-center gap-2 shadow-sm whitespace-nowrap';
+                text.textContent = 'Parity Valid (54/54 Facelets)';
+            } else {
+                badge.className = 'px-3.5 py-1.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold flex items-center gap-2 shadow-sm whitespace-nowrap';
+                text.textContent = 'Parity Mismatch (9 each)';
+            }
+        }
+        return isValid;
+    }
+
+    let isNetMouseDown = false;
+    window.addEventListener('mouseup', () => { isNetMouseDown = false; });
+
+    function initNetGrid(customState = null) {
+        FACE_SEQUENCE.forEach(f => {
+            const container = document.getElementById(`net-face-${f.toLowerCase()}`);
+            if (!container) return;
+            container.innerHTML = '';
+
+            const faceColors = customState?.[f] || Array(9).fill(FACE_DEFAULT_COLORS[f]);
+
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'net-cell flex items-center justify-center';
+                const initialColor = faceColors[i] || FACE_DEFAULT_COLORS[f];
+                cell.style.backgroundColor = COLOR_HEX_MAP[initialColor] || COLOR_HEX_MAP.gray;
+                cell.dataset.color = initialColor;
+                cell.dataset.face = f;
+                cell.dataset.index = i;
+
+                // Center sticker indicator badge
+                if (i === 4) {
+                    const centerBadge = document.createElement('span');
+                    centerBadge.className = 'text-[10px] font-black font-mono text-black/75 pointer-events-none drop-shadow-sm';
+                    centerBadge.textContent = f;
+                    cell.appendChild(centerBadge);
+                }
+
+                // Click / Paint handler
+                cell.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isNetMouseDown = true;
+                    handleCellInteraction(cell, f);
+                });
+
+                cell.addEventListener('mouseenter', () => {
+                    if (isNetMouseDown && netPaintMode === 'brush') {
+                        handleCellInteraction(cell, f);
+                    }
+                });
+
+                container.appendChild(cell);
+            }
+        });
+
+        updateNetParityCounts();
+        updateNet3DPreview();
+    }
+
+    function handleCellInteraction(cell, faceKey) {
+        if (netPaintMode === 'picker') {
+            const pickedColor = cell.dataset.color;
+            if (pickedColor) {
+                selectPaletteColor(pickedColor);
+                document.getElementById('tool-brush')?.click();
+            }
+            return;
+        }
+
+        if (netPaintMode === 'fill') {
+            fillFaceDirect(faceKey);
+            return;
+        }
+
+        // Brush Mode
+        cell.style.backgroundColor = COLOR_HEX_MAP[selectedPaletteColor];
+        cell.dataset.color = selectedPaletteColor;
+        playTone(520, 'sine', 0.02);
+        updateNetParityCounts();
+        updateNet3DPreview();
+    }
+
+    window.fillFaceDirect = function(faceKey) {
+        const container = document.getElementById(`net-face-${faceKey.toLowerCase()}`);
+        if (!container) return;
+        container.querySelectorAll('.net-cell').forEach(cell => {
+            cell.style.backgroundColor = COLOR_HEX_MAP[selectedPaletteColor];
+            cell.dataset.color = selectedPaletteColor;
+        });
+        playTone(680, 'triangle', 0.05);
+        updateNetParityCounts();
+        updateNet3DPreview();
+    };
+
+    window.focus3DFace = function(faceKey) {
+        if (!netPreviewCube) initNetPreviewCube();
+        if (netPreviewCube) {
+            netPreviewCube.lookAtFace(faceKey);
+            playTone(600, 'sine', 0.04);
+        }
+    };
+
+    // Preset Patterns
+    const PRESET_PATTERNS = {
+        'solved': null,
+        'checkerboard': {
+            U: ['yellow','white','yellow','white','yellow','white','yellow','white','yellow'],
+            D: ['white','yellow','white','yellow','white','yellow','white','yellow','white'],
+            F: ['green','blue','green','blue','green','blue','green','blue','green'],
+            B: ['blue','green','blue','green','blue','green','blue','green','blue'],
+            L: ['orange','red','orange','red','orange','red','orange','red','orange'],
+            R: ['red','orange','red','orange','red','orange','red','orange','red']
+        },
+        'superflip': {
+            U: ['yellow','blue','yellow','orange','yellow','red','yellow','green','yellow'],
+            D: ['white','green','white','orange','white','red','white','blue','white'],
+            F: ['green','yellow','green','orange','green','red','green','white','green'],
+            B: ['blue','yellow','blue','red','blue','orange','blue','white','blue'],
+            L: ['orange','yellow','orange','blue','orange','green','orange','white','orange'],
+            R: ['red','yellow','red','green','red','blue','red','white','red']
+        },
+        'cube_in_cube': {
+            U: ['green','green','green','green','yellow','yellow','green','yellow','yellow'],
+            D: ['blue','blue','blue','white','white','blue','white','white','blue'],
+            F: ['red','green','green','red','green','green','red','red','red'],
+            B: ['orange','orange','orange','orange','blue','blue','orange','blue','blue'],
+            L: ['white','white','white','orange','orange','white','orange','orange','white'],
+            R: ['red','red','yellow','red','red','yellow','yellow','yellow','yellow']
+        },
+        'cross_dots': {
+            U: ['red','yellow','red','yellow','yellow','yellow','red','yellow','red'],
+            D: ['orange','white','orange','white','white','white','orange','white','orange'],
+            F: ['yellow','green','yellow','green','green','green','yellow','green','yellow'],
+            B: ['white','blue','white','blue','blue','blue','white','blue','white'],
+            L: ['blue','orange','blue','orange','orange','orange','blue','orange','blue'],
+            R: ['green','red','green','red','red','red','green','red','green']
+        },
+    };
+
+    document.getElementById('net-preset-select')?.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'solved') {
+            initNetGrid();
+        } else if (PRESET_PATTERNS[val]) {
+            initNetGrid(PRESET_PATTERNS[val]);
+        }
+        playTone(640, 'triangle', 0.05);
+    });
+
+    document.getElementById('net-reset-btn')?.addEventListener('click', () => {
+        initNetGrid();
+        playTone(600, 'sine', 0.05);
+    });
+
+    document.getElementById('net-clear-btn')?.addEventListener('click', () => {
+        const blank = {};
+        FACE_SEQUENCE.forEach(f => { blank[f] = Array(9).fill('gray'); });
+        initNetGrid(blank);
+        playTone(450, 'sine', 0.05);
+    });
+
+    document.getElementById('net-scramble-btn')?.addEventListener('click', () => {
+        // Scramble simulation
+        const colorPool = [
+            ...Array(9).fill('yellow'),
+            ...Array(9).fill('white'),
+            ...Array(9).fill('green'),
+            ...Array(9).fill('blue'),
+            ...Array(9).fill('orange'),
+            ...Array(9).fill('red')
+        ].sort(() => Math.random() - 0.5);
+
+        const scrambled = {};
+        FACE_SEQUENCE.forEach((f, idx) => {
+            scrambled[f] = colorPool.slice(idx * 9, (idx + 1) * 9);
+            // keep center true to face
+            scrambled[f][4] = FACE_DEFAULT_COLORS[f];
+        });
+        initNetGrid(scrambled);
+        playTone(850, 'triangle', 0.08);
+    });
+
+    // Right Tab Switcher
+    window.switchNetTab = function(tab) {
+        const btn3D = document.getElementById('tab-btn-3d-preview');
+        const btnCV = document.getElementById('tab-btn-cv-scanner');
+        const pane3D = document.getElementById('net-tab-3d');
+        const paneCV = document.getElementById('net-tab-cv');
+
+        if (tab === '3d') {
+            btn3D.className = 'flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all bg-indigo-600 text-white shadow-md flex items-center justify-center gap-1.5';
+            btnCV.className = 'flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5';
+            pane3D?.classList.remove('hidden');
+            paneCV?.classList.add('hidden');
+            initNetPreviewCube();
+            if (netPreviewCube) netPreviewCube.onResize();
+        } else {
+            btnCV.className = 'flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all bg-indigo-600 text-white shadow-md flex items-center justify-center gap-1.5';
+            btn3D.className = 'flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5';
+            paneCV?.classList.remove('hidden');
+            pane3D?.classList.add('hidden');
+        }
+        playTone(550, 'sine', 0.04);
+    };
+
+    // OpenCV Computer Vision Scanner
+    window.selectCVTargetFace = function(faceKey) {
+        currentCVTargetFace = faceKey;
+        document.querySelectorAll('.cv-target-btn').forEach(b => {
+            if (b.dataset.face === faceKey) {
+                b.className = 'cv-target-btn py-1.5 rounded-lg bg-indigo-600 text-white font-mono text-xs font-bold border border-indigo-400 shadow-sm';
+            } else {
+                b.className = 'cv-target-btn py-1.5 rounded-lg bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-700';
+            }
+        });
+        const badge = document.getElementById('cv-center-badge');
+        if (badge) badge.textContent = `Target: ${faceKey} (${FACE_DEFAULT_COLORS[faceKey]})`;
+        focus3DFace(faceKey);
+        playTone(600, 'sine', 0.03);
+    };
+
+    const visionDropzone = document.getElementById('vision-dropzone');
+    const visionFileInput = document.getElementById('vision-file-input');
+
+    visionDropzone?.addEventListener('click', () => visionFileInput?.click());
+    
+    visionDropzone?.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        visionDropzone.classList.add('border-blue-400', 'bg-slate-900/80');
+    });
+
+    visionDropzone?.addEventListener('dragleave', () => {
+        visionDropzone.classList.remove('border-blue-400', 'bg-slate-900/80');
+    });
+
+    visionDropzone?.addEventListener('drop', (e) => {
+        e.preventDefault();
+        visionDropzone.classList.remove('border-blue-400', 'bg-slate-900/80');
+        if (e.dataTransfer.files.length) {
+            handleVisionFileUpload(e.dataTransfer.files[0]);
+        }
+    });
+
+    visionFileInput?.addEventListener('change', () => {
+        if (visionFileInput.files.length) {
+            handleVisionFileUpload(visionFileInput.files[0]);
+        }
+    });
+
+    async function handleVisionFileUpload(file) {
+        if (!file) return;
+
+        const spinner = document.getElementById('vision-scanning-spinner');
+        const content = document.getElementById('vision-dropzone-content');
+        const resultBox = document.getElementById('vision-result-box');
+
+        spinner?.classList.remove('hidden');
+        spinner?.classList.add('flex');
+        content?.classList.add('hidden');
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await fetch('/api/scan-image', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            spinner?.classList.add('hidden');
+            spinner?.classList.remove('flex');
+            content?.classList.remove('hidden');
+
+            if (data.success) {
+                resultBox?.classList.remove('hidden');
+                
+                // Show annotated image
+                const img = document.getElementById('vision-annotated-img');
+                if (img) img.src = data.annotated_image;
+
+                // Color code conversion
+                const codeToName = { 'Y': 'yellow', 'W': 'white', 'G': 'green', 'B': 'blue', 'O': 'orange', 'R': 'red' };
+                const grid3x3 = [];
+                (data.face_grid || []).forEach(row => {
+                    row.forEach(code => {
+                        grid3x3.push(codeToName[code] || 'yellow');
+                    });
+                });
+
+                detectedCVGrid = grid3x3.length === 9 ? grid3x3 : Array(9).fill(FACE_DEFAULT_COLORS[currentCVTargetFace]);
+                renderCVDetectedGrid(detectedCVGrid);
+                playTone(880, 'triangle', 0.1);
+            } else {
+                alert('OpenCV Scanner: ' + (data.error || 'Failed to detect 3x3 cube face'));
+            }
+        } catch(err) {
+            spinner?.classList.add('hidden');
+            spinner?.classList.remove('flex');
+            content?.classList.remove('hidden');
+            alert('Scan error: Could not reach OpenCV vision endpoint');
+        }
+    }
+
+    function renderCVDetectedGrid(colors) {
+        const container = document.getElementById('cv-detected-grid');
+        if (!container) return;
+        container.innerHTML = '';
+
+        colors.forEach((c, i) => {
+            const item = document.createElement('div');
+            item.className = 'w-7 h-7 rounded-md border border-slate-700 cursor-pointer flex items-center justify-center text-[9px] font-mono text-black font-bold transition-all';
+            item.style.backgroundColor = COLOR_HEX_MAP[c] || COLOR_HEX_MAP.gray;
+            item.textContent = c[0].toUpperCase();
+            
+            item.addEventListener('click', () => {
+                // Cycle color on click
+                const order = ['yellow', 'white', 'green', 'blue', 'orange', 'red'];
+                const nextIdx = (order.indexOf(colors[i]) + 1) % order.length;
+                colors[i] = order[nextIdx];
+                item.style.backgroundColor = COLOR_HEX_MAP[colors[i]];
+                item.textContent = colors[i][0].toUpperCase();
+                playTone(600, 'sine', 0.03);
+            });
+            container.appendChild(item);
+        });
+    }
+
+    document.getElementById('btn-apply-cv-face')?.addEventListener('click', () => {
+        if (!detectedCVGrid || detectedCVGrid.length !== 9) return;
+
+        const container = document.getElementById(`net-face-${currentCVTargetFace.toLowerCase()}`);
+        if (container) {
+            const cells = container.querySelectorAll('.net-cell');
+            cells.forEach((cell, idx) => {
+                cell.style.backgroundColor = COLOR_HEX_MAP[detectedCVGrid[idx]];
+                cell.dataset.color = detectedCVGrid[idx];
+            });
+        }
+
+        updateNetParityCounts();
+        updateNet3DPreview();
+        playTone(900, 'triangle', 0.08);
+
+        // Auto-advance to next target face
+        const currentIdx = FACE_SEQUENCE.indexOf(currentCVTargetFace);
+        const nextIdx = (currentIdx + 1) % FACE_SEQUENCE.length;
+        selectCVTargetFace(FACE_SEQUENCE[nextIdx]);
+        
+        // Show celebratory confirmation toast
+        const resultBox = document.getElementById('vision-result-box');
+        if (resultBox) {
+            const originalBorder = resultBox.className;
+            resultBox.classList.add('border-emerald-400', 'bg-emerald-950/40');
+            setTimeout(() => { resultBox.className = originalBorder; }, 800);
+        }
+    });
+
+    // -------------------------------------------------------------
+    // TWO-PHASE KOCIEMBA 3D SOLVER INTEGRATION & ANIMATION
+    // -------------------------------------------------------------
+    const COLOR_TO_FACE_CODE = {
+        'yellow': 'U',
+        'red': 'R',
+        'green': 'F',
+        'white': 'D',
+        'orange': 'L',
+        'blue': 'B'
+    };
+
+    let netSolutionSteps = [];
+
+    document.getElementById('net-solve-btn')?.addEventListener('click', async () => {
+        const isParityValid = updateNetParityCounts();
+        if (!isParityValid) {
+            alert('⚠️ Sticker Balance Mismatch:\nPlease ensure you have exactly 9 Yellow, 9 White, 9 Green, 9 Blue, 9 Orange, and 9 Red stickers before running the Minimal Step Solver.');
+            return;
+        }
+
+        const solveBtn = document.getElementById('net-solve-btn');
+        const origText = solveBtn.innerHTML;
+        solveBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i> Computing Minimal Steps Solution...';
+        solveBtn.disabled = true;
+
+        // Serialize 54 facelet states into standard URFDLB string
+        const state = getNetState();
+        let faceletStr = '';
+        ['U', 'R', 'F', 'D', 'L', 'B'].forEach(f => {
+            const arr = state[f] || [];
+            for (let i = 0; i < 9; i++) {
+                const col = arr[i] || FACE_DEFAULT_COLORS[f];
+                faceletStr += COLOR_TO_FACE_CODE[col] || f;
+            }
+        });
+
+        try {
+            const res = await fetch('/api/solve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    facelet_string: faceletStr
+                })
+            });
+            const data = await res.json();
+
+            solveBtn.innerHTML = origText;
+            solveBtn.disabled = false;
+
+            if (data.moves && data.moves.length) {
+                netSolutionMoves = data.moves;
+                netSolutionSteps = data.steps || [];
+                netSolutionStepIndex = 0;
+                renderNetSolutionRibbon(data.moves);
+                updateActiveStepCard(0);
+                playTone(850, 'triangle', 0.12);
+            } else if (data.error) {
+                alert('Solver warning: ' + data.error);
+            } else {
+                alert('Solver completed! Cube is already in solved state or solution was optimal.');
+            }
+        } catch(e) {
+            solveBtn.innerHTML = origText;
+            solveBtn.disabled = false;
+            alert('Solver error: Could not connect to solver API');
+        }
+    });
+
+    function renderNetSolutionRibbon(moves) {
+        const container = document.getElementById('net-solution-container');
+        const ribbon = document.getElementById('net-solution-ribbon');
+        const countEl = document.getElementById('net-solution-count');
+        const stepInd = document.getElementById('net-step-indicator');
+
+        if (!container || !ribbon) return;
+        container.classList.remove('hidden');
+        ribbon.innerHTML = '';
+        if (countEl) countEl.textContent = `${moves.length} moves`;
+        if (stepInd) stepInd.textContent = `Step 1 / ${moves.length}`;
+
+        moves.forEach((m, idx) => {
+            const chip = document.createElement('button');
+            chip.className = `px-2.5 py-1 rounded-lg text-xs font-mono font-bold whitespace-nowrap transition-all ${idx === 0 ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`;
+            chip.textContent = m;
+            chip.id = `net-move-chip-${idx}`;
+            chip.addEventListener('click', () => {
+                jumpToSolutionStep(idx);
+            });
+            ribbon.appendChild(chip);
+        });
+    }
+
+    function updateActiveStepCard(stepIdx) {
+        if (!netSolutionMoves || stepIdx < 0 || stepIdx >= netSolutionMoves.length) return;
+        const move = netSolutionMoves[stepIdx];
+        const stepMeta = netSolutionSteps[stepIdx] || {};
+
+        const moveBadge = document.getElementById('net-active-move-badge');
+        const moveArrow = document.getElementById('net-active-move-arrow');
+        const phaseBadge = document.getElementById('net-active-phase-badge');
+        const whyText = document.getElementById('net-active-why-text');
+        const howText = document.getElementById('net-active-how-text');
+        const stepInd = document.getElementById('net-step-indicator');
+
+        if (moveBadge) {
+            moveBadge.textContent = move;
+            const faceColors = {
+                'U': 'bg-amber-500 text-black border-amber-300',
+                'D': 'bg-slate-200 text-black border-white',
+                'F': 'bg-emerald-600 text-white border-emerald-400',
+                'B': 'bg-blue-600 text-white border-blue-400',
+                'L': 'bg-orange-500 text-white border-orange-300',
+                'R': 'bg-rose-600 text-white border-rose-400'
+            };
+            const f = move[0] || 'U';
+            moveBadge.className = `w-12 h-12 rounded-2xl font-black text-xl flex items-center justify-center shadow-lg border ${faceColors[f] || 'bg-indigo-600 text-white border-indigo-400'}`;
+        }
+
+        if (moveArrow) {
+            moveArrow.textContent = stepMeta.arrow || (move.includes("'") ? "↺ 90° Counter-Clockwise" : move.includes("2") ? "↻ 180° Half Turn" : "↻ 90° Clockwise");
+        }
+
+        if (phaseBadge) {
+            phaseBadge.textContent = stepMeta.phase || "Phase 1: Permutation Reduction";
+        }
+
+        if (whyText) {
+            whyText.textContent = stepMeta.why || `Executes ${move} to orient facelets into solved orbits with minimum entropy.`;
+        }
+
+        if (howText) {
+            howText.textContent = stepMeta.how || `Rotate the ${stepMeta.face_name || move[0]} layer smoothly.`;
+        }
+
+        if (stepInd) {
+            stepInd.textContent = `Step ${stepIdx + 1} / ${netSolutionMoves.length}`;
+        }
+    }
+
+    function jumpToSolutionStep(stepIdx) {
+        if (!netPreviewCube || stepIdx < 0 || stepIdx >= netSolutionMoves.length) return;
+        netSolutionStepIndex = stepIdx;
+        const move = netSolutionMoves[stepIdx];
+        highlightMoveChip(stepIdx);
+        updateActiveStepCard(stepIdx);
+        netPreviewCube.animateLayerTurn(move, () => {
+            playTone(600, 'sine', 0.03);
+        });
+    }
+
+    function highlightMoveChip(idx) {
+        netSolutionMoves.forEach((_, i) => {
+            const chip = document.getElementById(`net-move-chip-${i}`);
+            if (chip) {
+                if (i === idx) {
+                    chip.className = 'px-2.5 py-1 rounded-lg text-xs font-mono font-bold whitespace-nowrap transition-all bg-indigo-600 text-white ring-2 ring-indigo-400 scale-105';
+                    chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    chip.className = 'px-2.5 py-1 rounded-lg text-xs font-mono font-bold whitespace-nowrap transition-all bg-slate-800 text-slate-400';
+                }
+            }
+        });
+    }
+
+    document.getElementById('net-btn-next')?.addEventListener('click', () => {
+        if (netSolutionStepIndex < netSolutionMoves.length - 1) {
+            netSolutionStepIndex++;
+            jumpToSolutionStep(netSolutionStepIndex);
+        }
+    });
+
+    document.getElementById('net-btn-prev')?.addEventListener('click', () => {
+        if (netSolutionStepIndex > 0) {
+            netSolutionStepIndex--;
+            jumpToSolutionStep(netSolutionStepIndex);
+        }
+    });
+
+    document.getElementById('net-btn-start')?.addEventListener('click', () => {
+        netSolutionStepIndex = 0;
+        jumpToSolutionStep(0);
+    });
+
+    document.getElementById('net-btn-end')?.addEventListener('click', () => {
+        netSolutionStepIndex = netSolutionMoves.length - 1;
+        jumpToSolutionStep(netSolutionStepIndex);
+    });
+
+    document.getElementById('net-btn-play')?.addEventListener('click', () => {
+        const btn = document.getElementById('net-btn-play');
+        if (netSolutionPlayInterval) {
+            clearInterval(netSolutionPlayInterval);
+            netSolutionPlayInterval = null;
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> <span>Play</span>';
+        } else {
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i> <span>Pause</span>';
+            const speed = parseFloat(document.getElementById('net-speed-select')?.value || '1.0');
+            const intervalMs = Math.round(550 / speed);
+
+            netSolutionPlayInterval = setInterval(() => {
+                if (netSolutionStepIndex < netSolutionMoves.length - 1) {
+                    netSolutionStepIndex++;
+                    jumpToSolutionStep(netSolutionStepIndex);
+                } else {
+                    clearInterval(netSolutionPlayInterval);
+                    netSolutionPlayInterval = null;
+                    if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> <span>Play</span>';
+                }
+            }, intervalMs);
+        }
+    });
+
+    // Initialize 2D Net grid on start
+    initNetGrid();
+
+    // Boot
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof initNetPreviewCube === 'function') { initNetPreviewCube(); }
+    });
+    setTimeout(() => { { boot_late } }, 80);
 </script>
 {% endblock %}

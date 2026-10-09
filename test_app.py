@@ -93,17 +93,30 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
         }, follow_redirects=True)
         self.assertEqual(res.status_code, 200)
 
-        # 2. Access dashboard and check all stage containers exist
+        # 2. Access dashboard overview + every dedicated menu page
         res = self.client.get('/dashboard/')
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'id="stage-learning"', res.data)
-        self.assertIn(b'id="stage-videos"', res.data)
-        self.assertIn(b'id="stage-chat"', res.data)
-        self.assertIn(b'id="stage-friends"', res.data)
-        self.assertIn(b'id="stage-blog"', res.data)
-        self.assertIn(b'id="stage-overview"', res.data)
-        self.assertIn(b'id="stage-battle"', res.data)
-        self.assertIn(b'id="stage-guide"', res.data)
+        self.assertIn(b'overview-scramble-display', res.data)
+        self.assertIn(b'user-sidebar-nav', res.data)
+
+        menu_pages = {
+            '/dashboard/battle': 'battle-scramble-text',
+            '/dashboard/learning': 'learning-3d-canvas',
+            '/dashboard/guide': 'guide-3d-canvas',
+            '/dashboard/videos': 'upload-video-form-box',
+            '/dashboard/chat': 'chat-messages-container',
+            '/dashboard/friends': 'add-friend',
+            '/dashboard/blog': 'blog',
+            '/dashboard/competitions': 'competition',
+            '/dashboard/courses': 'course-modal',
+            '/dashboard/scan': 'net-grid',
+            '/dashboard/trophies': 'trophy',
+        }
+        for path, marker in menu_pages.items():
+            res = self.client.get(path)
+            self.assertEqual(res.status_code, 200, f'{path} must render')
+            self.assertIn(b'user-sidebar-nav', res.data, f'{path} must include shared sidebar')
+            self.assertIn(marker.encode(), res.data, f'{path} must contain its workspace marker')
 
         # 3. Test video upload
         res = self.client.post('/dashboard/videos/upload', data={
@@ -301,13 +314,13 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
         self.assertEqual(len(data['patterns']), len(patterns))
         self.assertIn('moves', data['patterns'][0])
 
-        # 7. Dashboard ships the Pattern Studio stage
+        # 7. Dashboard ships the Pattern Studio as a dedicated page
         self.login('speedcuber', 'user123')
-        res = self.client.get('/dashboard/')
+        res = self.client.get('/dashboard/patterns')
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'id="stage-patterns"', res.data)
         self.assertIn(b'id="pattern-3d-canvas"', res.data)
-        self.assertIn(b'data-target="stage-patterns"', res.data)
+        self.assertIn(b'id="pattern-list"', res.data)
+        self.assertIn(b'href="/dashboard/patterns"', res.data)
 
 if __name__ == '__main__':
     unittest.main()

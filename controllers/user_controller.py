@@ -209,7 +209,7 @@ def upload_video():
         flash('Your speedcubing solve video has been published to the community showcase!', 'success')
     else:
         flash('Please provide a valid video title and video link.', 'error')
-    return redirect(url_for('user.dashboard') + '#stage-videos')
+    return redirect(url_for('user.videos_page'))
 
 @user_bp.route('/videos/like/<int:video_id>', methods=['POST'])
 @login_required
@@ -238,7 +238,7 @@ def create_group():
         flash(f'Group "{name}" successfully created!', 'success')
     else:
         flash('Please enter a group name.', 'error')
-    return redirect(url_for('user.dashboard') + '#stage-chat')
+    return redirect(url_for('user.chat_page'))
 
 @user_bp.route('/chat/send', methods=['POST'])
 @login_required
@@ -300,7 +300,7 @@ def add_friend():
         flash(f'You are now connected with {friend["username"]}!', 'success')
     else:
         flash('User not found or you cannot add yourself as friend.', 'error')
-    return redirect(url_for('user.dashboard') + '#stage-friends')
+    return redirect(url_for('user.friends_page'))
 
 # -------------------------------------------------------------
 # BLOG & COMMUNITY FEED ACTIONS
@@ -319,7 +319,7 @@ def create_blog_post():
         flash('Your speedcubing blog post has been published!', 'success')
     else:
         flash('Please provide both title and content for your post.', 'error')
-    return redirect(url_for('user.dashboard') + '#stage-blog')
+    return redirect(url_for('user.blog_page'))
 
 @user_bp.route('/blogs/comment', methods=['POST'])
 @login_required
@@ -339,14 +339,14 @@ def add_blog_comment():
         flash('Comment posted!', 'success')
     else:
         flash('Comment could not be posted.', 'error')
-    return redirect(url_for('user.dashboard') + '#stage-blog')
+    return redirect(url_for('user.blog_page'))
 
 @user_bp.route('/courses/complete', methods=['POST'])
 @login_required
 def complete_course():
     """Marks a course as completed for the current user"""
     flash('Congratulations! You have completed this speedcubing masterclass course!', 'success')
-    return redirect(url_for('user.dashboard'))
+    return redirect(url_for('user.courses_page'))
 
 @user_bp.route('/competitions/submit', methods=['POST'])
 @login_required
@@ -375,7 +375,7 @@ def submit_competition():
         flash(f'Competition solve submitted successfully! ({move_count} moves)', 'success')
     else:
         flash('Invalid submission! Please enter valid solution moves.', 'error')
-    return redirect(url_for('user.dashboard'))
+    return redirect(url_for('user.competitions_page'))
 
 @user_bp.route('/coupons/redeem', methods=['POST'])
 @login_required
@@ -391,7 +391,7 @@ def redeem_coupon():
         flash(f'Coupon {code} Redeemed! Reward: {coupon["reward_text"]}', 'success')
     else:
         flash('Invalid or expired coupon code! Try "GROUPTHEORY2026".', 'error')
-    return redirect(url_for('user.dashboard'))
+    return redirect(url_for('user.trophies_page'))
 
 # -------------------------------------------------------------
 # CUSTOM CUBES WORKSHOP & GROUP CHALLENGES ACTIONS
@@ -422,7 +422,7 @@ def save_custom_cube():
         is_public=is_public
     )
     flash(f'Custom cube "{name}" successfully saved to your workshop collection!', 'success')
-    return redirect(url_for('user.dashboard') + '#stage-custom-builder')
+    return redirect(url_for('custom_cubes.builder'))
 
 @user_bp.route('/custom-cubes/delete/<int:cube_id>', methods=['POST'])
 @login_required
@@ -431,7 +431,7 @@ def delete_custom_cube(cube_id):
     user_id = session.get('user_id')
     CustomCubeModel.delete_cube(cube_id, user_id)
     flash('Custom puzzle deleted from your collection.', 'info')
-    return redirect(url_for('user.dashboard') + '#stage-custom-builder')
+    return redirect(url_for('custom_cubes.builder'))
 
 @user_bp.route('/custom-cubes/challenge-group', methods=['POST'])
 @login_required
@@ -454,7 +454,7 @@ def challenge_group():
         flash('Puzzle challenge sent to the Clan! Clan members have been tagged & notified in chat.', 'success')
     else:
         flash('Please select both a valid cube and a target clan/group.', 'error')
-    return redirect(url_for('user.dashboard') + '#stage-custom-builder')
+    return redirect(url_for('custom_cubes.builder'))
 
 @user_bp.route('/custom-cubes/solve-challenge/<int:challenge_id>', methods=['POST'])
 @login_required
@@ -467,7 +467,7 @@ def solve_challenge(challenge_id):
         flash('Congratulations! Your solution algorithm has been verified and registered on the Clan Challenge!', 'success')
     else:
         flash('Please provide a valid solution move sequence.', 'error')
-    return redirect(url_for('user.dashboard') + '#stage-custom-builder')
+    return redirect(url_for('custom_cubes.builder'))
 
 @user_bp.route('/custom-cubes/api/<int:cube_id>')
 @login_required

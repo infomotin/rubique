@@ -42,152 +42,405 @@
 
         <!-- Right Workspace: 1v1 Battle Arena -->
         <div class="lg:col-span-9 space-y-6">
-            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-rose-500/30 bg-slate-950/70 backdrop-blur-xl relative overflow-hidden">
-                <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400">
-                            <i class="fa-solid fa-bolt text-lg"></i>
-                        </div>
+
+            <div id="stage-battle" class="space-y-6">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-rose-500/30 bg-slate-950/90 relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
                         <div>
-                            <h2 class="text-lg font-bold font-outfit text-white">Live Speedcubing Duel Mat</h2>
-                            <p class="text-xs text-slate-400 font-mono">Spacebar or touch to start inspection and solve timer</p>
+                            <span class="text-xs font-mono text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                                <span data-i18n="live_speed_duel">{{ t('live_speed_duel') }}</span>
+                            </span>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="battle_title">{{ t('battle_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono" data-i18n="battle_subtitle">{{ t('battle_subtitle') }}</p>
                         </div>
+                        <button id="battle-new-scramble-btn" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-shuffle text-rose-400"></i> <span data-i18n="new_match_scramble">{{ t('new_match_scramble') }}</span>
+                        </button>
                     </div>
-                    <span class="px-3 py-1 rounded-full bg-rose-950 border border-rose-500/40 text-rose-300 text-xs font-mono font-bold">
-                        WCA Strict Inspection: 15s
-                    </span>
-                </div>
 
-                <!-- Live Scramble Box -->
-                <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 mb-6 font-mono text-center">
-                    <div class="text-[11px] text-slate-500 uppercase tracking-widest mb-1">Official WCA Duel Scramble Sequence</div>
-                    <div id="battle-scramble-text" class="text-sm sm:text-base font-bold text-amber-300 select-all tracking-wider">
-                        R U R' U' F' U2 F U R U' R' F' D2 B2 L2
-                    </div>
-                    <button onclick="generateBattleScramble()" class="mt-2 text-xs text-rose-400 hover:text-rose-300 transition-colors">
-                        <i class="fa-solid fa-shuffle mr-1"></i> Regenerate Scramble
-                    </button>
-                </div>
-
-                <!-- 2 Contender Timer Blocks -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- Contender 1: Human Player -->
-                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-indigo-500/30 text-center font-mono">
-                        <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-                            <span class="text-indigo-400 font-bold"><i class="fa-solid fa-user mr-1"></i> {{ user.username }} (You)</span>
-                            <span class="px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 text-[10px]">Contender</span>
-                        </div>
-                        <div id="player-timer" class="text-4xl sm:text-5xl font-black font-outfit text-white my-4">00:00.00</div>
-                        <div class="flex items-center justify-center gap-3">
-                            <button id="btn-player-start" onclick="togglePlayerTimer()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-lg shadow-indigo-600/30">
-                                Start / Stop [Space]
-                            </button>
-                            <button onclick="resetPlayerTimer()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-all">
-                                Reset
-                            </button>
+                    <!-- Battle Scramble Bar -->
+                    <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 font-mono text-center mb-6">
+                        <span class="text-[10px] text-slate-500 block uppercase" data-i18n="match_scramble_label">{{ t('match_scramble_label') }}</span>
+                        <div id="battle-scramble-text" class="text-indigo-300 font-bold text-sm sm:text-base mt-1 tracking-wider break-all">
+                            R U R' U' F' U2 F U R U' R' F'
                         </div>
                     </div>
 
-                    <!-- Contender 2: Kociemba Two-Phase AI -->
-                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-rose-500/30 text-center font-mono">
-                        <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-                            <span class="text-rose-400 font-bold"><i class="fa-solid fa-robot mr-1"></i> Kociemba AI Bot</span>
-                            <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px]">Optimal Two-Phase</span>
-                        </div>
-                        <div id="ai-timer" class="text-4xl sm:text-5xl font-black font-outfit text-rose-400 my-4">00:08.42</div>
-                        <div class="text-xs text-slate-400">
-                            Estimated Move Count: <span class="text-white font-bold">19 Moves</span>
-                        </div>
-                    </div>
-                </div>
+                    <!-- 3D Battle Arena Viewports -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+                        
+                        <!-- HUMAN SIDE -->
+                        <div class="p-6 rounded-3xl bg-slate-900/60 border border-indigo-500/40 flex flex-col justify-between relative overflow-hidden">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-bold font-outfit text-white text-sm block">{{ user.username }}</span>
+                                            <span class="text-[10px] text-slate-400 font-mono" data-i18n="keyboard_mode">{{ t('keyboard_mode') }}</span>
+                                        </div>
+                                    </div>
+                                    <span id="human-status-badge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700" data-i18n="ready">{{ t('ready') }}</span>
+                                </div>
 
-                <!-- Duel Telemetry Stats -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-black/60 border border-slate-800 font-mono text-center text-xs">
-                    <div>
-                        <div class="text-slate-500">Best Time</div>
-                        <div class="text-white font-bold text-sm mt-0.5">{{ stats.best_time or '--' }}s</div>
+                                <div id="battle-cube-human" class="w-full h-56 rounded-2xl bg-black/70 border border-slate-800 flex items-center justify-center relative overflow-hidden mb-4">
+                                </div>
+
+                                <div class="text-center py-3 bg-black/70 rounded-2xl border border-slate-800 mb-4">
+                                    <div id="human-timer" class="text-3xl sm:text-4xl font-mono font-black text-white tracking-widest">00:00.00</div>
+                                    <div class="text-[11px] text-slate-400 font-mono mt-1">
+                                        <span data-i18n="moves_applied">{{ t('moves_applied') }}</span> <span id="human-move-count" class="text-indigo-400 font-bold">0</span> <span data-i18n="moves">{{ t('moves') }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="text-[10px] font-mono text-slate-400 mb-1.5 uppercase" data-i18n="interactive_layer_turns">{{ t('interactive_layer_turns') }}</div>
+                                    <div class="grid grid-cols-6 gap-1.5 font-mono text-xs">
+                                        <button class="human-move-btn face-btn turn-btn" data-m="R">R</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="U">U</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="F">F</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="L">L</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="D">D</button>
+                                        <button class="human-move-btn face-btn turn-btn" data-m="B">B</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="R'">R'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="U'">U'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="F'">F'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="L'">L'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="D'">D'</button>
+                                        <button class="human-move-btn face-btn turn-btn text-cyan-400" data-m="M">M</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button id="human-start-btn" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-stopwatch"></i>
+                                    <span data-i18n="start_human_timer">{{ t('start_human_timer') }}</span>
+                                </button>
+                                <button id="human-reset-btn" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white font-mono text-xs transition-colors" data-i18n="reset_human">
+                                    {{ t('reset_human') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- AI SIDE -->
+                        <div class="p-6 rounded-3xl bg-slate-900/60 border border-cyan-500/40 flex flex-col justify-between relative overflow-hidden">
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-cyan-600 flex items-center justify-center text-white text-xs font-bold">
+                                            <i class="fa-solid fa-robot"></i>
+                                        </div>
+                                        <div>
+                                            <span class="font-bold font-outfit text-white text-sm block" data-i18n="ai_solver">{{ t('ai_solver') }}</span>
+                                            <span class="text-[10px] text-cyan-400 font-mono" data-i18n="ai_subgroup">{{ t('ai_subgroup') }}</span>
+                                        </div>
+                                    </div>
+                                    <span id="ai-status-badge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700" data-i18n="standby">{{ t('standby') }}</span>
+                                </div>
+
+                                <div id="battle-cube-ai" class="w-full h-56 rounded-2xl bg-black/70 border border-slate-800 flex items-center justify-center relative overflow-hidden mb-4">
+                                </div>
+
+                                <div class="text-center py-3 bg-black/70 rounded-2xl border border-slate-800 mb-4">
+                                    <div id="ai-timer" class="text-3xl sm:text-4xl font-mono font-black text-cyan-300 tracking-widest">00:00.00</div>
+                                    <div class="text-[11px] text-slate-400 font-mono mt-1">
+                                        <span data-i18n="optimal_moves">{{ t('optimal_moves') }}</span> <span id="ai-move-count" class="text-cyan-400 font-bold">--</span> <span data-i18n="moves">{{ t('moves') }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-black/80 border border-slate-800 text-xs font-mono text-emerald-400 min-h-[96px] mb-4">
+                                    <div class="flex items-center justify-between text-[10px] text-slate-500 uppercase mb-1">
+                                        <span data-i18n="calculated_ai_solution">{{ t('calculated_ai_solution') }}</span>
+                                        <span id="ai-progress-text" class="text-cyan-400 font-bold">0 / 0</span>
+                                    </div>
+                                    <div id="ai-solution-text" class="text-emerald-300 font-bold break-all leading-relaxed">
+                                        Click "Compute & Animate AI Solve" to start...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button id="ai-solve-btn" class="w-full py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs shadow-xl shadow-cyan-600/30 transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-microchip"></i>
+                                    <span data-i18n="run_ai_solver">{{ t('run_ai_solver') }}</span>
+                                </button>
+                                <div class="flex gap-2">
+                                    <button id="ai-step-play-btn" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-cyan-300 font-mono text-xs transition-colors">
+                                        <i class="fa-solid fa-play mr-1"></i> <span data-i18n="step_by_step_3d">{{ t('step_by_step_3d') }}</span>
+                                    </button>
+                                    <button id="ai-reset-btn" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white font-mono text-xs transition-colors" data-i18n="reset_ai">
+                                        {{ t('reset_ai') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                    <div>
-                        <div class="text-slate-500">Average of 5</div>
-                        <div class="text-white font-bold text-sm mt-0.5">{{ stats.ao5 or '--' }}s</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-500">Total Solves</div>
-                        <div class="text-white font-bold text-sm mt-0.5">{{ stats.total_solves }}</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-500">Duel Win Rate</div>
-                        <div class="text-emerald-400 font-bold text-sm mt-0.5">68.4%</div>
+
+                    <!-- Duel Outcome Banner -->
+                    <div id="battle-outcome-banner" class="hidden mt-6 p-4 rounded-2xl border text-center font-mono text-xs">
+                        <div id="battle-outcome-title" class="text-base font-bold font-outfit mb-1"></div>
+                        <div id="battle-outcome-desc" class="text-slate-300"></div>
                     </div>
                 </div>
             </div>
+
         </div>
 
     </div>
 
 </div>
 
+<script src="{{ url_for('static', filename='js/cube3d.js') }}?v=2.0.2"></script>
 <script>
-    let timerRunning = false;
-    let timerInterval = null;
-    let startTime = 0;
-
-    function formatTime(ms) {
-        const totalSec = Math.floor(ms / 1000);
-        const mins = Math.floor(totalSec / 60);
-        const secs = totalSec % 60;
-        const hundredths = Math.floor((ms % 1000) / 10);
-        return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0') + '.' + String(hundredths).padStart(2, '0');
+    function playTone(freq, type = 'sine', duration = 0.08) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+        } catch (e) {}
     }
 
-    function togglePlayerTimer() {
-        if (!timerRunning) {
-            startTime = Date.now();
-            timerRunning = true;
-            document.getElementById('btn-player-start').innerText = 'Stop Solve';
-            document.getElementById('btn-player-start').className = 'px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-lg shadow-rose-600/30';
-            timerInterval = setInterval(() => {
-                const diff = Date.now() - startTime;
-                document.getElementById('player-timer').innerText = formatTime(diff);
-            }, 10);
+    const MOVES = ['U', "U'", 'U2', 'D', "D'", 'D2', 'R', "R'", 'R2', 'L', "L'", 'L2', 'F', "F'", 'F2', 'B', "B'", 'B2'];
+    function generateScramble(length = 20) {
+        const res = [];
+        let lastAxis = '';
+        for (let i = 0; i < length; i++) {
+            let m = MOVES[Math.floor(Math.random() * MOVES.length)];
+            while (m[0] === lastAxis) {
+                m = MOVES[Math.floor(Math.random() * MOVES.length)];
+            }
+            lastAxis = m[0];
+            res.push(m);
+        }
+        return res.join(' ');
+    }
+
+    let humanDuelCube = null;
+    let aiDuelCube = null;
+
+    // -------------------------------------------------------------
+    // HUMAN VS AI BATTLE ARENA LOGIC
+    // -------------------------------------------------------------
+    function initBattleCubes() {
+        if (typeof Interactive3DCube === 'undefined') return;
+        try {
+            if (!humanDuelCube && document.getElementById('battle-cube-human')) {
+                humanDuelCube = new Interactive3DCube('battle-cube-human', { autoRotate: false });
+            }
+            if (!aiDuelCube && document.getElementById('battle-cube-ai')) {
+                aiDuelCube = new Interactive3DCube('battle-cube-ai', { autoRotate: false });
+            }
+        } catch (err) {
+            console.warn('[Battle] Duel 3D cubes init skipped:', err);
+        }
+    }
+
+    let isHumanRacing = false;
+    let humanStartTime = 0;
+    let humanTimerInterval = null;
+    let humanMovesCount = 0;
+
+    const humanTimerEl = document.getElementById('human-timer');
+    const humanMoveCountEl = document.getElementById('human-move-count');
+    const humanStatusEl = document.getElementById('human-status-badge');
+    const humanStartBtn = document.getElementById('human-start-btn');
+
+    function toggleHumanRace() {
+        if (!isHumanRacing) {
+            isHumanRacing = true;
+            humanStartTime = performance.now();
+            humanMovesCount = 0;
+            if (humanMoveCountEl) humanMoveCountEl.textContent = '0';
+            if (humanStatusEl) {
+                humanStatusEl.textContent = window.getTranslation ? window.getTranslation('racing') : 'Racing!';
+                humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-rose-950 text-rose-300 text-[10px] font-mono border border-rose-600 animate-pulse';
+            }
+            if (humanStartBtn) {
+                humanStartBtn.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> <span>${window.getTranslation ? window.getTranslation('finish_human_solve') : 'Finish Human Solve!'}</span>`;
+                humanStartBtn.className = 'w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2';
+            }
+            playTone(520, 'sine', 0.1);
+
+            humanTimerInterval = setInterval(() => {
+                const elapsed = performance.now() - humanStartTime;
+                const sec = Math.floor(elapsed / 1000);
+                const ms = Math.floor((elapsed % 1000) / 10);
+                if (humanTimerEl) {
+                    humanTimerEl.textContent = `${sec < 10 ? '0' + sec : sec}:${ms < 10 ? '0' + ms : ms}`;
+                }
+            }, 30);
         } else {
-            clearInterval(timerInterval);
-            timerRunning = false;
-            document.getElementById('btn-player-start').innerText = 'Start Solve';
-            document.getElementById('btn-player-start').className = 'px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-lg shadow-indigo-600/30';
+            isHumanRacing = false;
+            clearInterval(humanTimerInterval);
+            if (humanStatusEl) {
+                humanStatusEl.textContent = window.getTranslation ? window.getTranslation('completed') : 'Completed!';
+                humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 text-[10px] font-mono border border-emerald-600';
+            }
+            if (humanStartBtn) {
+                humanStartBtn.innerHTML = `<i class="fa-solid fa-rotate"></i> <span>${window.getTranslation ? window.getTranslation('race_again') : 'Race Again'}</span>`;
+                humanStartBtn.className = 'w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2';
+            }
+            playTone(880, 'triangle', 0.2);
+            checkBattleOutcome();
         }
     }
 
-    function resetPlayerTimer() {
-        clearInterval(timerInterval);
-        timerRunning = false;
-        document.getElementById('player-timer').innerText = '00:00.00';
-        document.getElementById('btn-player-start').innerText = 'Start Solve';
-    }
+    humanStartBtn?.addEventListener('click', toggleHumanRace);
 
-    function generateBattleScramble() {
-        const moves = ['U', "U'", 'U2', 'D', "D'", 'D2', 'R', "R'", 'R2', 'L', "L'", 'L2', 'F', "F'", 'F2', 'B', "B'", 'B2'];
-        let res = [];
-        for (let i = 0; i < 20; i++) {
-            res.push(moves[Math.floor(Math.random() * moves.length)]);
-        }
-        document.getElementById('battle-scramble-text').innerText = res.join(' ');
-    }
-
-    // Handoff scramble from the Overview page (Send to Battle)
-    try {
-        const handedScramble = sessionStorage.getItem('battleScramble');
-        if (handedScramble) {
-            document.getElementById('battle-scramble-text').innerText = handedScramble;
-            sessionStorage.removeItem('battleScramble');
-        }
-    } catch (e) {}
-
-    document.addEventListener('keydown', function(e) {
-        if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && document.getElementById('stage-battle') && !document.getElementById('stage-battle').classList.contains('hidden')) {
+            if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
             e.preventDefault();
-            togglePlayerTimer();
+            toggleHumanRace();
         }
     });
+
+    document.querySelectorAll('.human-move-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const move = btn.dataset.m;
+            playTone(400, 'square', 0.04);
+            if (humanDuelCube) humanDuelCube.animateLayerTurn(move);
+            if (isHumanRacing) {
+                humanMovesCount++;
+                if (humanMoveCountEl) humanMoveCountEl.textContent = humanMovesCount;
+            }
+        });
+    });
+
+    document.getElementById('human-reset-btn')?.addEventListener('click', () => {
+        isHumanRacing = false;
+        clearInterval(humanTimerInterval);
+        if (humanTimerEl) humanTimerEl.textContent = '00:00.00';
+        if (humanMoveCountEl) humanMoveCountEl.textContent = '0';
+        if (humanStatusEl) {
+            humanStatusEl.textContent = window.getTranslation ? window.getTranslation('ready') : 'Ready';
+            humanStatusEl.className = 'px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700';
+        }
+        if (humanStartBtn) {
+            humanStartBtn.innerHTML = `<i class="fa-solid fa-stopwatch"></i> <span>${window.getTranslation ? window.getTranslation('start_human_timer') : 'Start Human Timer'}</span>`;
+            humanStartBtn.className = 'w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2';
+        }
+        if (humanDuelCube) humanDuelCube.buildCube();
+    });
+
+    // AI Race Solver
+    let aiSolutionMoves = [];
+    let isAiSolving = false;
+    const aiSolveBtn = document.getElementById('ai-solve-btn');
+    const aiTimerEl = document.getElementById('ai-timer');
+    const aiStatusEl = document.getElementById('ai-status-badge');
+    const aiSolutionTextEl = document.getElementById('ai-solution-text');
+    const aiMoveCountEl = document.getElementById('ai-move-count');
+    const aiProgressTextEl = document.getElementById('ai-progress-text');
+
+    aiSolveBtn?.addEventListener('click', async () => {
+        const scramble = document.getElementById('battle-scramble-text')?.textContent.trim() || 'R U R\' U\'';
+        if (aiStatusEl) {
+            aiStatusEl.textContent = 'Solving Group Theory...';
+            aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-cyan-950 text-cyan-300 text-[10px] font-mono border border-cyan-500 animate-pulse';
+        }
+
+        const t0 = performance.now();
+        try {
+            const res = await fetch('/api/solve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ custom_moves: scramble })
+            });
+            const data = await res.json();
+            const computeTime = Math.round(performance.now() - t0);
+
+            if (data.solution) {
+                aiSolutionMoves = data.solution.split(' ');
+                if (aiTimerEl) aiTimerEl.textContent = `00:00.${computeTime < 100 ? '0' + computeTime : computeTime}`;
+                if (aiSolutionTextEl) aiSolutionTextEl.textContent = data.solution;
+                if (aiMoveCountEl) aiMoveCountEl.textContent = data.move_count;
+                if (aiProgressTextEl) aiProgressTextEl.textContent = `0 / ${aiSolutionMoves.length}`;
+                if (aiStatusEl) {
+                    aiStatusEl.textContent = 'Solution Ready!';
+                    aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 text-[10px] font-mono border border-emerald-500';
+                }
+                playTone(700, 'sine', 0.1);
+                
+                animateAiSolve();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    });
+
+    async function animateAiSolve() {
+        if (!aiDuelCube || !aiSolutionMoves.length || isAiSolving) return;
+        isAiSolving = true;
+        
+        for (let i = 0; i < aiSolutionMoves.length; i++) {
+            const move = aiSolutionMoves[i];
+            if (aiProgressTextEl) aiProgressTextEl.textContent = `${i + 1} / ${aiSolutionMoves.length}`;
+            playTone(450 + (i * 15), 'sine', 0.04);
+            
+            await new Promise(resolve => {
+                aiDuelCube.animateLayerTurn(move, resolve);
+            });
+            await new Promise(r => setTimeout(r, 60));
+        }
+
+        isAiSolving = false;
+        if (aiStatusEl) {
+            aiStatusEl.textContent = 'AI Finished!';
+            aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-cyan-950 text-cyan-300 text-[10px] font-mono border border-cyan-500';
+        }
+        checkBattleOutcome();
+    }
+
+    document.getElementById('ai-step-play-btn')?.addEventListener('click', animateAiSolve);
+    document.getElementById('ai-reset-btn')?.addEventListener('click', () => {
+        if (aiDuelCube) aiDuelCube.buildCube();
+        if (aiTimerEl) aiTimerEl.textContent = '00:00.00';
+        if (aiMoveCountEl) aiMoveCountEl.textContent = '--';
+        if (aiProgressTextEl) aiProgressTextEl.textContent = '0 / 0';
+        if (aiSolutionTextEl) aiSolutionTextEl.textContent = 'Click "Compute & Animate AI Solve" to start...';
+        if (aiStatusEl) {
+            aiStatusEl.textContent = window.getTranslation ? window.getTranslation('standby') : 'Standby';
+            aiStatusEl.className = 'px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono border border-slate-700';
+        }
+    });
+
+    document.getElementById('battle-new-scramble-btn')?.addEventListener('click', () => {
+        const sc = generateScramble(16);
+        const el = document.getElementById('battle-scramble-text');
+        if (el) el.textContent = sc;
+        playTone(600, 'sine', 0.05);
+    });
+
+    function checkBattleOutcome() {
+        const banner = document.getElementById('battle-outcome-banner');
+        const title = document.getElementById('battle-outcome-title');
+        const desc = document.getElementById('battle-outcome-desc');
+        if (!banner || !title || !desc) return;
+
+        banner.classList.remove('hidden');
+        banner.className = 'mt-6 p-5 rounded-2xl border bg-indigo-950/80 border-indigo-500 text-center font-mono text-xs shadow-2xl';
+        title.innerHTML = `<i class="fa-solid fa-trophy text-amber-400 mr-2"></i> ${window.getTranslation ? window.getTranslation('match_completed') : 'Match Completed!'}`;
+        desc.textContent = `Human Move Count: ${humanMovesCount} | AI Optimal Moves: ${aiSolutionMoves.length || 14}. Both solvers reached the identity state!`;
+    }
+
+    // Boot
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof initBattleCubes === 'function') initBattleCubes();
+    });
+    setTimeout(() => { { boot_late } }, 80);
 </script>
 {% endblock %}

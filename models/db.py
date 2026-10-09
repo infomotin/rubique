@@ -274,6 +274,40 @@ def init_database():
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+
+            # 16. Chess Games Table (GoChess Smart Board)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chess_games (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    title VARCHAR(150) DEFAULT 'GoChess Smart Session',
+                    game_mode VARCHAR(30) DEFAULT 'ai',
+                    ai_level INT DEFAULT 2,
+                    board_theme VARCHAR(50) DEFAULT 'obsidian',
+                    fen VARCHAR(200) DEFAULT 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+                    pgn TEXT,
+                    moves_count INT DEFAULT 0,
+                    status VARCHAR(30) DEFAULT 'active',
+                    winner VARCHAR(30) NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 17. Chess Clan Challenges Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chess_clan_challenges (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    game_id INT NOT NULL,
+                    group_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    challenge_note TEXT,
+                    status VARCHAR(30) DEFAULT 'open',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (game_id) REFERENCES chess_games(id) ON DELETE CASCADE,
+                    FOREIGN KEY (group_id) REFERENCES chat_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
         conn.close()
     else:
         print("[Database] Initializing SQLite Multi-Role RBAC Tables...")
@@ -505,6 +539,41 @@ def init_database():
                 solver_id INTEGER,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (cube_id) REFERENCES custom_cubes(id),
+                FOREIGN KEY (group_id) REFERENCES chat_groups(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 16. Chess Games Table (GoChess Smart Board)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chess_games (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT DEFAULT 'GoChess Smart Session',
+                game_mode TEXT DEFAULT 'ai',
+                ai_level INTEGER DEFAULT 2,
+                board_theme TEXT DEFAULT 'obsidian',
+                fen TEXT DEFAULT 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+                pgn TEXT,
+                moves_count INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                winner TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 17. Chess Clan Challenges Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chess_clan_challenges (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_id INTEGER NOT NULL,
+                group_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                challenge_note TEXT,
+                status TEXT DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (game_id) REFERENCES chess_games(id),
                 FOREIGN KEY (group_id) REFERENCES chat_groups(id),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
