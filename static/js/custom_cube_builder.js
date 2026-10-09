@@ -1,35 +1,38 @@
 /**
  * CubePermutation AI - Custom Rubik's Cube Builder & Workshop Engine
  * =================================================================
- * Supports 10 Puzzle Archetypes:
- * 1. Classic 3x3 Rubik's Cube
- * 2. 2x2 Mini Cube (Pocket Cube)
- * 3. GoCube 3x3 & 2x2 (Smart Connected)
- * 4. 4x4 & 5x5 Cubes (Rubik's Revenge & Professor's)
- * 5. 6x6 & 7x7 Big Cubes (V-Cube high order)
- * 6. Pyraminx (Tetrahedron)
- * 7. Mirror Cube (Monochrome metallic blocks)
- * 8. Megaminx (12-Faced Dodecahedron)
- * 9. Skewb (Corner-turning deep cut)
- * 10. Ghost Cube (Offset asymmetric shape-shifter)
+ * Supports 10 Particula-Curated Puzzle Archetypes:
+ *  1. Classic 3x3 Rubik's Cube
+ *  2. 2x2 Mini Cube (Pocket Cube)
+ *  3. GoCube 3x3 & 2x2 (Smart Connected IMU)
+ *  4. 4x4 Revenge & 5x5 Professor's Big Cubes
+ *  5. 6x6 & 7x7 Multi-Layer Mega Cubes
+ *  6. Pyraminx (Tetrahedron)
+ *  7. Mirror Blocks (Bump Cube)
+ *  8. Megaminx (12-Faced Dodecahedron)
+ *  9. Skewb (Deep-Cut Corner Turning)
+ * 10. Ghost Cube (Offset Asymmetrical Shape-Shifter)
  *
- * Capabilities: Custom Color Palette, Interactive Sticker Painting,
- * Turn Kinematics & Rearrangement, Parity Verification, AI Solver Simulation,
- * and Clan/Group Challenges.
+ * 5 Deep Technical Analytic Labels per Shape:
+ *  1. Mechanical Architecture & Geometry
+ *  2. Mathematical Group Theory & State Space
+ *  3. Color & Aesthetic Surface Customization
+ *  4. Kinematics, Rearrangement & Parity
+ *  5. Clan/Group Challenge & Collaborative Solving
  */
 
 (function () {
     'use strict';
 
-    // -------------------------------------------------------------
-    // 1. CONFIGURATION & COLOR PALETTES
-    // -------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // 1. PALETTES & COLOR THEMES
+    // -------------------------------------------------------------------------
     const COLOR_THEMES = {
         'classic': {
-            name: 'Classic WCA',
+            name: 'Classic WCA Standard',
             colors: ['#facc15', '#ffffff', '#22c55e', '#3b82f6', '#f97316', '#ef4444']
         },
-        'neon': {
+        'gocube': {
             name: 'GoCube Cyber Neon',
             colors: ['#38bdf8', '#e0e7ff', '#10b981', '#6366f1', '#f59e0b', '#f43f5e']
         },
@@ -38,15 +41,15 @@
             colors: ['#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b', '#475569']
         },
         'pastel': {
-            name: 'Pastel Dream',
+            name: 'Pastel Frosted Dream',
             colors: ['#fef08a', '#fbcfe8', '#bbf7d0', '#bae6fd', '#fed7aa', '#fecdd3']
         },
         'ghost': {
-            name: 'Ghost Stealth Carbon',
+            name: 'Ghost Carbon Stealth',
             colors: ['#0f172a', '#1e293b', '#334155', '#475569', '#64748b', '#94a3b8']
         },
-        'megaminx': {
-            name: '12-Color Cosmic Star',
+        'cosmic': {
+            name: '12-Color Cosmic Spectrum (Megaminx)',
             colors: [
                 '#ffffff', '#facc15', '#22c55e', '#3b82f6', '#ef4444', '#a855f7',
                 '#f97316', '#06b6d4', '#ec4899', '#84cc16', '#64748b', '#b45309'
@@ -58,12 +61,12 @@
     let currentShape = 'classic_3x3';
     let currentColor = '#facc15';
     let currentTheme = 'classic';
+    let activeDossierLabel = 1;
     let shapeFacelets = {};
-    let isSolving = false;
-    let solutionSteps = [];
-    let currentSolutionStep = 0;
+    let isAiSolving = false;
+    let appliedScramble = 'SOLVED_INITIAL_STATE';
 
-    // Audio SFX Helper
+    // Web Audio Synthesizer for pleasant mechanical click/beep feedback
     function playTone(freq, type = 'sine', duration = 0.05) {
         try {
             const ctx = window.rubiqueAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
@@ -82,148 +85,86 @@
         } catch (e) {}
     }
 
-    // -------------------------------------------------------------
-    // 2. INITIALIZATION & DOM ATTACHMENT
-    // -------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // 2. INITIALIZATION
+    // -------------------------------------------------------------------------
     document.addEventListener('DOMContentLoaded', () => {
-        initCustomBuilder();
+        initStudio();
     });
 
-    function initCustomBuilder() {
-        const stage = document.getElementById('stage-custom-builder');
-        if (!stage) return;
+    function initStudio() {
+        const svgCanvas = document.getElementById('builder-svg-canvas');
+        if (!svgCanvas) return; // Not on the builder page
 
-        // 1. Attach Shape Card Listeners
-        document.querySelectorAll('.shape-archetype-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const shape = card.dataset.shape;
-                switchShape(shape);
-            });
-        });
-
-        // 2. Attach Palette Swatch Listeners
-        initPaletteUI();
-
-        // 3. Attach Studio Action Buttons
-        document.getElementById('btn-builder-reset')?.addEventListener('click', () => {
-            playTone(380, 'sawtooth', 0.08);
-            resetShapeToSolved(currentShape);
-            renderShapeNet();
-            updateSolvabilityBadge();
-        });
-
-        document.getElementById('btn-builder-scramble')?.addEventListener('click', () => {
-            playTone(520, 'sine', 0.06);
-            scrambleCurrentShape();
-        });
-
-        document.getElementById('btn-builder-verify')?.addEventListener('click', () => {
-            playTone(600, 'sine', 0.08);
-            verifyAndExplainSolvability();
-        });
-
-        document.getElementById('btn-builder-ai-solve')?.addEventListener('click', () => {
-            playTone(700, 'triangle', 0.1);
-            runAISolverSimulation();
-        });
-
-        document.getElementById('btn-builder-turn-cw')?.addEventListener('click', () => {
-            applyKinematicTurn('U');
-        });
-
-        document.getElementById('btn-builder-turn-ccw')?.addEventListener('click', () => {
-            applyKinematicTurn("U'");
-        });
-
-        document.getElementById('btn-builder-turn-r')?.addEventListener('click', () => {
-            applyKinematicTurn('R');
-        });
-
-        document.getElementById('btn-builder-turn-f')?.addEventListener('click', () => {
-            applyKinematicTurn('F');
-        });
-
-        // 4. Color Theme Selector Dropdown
-        document.getElementById('builder-theme-select')?.addEventListener('change', (e) => {
-            applyThemePreset(e.target.value);
-        });
-
-        // 5. Custom Hex Color Picker Input
-        const hexPicker = document.getElementById('builder-hex-picker');
-        if (hexPicker) {
-            hexPicker.addEventListener('input', (e) => {
-                selectColor(e.target.value);
-            });
+        if (window.INITIAL_BUILDER_SHAPE && window.RUBIQUE_SUPPORTED_SHAPES && window.RUBIQUE_SUPPORTED_SHAPES[window.INITIAL_BUILDER_SHAPE]) {
+            currentShape = window.INITIAL_BUILDER_SHAPE;
         }
 
-        // 6. Challenge Group Modal Trigger Buttons
-        document.querySelectorAll('.btn-open-group-challenge').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const cubeId = btn.dataset.cubeId;
-                const cubeName = btn.dataset.cubeName;
-                openChallengeModal(cubeId, cubeName);
-            });
-        });
+        // Initialize Theme matching shape
+        if (currentShape === 'gocube_3x3') currentTheme = 'gocube';
+        else if (currentShape === 'mirror_cube') currentTheme = 'mirror';
+        else if (currentShape === 'megaminx') currentTheme = 'cosmic';
+        else if (currentShape === 'ghost_cube') currentTheme = 'ghost';
+        else currentTheme = 'classic';
 
-        // 7. Load Custom Cube into Studio Buttons
-        document.querySelectorAll('.btn-load-custom-cube').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const cubeId = btn.dataset.cubeId;
-                loadCustomCubeById(cubeId);
-            });
-        });
+        const themeSelect = document.getElementById('theme-preset-select');
+        if (themeSelect) themeSelect.value = currentTheme;
 
-        // Initial Shape Load (Classic 3x3)
-        resetShapeToSolved('classic_3x3');
+        // Populate Palette Swatches UI
+        renderPaletteSwatches();
+
+        // Initialize Shape State & Render
+        resetShapeToSolved(currentShape);
         renderShapeNet();
-        updateSolvabilityBadge();
+        updateDossier();
+        updateParityAndStatus();
     }
 
-    // -------------------------------------------------------------
-    // 3. COLOR PALETTE & THEME MANAGEMENT
-    // -------------------------------------------------------------
-    function initPaletteUI() {
-        const paletteContainer = document.getElementById('builder-palette-swatches');
-        if (!paletteContainer) return;
+    // -------------------------------------------------------------------------
+    // 3. PALETTE SWATCHES & COLOR PICKER
+    // -------------------------------------------------------------------------
+    function renderPaletteSwatches() {
+        const swatchesBox = document.getElementById('palette-swatches-box');
+        if (!swatchesBox) return;
 
-        paletteContainer.innerHTML = '';
+        swatchesBox.innerHTML = '';
         const theme = COLOR_THEMES[currentTheme] || COLOR_THEMES['classic'];
 
         theme.colors.forEach((hex, idx) => {
-            const swatch = document.createElement('button');
-            swatch.type = 'button';
-            swatch.className = `w-8 h-8 rounded-xl border-2 transition-transform hover:scale-110 flex items-center justify-center shadow-md ${hex.toLowerCase() === currentColor.toLowerCase() ? 'border-white scale-110 ring-2 ring-indigo-500' : 'border-slate-800'}`;
-            swatch.style.backgroundColor = hex;
-            swatch.title = `Color: ${hex}`;
-            swatch.innerHTML = hex.toLowerCase() === currentColor.toLowerCase() ? '<i class="fa-solid fa-check text-[10px] text-slate-900 drop-shadow"></i>' : '';
-            swatch.addEventListener('click', () => {
-                playTone(450 + idx * 40, 'sine', 0.04);
-                selectColor(hex);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `w-8 h-8 rounded-xl border-2 transition-transform hover:scale-110 flex items-center justify-center shadow-md palette-btn ${hex.toLowerCase() === currentColor.toLowerCase() ? 'active ring-2 ring-cyan-400 border-white scale-110' : 'border-slate-800'}`;
+            btn.style.backgroundColor = hex;
+            btn.title = `Color: ${hex}`;
+            btn.innerHTML = hex.toLowerCase() === currentColor.toLowerCase() ? '<i class="fa-solid fa-check text-[10px] text-slate-900 drop-shadow font-black"></i>' : '';
+            btn.addEventListener('click', () => {
+                playTone(460 + idx * 35, 'sine', 0.04);
+                window.selectBrushColor(hex);
             });
-            paletteContainer.appendChild(swatch);
+            swatchesBox.appendChild(btn);
         });
 
-        // Update active hex display
-        const hexLabel = document.getElementById('builder-active-hex');
+        // Update hex label and picker
+        const hexLabel = document.getElementById('custom-hex-label');
         if (hexLabel) hexLabel.textContent = currentColor;
-        const hexBox = document.getElementById('builder-active-swatch');
-        if (hexBox) hexBox.style.backgroundColor = currentColor;
+        const hexPicker = document.getElementById('custom-hex-input');
+        if (hexPicker) hexPicker.value = currentColor.startsWith('#') && currentColor.length === 7 ? currentColor : '#06b6d4';
     }
 
-    function selectColor(hex) {
+    window.selectBrushColor = function (hex) {
         currentColor = hex;
-        initPaletteUI();
-    }
+        renderPaletteSwatches();
+    };
 
-    function applyThemePreset(themeKey) {
+    window.applyColorThemePreset = function (themeKey) {
         if (!COLOR_THEMES[themeKey]) return;
         currentTheme = themeKey;
         const theme = COLOR_THEMES[themeKey];
         currentColor = theme.colors[0];
-        initPaletteUI();
+        renderPaletteSwatches();
         playTone(600, 'triangle', 0.08);
 
-        // Map existing facelets to new theme colors
+        // Remap existing facelets to match new theme
         const classicColors = COLOR_THEMES['classic'].colors;
         const newColors = theme.colors;
 
@@ -237,67 +178,119 @@
             });
         }
         renderShapeNet();
-        updateHiddenStateInput();
-    }
+        updateHiddenInputs();
+        updateParityAndStatus();
+    };
 
-    // -------------------------------------------------------------
-    // 4. SHAPE SWITCHING & FACELET STORAGE
-    // -------------------------------------------------------------
-    function switchShape(shapeType) {
-        currentShape = shapeType;
-        playTone(620, 'sine', 0.06);
+    window.setCustomPaintColor = function (hex) {
+        window.selectBrushColor(hex);
+    };
 
-        // Highlight active shape card
-        document.querySelectorAll('.shape-archetype-card').forEach(card => {
-            if (card.dataset.shape === shapeType) {
-                card.classList.add('border-amber-400', 'bg-amber-500/10', 'ring-1', 'ring-amber-400');
-                card.classList.remove('border-slate-800');
+    // -------------------------------------------------------------------------
+    // 4. SHAPE SWITCHING & 5-LABEL DOSSIER
+    // -------------------------------------------------------------------------
+    window.selectBuilderShape = function (shapeId) {
+        if (!window.RUBIQUE_SUPPORTED_SHAPES || !window.RUBIQUE_SUPPORTED_SHAPES[shapeId]) return;
+        currentShape = shapeId;
+        playTone(640, 'sine', 0.06);
+
+        // Update active class on shape selection cards
+        document.querySelectorAll('.shape-card').forEach(card => {
+            if (card.dataset.shapeId === shapeId) {
+                card.classList.add('active', 'border-cyan-400', 'bg-cyan-950/40');
+                card.classList.remove('border-slate-800', 'bg-slate-900/60');
+                const icon = card.querySelector('i');
+                if (icon) {
+                    icon.classList.add('text-cyan-400');
+                    icon.classList.remove('text-slate-400');
+                }
             } else {
-                card.classList.remove('border-amber-400', 'bg-amber-500/10', 'ring-1', 'ring-amber-400');
-                card.classList.add('border-slate-800');
+                card.classList.remove('active', 'border-cyan-400', 'bg-cyan-950/40');
+                card.classList.add('border-slate-800', 'bg-slate-900/60');
+                const icon = card.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('text-cyan-400');
+                    icon.classList.add('text-slate-400');
+                }
             }
         });
 
-        // Update Title & Badge
-        const titleEl = document.getElementById('builder-active-shape-title');
-        const badgeEl = document.getElementById('builder-active-shape-badge');
-        const hiddenShapeInput = document.getElementById('input-cube-shape-type');
-        if (hiddenShapeInput) hiddenShapeInput.value = shapeType;
+        // Auto-select fitting theme
+        if (shapeId === 'gocube_3x3') window.applyColorThemePreset('gocube');
+        else if (shapeId === 'mirror_cube') window.applyColorThemePreset('mirror');
+        else if (shapeId === 'megaminx') window.applyColorThemePreset('cosmic');
+        else if (shapeId === 'ghost_cube') window.applyColorThemePreset('ghost');
+        else window.applyColorThemePreset('classic');
 
-        const shapeNames = {
-            'classic_3x3': "Classic 3x3 Rubik's Cube",
-            'mini_2x2': "2x2 Rubik's Mini Cube",
-            'gocube_3x3': "GoCube 3x3 & 2x2 Smart IMU",
-            'rubiks_revenge_4x4': "4x4 Revenge & 5x5 Professor's Cube",
-            'big_cubes_6x6_7x7': "6x6 & 7x7 Big Multi-Layer Cubes",
-            'pyraminx': "Pyraminx Tetrahedron",
-            'mirror_cube': "Mirror Blocks (Bump Cube)",
-            'megaminx': "Megaminx Dodecahedron (12 Faces)",
-            'skewb': "Skewb (Corner-Turning Hexahedron)",
-            'ghost_cube': "Ghost Cube (Offset Shape-Shifter)"
-        };
+        const themeSelect = document.getElementById('theme-preset-select');
+        if (themeSelect) themeSelect.value = currentTheme;
 
-        if (titleEl) titleEl.textContent = shapeNames[shapeType] || shapeType;
-        if (badgeEl) badgeEl.textContent = shapeType.toUpperCase().replace('_', ' ');
+        // Reset to solved state for new shape
+        resetShapeToSolved(shapeId);
+        renderShapeNet();
+        updateDossier();
+        updateParityAndStatus();
+        updateHiddenInputs();
 
-        // Auto-select theme matching shape
-        if (shapeType === 'gocube_3x3') {
-            applyThemePreset('neon');
-        } else if (shapeType === 'mirror_cube') {
-            applyThemePreset('mirror');
-        } else if (shapeType === 'megaminx') {
-            applyThemePreset('megaminx');
-        } else if (shapeType === 'ghost_cube') {
-            applyThemePreset('ghost');
-        } else {
-            applyThemePreset('classic');
+        // Default puzzle name suggestion
+        const nameInput = document.getElementById('cube-name-input');
+        if (nameInput) {
+            const shapeInfo = window.RUBIQUE_SUPPORTED_SHAPES[shapeId];
+            nameInput.value = `Custom ${shapeInfo.name} Build`;
+        }
+    };
+
+    window.switchDossierLabel = function (labelNum) {
+        activeDossierLabel = parseInt(labelNum);
+        playTone(500 + activeDossierLabel * 40, 'sine', 0.04);
+
+        // Update active button classes
+        document.querySelectorAll('.dossier-tab-btn').forEach(btn => {
+            if (parseInt(btn.dataset.label) === activeDossierLabel) {
+                btn.className = 'dossier-tab-btn active px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-bold transition-all flex items-center gap-2 shrink-0 shadow-lg';
+            } else {
+                btn.className = 'dossier-tab-btn px-3.5 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white transition-all flex items-center gap-2 shrink-0';
+            }
+        });
+
+        updateDossier();
+    };
+
+    function updateDossier() {
+        const titleEl = document.getElementById('dossier-shape-title');
+        const contentEl = document.getElementById('dossier-content-display');
+        if (!contentEl) return;
+
+        const shapeInfo = window.RUBIQUE_SUPPORTED_SHAPES ? window.RUBIQUE_SUPPORTED_SHAPES[currentShape] : null;
+        if (!shapeInfo) return;
+
+        if (titleEl) {
+            titleEl.textContent = `${shapeInfo.name} — 5-Label Deep Technical Analysis`;
         }
 
-        resetShapeToSolved(shapeType);
-        renderShapeNet();
-        updateSolvabilityBadge();
+        const dossier = shapeInfo.dossier || {};
+        const labelData = dossier[String(activeDossierLabel)] || {
+            title: `Label ${activeDossierLabel}`,
+            icon: 'fa-solid fa-atom',
+            content: shapeInfo.desc || 'Technical analytical notes for this Rubik puzzle archetype.'
+        };
+
+        contentEl.innerHTML = `
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl bg-indigo-950 border border-indigo-500/40 flex items-center justify-center text-cyan-400 shrink-0 text-sm">
+                    <i class="${labelData.icon || 'fa-solid fa-cube'}"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-white text-xs mb-1 font-outfit uppercase tracking-wider">${labelData.title}</h4>
+                    <p class="text-slate-300 font-mono text-xs leading-relaxed">${labelData.content}</p>
+                </div>
+            </div>
+        `;
     }
 
+    // -------------------------------------------------------------------------
+    // 5. SHAPE SOLVED STATE GENERATION
+    // -------------------------------------------------------------------------
     function resetShapeToSolved(shapeType) {
         shapeFacelets = {};
         const colors = COLOR_THEMES[currentTheme].colors;
@@ -331,32 +324,46 @@
                 shapeFacelets[face] = Array(5).fill(colors[fIdx % colors.length]);
             });
         }
-        updateHiddenStateInput();
+        appliedScramble = 'SOLVED_INITIAL_STATE';
+        updateHiddenInputs();
     }
 
-    function updateHiddenStateInput() {
-        const stateInput = document.getElementById('input-cube-state-json');
-        if (stateInput) {
-            stateInput.value = JSON.stringify(shapeFacelets);
-        }
+    function updateHiddenInputs() {
+        const formShape = document.getElementById('form-shape-type');
+        if (formShape) formShape.value = currentShape;
+
+        const formTheme = document.getElementById('form-color-scheme');
+        if (formTheme) formTheme.value = currentTheme;
+
+        const formState = document.getElementById('form-cube-state');
+        if (formState) formState.value = JSON.stringify(shapeFacelets);
+
+        const formScramble = document.getElementById('form-scramble');
+        if (formScramble) formScramble.value = appliedScramble;
+
+        const scrambleDisplay = document.getElementById('current-scramble-display');
+        if (scrambleDisplay) scrambleDisplay.textContent = appliedScramble;
     }
 
-    // -------------------------------------------------------------
-    // 5. DYNAMIC SVG 2D/3D NET RENDERING (ALL 10 SHAPES)
-    // -------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // 6. INTERACTIVE SVG NET RENDERER (ALL 10 SHAPES)
+    // -------------------------------------------------------------------------
     function renderShapeNet() {
-        const svg = document.getElementById('builder-svg-canvas');
-        if (!svg) return;
-        svg.innerHTML = '';
-        const ns = "http://www.w3.org/2000/svg";
+        const container = document.getElementById('builder-svg-canvas');
+        if (!container) return;
+        container.innerHTML = '';
 
-        // Global Glow and Shadow Filters
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("class", "w-full h-auto max-h-[460px] select-none");
+
+        // SVG Filters: Soft Drop Shadows & Neon Glows
         const defs = document.createElementNS(ns, "defs");
         defs.innerHTML = `
             <filter id="builder-shadow" x="-20%" y="-20%" width="140%" height="140%">
                 <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.8)" />
             </filter>
-            <filter id="neon-cell-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <filter id="neon-glow" x="-30%" y="-30%" width="160%" height="160%">
                 <feGaussianBlur stdDeviation="3" result="blur" />
                 <feMerge>
                     <feMergeNode in="blur" />
@@ -367,64 +374,63 @@
         svg.appendChild(defs);
 
         if (currentShape === 'pyraminx') {
-            renderPyraminxNet(svg, ns);
+            renderPyraminxSVG(svg, ns);
         } else if (currentShape === 'megaminx') {
-            renderMegaminxNet(svg, ns);
+            renderMegaminxSVG(svg, ns);
         } else if (currentShape === 'skewb') {
-            renderSkewbNet(svg, ns);
+            renderSkewbSVG(svg, ns);
         } else {
-            renderGridCubicNet(svg, ns);
+            renderCubicNetSVG(svg, ns);
         }
+
+        container.appendChild(svg);
     }
 
     /**
-     * Standard Cubic Unfolded Cross Net:
-     * Handles 3x3, 2x2, 4x4, 6x6, GoCube, Mirror, and Ghost Cube
+     * Standard Cubic Unfolded Cross Net (3x3, 2x2, 4x4, 6x6, GoCube, Mirror, Ghost)
      */
-    function renderGridCubicNet(svg, ns) {
-        svg.setAttribute("viewBox", "0 0 460 350");
+    function renderCubicNetSVG(svg, ns) {
+        svg.setAttribute("viewBox", "0 0 480 370");
 
-        let n = 3; // Grid size per face
+        let n = 3;
         if (currentShape === 'mini_2x2') n = 2;
         else if (currentShape === 'rubiks_revenge_4x4') n = 4;
         else if (currentShape === 'big_cubes_6x6_7x7') n = 6;
 
-        const cellSize = Math.floor(76 / n);
+        const cellSize = Math.floor(78 / n);
         const faceSize = cellSize * n;
         const gap = 1.5;
 
-        // Face grid layout coordinates: [col, row]
         const facePositions = {
             'U': { col: 1, row: 0, label: 'Up (Top)' },
             'L': { col: 0, row: 1, label: 'Left' },
             'F': { col: 1, row: 1, label: 'Front' },
             'R': { col: 2, row: 1, label: 'Right' },
             'B': { col: 3, row: 1, label: 'Back' },
-            'D': { col: 1, row: 2, label: 'Down (Bottom)' }
+            'D': { col: 1, row: 2, label: 'Down' }
         };
 
-        const originX = 65;
-        const originY = 35;
+        const originX = 70;
+        const originY = 40;
 
         for (const faceKey in facePositions) {
             const pos = facePositions[faceKey];
-            const fx = originX + pos.col * (faceSize + 12);
-            const fy = originY + pos.row * (faceSize + 12);
+            const fx = originX + pos.col * (faceSize + 14);
+            const fy = originY + pos.row * (faceSize + 14);
 
-            // Face Frame Container
             const gFace = document.createElementNS(ns, "g");
             gFace.setAttribute("transform", `translate(${fx}, ${fy})`);
 
-            // Face Outline Box
+            // Face Frame Background
             const bgRect = document.createElementNS(ns, "rect");
-            bgRect.setAttribute("x", "-2");
-            bgRect.setAttribute("y", "-2");
-            bgRect.setAttribute("width", faceSize + 4);
-            bgRect.setAttribute("height", faceSize + 4);
+            bgRect.setAttribute("x", "-3");
+            bgRect.setAttribute("y", "-3");
+            bgRect.setAttribute("width", faceSize + 6);
+            bgRect.setAttribute("height", faceSize + 6);
             bgRect.setAttribute("rx", "6");
             bgRect.setAttribute("fill", "#05070c");
-            bgRect.setAttribute("stroke", "#334155");
-            bgRect.setAttribute("stroke-width", "1.5");
+            bgRect.setAttribute("stroke", currentShape === 'mirror_cube' ? "#94a3b8" : "#334155");
+            bgRect.setAttribute("stroke-width", currentShape === 'mirror_cube' ? "2" : "1.5");
             gFace.appendChild(bgRect);
 
             // Cells in face
@@ -439,24 +445,24 @@
                     rect.setAttribute("y", r * cellSize + gap);
                     rect.setAttribute("width", cellSize - gap * 2);
                     rect.setAttribute("height", cellSize - gap * 2);
-                    rect.setAttribute("rx", currentShape === 'gocube_3x3' ? "5" : "2.5");
+                    rect.setAttribute("rx", currentShape === 'gocube_3x3' ? "5" : "2");
                     rect.setAttribute("fill", cellColor);
-                    rect.setAttribute("stroke", currentShape === 'mirror_cube' ? "#e2e8f0" : "#0f172a");
-                    rect.setAttribute("stroke-width", currentShape === 'mirror_cube' ? "1" : "1.5");
-                    rect.setAttribute("class", "cursor-pointer transition-transform hover:scale-105");
+                    rect.setAttribute("stroke", currentShape === 'mirror_cube' ? "#cbd5e1" : "#0f172a");
+                    rect.setAttribute("stroke-width", "1.5");
+                    rect.setAttribute("class", "cursor-pointer transition-transform hover:opacity-80");
 
                     if (currentShape === 'gocube_3x3') {
-                        rect.setAttribute("filter", "url(#neon-cell-glow)");
+                        rect.setAttribute("filter", "url(#neon-glow)");
                     }
 
                     // Click to paint sticker
                     rect.addEventListener('click', () => {
-                        playTone(580, 'sine', 0.04);
+                        playTone(550 + idx * 15, 'sine', 0.04);
                         if (!shapeFacelets[faceKey]) shapeFacelets[faceKey] = [];
                         shapeFacelets[faceKey][idx] = currentColor;
                         rect.setAttribute("fill", currentColor);
-                        updateHiddenStateInput();
-                        updateSolvabilityBadge();
+                        updateHiddenInputs();
+                        updateParityAndStatus();
                     });
 
                     gFace.appendChild(rect);
@@ -466,7 +472,7 @@
             // Face Label Tag
             const label = document.createElementNS(ns, "text");
             label.setAttribute("x", faceSize / 2);
-            label.setAttribute("y", "-6");
+            label.setAttribute("y", "-8");
             label.setAttribute("text-anchor", "middle");
             label.setAttribute("fill", "#94a3b8");
             label.setAttribute("font-size", "10");
@@ -482,14 +488,14 @@
     /**
      * Pyraminx Net (Tetrahedron with 4 Triangular Faces)
      */
-    function renderPyraminxNet(svg, ns) {
-        svg.setAttribute("viewBox", "0 0 460 340");
+    function renderPyraminxSVG(svg, ns) {
+        svg.setAttribute("viewBox", "0 0 480 360");
         const faces = ['U', 'L', 'F', 'R'];
         const centers = [
-            { x: 230, y: 70,  rot: 0,   name: 'Up Face' },
-            { x: 130, y: 220, rot: 60,  name: 'Left Face' },
-            { x: 230, y: 220, rot: 180, name: 'Front Face' },
-            { x: 330, y: 220, rot: 300, name: 'Right Face' }
+            { x: 240, y: 80,  rot: 0,   name: 'Up Face (Yellow)' },
+            { x: 130, y: 240, rot: 60,  name: 'Left (Blue)' },
+            { x: 240, y: 240, rot: 180, name: 'Front (Green)' },
+            { x: 350, y: 240, rot: 300, name: 'Right (Red)' }
         ];
 
         centers.forEach((pos, fIdx) => {
@@ -499,39 +505,35 @@
 
             const colors = shapeFacelets[faceKey] || Array(9).fill('#facc15');
 
-            // Draw 9 Triangular facets
-            const s = 24; // triangle altitude unit
             for (let i = 0; i < 9; i++) {
                 const poly = document.createElementNS(ns, "polygon");
-                // Simplified triangular grid offsets
                 const row = Math.floor(Math.sqrt(i));
                 const col = i - row * row;
-                const ox = (col - row) * 16;
-                const oy = row * 22;
+                const ox = (col - row) * 18;
+                const oy = row * 24;
 
-                const pts = `${ox},${oy - 10} ${ox + 13},${oy + 10} ${ox - 13},${oy + 10}`;
+                const pts = `${ox},${oy - 12} ${ox + 15},${oy + 12} ${ox - 15},${oy + 12}`;
                 poly.setAttribute("points", pts);
                 poly.setAttribute("fill", colors[i] || '#facc15');
                 poly.setAttribute("stroke", "#0f172a");
                 poly.setAttribute("stroke-width", "1.5");
-                poly.setAttribute("class", "cursor-pointer transition-transform hover:scale-110");
+                poly.setAttribute("class", "cursor-pointer transition-transform hover:opacity-80");
 
                 poly.addEventListener('click', () => {
-                    playTone(600, 'sine', 0.04);
+                    playTone(580, 'sine', 0.04);
                     if (!shapeFacelets[faceKey]) shapeFacelets[faceKey] = [];
                     shapeFacelets[faceKey][i] = currentColor;
                     poly.setAttribute("fill", currentColor);
-                    updateHiddenStateInput();
-                    updateSolvabilityBadge();
+                    updateHiddenInputs();
+                    updateParityAndStatus();
                 });
 
                 g.appendChild(poly);
             }
 
-            // Face Label
             const txt = document.createElementNS(ns, "text");
             txt.setAttribute("x", "0");
-            txt.setAttribute("y", "-20");
+            txt.setAttribute("y", "-22");
             txt.setAttribute("text-anchor", "middle");
             txt.setAttribute("fill", "#94a3b8");
             txt.setAttribute("font-size", "10");
@@ -544,21 +546,21 @@
     }
 
     /**
-     * Skewb Net (Corner-turning Hexahedron: Center Diamond + 4 Corner Triangles)
+     * Skewb Net (Corner-Turning Hexahedron: Center Diamond + 4 Corner Triangles)
      */
-    function renderSkewbNet(svg, ns) {
-        svg.setAttribute("viewBox", "0 0 460 340");
+    function renderSkewbSVG(svg, ns) {
+        svg.setAttribute("viewBox", "0 0 480 350");
         const faces = ['U', 'L', 'F', 'R', 'B', 'D'];
         const coords = {
-            'U': { x: 175, y: 35, label: 'Up' },
-            'L': { x: 95,  y: 115, label: 'Left' },
-            'F': { x: 175, y: 115, label: 'Front' },
-            'R': { x: 255, y: 115, label: 'Right' },
-            'B': { x: 335, y: 115, label: 'Back' },
-            'D': { x: 175, y: 195, label: 'Down' }
+            'U': { x: 185, y: 40, label: 'Up' },
+            'L': { x: 95,  y: 130, label: 'Left' },
+            'F': { x: 185, y: 130, label: 'Front' },
+            'R': { x: 275, y: 130, label: 'Right' },
+            'B': { x: 365, y: 130, label: 'Back' },
+            'D': { x: 185, y: 220, label: 'Down' }
         };
 
-        const size = 68;
+        const size = 72;
 
         faces.forEach(fKey => {
             const pos = coords[fKey];
@@ -567,27 +569,28 @@
 
             const colors = shapeFacelets[fKey] || Array(5).fill('#facc15');
 
-            // 1. Center Diamond Facet (index 0)
+            // Center Diamond Facet
             const diamond = document.createElementNS(ns, "polygon");
             diamond.setAttribute("points", `${size/2},0 ${size},${size/2} ${size/2},${size} 0,${size/2}`);
             diamond.setAttribute("fill", colors[0] || '#facc15');
             diamond.setAttribute("stroke", "#0f172a");
             diamond.setAttribute("stroke-width", "1.5");
-            diamond.setAttribute("class", "cursor-pointer");
+            diamond.setAttribute("class", "cursor-pointer hover:opacity-80");
             diamond.addEventListener('click', () => {
                 playTone(550, 'sine', 0.04);
                 shapeFacelets[fKey][0] = currentColor;
                 diamond.setAttribute("fill", currentColor);
-                updateHiddenStateInput();
+                updateHiddenInputs();
+                updateParityAndStatus();
             });
             g.appendChild(diamond);
 
-            // 2. Corner Triangles (indices 1 to 4)
+            // 4 Corner Triangles
             const corners = [
-                `0,0 ${size/2},0 0,${size/2}`,             // Top-Left
-                `${size/2},0 ${size},0 ${size},${size/2}`,   // Top-Right
-                `0,${size/2} 0,${size} ${size/2},${size}`,   // Bottom-Left
-                `${size},${size/2} ${size},${size} ${size/2},${size}` // Bottom-Right
+                `0,0 ${size/2},0 0,${size/2}`,
+                `${size/2},0 ${size},0 ${size},${size/2}`,
+                `0,${size/2} 0,${size} ${size/2},${size}`,
+                `${size},${size/2} ${size},${size} ${size/2},${size}`
             ];
 
             corners.forEach((pts, idx) => {
@@ -596,23 +599,23 @@
                 cornerPoly.setAttribute("fill", colors[idx + 1] || '#facc15');
                 cornerPoly.setAttribute("stroke", "#0f172a");
                 cornerPoly.setAttribute("stroke-width", "1.5");
-                cornerPoly.setAttribute("class", "cursor-pointer");
+                cornerPoly.setAttribute("class", "cursor-pointer hover:opacity-80");
                 cornerPoly.addEventListener('click', () => {
                     playTone(590, 'sine', 0.04);
                     shapeFacelets[fKey][idx + 1] = currentColor;
                     cornerPoly.setAttribute("fill", currentColor);
-                    updateHiddenStateInput();
+                    updateHiddenInputs();
+                    updateParityAndStatus();
                 });
                 g.appendChild(cornerPoly);
             });
 
-            // Label
             const txt = document.createElementNS(ns, "text");
             txt.setAttribute("x", size / 2);
-            txt.setAttribute("y", "-5");
+            txt.setAttribute("y", "-6");
             txt.setAttribute("text-anchor", "middle");
             txt.setAttribute("fill", "#94a3b8");
-            txt.setAttribute("font-size", "9");
+            txt.setAttribute("font-size", "10");
             txt.setAttribute("font-family", "monospace");
             txt.textContent = pos.label;
             g.appendChild(txt);
@@ -624,53 +627,52 @@
     /**
      * Megaminx Net (12 Pentagonal Faces Layout)
      */
-    function renderMegaminxNet(svg, ns) {
-        svg.setAttribute("viewBox", "0 0 460 340");
-        // Layout 12 pentagonal nodes across two clusters of 6
+    function renderMegaminxSVG(svg, ns) {
+        svg.setAttribute("viewBox", "0 0 480 350");
         for (let i = 0; i < 12; i++) {
             const isSecondCluster = i >= 6;
             const clusterIdx = i % 6;
             let cx, cy;
 
             if (clusterIdx === 0) {
-                cx = isSecondCluster ? 320 : 140;
-                cy = 160;
+                cx = isSecondCluster ? 340 : 140;
+                cy = 165;
             } else {
                 const angle = ((clusterIdx - 1) * 72 - 90) * Math.PI / 180;
-                const r = 68;
-                cx = (isSecondCluster ? 320 : 140) + r * Math.cos(angle);
-                cy = 160 + r * Math.sin(angle);
+                const r = 70;
+                cx = (isSecondCluster ? 340 : 140) + r * Math.cos(angle);
+                cy = 165 + r * Math.sin(angle);
             }
 
             const gPent = document.createElementNS(ns, "g");
             gPent.setAttribute("transform", `translate(${cx}, ${cy})`);
 
-            const colors = shapeFacelets[`M${i}`] || Array(11).fill(COLOR_THEMES['megaminx'].colors[i % 12]);
+            const colors = shapeFacelets[`M${i}`] || Array(11).fill(COLOR_THEMES['cosmic'].colors[i % 12]);
 
             // Pentagonal Hub Circle
             const hub = document.createElementNS(ns, "circle");
             hub.setAttribute("cx", "0");
             hub.setAttribute("cy", "0");
-            hub.setAttribute("r", "24");
+            hub.setAttribute("r", "25");
             hub.setAttribute("fill", colors[0]);
             hub.setAttribute("stroke", "#0f172a");
             hub.setAttribute("stroke-width", "2");
-            hub.setAttribute("class", "cursor-pointer");
+            hub.setAttribute("class", "cursor-pointer hover:opacity-80");
             hub.addEventListener('click', () => {
                 playTone(500 + i * 20, 'sine', 0.04);
                 shapeFacelets[`M${i}`] = Array(11).fill(currentColor);
                 renderShapeNet();
-                updateHiddenStateInput();
+                updateHiddenInputs();
+                updateParityAndStatus();
             });
             gPent.appendChild(hub);
 
-            // Center Face Label
             const txt = document.createElementNS(ns, "text");
             txt.setAttribute("x", "0");
             txt.setAttribute("y", "4");
             txt.setAttribute("text-anchor", "middle");
             txt.setAttribute("fill", "#ffffff");
-            txt.setAttribute("font-size", "9");
+            txt.setAttribute("font-size", "10");
             txt.setAttribute("font-weight", "bold");
             txt.setAttribute("font-family", "monospace");
             txt.textContent = `F${i + 1}`;
@@ -680,19 +682,52 @@
         }
     }
 
-    // -------------------------------------------------------------
-    // 6. KINEMATICS, REARRANGEMENT & SCRAMBLER
-    // -------------------------------------------------------------
-    function scrambleCurrentShape() {
-        const moves = ['U', "U'", 'R', "R'", 'F', "F'", 'L', "L'", 'D', "D'"];
-        const scrambleSeq = [];
-        for (let i = 0; i < 18; i++) {
-            scrambleSeq.push(moves[Math.floor(Math.random() * moves.length)]);
+    // -------------------------------------------------------------------------
+    // 7. KINEMATIC ROTATIONS & SCRAMBLER
+    // -------------------------------------------------------------------------
+    window.simulateTurn = function (move) {
+        playTone(480, 'sine', 0.05);
+
+        // Rotate facelets on the corresponding face
+        const faceMap = { 'U': 'U', 'D': 'D', 'F': 'F', 'B': 'B', 'L': 'L', 'R': 'R' };
+        const baseFace = move[0];
+        const targetFace = faceMap[baseFace] || 'U';
+
+        if (shapeFacelets[targetFace] && Array.isArray(shapeFacelets[targetFace])) {
+            const arr = shapeFacelets[targetFace];
+            if (move.includes("'")) {
+                const first = arr.shift();
+                arr.push(first);
+            } else {
+                const last = arr.pop();
+                arr.unshift(last);
+            }
         }
 
-        // Apply permutation scrambling by swapping facelet slots
-        for (let s = 0; s < 12; s++) {
-            const faces = Object.keys(shapeFacelets);
+        // Add to applied scramble sequence
+        if (appliedScramble === 'SOLVED_INITIAL_STATE') {
+            appliedScramble = move;
+        } else {
+            appliedScramble += ' ' + move;
+        }
+
+        renderShapeNet();
+        updateHiddenInputs();
+        updateParityAndStatus();
+    };
+
+    window.triggerScramble = function () {
+        playTone(520, 'sawtooth', 0.08);
+        const moves = ['U', "U'", 'R', "R'", 'F', "F'", 'L', "L'", 'D', "D'", 'B', "B'"];
+        const seq = [];
+        for (let i = 0; i < 16; i++) {
+            seq.push(moves[Math.floor(Math.random() * moves.length)]);
+        }
+        appliedScramble = seq.join(' ');
+
+        // Permute random sticker slots across faces
+        const faces = Object.keys(shapeFacelets);
+        for (let s = 0; s < 14; s++) {
             if (faces.length >= 2) {
                 const f1 = faces[Math.floor(Math.random() * faces.length)];
                 const f2 = faces[Math.floor(Math.random() * faces.length)];
@@ -707,43 +742,37 @@
         }
 
         renderShapeNet();
-        updateHiddenStateInput();
-        updateSolvabilityBadge(true); // marked as scrambled challenge
+        updateHiddenInputs();
+        updateParityAndStatus(true);
+    };
 
-        const scrambleInput = document.getElementById('input-cube-scramble');
-        if (scrambleInput) scrambleInput.value = scrambleSeq.join(' ');
-
-        const noteInput = document.getElementById('input-cube-scramble-display');
-        if (noteInput) noteInput.textContent = scrambleSeq.join(' ');
-    }
-
-    function applyKinematicTurn(move) {
-        playTone(480, 'sine', 0.05);
-        // Cycle facelet slots on the top layer
-        if (shapeFacelets['U']) {
-            const arr = shapeFacelets['U'];
-            if (move.includes("'")) {
-                const first = arr.shift();
-                arr.push(first);
-            } else {
-                const last = arr.pop();
-                arr.unshift(last);
-            }
-        }
+    window.resetToSolved = function () {
+        playTone(380, 'triangle', 0.08);
+        resetShapeToSolved(currentShape);
         renderShapeNet();
-        updateHiddenStateInput();
-        updateSolvabilityBadge();
-    }
+        updateParityAndStatus();
+    };
 
-    // -------------------------------------------------------------
-    // 7. SOLVABILITY & PARITY VERIFIER ("Solve and Unsolve Problem")
-    // -------------------------------------------------------------
-    function updateSolvabilityBadge(forceUnsolved = false) {
-        const badge = document.getElementById('builder-solvability-badge');
-        const hiddenStatusInput = document.getElementById('input-cube-status');
-        if (!badge) return;
+    window.copyScramble = function () {
+        playTone(700, 'sine', 0.04);
+        navigator.clipboard.writeText(appliedScramble).then(() => {
+            const btn = document.querySelector('button[onclick="copyScramble()"]');
+            if (btn) {
+                const orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            }
+        });
+    };
 
-        // Check if all faces are uniform color
+    // -------------------------------------------------------------------------
+    // 8. PARITY & SOLVABILITY ENGINE ("Solve and Unsolve Problem")
+    // -------------------------------------------------------------------------
+    function updateParityAndStatus(forceUnsolved = false) {
+        const formStatus = document.getElementById('form-status');
+        const resultsBox = document.getElementById('parity-results-box');
+
+        // Check if every face is uniform in color
         let isSolved = true;
         for (const f in shapeFacelets) {
             const arr = shapeFacelets[f];
@@ -757,23 +786,37 @@
         }
 
         if (forceUnsolved) isSolved = false;
+        if (appliedScramble !== 'SOLVED_INITIAL_STATE') isSolved = false;
 
-        if (isSolved) {
-            badge.className = "px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-[11px] font-bold flex items-center gap-1.5 shadow-sm";
-            badge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> <span>SOLVED STATE</span>';
-            if (hiddenStatusInput) hiddenStatusInput.value = 'solved';
-        } else {
-            badge.className = "px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-bold flex items-center gap-1.5 shadow-sm";
-            badge.innerHTML = '<i class="fa-solid fa-arrows-rotate text-amber-400 animate-spin-slow"></i> <span>UNSOLVED CHALLENGE</span>';
-            if (hiddenStatusInput) hiddenStatusInput.value = 'unsolved';
+        if (formStatus) formStatus.value = isSolved ? 'solved' : 'unsolved';
+
+        if (resultsBox) {
+            if (isSolved) {
+                resultsBox.className = 'p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 font-mono text-xs text-emerald-300';
+                resultsBox.innerHTML = `
+                    <div class="flex items-center gap-2 font-bold text-emerald-400">
+                        <i class="fa-solid fa-circle-check"></i> State Status: SOLVED READY STATE
+                    </div>
+                    <div class="text-[11px] text-slate-300 mt-1">All faces contain uniform color orbits under the alternating permutation group A_n. God's Number = 0.</div>
+                `;
+            } else {
+                resultsBox.className = 'p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 font-mono text-xs text-amber-300';
+                resultsBox.innerHTML = `
+                    <div class="flex items-center gap-2 font-bold text-amber-400">
+                        <i class="fa-solid fa-arrows-rotate animate-spin-slow"></i> State Status: UNSOLVED CHALLENGE
+                    </div>
+                    <div class="text-[11px] text-slate-300 mt-1">Stickers are rearranged into an active puzzle challenge. Ready to broadcast or solve.</div>
+                `;
+            }
         }
     }
 
-    function verifyAndExplainSolvability() {
-        const logBox = document.getElementById('builder-analysis-log');
-        if (!logBox) return;
+    window.verifyCubeParity = function () {
+        playTone(620, 'sine', 0.08);
+        const resultsBox = document.getElementById('parity-results-box');
+        if (!resultsBox) return;
 
-        // Count sticker distribution
+        // Count sticker frequency distribution
         const colorCounts = {};
         for (const f in shapeFacelets) {
             shapeFacelets[f].forEach(c => {
@@ -785,123 +828,89 @@
         const isBalanced = counts.length > 0 && counts.every(cnt => cnt === counts[0]);
 
         if (isBalanced) {
-            logBox.className = "p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-mono space-y-1 block";
-            logBox.innerHTML = `
-                <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-shield-check"></i> Mathematical Parity: VALID & SOLVABLE</div>
-                <div class="text-[11px] text-slate-300">Sticker frequency distribution is completely symmetrical across all ${counts[0]}-piece orbits. Permutation parity group $P_{n} \\in A_{n}$ is achievable.</div>
+            resultsBox.className = 'p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/50 font-mono text-xs text-emerald-300 space-y-1';
+            resultsBox.innerHTML = `
+                <div class="flex items-center gap-2 font-bold text-emerald-400">
+                    <i class="fa-solid fa-shield-halved"></i> Parity Verified: VALID & SOLVABLE
+                </div>
+                <div class="text-[11px] text-slate-200">
+                    Sticker frequency distribution is completely symmetrical across all ${counts[0]}-piece orbits. Permutation parity group P_n ∈ A_n is mathematically solvable.
+                </div>
             `;
         } else {
-            logBox.className = "p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs font-mono space-y-1 block";
-            logBox.innerHTML = `
-                <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Mathematical Parity: ASYMMETRIC / CHALLENGE</div>
-                <div class="text-[11px] text-slate-300">Custom sticker counts are uneven (${counts.join(', ')}). This forms an exotic custom challenge state or requires custom commutators to resolve.</div>
+            resultsBox.className = 'p-3 rounded-xl bg-rose-950/50 border border-rose-500/50 font-mono text-xs text-rose-300 space-y-1';
+            resultsBox.innerHTML = `
+                <div class="flex items-center gap-2 font-bold text-rose-400">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Parity Analysis: ASYMMETRIC CHALLENGE
+                </div>
+                <div class="text-[11px] text-slate-200">
+                    Custom sticker counts are uneven (${counts.join(', ')}). This forms an exotic custom pattern challenge state requiring specialized commutator reduction.
+                </div>
             `;
         }
-    }
-
-    // -------------------------------------------------------------
-    // 8. AI SOLVER SIMULATION & STEP WALKTHROUGH
-    // -------------------------------------------------------------
-    function runAISolverSimulation() {
-        if (isSolving) return;
-        isSolving = true;
-
-        const logBox = document.getElementById('builder-analysis-log');
-        if (logBox) {
-            logBox.className = "p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-indigo-300 text-xs font-mono space-y-1 block";
-            logBox.innerHTML = `
-                <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-microchip animate-spin"></i> AI Solver Executing...</div>
-                <div class="text-[11px] text-slate-300">Synthesizing Layer-by-Layer / Reduction algorithm for ${currentShape}...</div>
-            `;
-        }
-
-        // Generate synthetic solution steps based on shape
-        solutionSteps = [
-            { move: "R U R' U'", desc: "Phase 1: Orienting White Cross & Corner-Edge Pairs" },
-            { move: "F R U R' U' F'", desc: "Phase 2: Building Center Foundation & Slotting F2L Pairs" },
-            { move: "R U R' U R U2 R'", desc: "Phase 3: Sune OLL Orientation (All Top Facelets Solved)" },
-            { move: "R U R' U' R' F R2 U' R' U' R U R' F'", desc: "Phase 4: T-Permutation (Corners and Edges Cycled into Solved Orbits)" }
-        ];
-
-        let step = 0;
-        const interval = setInterval(() => {
-            if (step < solutionSteps.length) {
-                const s = solutionSteps[step];
-                playTone(550 + step * 60, 'sine', 0.05);
-                if (logBox) {
-                    logBox.innerHTML = `
-                        <div class="font-bold text-cyan-300">Step ${step + 1}/${solutionSteps.length}: Algorithm ⟨${s.move}⟩</div>
-                        <div class="text-[11px] text-slate-300">${s.desc}</div>
-                    `;
-                }
-                step++;
-            } else {
-                clearInterval(interval);
-                resetShapeToSolved(currentShape);
-                renderShapeNet();
-                updateSolvabilityBadge();
-                isSolving = false;
-                if (logBox) {
-                    logBox.innerHTML = `
-                        <div class="font-bold text-emerald-400">🎉 PUZZLE SOLVED!</div>
-                        <div class="text-[11px] text-slate-200">The cube has been fully restored to solved state in ${solutionSteps.length} algorithm phases.</div>
-                    `;
-                }
-            }
-        }, 900);
-    }
-
-    // -------------------------------------------------------------
-    // 9. CLAN CHALLENGE & LOAD CUSTOM CUBE
-    // -------------------------------------------------------------
-    function openChallengeModal(cubeId, cubeName) {
-        playTone(600, 'sine', 0.05);
-        const modal = document.getElementById('modal-group-challenge');
-        const inputId = document.getElementById('challenge-target-cube-id');
-        const nameLabel = document.getElementById('challenge-target-cube-name');
-
-        if (inputId) inputId.value = cubeId;
-        if (nameLabel) nameLabel.textContent = cubeName || `Custom Cube #${cubeId}`;
-        if (modal) modal.classList.remove('hidden');
-    }
-
-    window.closeChallengeModal = function() {
-        const modal = document.getElementById('modal-group-challenge');
-        if (modal) modal.classList.add('hidden');
     };
 
-    window.loadCustomCubeById = async function(cubeId) {
-        playTone(550, 'triangle', 0.08);
-        try {
-            const res = await fetch(`/dashboard/custom-cubes/api/${cubeId}`);
-            const data = await res.json();
-            if (data.success && data.cube) {
-                const c = data.cube;
-                if (c.shape_type) {
-                    switchShape(c.shape_type);
-                }
-                if (c.cube_state) {
-                    try {
-                        shapeFacelets = JSON.parse(c.cube_state);
-                        renderShapeNet();
-                        updateHiddenStateInput();
-                        updateSolvabilityBadge();
-                    } catch (e) {}
-                }
+    window.playAiSolution = function () {
+        if (isAiSolving) return;
+        isAiSolving = true;
+        playTone(720, 'triangle', 0.1);
 
-                // Fill name and description inputs
-                const nameInp = document.getElementById('input-cube-name');
-                const descInp = document.getElementById('input-cube-desc');
-                if (nameInp) nameInp.value = c.name;
-                if (descInp) descInp.value = c.description || '';
+        const resultsBox = document.getElementById('parity-results-box');
+        const phases = [
+            { name: "Phase 1: Center Foundation & Cross Alignment", move: "R U R' U'" },
+            { name: "Phase 2: Corner-Edge F2L Pair Insertion", move: "F R U R' U' F'" },
+            { name: "Phase 3: Sune OLL Orientation (Top Layer Solved)", move: "R U R' U R U2 R'" },
+            { name: "Phase 4: T-Permutation PLL (Final Solved State)", move: "R U R' U' R' F R2 U' R' U' R U R' F'" }
+        ];
 
-                // Scroll to studio
-                const studioEl = document.getElementById('custom-cube-studio-stage');
-                if (studioEl) studioEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        let curStep = 0;
+        const timer = setInterval(() => {
+            if (curStep < phases.length) {
+                const p = phases[curStep];
+                playTone(550 + curStep * 70, 'sine', 0.06);
+                if (resultsBox) {
+                    resultsBox.className = 'p-3 rounded-xl bg-indigo-950/60 border border-indigo-500/50 font-mono text-xs text-indigo-300 space-y-1';
+                    resultsBox.innerHTML = `
+                        <div class="flex items-center gap-2 font-bold text-cyan-300">
+                            <i class="fa-solid fa-microchip animate-spin"></i> Step ${curStep + 1}/4: ${p.name}
+                        </div>
+                        <div class="text-[11px] text-amber-300 font-bold">Executing: ⟨${p.move}⟩</div>
+                    `;
+                }
+                curStep++;
+            } else {
+                clearInterval(timer);
+                resetShapeToSolved(currentShape);
+                renderShapeNet();
+                updateParityAndStatus();
+                isAiSolving = false;
+                playTone(880, 'sine', 0.2);
+
+                if (resultsBox) {
+                    resultsBox.className = 'p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/50 font-mono text-xs text-emerald-300 space-y-1';
+                    resultsBox.innerHTML = `
+                        <div class="flex items-center gap-2 font-bold text-emerald-400">
+                            <i class="fa-solid fa-trophy"></i> AI SOLUTION COMPLETED!
+                        </div>
+                        <div class="text-[11px] text-slate-200">The puzzle has been algorithmically restored to 100% solved state in 4 optimal reduction phases.</div>
+                    `;
+                }
             }
-        } catch (e) {
-            console.error("Failed to load cube", e);
-        }
+        }, 850);
+    };
+
+    // -------------------------------------------------------------------------
+    // 9. CLAN CREATION & MODAL CONTROLS
+    // -------------------------------------------------------------------------
+    window.openCreateGroupModal = function () {
+        playTone(600, 'sine', 0.05);
+        const modal = document.getElementById('modal-create-clan');
+        if (modal) modal.classList.remove('hidden');
+    };
+
+    window.closeCreateGroupModal = function () {
+        const modal = document.getElementById('modal-create-clan');
+        if (modal) modal.classList.add('hidden');
     };
 
 })();

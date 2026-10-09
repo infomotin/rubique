@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Overview & Speedcubing Analytics - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-indigo-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-indigo-600/30 border border-indigo-500/40 p-0.5 shadow-2xl flex items-center justify-center text-indigo-400 text-2xl font-bold">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                        <span data-i18n="working_stages">{{ t('working_stages') }}</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight" data-i18n="stage_overview">{{ t('stage_overview') }}</h1>
+                    <p class="text-xs text-slate-400 font-mono" data-i18n="stage_overview_sub">{{ t('stage_overview_sub') }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('visualizer.index') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-cube"></i> 3D Lab
+                </a>
+                <a href="{{ url_for('user.battle_page') }}" class="px-4 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/40 border border-rose-500/40 text-rose-300 font-mono font-bold text-xs transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-swords"></i> Battle Arena
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Overview & Speedcubing Metrics -->
+        <div class="lg:col-span-9 space-y-6">
+
+            <!-- 4 Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                <div class="glass-card p-5 rounded-2xl border border-indigo-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span data-i18n="total_solves">{{ t('total_solves') }}</span>
+                        <i class="fa-solid fa-cube text-indigo-400 text-sm"></i>
+                    </div>
+                    <div class="text-3xl font-extrabold text-white mt-2">{{ stats.total_solves }}</div>
+                    <div class="text-[11px] text-indigo-400 mt-1 flex items-center gap-1">
+                        <i class="fa-solid fa-database"></i> MySQL Logged
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl border border-emerald-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span data-i18n="best_solution">{{ t('best_solution') }}</span>
+                        <i class="fa-solid fa-bolt text-emerald-400 text-sm"></i>
+                    </div>
+                    <div class="text-3xl font-extrabold text-emerald-400 mt-2">{{ stats.min_moves }} <span class="text-xs text-slate-500" data-i18n="moves">{{ t('moves') }}</span></div>
+                    <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check"></i> Optimal Two-Phase
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl border border-cyan-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span data-i18n="avg_efficiency">{{ t('avg_efficiency') }}</span>
+                        <i class="fa-solid fa-chart-line text-cyan-400 text-sm"></i>
+                    </div>
+                    <div class="text-3xl font-extrabold text-cyan-300 mt-2">{{ stats.avg_moves }} <span class="text-xs text-slate-500" data-i18n="moves">{{ t('moves') }}</span></div>
+                    <div class="text-[11px] text-cyan-400 mt-1 flex items-center gap-1">
+                        <i class="fa-solid fa-infinity"></i> God's Number
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl border border-amber-500/30 bg-slate-950/60 font-mono relative overflow-hidden">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span data-i18n="global_rank">{{ t('global_rank') }}</span>
+                        <i class="fa-solid fa-crown text-amber-400 text-sm"></i>
+                    </div>
+                    <div class="text-3xl font-extrabold text-amber-300 mt-2">#{{ (user.id % 25) + 1 }}</div>
+                    <div class="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
+                        <i class="fa-solid fa-fire"></i> Top 5% Contender
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Live Quick Scramble Generator Card -->
+            <div class="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-slate-950/80">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-800 mb-4">
+                    <div>
+                        <span class="text-[10px] font-mono text-indigo-400 font-bold uppercase tracking-wider" data-i18n="wca_scramble_title">{{ t('wca_scramble_title') }}</span>
+                        <h3 class="text-base font-bold font-outfit text-white" data-i18n="wca_scramble_subtitle">{{ t('wca_scramble_subtitle') }}</h3>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="overview-gen-scramble-btn" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-indigo-600/25">
+                            <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="new_scramble">{{ t('new_scramble') }}</span>
+                        </button>
+                        <button id="overview-copy-scramble-btn" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono transition-all">
+                            <i class="fa-solid fa-copy mr-1"></i> <span data-i18n="copy_scramble">{{ t('copy_scramble') }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 text-center font-mono">
+                    <div id="overview-scramble-display" class="text-indigo-300 font-bold text-sm sm:text-base tracking-widest leading-relaxed">
+                        R' D2 B2 L2 F2 U' B2 D' F2 U L2 F' R' D2 F U2 B2 R' D' F
+                    </div>
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-slate-400">
+                    <span>Move Length: <strong class="text-white">20 moves</strong></span>
+                    <div class="flex gap-2">
+                        <button onclick="sendScrambleToBattle()" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 transition-colors">
+                            <i class="fa-solid fa-swords mr-1"></i> <span data-i18n="send_to_battle">{{ t('send_to_battle') }}</span>
+                        </button>
+                        <a href="{{ url_for('visualizer.index') }}" class="px-3 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-300 transition-colors">
+                            <i class="fa-solid fa-play mr-1"></i> <span data-i18n="open_in_visualizer">{{ t('open_in_visualizer') }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Solve History Table -->
+            <div class="glass-card p-6 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                    <h3 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> <span data-i18n="solve_history_title">{{ t('solve_history_title') }}</span>
+                    </h3>
+                    <span class="text-xs font-mono text-slate-400">{{ history|length }} Solves Logged</span>
+                </div>
+
+                {% if history %}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs font-mono">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                                    <th class="py-2.5 px-3" data-i18n="date_time">{{ t('date_time') }}</th>
+                                    <th class="py-2.5 px-3" data-i18n="scramble_seq">{{ t('scramble_seq') }}</th>
+                                    <th class="py-2.5 px-3" data-i18n="two_phase_sol">{{ t('two_phase_sol') }}</th>
+                                    <th class="py-2.5 px-3 text-center" data-i18n="move_count">{{ t('move_count') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-900">
+                                {% for row in history %}
+                                    <tr class="hover:bg-slate-900/50 transition-colors">
+                                        <td class="py-3 px-3 text-slate-500 whitespace-nowrap">{{ (row.created_at|string)[:16] if row.created_at else 'Just now' }}</td>
+                                        <td class="py-3 px-3 text-indigo-300 max-w-xs truncate" title="{{ row.scramble }}">{{ row.scramble | safe }}</td>
+                                        <td class="py-3 px-3 text-emerald-400 max-w-xs truncate" title="{{ row.solution }}">{{ row.solution | safe }}</td>
+                                        <td class="py-3 px-3 text-center">
+                                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 text-cyan-300 font-bold border border-slate-800">
+                                                {{ row.move_count }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-10 text-slate-500 font-mono text-xs">
+                        <i class="fa-solid fa-cube text-3xl text-slate-700 mb-2 block"></i>
+                        <span data-i18n="no_solves_yet">{{ t('no_solves_yet') }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function playTone(freq, type = 'sine', duration = 0.08) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    const MOVES = ['U', "U'", 'U2', 'D', "D'", 'D2', 'R', "R'", 'R2', 'L', "L'", 'L2', 'F', "F'", 'F2', 'B', "B'", 'B2'];
+    function generateScramble(length = 20) {
+        const res = [];
+        let lastAxis = '';
+        for (let i = 0; i < length; i++) {
+            let m = MOVES[Math.floor(Math.random() * MOVES.length)];
+            while (m[0] === lastAxis) {
+                m = MOVES[Math.floor(Math.random() * MOVES.length)];
+            }
+            lastAxis = m[0];
+            res.push(m);
+        }
+        return res.join(' ');
+    }
+
+    const overviewScrambleEl = document.getElementById('overview-scramble-display');
+    document.getElementById('overview-gen-scramble-btn')?.addEventListener('click', () => {
+        const sc = generateScramble(20);
+        if (overviewScrambleEl) overviewScrambleEl.textContent = sc;
+        playTone(600, 'sine', 0.05);
+    });
+
+    document.getElementById('overview-copy-scramble-btn')?.addEventListener('click', () => {
+        if (overviewScrambleEl) {
+            navigator.clipboard.writeText(overviewScrambleEl.textContent.trim());
+            playTone(880, 'triangle', 0.08);
+            alert('Scramble copied to clipboard!');
+        }
+    });
+
+    function sendScrambleToBattle() {
+        const sc = overviewScrambleEl?.textContent.trim() || generateScramble(14);
+        try { sessionStorage.setItem('battleScramble', sc); } catch (e) {}
+        window.location.href = "{{ url_for('user.battle_page') }}";
+    }
+</script>
+{% endblock %}

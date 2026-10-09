@@ -218,6 +218,97 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
         history_data = json.loads(res.data)
         self.assertIn('history', history_data)
 
+    def test_pattern_studio_library_and_stage(self):
+        """Pattern Studio: verified pattern library, API endpoint and dashboard stage"""
+        import pycuber as pc
+        import pattern_library
+
+        opposite = {'y': 'w', 'w': 'y', 'g': 'b', 'b': 'g', 'o': 'r', 'r': 'o'}
+        own = {'U': 'y', 'R': 'o', 'F': 'g', 'D': 'w', 'L': 'r', 'B': 'b'}
+
+        def face_grid(cube, letter):
+            return [[str(s)[1] for s in row] for row in cube.get_face(letter)]
+
+        # 1. Library loads, is unique, and every pattern reverts to solved
+        patterns = pattern_library.get_patterns()
+        self.assertGreaterEqual(len(patterns), 5)
+        self.assertEqual(len({p['id'] for p in patterns}), len(patterns))
+        for p in patterns:
+            self.assertTrue(p['verified'])
+            self.assertEqual(p['move_count'], len(p['algorithm'].split()))
+            self.assertIn(p['difficulty'], ('beginner', 'intermediate', 'advanced'))
+            cube = pc.Cube()
+            cube(p['algorithm'])
+            self.assertNotEqual(str(cube), str(pc.Cube()))
+            cube(pattern_library.invert_sequence(p['algorithm']))
+            self.assertEqual(str(cube), str(pc.Cube()))
+
+        by_id = {p['id']: p for p in patterns}
+
+        # 2. Checkerboard: alternating opposite colours on every face
+        cube = pc.Cube()
+        cube(by_id['checkerboard']['algorithm'])
+        for letter in 'URFDLB':
+            grid = face_grid(cube, letter)
+            for r in range(3):
+                for c in range(3):
+                    expected = grid[0][0] if (r + c) % 2 == 0 else opposite[grid[0][0]]
+                    self.assertEqual(grid[r][c], expected, f'checkerboard broken on {letter}')
+            self.assertEqual(opposite[grid[0][0]], grid[0][1])
+
+        # 3. Six Spots: every face keeps its own colour with a contrasting centre dot
+        cube = pc.Cube()
+        cube(by_id['six_spots']['algorithm'])
+        for letter in 'URFDLB':
+            grid = face_grid(cube, letter)
+            rim = [grid[0][0], grid[0][1], grid[0][2], grid[1][0],
+                   grid[1][2], grid[2][0], grid[2][1], grid[2][2]]
+            self.assertEqual(set(rim), {own[letter]}, f'six spots rim broken on {letter}')
+            self.assertNotEqual(grid[1][1], own[letter])
+
+        # 4. Cube in a Cube: 2x2 block of the face colour framed by one other colour
+        cube = pc.Cube()
+        cube(by_id['cube_in_cube']['algorithm'])
+        for letter in 'URFDLB':
+            grid = face_grid(cube, letter)
+            flat = [grid[r][c] for r in range(3) for c in range(3)]
+            self.assertEqual(flat.count(own[letter]), 4, f'inner cube broken on {letter}')
+            others = {ch for ch in flat if ch != own[letter]}
+            self.assertEqual(len(others), 1)
+            self.assertEqual(flat.count(next(iter(others))), 5)
+
+        # 5. Superflip: corners and centres stay home, all 24 edge stickers flip
+        cube = pc.Cube()
+        cube(by_id['superflip']['algorithm'])
+        solved = pc.Cube()
+        for letter in 'URFDLB':
+            grid = face_grid(cube, letter)
+            solved_grid = face_grid(solved, letter)
+            for r in range(3):
+                for c in range(3):
+                    if r in (0, 2) and c in (0, 2):
+                        self.assertEqual(grid[r][c], solved_grid[r][c])
+                    elif r == 1 and c == 1:
+                        self.assertEqual(grid[r][c], solved_grid[r][c])
+                    else:
+                        self.assertNotEqual(grid[r][c], solved_grid[r][c])
+
+        # 6. API endpoint serves the library
+        res = self.client.get('/api/patterns')
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data['success'])
+        self.assertEqual(len(data['patterns']), len(patterns))
+        self.assertIn('moves', data['patterns'][0])
+
+        # 7. Dashboard ships the Pattern Studio stage
+        self.login('speedcuber', 'user123')
+        res = self.client.get('/dashboard/')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'id="stage-patterns"', res.data)
+        self.assertIn(b'id="pattern-3d-canvas"', res.data)
+        self.assertIn(b'data-target="stage-patterns"', res.data)
+
 if __name__ == '__main__':
     unittest.main()
 

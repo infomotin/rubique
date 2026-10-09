@@ -13,6 +13,7 @@ from flask import Blueprint, request, jsonify, session
 from models.solve_model import SolveModel
 from .auth_controller import login_required
 import solver_engine
+import pattern_library
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -291,3 +292,11 @@ def history():
     else:
         user_history = []
     return jsonify({'history': user_history})
+
+@api_bp.route('/patterns', methods=['GET'])
+def list_patterns():
+    """Pattern Studio library: verified artistic patterns with their move lists."""
+    try:
+        return jsonify({'success': True, 'patterns': pattern_library.get_patterns()})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

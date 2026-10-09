@@ -413,11 +413,13 @@ class Interactive3DCube {
         } else if (base === 'E') {
             axis = new THREE.Vector3(0, 1, 0);
             layerCondition = (c) => Math.abs(c.position.y) < 0.5;
-            targetAngle = isPrime ? Math.PI / 2 : -Math.PI / 2;
+            // E follows D (equator slice turns in the same direction as D)
+            targetAngle = isPrime ? -Math.PI / 2 : Math.PI / 2;
         } else if (base === 'S') {
             axis = new THREE.Vector3(0, 0, 1);
             layerCondition = (c) => Math.abs(c.position.z) < 0.5;
-            targetAngle = isPrime ? -Math.PI / 2 : Math.PI / 2;
+            // S follows F (standing slice turns in the same direction as F)
+            targetAngle = isPrime ? Math.PI / 2 : -Math.PI / 2;
         }
 
         if (isDouble) {

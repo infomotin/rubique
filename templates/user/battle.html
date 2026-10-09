@@ -174,6 +174,15 @@
         document.getElementById('battle-scramble-text').innerText = res.join(' ');
     }
 
+    // Handoff scramble from the Overview page (Send to Battle)
+    try {
+        const handedScramble = sessionStorage.getItem('battleScramble');
+        if (handedScramble) {
+            document.getElementById('battle-scramble-text').innerText = handedScramble;
+            sessionStorage.removeItem('battleScramble');
+        }
+    } catch (e) {}
+
     document.addEventListener('keydown', function(e) {
         if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
             e.preventDefault();

@@ -85,8 +85,37 @@ def save_cube():
         status=status,
         is_public=is_public
     )
+
+    # Optional Clan challenge mention
+    challenge_group_id = request.form.get('challenge_group_id')
+    challenge_note = request.form.get('challenge_note', '').strip()
+    if challenge_group_id and challenge_group_id.isdigit() and int(challenge_group_id) > 0:
+        try:
+            CustomCubeModel.challenge_group(cube_id, int(challenge_group_id), user_id, challenge_note)
+            flash(f'Custom cube "{name}" saved and Clan Challenge launched in study group chat!', 'success')
+            return redirect(url_for('custom_cubes.index'))
+        except Exception:
+            pass
+
     flash(f'Custom cube "{name}" successfully saved to your workshop collection!', 'success')
     return redirect(url_for('custom_cubes.index'))
+
+@custom_cube_bp.route('/create-group', methods=['POST'])
+@login_required
+def create_group():
+    """Quick Clan creation directly inside the Custom Cube Workshop"""
+    user_id = session.get('user_id')
+    name = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+    is_private = 1 if request.form.get('is_private') in ('1', 'true', 'on') else 0
+    passcode = request.form.get('passcode', '').strip() or None
+    
+    if name:
+        CommunityModel.create_group(name, description, is_private, passcode, created_by=user_id)
+        flash(f'Study Clan "{name}" successfully created! You can now mention and challenge it to solve custom puzzles.', 'success')
+    else:
+        flash('Clan name is required.', 'error')
+    return redirect(url_for('custom_cubes.builder'))
 
 @custom_cube_bp.route('/delete/<int:cube_id>', methods=['POST'])
 @login_required

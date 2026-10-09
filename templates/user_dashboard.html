@@ -171,6 +171,15 @@
                     </div>
                 </button>
 
+                <!-- 4b. Pattern Studio (NEW!) -->
+                <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-patterns">
+                    <i class="tab-icon fa-solid fa-swatchbook text-sm w-5 text-center text-fuchsia-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200" data-i18n="stage_patterns">{{ t('stage_patterns') }}</div>
+                        <div class="text-[10px] text-fuchsia-400/80 font-sans" data-i18n="stage_patterns_sub">{{ t('stage_patterns_sub') }}</div>
+                    </div>
+                </button>
+
                 <!-- 5. Video Showcase (NEW!) -->
                 <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-videos">
                     <i class="tab-icon fa-solid fa-video text-sm w-5 text-center text-pink-400"></i>
@@ -927,6 +936,88 @@
                                     <i class="fa-solid fa-circle-play"></i> <span>3D তে দেখুন ও শিখুন</span>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- -------------------------------------------------------------
+                 STAGE 4b: PATTERN STUDIO (ARTISTIC CUBE PATTERNS) - NEW!
+                 ------------------------------------------------------------- -->
+            <div id="stage-patterns" class="stage-pane hidden space-y-6 animate-fade-in">
+                <div class="glass-card p-6 sm:p-8 rounded-3xl border border-fuchsia-500/30 bg-slate-950/90">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                        <div>
+                            <span class="text-xs font-mono text-fuchsia-400 font-bold uppercase tracking-wider" data-i18n="pat_badge">{{ t('pat_badge') }}</span>
+                            <h2 class="text-xl font-bold font-outfit text-white" data-i18n="pat_title">{{ t('pat_title') }}</h2>
+                            <p class="text-xs text-slate-400 font-mono mt-1" data-i18n="pat_desc">{{ t('pat_desc') }}</p>
+                        </div>
+                        <div class="flex flex-col items-start sm:items-end gap-1.5 font-mono text-[10px]">
+                            <span class="px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold" data-i18n="pat_verified">{{ t('pat_verified') }}</span>
+                            <span class="text-slate-500" data-i18n="pat_source">{{ t('pat_source') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Pattern Cards -->
+                        <div class="lg:col-span-5">
+                            <div id="pattern-list" class="space-y-3">
+                                <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-slate-400 text-xs font-mono animate-pulse" data-i18n="pat_loading">{{ t('pat_loading') }}</div>
+                            </div>
+                        </div>
+
+                        <!-- 3D Pattern Stage -->
+                        <div class="lg:col-span-7 rounded-3xl bg-black/80 border border-slate-800 p-4 flex flex-col justify-between relative overflow-hidden">
+                            <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse"></span>
+                                    <span id="pattern-active-name" class="font-bold text-white">Checkerboard</span>
+                                </span>
+                                <span id="pattern-active-meta" class="text-fuchsia-300 font-bold"></span>
+                            </div>
+
+                            <!-- 3D Canvas Container -->
+                            <div id="pattern-3d-canvas" class="w-full h-80 rounded-2xl bg-slate-950/60 flex items-center justify-center relative"></div>
+
+                            <!-- Move Ribbon & Playback Controls -->
+                            <div class="mt-3 pt-3 border-t border-slate-900 space-y-3">
+                                <div id="pattern-move-ribbon" class="flex items-center justify-center gap-2 flex-wrap font-mono text-xs text-fuchsia-300 py-1 min-h-[2rem]"></div>
+
+                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <button id="pattern-prev-btn" class="ctrl-btn text-xs" title="Step Back"><i class="fa-solid fa-backward-step"></i></button>
+                                        <button id="pattern-play-btn" class="ctrl-btn-primary bg-fuchsia-600 hover:bg-fuchsia-500 shadow-fuchsia-600/30" title="Play Pattern"><i class="fa-solid fa-play"></i></button>
+                                        <button id="pattern-next-btn" class="ctrl-btn text-xs" title="Step Forward"><i class="fa-solid fa-forward-step"></i></button>
+                                        <button id="pattern-reset-btn" class="ctrl-btn text-xs" title="Reset to Solved"><i class="fa-solid fa-rotate-left"></i></button>
+                                        <button id="pattern-revert-btn" class="ctrl-btn text-xs" title="Revert (Undo)"><i class="fa-solid fa-undo"></i></button>
+                                    </div>
+                                    <button id="pattern-copy-btn" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px] transition-all">
+                                        <i class="fa-solid fa-copy mr-1"></i><span data-i18n="pat_copy">{{ t('pat_copy') }}</span>
+                                    </button>
+                                </div>
+
+                                <p id="pattern-active-desc" class="text-[11px] text-slate-400 font-sans leading-relaxed"></p>
+                                <p id="pattern-status" class="text-[11px] font-mono text-fuchsia-300 min-h-[1rem]"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notation Cheat Sheet (notation-first learning) -->
+                <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80">
+                    <h3 class="text-sm font-bold font-outfit text-white mb-4" data-i18n="pat_notation_title">{{ t('pat_notation_title') }}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+                        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
+                            <div class="text-fuchsia-300 font-bold mb-1.5">U D L R F B</div>
+                            <p class="text-slate-400 leading-relaxed" data-i18n="pat_notation_faces">{{ t('pat_notation_faces') }}</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
+                            <div class="text-fuchsia-300 font-bold mb-1.5">' / 2</div>
+                            <p class="text-slate-400 leading-relaxed" data-i18n="pat_notation_suffix">{{ t('pat_notation_suffix') }}</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
+                            <div class="text-fuchsia-300 font-bold mb-1.5">M E S</div>
+                            <p class="text-slate-400 leading-relaxed" data-i18n="pat_notation_slices">{{ t('pat_notation_slices') }}</p>
                         </div>
                     </div>
                 </div>
@@ -1976,7 +2067,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{{ url_for('static', filename='js/cube3d.js') }}?v=2.0.1"></script>
+<script src="{{ url_for('static', filename='js/cube3d.js') }}?v=2.0.2"></script>
 <script>
     // Audio Synth Web Audio Cues
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2042,6 +2133,13 @@
                     guideCube.onResize();
                 }
                 setTimeout(() => { if (guideCube) guideCube.onResize(); }, 120);
+            } else if (stageId === 'stage-patterns') {
+                initPatternCube();
+                if (patternCube) {
+                    patternCube.onResize();
+                }
+                setTimeout(() => { if (patternCube) patternCube.onResize(); }, 120);
+                loadPatternLibrary();
             } else if (stageId === 'stage-scan') {
                 initNetPreviewCube();
                 if (netPreviewCube) {
@@ -2667,6 +2765,269 @@
         renderGuideRibbon();
         document.getElementById('guide-play-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
         playTone(400, 'triangle', 0.06);
+    });
+
+    // -------------------------------------------------------------
+    // PATTERN STUDIO (ARTISTIC 3D PATTERNS) - PARTICULA-INSPIRED
+    // -------------------------------------------------------------
+    let patternCube = null;
+    let patternLibrary = [];
+    let activePattern = null;
+    let patternStep = 0;
+    let isPatternPlaying = false;
+
+    function initPatternCube() {
+        if (typeof Interactive3DCube === 'undefined') return;
+        const canvasContainer = document.getElementById('pattern-3d-canvas');
+        if (!canvasContainer) return;
+        try {
+            if (!patternCube) {
+                patternCube = new Interactive3DCube('pattern-3d-canvas', { autoRotate: false });
+            }
+            if (patternCube && patternCube.onResize) {
+                patternCube.onResize();
+            }
+        } catch (err) {
+            console.warn('[Pattern] Pattern cube init skipped:', err);
+        }
+    }
+
+    function resetPatternCube() {
+        if (!patternCube) return;
+        patternCube.turnQueue = [];
+        patternCube.isAnimatingTurn = false;
+        patternCube.buildCube();
+        if (patternCube.onResize) patternCube.onResize();
+    }
+
+    function invertPatternMove(move) {
+        if (move.includes('2')) return move;
+        if (move.includes("'")) return move.replace("'", '');
+        return move + "'";
+    }
+
+    function patternText(key, fallback) {
+        try {
+            if (window.getTranslation) {
+                const val = window.getTranslation(key);
+                if (val && val !== key) return val;
+            }
+        } catch (e) {}
+        return fallback;
+    }
+
+    function setPatternStatus(message, isError = false) {
+        const el = document.getElementById('pattern-status');
+        if (!el) return;
+        el.textContent = message;
+        el.className = `text-[11px] font-mono min-h-[1rem] ${isError ? 'text-rose-400' : 'text-fuchsia-300'}`;
+    }
+
+    async function loadPatternLibrary() {
+        const list = document.getElementById('pattern-list');
+        if (!list) return;
+        if (patternLibrary.length) return;
+        try {
+            const res = await fetch('/api/patterns');
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'load failed');
+            patternLibrary = data.patterns || [];
+            if (!patternLibrary.length) throw new Error('empty library');
+            renderPatternList();
+            selectPattern(patternLibrary[0].id);
+        } catch (err) {
+            console.warn('[Pattern] library load failed:', err);
+            list.innerHTML = `<div class="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs font-mono">${patternText('pat_error', 'Could not load the pattern library.')}</div>`;
+        }
+    }
+
+    function renderPatternList() {
+        const list = document.getElementById('pattern-list');
+        if (!list) return;
+        list.innerHTML = '';
+        patternLibrary.forEach(p => {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'pattern-card w-full text-left p-4 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-fuchsia-500/50 transition-all';
+            card.dataset.patternId = p.id;
+            const diffKey = 'pat_diff_' + p.difficulty;
+            const diffClass = p.difficulty === 'beginner'
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                : (p.difficulty === 'intermediate'
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                    : 'bg-rose-500/15 text-rose-300 border-rose-500/40');
+            card.innerHTML = `
+                <div class="flex items-center justify-between gap-2">
+                    <span class="font-bold text-white font-outfit text-sm">${p.name}</span>
+                    <span class="px-2 py-0.5 rounded-full font-mono text-[10px] border ${diffClass}">${patternText(diffKey, p.difficulty)}</span>
+                </div>
+                <div class="mt-1.5 font-mono text-[11px] text-fuchsia-300/90 break-all">${p.algorithm}</div>
+                <div class="mt-1 text-[11px] text-slate-400 font-sans leading-relaxed">${p.description}</div>
+                <div class="mt-2 flex items-center gap-3 text-[10px] font-mono text-slate-500">
+                    <span>${p.move_count} ${patternText('pat_moves', 'moves')}</span>
+                    <span class="flex items-center gap-1 text-emerald-400"><i class="fa-solid fa-circle-check"></i> ${patternText('pat_verified', 'Server-verified algorithms')}</span>
+                </div>`;
+            card.addEventListener('click', () => selectPattern(p.id));
+            list.appendChild(card);
+        });
+    }
+
+    function selectPattern(patternId) {
+        const pattern = patternLibrary.find(p => p.id === patternId);
+        if (!pattern) return;
+        activePattern = pattern;
+        patternStep = 0;
+        isPatternPlaying = false;
+        updatePatternPlayBtn();
+        initPatternCube();
+        resetPatternCube();
+        document.querySelectorAll('.pattern-card').forEach(c => {
+            const isActive = c.dataset.patternId === patternId;
+            c.classList.toggle('border-fuchsia-500/60', isActive);
+            c.classList.toggle('bg-slate-900', isActive);
+        });
+        const nameEl = document.getElementById('pattern-active-name');
+        const metaEl = document.getElementById('pattern-active-meta');
+        const descEl = document.getElementById('pattern-active-desc');
+        if (nameEl) nameEl.textContent = pattern.name;
+        if (metaEl) metaEl.textContent = `${pattern.move_count} ${patternText('pat_moves', 'moves')}`;
+        if (descEl) descEl.textContent = pattern.description;
+        renderPatternRibbon();
+        setPatternStatus('');
+        playTone(600, 'sine', 0.05);
+    }
+
+    function renderPatternRibbon() {
+        const ribbon = document.getElementById('pattern-move-ribbon');
+        if (!ribbon || !activePattern) return;
+        ribbon.innerHTML = '';
+        activePattern.moves.forEach((m, idx) => {
+            const span = document.createElement('span');
+            let cls = 'px-2.5 py-1 rounded-lg border font-bold transition-all cursor-pointer ';
+            if (idx < patternStep) cls += 'bg-fuchsia-600 text-white border-fuchsia-500 shadow-md';
+            else if (idx === patternStep) cls += 'bg-slate-900 text-fuchsia-300 border-fuchsia-400 scale-110';
+            else cls += 'bg-slate-900 text-slate-300 border-slate-800';
+            span.className = cls;
+            span.textContent = m;
+            span.addEventListener('click', () => {
+                if (!patternCube || isPatternPlaying) return;
+                patternCube.animateLayerTurn(m, () => {
+                    patternStep = idx + 1;
+                    renderPatternRibbon();
+                });
+                playTone(560, 'sine', 0.04);
+            });
+            ribbon.appendChild(span);
+        });
+    }
+
+    function updatePatternPlayBtn() {
+        const playBtn = document.getElementById('pattern-play-btn');
+        if (!playBtn) return;
+        playBtn.innerHTML = isPatternPlaying
+            ? '<i class="fa-solid fa-pause"></i>'
+            : '<i class="fa-solid fa-play"></i>';
+    }
+
+    async function playPatternSequence() {
+        if (!patternCube || !activePattern || isPatternPlaying) return;
+        if (patternStep >= activePattern.moves.length) {
+            patternStep = 0;
+            resetPatternCube();
+            renderPatternRibbon();
+        }
+        isPatternPlaying = true;
+        updatePatternPlayBtn();
+        setPatternStatus('');
+        const moves = activePattern.moves;
+        while (activePattern && patternStep < moves.length && isPatternPlaying) {
+            const move = moves[patternStep];
+            renderPatternRibbon();
+            playTone(500 + (patternStep * 25), 'sine', 0.04);
+            await new Promise(resolve => {
+                patternCube.animateLayerTurn(move, resolve);
+            });
+            patternStep++;
+            renderPatternRibbon();
+            await new Promise(r => setTimeout(r, 90));
+        }
+        if (activePattern && patternStep >= activePattern.moves.length) {
+            setPatternStatus(patternText('pat_status_done', 'Pattern complete! Use Revert to return to solved.'));
+            playTone(760, 'sine', 0.09);
+        }
+        isPatternPlaying = false;
+        updatePatternPlayBtn();
+    }
+
+    document.getElementById('pattern-play-btn')?.addEventListener('click', () => {
+        if (!isPatternPlaying) {
+            playPatternSequence();
+        } else {
+            isPatternPlaying = false;
+            updatePatternPlayBtn();
+        }
+    });
+
+    document.getElementById('pattern-next-btn')?.addEventListener('click', () => {
+        if (!activePattern || !patternCube || isPatternPlaying) return;
+        if (patternStep < activePattern.moves.length) {
+            const move = activePattern.moves[patternStep];
+            patternCube.animateLayerTurn(move, () => {
+                patternStep++;
+                renderPatternRibbon();
+            });
+            playTone(520, 'sine', 0.04);
+        }
+    });
+
+    document.getElementById('pattern-prev-btn')?.addEventListener('click', () => {
+        if (!activePattern || !patternCube || isPatternPlaying || patternStep <= 0) return;
+        patternStep--;
+        const move = invertPatternMove(activePattern.moves[patternStep]);
+        patternCube.animateLayerTurn(move, () => {
+            renderPatternRibbon();
+        });
+        playTone(460, 'sine', 0.04);
+    });
+
+    document.getElementById('pattern-reset-btn')?.addEventListener('click', () => {
+        if (isPatternPlaying) {
+            isPatternPlaying = false;
+            updatePatternPlayBtn();
+        }
+        patternStep = 0;
+        resetPatternCube();
+        renderPatternRibbon();
+        setPatternStatus('');
+        playTone(400, 'triangle', 0.06);
+    });
+
+    document.getElementById('pattern-revert-btn')?.addEventListener('click', async () => {
+        if (!activePattern || !patternCube || patternStep === 0 || isPatternPlaying) return;
+        const executed = activePattern.moves.slice(0, patternStep).reverse().map(invertPatternMove);
+        patternStep = 0;
+        renderPatternRibbon();
+        for (const move of executed) {
+            await new Promise(resolve => patternCube.animateLayerTurn(move, resolve));
+            await new Promise(r => setTimeout(r, 40));
+        }
+        renderPatternRibbon();
+        setPatternStatus('');
+        playTone(700, 'sine', 0.07);
+    });
+
+    document.getElementById('pattern-copy-btn')?.addEventListener('click', async () => {
+        if (!activePattern) return;
+        try {
+            await navigator.clipboard.writeText(activePattern.algorithm);
+            const label = document.querySelector('#pattern-copy-btn span');
+            if (label) {
+                const original = label.textContent;
+                label.textContent = patternText('pat_copied', 'Copied!');
+                setTimeout(() => { label.textContent = original; }, 1500);
+            }
+            playTone(880, 'triangle', 0.08);
+        } catch (e) {}
     });
 
     // -------------------------------------------------------------

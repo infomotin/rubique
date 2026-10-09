@@ -46,7 +46,7 @@ def dashboard():
     group_challenges = CustomCubeModel.get_group_challenges(limit=25)
 
     return render_template(
-        'user_dashboard.html',
+        'user/overview.html',
         user=user,
         stats=stats,
         history=history,
@@ -98,6 +98,14 @@ def guide_page():
     user_id = session.get('user_id')
     user = UserModel.find_by_id(user_id)
     return render_template('user/guide.html', user=user, active_page='guide')
+
+@user_bp.route('/patterns')
+@login_required
+def patterns_page():
+    """Dedicated Pattern Studio: artistic 3D cube pattern library"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    return render_template('user/patterns.html', user=user, active_page='patterns')
 
 @user_bp.route('/videos')
 @login_required

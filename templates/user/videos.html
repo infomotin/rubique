@@ -115,15 +115,29 @@
                                 <p class="text-xs text-slate-400 font-sans mb-3 line-clamp-2">{{ v.description or 'Speedcubing solve demonstration.' }}</p>
 
                                 <div class="rounded-2xl overflow-hidden bg-black aspect-video mb-3 relative border border-slate-800">
-                                    <video controls preload="metadata" class="w-full h-full object-cover">
-                                        <source src="{{ v.video_url }}" type="video/mp4">
-                                        Your browser does not support the video tag.
-                                    </video>
+                                    {% if 'youtube.com/watch' in v.video_url %}
+                                        <iframe class="w-full h-full" src="https://www.youtube.com/embed/{{ v.video_url.split('v=')[-1].split('&')[0] }}"
+                                                title="{{ v.title }}" frameborder="0" allowfullscreen></iframe>
+                                    {% elif 'youtu.be/' in v.video_url %}
+                                        <iframe class="w-full h-full" src="https://www.youtube.com/embed/{{ v.video_url.split('youtu.be/')[-1].split('?')[0] }}"
+                                                title="{{ v.title }}" frameborder="0" allowfullscreen></iframe>
+                                    {% elif 'vimeo.com/' in v.video_url %}
+                                        <iframe class="w-full h-full" src="https://player.vimeo.com/video/{{ v.video_url.split('vimeo.com/')[-1].split('?')[0] }}"
+                                                title="{{ v.title }}" frameborder="0" allowfullscreen></iframe>
+                                    {% else %}
+                                        <video controls preload="metadata" class="w-full h-full object-cover">
+                                            <source src="{{ v.video_url }}">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    {% endif %}
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between pt-2 border-t border-slate-800 font-mono text-xs">
-                                <span class="text-slate-400"><i class="fa-solid fa-heart text-pink-400 mr-1"></i> {{ v.likes }} speedcuber likes</span>
+                                <button onclick="likeVideo({{ v.id }}, this)" class="flex items-center gap-1.5 text-slate-400 hover:text-pink-400 transition-colors">
+                                    <i class="fa-solid fa-heart text-pink-400"></i>
+                                    <span class="like-count font-bold">{{ v.likes }}</span> speedcuber likes
+                                </button>
                                 <span class="text-slate-500 text-[11px]">{{ v.method }}</span>
                             </div>
                         </div>
@@ -142,4 +156,32 @@
     </div>
 
 </div>
+
+<script>
+    function playTone(freq, type = 'sine', duration = 0.08) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    async function likeVideo(vid, btn) {
+        try {
+            await fetch(`/dashboard/videos/like/${vid}`, { method: 'POST' });
+            const countEl = btn.querySelector('.like-count');
+            if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+            btn.classList.add('text-pink-500');
+            playTone(750, 'sine', 0.08);
+        } catch(e) {}
+    }
+</script>
 {% endblock %}
