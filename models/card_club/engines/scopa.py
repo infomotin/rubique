@@ -45,22 +45,36 @@ class Scopa(BaseCardGame):
         }
 
     def _captures(self, seat, card):
-        """All legal capture lists for `card` against the table."""
-        s = self.state
+        """Legal capture lists: single same-rank, or any subset summing to
+        the card's value (values are 1-14, so pruned subset-sum stays tiny)."""
+        table = self.state["table"]
         v = _value(card)
-        table = s["table"]
+        seen = set()
         out = []
-        for r in range(1, len(table) + 1):
-            for combo in itertools.combinations(table, r):
-                combo = list(combo)
-                if r == 1 and combo[0][1] == card[1]:
-                    out.append(combo)
-                elif r >= 1 and sum(_value(c) for c in combo) == v:
-                    if r == 1 and combo[0][1] == card[1]:
-                        continue            # already added as same-rank
-                    out.append(combo)
-        if not out and any(_value(c) == v for c in table):
-            pass
+        for c in table:
+            if c[1] == card[1]:
+                key = (c,)
+                if key not in seen:
+                    seen.add(key)
+                    out.append([c])
+        vals = [(_value(c), c) for c in table]
+
+        def walk(start, need, chosen):
+            if need == 0:
+                key = tuple(sorted(chosen))
+                if key not in seen:
+                    seen.add(key)
+                    out.append(list(chosen))
+                return
+            for i in range(start, len(vals)):
+                val, card_c = vals[i]
+                if val > need:
+                    continue
+                chosen.append(card_c)
+                walk(i + 1, need - val, chosen)
+                chosen.pop()
+
+        walk(0, v, [])
         return out
 
     def view(self, seat):

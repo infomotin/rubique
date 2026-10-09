@@ -624,6 +624,68 @@ def init_database():
                     FOREIGN KEY (table_id) REFERENCES club_tables(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+
+            # 37. Card Club - Hash-chained ledger head (optimistic lock row)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_chain_head (
+                    id INT PRIMARY KEY,
+                    seq INT NOT NULL DEFAULT 0,
+                    last_hash CHAR(64) NOT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 38. Card Club - Developer reserve (fixed supply, never mints mid-play)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_reserve (
+                    id INT PRIMARY KEY,
+                    balance BIGINT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 39. Card Club - Player-to-player coin sale escrow
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_escrow (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    payer_id INT NOT NULL,
+                    payee_id INT NOT NULL,
+                    amount BIGINT NOT NULL,
+                    description VARCHAR(255) DEFAULT '',
+                    status VARCHAR(20) DEFAULT 'offered',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    resolved_at TIMESTAMP NULL,
+                    FOREIGN KEY (payer_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (payee_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 40. Card Club - Device binding (one registration per machine)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS device_registrations (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    device_key CHAR(64) NOT NULL UNIQUE,
+                    user_id INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            for _ledger_sql in (
+                "ALTER TABLE club_ledger ADD COLUMN seq INT NOT NULL DEFAULT 0",
+                "ALTER TABLE club_ledger ADD COLUMN owner_key VARCHAR(80) NOT NULL DEFAULT ''",
+                "ALTER TABLE club_ledger ADD COLUMN prev_hash CHAR(64) NOT NULL DEFAULT ''",
+                "ALTER TABLE club_ledger ADD COLUMN entry_hash CHAR(64) NOT NULL DEFAULT ''",
+            ):
+                try:
+                    cur.execute(_ledger_sql)
+                except Exception:
+                    pass
+            try:
+                cur.execute("INSERT INTO club_chain_head (id, seq, last_hash) VALUES (1, 0, %s)",
+                            ("0" * 64,))
+            except Exception:
+                pass
+            try:
+                cur.execute("INSERT INTO club_reserve (id, balance) VALUES (1, %s)",
+                            (1000000000,))
+            except Exception:
+                pass
         conn.close()
     else:
         print("[Database] Initializing SQLite Multi-Role RBAC Tables...")
@@ -1208,6 +1270,68 @@ def init_database():
                 FOREIGN KEY (table_id) REFERENCES club_tables(id)
             )
         """)
+
+        # 37. Card Club - Hash-chained ledger head
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_chain_head (
+                id INTEGER PRIMARY KEY,
+                seq INTEGER NOT NULL DEFAULT 0,
+                last_hash TEXT NOT NULL
+            )
+        """)
+        # 38. Card Club - Developer reserve (fixed supply)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_reserve (
+                id INTEGER PRIMARY KEY,
+                balance INTEGER NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # 39. Card Club - Player-to-player coin sale escrow
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_escrow (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                payer_id INTEGER NOT NULL,
+                payee_id INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                description TEXT DEFAULT '',
+                status TEXT DEFAULT 'offered',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP,
+                FOREIGN KEY (payer_id) REFERENCES users(id),
+                FOREIGN KEY (payee_id) REFERENCES users(id)
+            )
+        """)
+        # 40. Card Club - Device binding (one registration per machine)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS device_registrations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_key TEXT NOT NULL UNIQUE,
+                user_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        cur.execute("PRAGMA table_info(club_ledger)")
+        _led_cols = {row[1] for row in cur.fetchall()}
+        for _col_name, _col_sql in (
+            ("seq", "INTEGER NOT NULL DEFAULT 0"),
+            ("owner_key", "TEXT NOT NULL DEFAULT ''"),
+            ("prev_hash", "TEXT NOT NULL DEFAULT ''"),
+            ("entry_hash", "TEXT NOT NULL DEFAULT ''"),
+        ):
+            if _col_name not in _led_cols:
+                try:
+                    cur.execute(f"ALTER TABLE club_ledger ADD COLUMN {_col_name} {_col_sql}")
+                except Exception:
+                    pass
+        cur.execute("SELECT id FROM club_chain_head WHERE id = 1")
+        if not cur.fetchone():
+            cur.execute("INSERT INTO club_chain_head (id, seq, last_hash) VALUES (1, 0, ?)",
+                        ("0" * 64,))
+        cur.execute("SELECT id FROM club_reserve WHERE id = 1")
+        if not cur.fetchone():
+            cur.execute("INSERT INTO club_reserve (id, balance) VALUES (1, ?)", (1000000000,))
 
         conn.commit()
         conn.close()

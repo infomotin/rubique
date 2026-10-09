@@ -63,7 +63,7 @@ def index():
     return render_template(
         'card/game.html',
         user=user,
-        active_page='card_game',
+        active_page='cards',
         symbols=CARD_SYMBOLS,
         saved_games=saved_games,
         is_override=admin_override

@@ -83,7 +83,7 @@ class CardModel:
             return execute_update(sql_mysql, sql_sqlite, (moves_count, time_seconds, score, status, deck_str, game_id))
         else:
             sql_mysql = "UPDATE card_games SET moves_count = %s, time_seconds = %s, score = %s, status = %s WHERE id = %s"
-            sql_sqlite = "UPDATE card_games SET moves_count = ?, time_seconds = ?, score = ?, status = ?, WHERE id = ?"
+            sql_sqlite = "UPDATE card_games SET moves_count = ?, time_seconds = ?, score = ?, status = ? WHERE id = ?"
             return execute_update(sql_mysql, sql_sqlite, (moves_count, time_seconds, score, status, game_id))
 
     @staticmethod
