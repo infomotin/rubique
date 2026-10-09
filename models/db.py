@@ -234,6 +234,40 @@ def init_database():
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            # 14. Custom Cubes Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS custom_cubes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    name VARCHAR(150) NOT NULL,
+                    shape_type VARCHAR(50) DEFAULT 'classic_3x3',
+                    description TEXT,
+                    color_scheme TEXT,
+                    cube_state TEXT,
+                    scramble TEXT,
+                    status VARCHAR(30) DEFAULT 'unsolved',
+                    is_public INT DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 15. Cube Group Challenges Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS cube_group_challenges (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    cube_id INT NOT NULL,
+                    group_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    challenge_note TEXT,
+                    status VARCHAR(30) DEFAULT 'open',
+                    solution TEXT,
+                    solver_id INT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (cube_id) REFERENCES custom_cubes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (group_id) REFERENCES chat_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
         conn.close()
     else:
         print("[Database] Initializing SQLite Multi-Role RBAC Tables...")
@@ -422,6 +456,42 @@ def init_database():
             )
         """)
 
+        # 14. Custom Cubes Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS custom_cubes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                shape_type TEXT DEFAULT 'classic_3x3',
+                description TEXT,
+                color_scheme TEXT,
+                cube_state TEXT,
+                scramble TEXT,
+                status TEXT DEFAULT 'unsolved',
+                is_public INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 15. Cube Group Challenges Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS cube_group_challenges (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cube_id INTEGER NOT NULL,
+                group_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                challenge_note TEXT,
+                status TEXT DEFAULT 'open',
+                solution TEXT,
+                solver_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (cube_id) REFERENCES custom_cubes(id),
+                FOREIGN KEY (group_id) REFERENCES chat_groups(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
         conn.commit()
         conn.close()
 
@@ -582,6 +652,43 @@ def seed_demo_data():
             "INSERT INTO blog_comments (post_id, user_id, comment) VALUES (?, ?, ?)",
             (pid1, uid, "Awesome tutorial! Sune is definitely my favorite algorithm.")
         )
+
+    # Seed Initial Custom Cubes & Clan Challenge
+    cc = query_one("SELECT id FROM custom_cubes LIMIT 1", "SELECT id FROM custom_cubes LIMIT 1")
+    if not cc:
+        user_cuber = query_one("SELECT id FROM users WHERE username = 'speedcuber'", "SELECT id FROM users WHERE username = 'speedcuber'")
+        uid = user_cuber['id'] if user_cuber else 1
+        cube1_id = execute_insert(
+            """INSERT INTO custom_cubes (user_id, name, shape_type, description, color_scheme, cube_state, scramble, status, is_public)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO custom_cubes (user_id, name, shape_type, description, color_scheme, cube_state, scramble, status, is_public)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (uid, "Cyber Neon GoCube 3x3", "gocube_3x3", "High-frequency cyber illuminated Bluetooth smart cube with custom neon color scheme.", "#38bdf8,#e0e7ff,#10b981,#6366f1,#f59e0b,#f43f5e", "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB", "R U R' U' R' F R2 U' R' U' R U R' F'", "unsolved", 1)
+        )
+        cube2_id = execute_insert(
+            """INSERT INTO custom_cubes (user_id, name, shape_type, description, color_scheme, cube_state, scramble, status, is_public)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO custom_cubes (user_id, name, shape_type, description, color_scheme, cube_state, scramble, status, is_public)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (uid, "Titanium Mirror Bump Cube", "mirror_cube", "Monochrome metallic brushed silver blocks with shape-shifting geometry.", "#e2e8f0,#cbd5e1,#94a3b8,#64748b,#475569,#334155", "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB", "F R U' R' U F'", "solved", 1)
+        )
+        cube3_id = execute_insert(
+            """INSERT INTO custom_cubes (user_id, name, shape_type, description, color_scheme, cube_state, scramble, status, is_public)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO custom_cubes (user_id, name, shape_type, description, color_scheme, cube_state, scramble, status, is_public)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (uid, "Grand Dodecahedron Megaminx", "megaminx", "12-faced cosmic pentagonal star puzzle challenge with 12 distinct vivid colors.", "#ffffff,#facc15,#22c55e,#3b82f6,#ef4444,#a855f7,#f97316,#06b6d4,#ec4899,#84cc16,#64748b,#b45309", "", "R++ D-- R-- D++ U'", "unsolved", 1)
+        )
+        # Seed a Clan Challenge mentioning the speedcubers clan
+        grp = query_one("SELECT id FROM chat_groups LIMIT 1", "SELECT id FROM chat_groups LIMIT 1")
+        if grp and cube1_id:
+            execute_insert(
+                """INSERT INTO cube_group_challenges (cube_id, group_id, user_id, challenge_note, status)
+                   VALUES (%s, %s, %s, %s, 'open')""",
+                """INSERT INTO cube_group_challenges (cube_id, group_id, user_id, challenge_note, status)
+                   VALUES (?, ?, ?, ?, 'open')""",
+                (cube1_id, grp['id'], uid, "Clan Challenge: Can anyone find a solution algorithm under 22 moves for this Cyber Neon cube?")
+            )
 
 def query_one(sql_mysql, sql_sqlite, params=()):
     """Single row fetch helper"""

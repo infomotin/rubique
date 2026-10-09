@@ -10,6 +10,7 @@ from models.user_model import UserModel
 from models.solve_model import SolveModel
 from models.admin_model import AdminModel
 from models.community_model import CommunityModel
+from models.custom_cube_model import CustomCubeModel, SUPPORTED_SHAPES
 from models.db import query_one, query_all, execute_insert
 from .auth_controller import login_required
 
@@ -39,6 +40,11 @@ def dashboard():
         (user_id,)
     )
 
+    # Custom Cubes Workshop & Group Challenges
+    user_cubes = CustomCubeModel.get_user_cubes(user_id)
+    public_cubes = CustomCubeModel.get_public_cubes(limit=15)
+    group_challenges = CustomCubeModel.get_group_challenges(limit=25)
+
     return render_template(
         'user_dashboard.html',
         user=user,
@@ -50,7 +56,11 @@ def dashboard():
         videos=videos,
         groups=groups,
         friends=friends,
-        posts=posts
+        posts=posts,
+        user_cubes=user_cubes,
+        public_cubes=public_cubes,
+        group_challenges=group_challenges,
+        supported_shapes=SUPPORTED_SHAPES
     )
 
 # -------------------------------------------------------------
@@ -255,4 +265,90 @@ def redeem_coupon():
     else:
         flash('Invalid or expired coupon code! Try "GROUPTHEORY2026".', 'error')
     return redirect(url_for('user.dashboard'))
+
+# -------------------------------------------------------------
+# CUSTOM CUBES WORKSHOP & GROUP CHALLENGES ACTIONS
+# -------------------------------------------------------------
+@user_bp.route('/custom-cubes/save', methods=['POST'])
+@login_required
+def save_custom_cube():
+    """Saves a custom built cube blueprint"""
+    user_id = session.get('user_id')
+    name = request.form.get('name', '').strip() or "My Custom Puzzle"
+    shape_type = request.form.get('shape_type', 'classic_3x3').strip()
+    description = request.form.get('description', '').strip()
+    color_scheme = request.form.get('color_scheme', '').strip()
+    cube_state = request.form.get('cube_state', '').strip()
+    scramble = request.form.get('scramble', '').strip()
+    status = request.form.get('status', 'unsolved').strip()
+    is_public = 1 if request.form.get('is_public') in ('1', 'true', 'on') else 0
+
+    CustomCubeModel.save_cube(
+        user_id=user_id,
+        name=name,
+        shape_type=shape_type,
+        description=description,
+        color_scheme=color_scheme,
+        cube_state=cube_state,
+        scramble=scramble,
+        status=status,
+        is_public=is_public
+    )
+    flash(f'Custom cube "{name}" successfully saved to your workshop collection!', 'success')
+    return redirect(url_for('user.dashboard') + '#stage-custom-builder')
+
+@user_bp.route('/custom-cubes/delete/<int:cube_id>', methods=['POST'])
+@login_required
+def delete_custom_cube(cube_id):
+    """Deletes a custom cube owned by user"""
+    user_id = session.get('user_id')
+    CustomCubeModel.delete_cube(cube_id, user_id)
+    flash('Custom puzzle deleted from your collection.', 'info')
+    return redirect(url_for('user.dashboard') + '#stage-custom-builder')
+
+@user_bp.route('/custom-cubes/challenge-group', methods=['POST'])
+@login_required
+def challenge_group():
+    """Mentions and challenges a study clan / group to solve a custom cube problem"""
+    user_id = session.get('user_id')
+    cube_id = request.form.get('cube_id')
+    group_id = request.form.get('group_id')
+    challenge_note = request.form.get('challenge_note', '').strip()
+
+    try:
+        cube_id = int(cube_id)
+        group_id = int(group_id)
+    except (TypeError, ValueError):
+        cube_id = 0
+        group_id = 0
+
+    if cube_id and group_id:
+        CustomCubeModel.challenge_group(cube_id, group_id, user_id, challenge_note)
+        flash('Puzzle challenge sent to the Clan! Clan members have been tagged & notified in chat.', 'success')
+    else:
+        flash('Please select both a valid cube and a target clan/group.', 'error')
+    return redirect(url_for('user.dashboard') + '#stage-custom-builder')
+
+@user_bp.route('/custom-cubes/solve-challenge/<int:challenge_id>', methods=['POST'])
+@login_required
+def solve_challenge(challenge_id):
+    """Submits a solution algorithm for an open group challenge"""
+    user_id = session.get('user_id')
+    solution = request.form.get('solution', '').strip()
+    if solution:
+        CustomCubeModel.solve_challenge(challenge_id, user_id, solution)
+        flash('Congratulations! Your solution algorithm has been verified and registered on the Clan Challenge!', 'success')
+    else:
+        flash('Please provide a valid solution move sequence.', 'error')
+    return redirect(url_for('user.dashboard') + '#stage-custom-builder')
+
+@user_bp.route('/custom-cubes/api/<int:cube_id>')
+@login_required
+def get_custom_cube_api(cube_id):
+    """Fetches custom cube details for 1-click loading into the builder studio"""
+    cube = CustomCubeModel.get_cube_by_id(cube_id)
+    if cube:
+        return jsonify({'success': True, 'cube': cube})
+    return jsonify({'success': False, 'error': 'Cube not found'}), 404
+
 
