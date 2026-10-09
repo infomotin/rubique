@@ -54,14 +54,10 @@ class EgyptianRatscrew(BaseCardGame):
         s = self.state
         if s["over"]:
             return
-        alive = [i for i in range(len(s["players"]))
-                 if s["hands"][str(i)] or i in s["finish"]]
-        for i in range(len(s["players"])):
-            if not s["hands"][str(i)] and i not in s["finish"] and i != s["turn"]:
-                pass
         for i in range(len(s["players"])):
             if not s["hands"][str(i)] and i not in s["finish"]:
                 s["finish"].append(i)
+                self._say(s, i, "is out of cards")
         alive = [i for i in range(len(s["players"])) if i not in s["finish"]]
         if len(alive) <= 1 and len(s["players"]) > 1:
             for i in alive:
@@ -70,7 +66,8 @@ class EgyptianRatscrew(BaseCardGame):
             s["over"] = True
             s["turn"] = -1
         elif alive and s["turn"] not in alive:
-            s["turn"] = alive[0]
+            while s["turn"] not in alive and not s["over"]:
+                s["turn"] = self._next(s, s["turn"])
 
     def view(self, seat):
         s = self.state
@@ -219,10 +216,9 @@ class Speed(BaseCardGame):
         for pile in ("up", "down"):
             for c in self._playable_on(seat, pile):
                 acts.append({"action": "play", "card": c, "pile": pile})
-        if s["hands"][str(seat)] and not s["stocks"][str(seat)] and not acts:
-            acts.append({"action": "pass"})
-        if not acts and s["stocks"][str(seat)]:
-            acts.append({"action": "draw"})
+        if not acts:
+            acts.append({"action": "draw"} if s["stocks"][str(seat)]
+                        else {"action": "pass"})
         return acts
 
     def apply(self, seat, action):
@@ -255,18 +251,19 @@ class Speed(BaseCardGame):
             self._top_up(seat)
             return
         if act == "pass":
-            if s["stocks"][key] or self._playable_on(seat, "up") or self._playable_on(seat, "down"):
+            if self._playable_on(seat, "up") or self._playable_on(seat, "down") or s["stocks"][key]:
                 raise IllegalMove("You still have options")
-            s["finish"].append(seat)
-            if len(s["finish"]) == len(s["players"]) - 0 and not all(
-                    not s["hands"][str(i)] and not s["stocks"][str(i)]
-                    for i in range(len(s["players"]))):
-                pass
-            if len(s["finish"]) == len(s["players"]):
-                s["over"] = True
-            elif len(s["finish"]) == len(s["players"]) - 1 and len(s["players"]) > 2:
-                s["over"] = True
-                s["finish"] += [i for i in range(len(s["players"])) if i not in s["finish"]]
+            # Stuck: only decisive when nobody can finish anymore.
+            any_stock = any(s["stocks"].values())
+            any_play = any(self._playable_on(i, "up") or self._playable_on(i, "down")
+                           for i in range(len(s["players"])))
+            if any_stock or any_play:
+                self._say(s, seat, "stuck for now")
+                return
+            order = sorted(range(len(s["players"])),
+                           key=lambda i: (len(s["hands"][str(i)]) + len(s["stocks"][str(i)]), i))
+            s["finish"] = order
+            s["over"] = True
             return
         raise IllegalMove("Unknown action")
 
@@ -321,12 +318,15 @@ class Spoons(BaseCardGame):
         if s["over"]:
             return []
         acts = []
-        if self._has_four(s["hands"][str(seat)]) and len(s["grabs"]) < s["spoons"]:
+        if (self._has_four(s["hands"][str(seat)]) and len(s["grabs"]) < s["spoons"]
+                and seat == s["turn"]):
             acts.append({"action": "grab"})
         if s["grab_phase"]:
+            if seat == s["turn"]:
+                acts.append({"action": "react"})
             return acts
-        if seat == s["turn"] and s["stock"]:
-            acts.append({"action": "draw_pass"})
+        if seat == s["turn"]:
+            acts.append({"action": "draw_pass"} if s["stock"] else {"action": "stalemate"})
         return acts
 
     def apply(self, seat, action):
@@ -347,9 +347,22 @@ class Spoons(BaseCardGame):
                 s["grab_phase"] = True
                 s["turn"] = self._next(s, seat)
             else:
-                nxt = self._next(s, s["turn"])
-                s["turn"] = nxt
-            if len(s["grabs"]) >= s["spoons"] and s["grab_phase"]:
+                s["turn"] = self._next(s, s["turn"])
+            if s["grab_phase"] and s["turn"] == s["grabs"][0]:
+                self._resolve()
+            elif len(s["grabs"]) >= s["spoons"] and s["grab_phase"]:
+                self._resolve()
+            return
+        if act == "stalemate":
+            if seat != s["turn"] or s["grab_phase"] or s["stock"]:
+                raise IllegalMove("Not applicable")
+            self._resolve_deadlock()
+            return
+        if act == "react":
+            if seat != s["turn"] or not s["grab_phase"]:
+                raise IllegalMove("Not your reaction")
+            s["turn"] = self._next(s, seat)
+            if s["turn"] == s["grabs"][0]:
                 self._resolve()
             return
         if act == "draw_pass":
@@ -360,11 +373,9 @@ class Spoons(BaseCardGame):
                 return
             s["hands"][str(seat)].append(s["stock"].pop())
             hand = s["hands"][str(seat)]
-            if len(hand) <= 4:
-                raise IllegalMove("Internal: hand overflow")
             card = action.get("card")
-            if card not in hand or hand.index(card) < 4:
-                raise IllegalMove("Pass one card from your hand")
+            if card not in hand:
+                raise IllegalMove("Pass one card you hold")
             hand.remove(card)
             nxt = self._next(s, seat)
             s["hands"][str(nxt)].append(card)
@@ -372,14 +383,8 @@ class Spoons(BaseCardGame):
             s["turn"] = nxt
             if self._has_four(s["hands"][str(nxt)]):
                 self._say(s, nxt, "has four of a kind")
-            if self._passes_exhausted():
-                self._resolve_deadlock()
             return
         raise IllegalMove("Unknown action")
-
-    def _passes_exhausted(self):
-        s = self.state
-        return not s["stock"] and s["passes"] >= len(s["players"]) * 8
 
     def _resolve_deadlock(self):
         """Stock gone and nobody qualified: round is a wash."""

@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}Bit-Level Activity Telemetry Monitor - Developer HUD - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Cyber DevOps Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-600 p-0.5 shadow-2xl shadow-emerald-500/30 shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-emerald-400 text-2xl font-mono">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-mono mb-2 shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="font-bold">DEV PANEL &bull; BIT-LEVEL ACTIVITY TELEMETRY STREAM</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black font-outfit text-white tracking-tight">Microsecond Bit-Level Activity Monitor</h1>
+                    <p class="text-xs sm:text-sm text-slate-400 font-mono mt-1">
+                        Granular inspection of every single bit, payload byte, hex memory dump, socket latency, and HTTP status
+                    </p>
+                </div>
+            </div>
+
+            <!-- Controls: Probe Injector & Stream Purge -->
+            <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                <button id="btn-fire-probe" class="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-lg shadow-cyan-600/30 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bolt text-xs"></i> Inject Bit Probe
+                </button>
+                <button id="btn-toggle-auto" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-emerald-500/50 text-emerald-300 transition-all flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="auto-refresh-label">Auto-Poll: 3s</span>
+                </button>
+                <form method="POST" action="{{ url_for('developer.api_telemetry_clear') }}" class="inline">
+                    <button type="submit" class="px-3.5 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/40 text-rose-300 transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash-can text-xs"></i> Purge Stream
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "developer/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace -->
+        <div class="lg:col-span-9 space-y-6">
+            
+            <!-- Bit Gauges & Telemetry Metrics Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
+                <div class="glass-card p-4 rounded-2xl border border-emerald-500/30 bg-slate-900/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] text-slate-400 uppercase">Stream Depth</span>
+                        <i class="fa-solid fa-layer-group text-emerald-400 text-sm"></i>
+                    </div>
+                    <div id="stat-stream-depth" class="text-xl sm:text-2xl font-black text-white">{{ stream|length }}</div>
+                    <div class="text-[10px] text-emerald-300/80 mt-1">Packets in Buffer</div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl border border-cyan-500/30 bg-slate-900/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] text-slate-400 uppercase">Total Bits Tracked</span>
+                        <i class="fa-solid fa-binary text-cyan-400 text-sm"></i>
+                    </div>
+                    {% set total_bits = 0 %}
+                    <div id="stat-total-bits" class="text-xl sm:text-2xl font-black text-cyan-300">
+                        {{ (stream|sum(attribute='payload_bits'))|default(0) }} b
+                    </div>
+                    <div class="text-[10px] text-cyan-400/80 mt-1">Payload Bitstream</div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl border border-violet-500/30 bg-slate-900/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] text-slate-400 uppercase">Total Bytes</span>
+                        <i class="fa-solid fa-database text-violet-400 text-sm"></i>
+                    </div>
+                    <div id="stat-total-bytes" class="text-xl sm:text-2xl font-black text-violet-300">
+                        {{ (stream|sum(attribute='payload_bytes'))|default(0) }} B
+                    </div>
+                    <div class="text-[10px] text-violet-400/80 mt-1">Raw Ingest Memory</div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl border border-amber-500/30 bg-slate-900/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] text-slate-400 uppercase">Avg Latency</span>
+                        <i class="fa-solid fa-stopwatch text-amber-400 text-sm"></i>
+                    </div>
+                    <div id="stat-avg-latency" class="text-xl sm:text-2xl font-black text-amber-300">
+                        {% if stream|length > 0 %}
+                            {{ ((stream|sum(attribute='latency_ms')) / (stream|length))|round(2) }} ms
+                        {% else %}
+                            0.0 ms
+                        {% endif %}
+                    </div>
+                    <div class="text-[10px] text-amber-400/80 mt-1">Loop Latency</div>
+                </div>
+            </div>
+
+            <!-- Filter Strip & Probe Notice Bar -->
+            <div class="glass-card p-4 rounded-2xl border border-slate-800 bg-slate-950/70 font-mono text-xs flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span class="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Module Filter:</span>
+                    <select id="filter-module" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-200 text-xs">
+                        <option value="">All Modules</option>
+                        <option value="ChessStudio">ChessStudio</option>
+                        <option value="CyberDeckCards">CyberDeckCards</option>
+                        <option value="AdminSecurity">AdminSecurity</option>
+                        <option value="AdminOversight">AdminOversight</option>
+                        <option value="ProbeEngine">ProbeEngine</option>
+                        <option value="DevStream">DevStream</option>
+                    </select>
+
+                    <span class="text-slate-400 font-bold uppercase text-[10px] tracking-wider ml-2">Severity:</span>
+                    <select id="filter-severity" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-200 text-xs">
+                        <option value="">All Levels</option>
+                        <option value="INFO">INFO</option>
+                        <option value="WARNING">WARNING</option>
+                        <option value="CRITICAL">CRITICAL</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                    <span id="live-pulse" class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span id="last-updated-text">Stream Active</span>
+                </div>
+            </div>
+
+            <!-- Bit Stream Data Table -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80 font-mono text-xs">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                        <i class="fa-solid fa-network-wired text-emerald-400"></i>
+                        <span>Live Bitstream Ingest (Microsecond Precision)</span>
+                    </h2>
+                    <span class="text-[10px] text-slate-500">Every single bit is monitored</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left" id="telemetry-table">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                                <th class="py-2.5 px-3">Trace ID</th>
+                                <th class="py-2.5 px-3">Module &amp; Action</th>
+                                <th class="py-2.5 px-3">Size (Bytes / Bits)</th>
+                                <th class="py-2.5 px-3">Hex Dump (Memory)</th>
+                                <th class="py-2.5 px-3">Latency</th>
+                                <th class="py-2.5 px-3">Status</th>
+                                <th class="py-2.5 px-3">User &amp; IP</th>
+                                <th class="py-2.5 px-3 text-right">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="telemetry-tbody" class="divide-y divide-slate-800/60">
+                            {% for item in stream %}
+                            <tr class="hover:bg-slate-900/60 transition-colors font-mono">
+                                <td class="py-2.5 px-3">
+                                    <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-[10px]">
+                                        {{ item.trace_id }}
+                                    </span>
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <div class="font-bold text-white text-[11px]">{{ item.module }}</div>
+                                    <div class="text-[10px] text-slate-400">{{ item.action }}</div>
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <div class="text-slate-200 font-bold">{{ item.payload_bytes }} B</div>
+                                    <div class="text-[10px] text-emerald-400">{{ item.payload_bits }} bits</div>
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <span class="text-[10px] text-slate-400 tracking-wider bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 select-all" title="Raw Memory Hex Sample">
+                                        {{ item.payload_hex or '00' }}
+                                    </span>
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    {% if item.latency_ms < 5.0 %}
+                                        <span class="text-emerald-400 font-bold text-[11px]">{{ item.latency_ms }} ms</span>
+                                    {% elif item.latency_ms < 20.0 %}
+                                        <span class="text-cyan-400 font-bold text-[11px]">{{ item.latency_ms }} ms</span>
+                                    {% else %}
+                                        <span class="text-amber-400 font-bold text-[11px]">{{ item.latency_ms }} ms</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    {% if item.http_status == 200 %}
+                                        <span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] border border-emerald-500/30">200 OK</span>
+                                    {% elif item.http_status == 403 %}
+                                        <span class="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px] border border-rose-500/30">403 FORBID</span>
+                                    {% else %}
+                                        <span class="px-1.5 py-0.5 rounded bg-slate-900 text-slate-300 text-[10px]">{{ item.http_status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <span class="text-slate-200">{{ item.username or 'sys' }}</span>
+                                    <span class="text-[9px] text-slate-500 block">{{ item.client_ip }}</span>
+                                </td>
+                                <td class="py-2.5 px-3 text-right text-slate-400 text-[10px]">
+                                    {{ item.created_at }}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="py-8 text-center text-slate-500">
+                                    No bitstream telemetry records captured yet. Click "Inject Bit Probe" to emit a test packet!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let autoPollActive = true;
+    let pollInterval = null;
+
+    const tbody = document.getElementById('telemetry-tbody');
+    const filterModule = document.getElementById('filter-module');
+    const filterSeverity = document.getElementById('filter-severity');
+    const btnProbe = document.getElementById('btn-fire-probe');
+    const btnAuto = document.getElementById('btn-toggle-auto');
+    const autoLabel = document.getElementById('auto-refresh-label');
+    const lastUpdated = document.getElementById('last-updated-text');
+
+    // Stats elements
+    const statDepth = document.getElementById('stat-stream-depth');
+    const statBits = document.getElementById('stat-total-bits');
+    const statBytes = document.getElementById('stat-total-bytes');
+    const statLatency = document.getElementById('stat-avg-latency');
+
+    function fetchStream() {
+        const mod = filterModule.value;
+        const sev = filterSeverity.value;
+        const url = `/developer/api/telemetry-stream?module=${encodeURIComponent(mod)}&severity=${encodeURIComponent(sev)}&limit=80`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.stream) {
+                    renderTable(data.stream);
+                    updateStats(data.stream);
+                    lastUpdated.innerText = 'Updated ' + new Date().toLocaleTimeString();
+                }
+            })
+            .catch(err => console.error('Bitstream fetch err:', err));
+    }
+
+    function renderTable(stream) {
+        if (!stream.length) {
+            tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-500">No telemetry packets match filter.</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        stream.forEach(item => {
+            const latClass = item.latency_ms < 5.0 ? 'text-emerald-400' : (item.latency_ms < 20.0 ? 'text-cyan-400' : 'text-amber-400');
+            const statusBadge = item.http_status === 200 
+                ? '<span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] border border-emerald-500/30">200 OK</span>'
+                : (item.http_status === 403 
+                    ? '<span class="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px] border border-rose-500/30">403 FORBID</span>' 
+                    : `<span class="px-1.5 py-0.5 rounded bg-slate-900 text-slate-300 text-[10px]">${item.http_status}</span>`);
+
+            html += `
+            <tr class="hover:bg-slate-900/60 transition-colors font-mono">
+                <td class="py-2.5 px-3">
+                    <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-[10px]">
+                        ${item.trace_id || 'trace'}
+                    </span>
+                </td>
+                <td class="py-2.5 px-3">
+                    <div class="font-bold text-white text-[11px]">${item.module || ''}</div>
+                    <div class="text-[10px] text-slate-400">${item.action || ''}</div>
+                </td>
+                <td class="py-2.5 px-3">
+                    <div class="text-slate-200 font-bold">${item.payload_bytes || 0} B</div>
+                    <div class="text-[10px] text-emerald-400">${item.payload_bits || 0} bits</div>
+                </td>
+                <td class="py-2.5 px-3">
+                    <span class="text-[10px] text-slate-400 tracking-wider bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 select-all" title="Memory Hex Dump">
+                        ${item.payload_hex || '00'}
+                    </span>
+                </td>
+                <td class="py-2.5 px-3">
+                    <span class="${latClass} font-bold text-[11px]">${item.latency_ms || 0} ms</span>
+                </td>
+                <td class="py-2.5 px-3">
+                    ${statusBadge}
+                </td>
+                <td class="py-2.5 px-3">
+                    <span class="text-slate-200">${item.username || 'sys'}</span>
+                    <span class="text-[9px] text-slate-500 block">${item.client_ip || ''}</span>
+                </td>
+                <td class="py-2.5 px-3 text-right text-slate-400 text-[10px]">
+                    ${item.created_at || ''}
+                </td>
+            </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function updateStats(stream) {
+        statDepth.innerText = stream.length;
+        let totalBits = 0;
+        let totalBytes = 0;
+        let totalLat = 0;
+        stream.forEach(s => {
+            totalBits += (s.payload_bits || 0);
+            totalBytes += (s.payload_bytes || 0);
+            totalLat += (s.latency_ms || 0);
+        });
+        statBits.innerText = totalBits.toLocaleString() + ' b';
+        statBytes.innerText = totalBytes.toLocaleString() + ' B';
+        statLatency.innerText = stream.length ? (totalLat / stream.length).toFixed(2) + ' ms' : '0.0 ms';
+    }
+
+    // Auto poll setup
+    function startPolling() {
+        if (!pollInterval) {
+            pollInterval = setInterval(fetchStream, 3000);
+        }
+    }
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    startPolling();
+
+    btnAuto.addEventListener('click', function() {
+        autoPollActive = !autoPollActive;
+        if (autoPollActive) {
+            startPolling();
+            autoLabel.innerText = 'Auto-Poll: 3s';
+            btnAuto.className = 'px-4 py-2.5 rounded-xl bg-slate-900 border border-emerald-500/50 text-emerald-300 transition-all flex items-center gap-1.5';
+        } else {
+            stopPolling();
+            autoLabel.innerText = 'Auto-Poll: PAUSED';
+            btnAuto.className = 'px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 transition-all flex items-center gap-1.5';
+        }
+    });
+
+    filterModule.addEventListener('change', fetchStream);
+    filterSeverity.addEventListener('change', fetchStream);
+
+    btnProbe.addEventListener('click', function() {
+        btnProbe.disabled = true;
+        btnProbe.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> Injecting...`;
+
+        fetch('/developer/api/telemetry-probe', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                btnProbe.disabled = false;
+                btnProbe.innerHTML = `<i class="fa-solid fa-bolt text-xs"></i> Inject Bit Probe`;
+                fetchStream();
+            })
+            .catch(err => {
+                btnProbe.disabled = false;
+                btnProbe.innerHTML = `<i class="fa-solid fa-bolt text-xs"></i> Inject Bit Probe`;
+                console.error('Probe err:', err);
+            });
+    });
+});
+</script>
+{% endblock %}

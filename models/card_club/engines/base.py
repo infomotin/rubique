@@ -70,7 +70,7 @@ class BaseCardGame:
 
     # -- settlement ----------------------------------------------------
     def is_over(self):
-        return bool(self.state.get("finish"))
+        return bool(self.state.get("over"))
 
     def finish_order(self):
         """Seat indexes ordered best-first. Used for winner-takes-all."""
@@ -102,9 +102,10 @@ class BaseCardGame:
     @staticmethod
     def _next(state, seat, step=1):
         n = len(state["players"])
+        done = set(state.get("finished_seats", [])) | set(state.get("finish", []))
         for i in range(1, n + 1):
             cand = (seat + step * i) % n
-            if cand not in state.get("finished_seats", []):
+            if cand not in done:
                 return cand
         return seat
 

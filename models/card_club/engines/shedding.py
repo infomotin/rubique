@@ -45,7 +45,7 @@ class Blitz(BaseCardGame):
             "slug": cls.slug, "players": list(players),
             "hands": {str(k): v for k, v in hands.items()},
             "draw": deck, "discard": [first], "dir": 1, "turn": 0,
-            "pending_draw": 0, "finish": [], "log": [], "over": False,
+            "pending_draw": 0, "passes": 0, "finish": [], "log": [], "over": False,
         }
 
     def _top(self):
@@ -95,6 +95,7 @@ class Blitz(BaseCardGame):
             hands.remove(card)
             s["discard"].append(card)
             s["pending_draw"] = 0 if card[1] == "8" else s["pending_draw"]
+            s["passes"] = 0
             self._say(s, seat, f"played {card}")
             if not hands:
                 self._finish(s, seat)
@@ -131,7 +132,13 @@ class Blitz(BaseCardGame):
         elif act == "pass":
             if s["pending_draw"] or s["draw"]:
                 raise IllegalMove("You must draw")
+            s["passes"] += 1
             s["turn"] = self._next(s, seat, s["dir"])
+            if s["passes"] >= len(s["players"]) * 2:
+                s["finish"] = sorted(range(len(s["players"])),
+                                     key=lambda i: len(s["hands"][str(i)]))
+                s["over"] = True
+                s["turn"] = -1
         else:
             raise IllegalMove("Unknown action")
 
@@ -165,7 +172,8 @@ class Cheat(BaseCardGame):
             "slug": cls.slug, "players": list(players),
             "hands": {str(k): v for k, v in hands.items()},
             "turn": 0, "rank_idx": 0, "pile": [], "declared": None,
-            "empty_pending": None, "finish": [], "log": [], "over": False,
+            "empty_pending": None, "turns": 0, "finish": [], "log": [],
+            "over": False,
         }
 
     @property
@@ -232,6 +240,15 @@ class Cheat(BaseCardGame):
             s["declared"] = decl
             s["rank_idx"] += 1
             self._say(s, seat, f"declared {n} x {decl['rank']}")
+            s["turns"] += 1
+            if s["turns"] > len(s["players"]) * 60:
+                order = sorted(range(len(s["players"])),
+                               key=lambda i: (len(s["hands"][str(i)]), i))
+                s["finish"] = order
+                s["over"] = True
+                s["turn"] = -1
+                self._say(s, None, "stalemate - fewest cards win")
+                return
             if not hands and s["empty_pending"] is None:
                 s["empty_pending"] = seat
             elif hands and s["empty_pending"] == seat:
@@ -480,7 +497,7 @@ class Palace(BaseCardGame):
         first = deck.pop() if deck else None
         return {
             "slug": cls.slug, "players": list(players), "zones": zones,
-            "discard": [first] if first else [], "turn": 0,
+            "discard": [first] if first else [], "turn": 0, "pickups": 0,
             "finish": [], "log": [], "over": False,
         }
 
@@ -569,7 +586,18 @@ class Palace(BaseCardGame):
                 raise IllegalMove("Nothing to pick up")
             z["hand"] += s["discard"]
             s["discard"] = []
+            s["pickups"] += 1
             self._say(s, seat, "picked up the pile")
+            if s["pickups"] >= len(s["players"]) * 4:
+                order = sorted(range(len(s["players"])),
+                               key=lambda i: (len(self._own(i)["hand"]) +
+                                              len(self._own(i)["up"]) +
+                                              len(self._own(i)["down"]), i))
+                s["finish"] = order
+                s["over"] = True
+                s["turn"] = -1
+                self._say(s, None, "stalemate - fewest palace cards win")
+                return
         else:
             raise IllegalMove("Unknown action")
         if not z["hand"] and not z["up"] and not z["down"]:
@@ -729,8 +757,6 @@ class RanterGoRound(BaseCardGame):
         rng.shuffle(deck)
         base = len(deck) // n
         hands = {i: [deck.pop() for _ in range(base)] for i in range(n)}
-        for extra in range(len(deck)):
-            hands[extra % n].append(deck.pop())
         leader = 0
         for i in range(n):
             if "D2" in hands[i]:
