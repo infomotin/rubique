@@ -26,14 +26,26 @@
                 </div>
             </div>
 
-            <!-- Quick Action Badges -->
+            <!-- Quick Action Badges & Module Links -->
             <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
-                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
-                    <i class="fa-solid fa-users text-amber-400 mr-1.5"></i> {{ stats.total_users }} Total Users
-                </span>
-                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
-                    <i class="fa-solid fa-cube text-cyan-400 mr-1.5"></i> {{ stats.total_solves }} Solves Logged
-                </span>
+                <a href="{{ url_for('super_admin.users_page') }}" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-all">
+                    <i class="fa-solid fa-users text-amber-400 mr-1"></i> Users ({{ stats.total_users }})
+                </a>
+                <a href="{{ url_for('super_admin.competitions_page') }}" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-all">
+                    <i class="fa-solid fa-trophy text-yellow-400 mr-1"></i> Tournaments ({{ stats.total_competitions }})
+                </a>
+                <a href="{{ url_for('super_admin.courses_page') }}" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-all">
+                    <i class="fa-solid fa-graduation-cap text-indigo-400 mr-1"></i> Courses ({{ stats.total_courses }})
+                </a>
+                <a href="{{ url_for('super_admin.coupons_page') }}" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-all">
+                    <i class="fa-solid fa-ticket text-emerald-400 mr-1"></i> Coupons ({{ stats.total_coupons }})
+                </a>
+                <a href="{{ url_for('super_admin.custom_cubes_page') }}" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-cyan-300 transition-all">
+                    <i class="fa-solid fa-shapes mr-1"></i> Custom Puzzles
+                </a>
+                <a href="{{ url_for('super_admin.logs_page') }}" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 transition-all">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> Logs
+                </a>
                 <a href="{{ url_for('visualizer.index') }}" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-all">
                     Launch Visualizer &rarr;
                 </a>

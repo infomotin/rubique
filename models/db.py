@@ -83,6 +83,12 @@ def init_database():
                     role VARCHAR(30) DEFAULT 'user',
                     bio VARCHAR(255) DEFAULT 'Group Theory Explorer & Speedcuber',
                     avatar_color VARCHAR(30) DEFAULT '#818cf8',
+                    wca_id VARCHAR(50) DEFAULT '',
+                    country VARCHAR(100) DEFAULT '',
+                    main_cube VARCHAR(100) DEFAULT 'GAN 12 MagLev 3x3',
+                    preferred_method VARCHAR(50) DEFAULT 'CFOP',
+                    pb_single VARCHAR(30) DEFAULT '',
+                    pb_ao5 VARCHAR(30) DEFAULT '',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
@@ -295,6 +301,18 @@ def init_database():
             cur.execute("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT 'Group Theory Explorer & Speedcuber'")
         if 'avatar_color' not in cols:
             cur.execute("ALTER TABLE users ADD COLUMN avatar_color TEXT DEFAULT '#818cf8'")
+        if 'wca_id' not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN wca_id TEXT DEFAULT ''")
+        if 'country' not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN country TEXT DEFAULT ''")
+        if 'main_cube' not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN main_cube TEXT DEFAULT 'GAN 12 MagLev 3x3'")
+        if 'preferred_method' not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN preferred_method TEXT DEFAULT 'CFOP'")
+        if 'pb_single' not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN pb_single TEXT DEFAULT ''")
+        if 'pb_ao5' not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN pb_ao5 TEXT DEFAULT ''")
 
         # 2. Solves Table
         cur.execute("""

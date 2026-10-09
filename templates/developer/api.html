@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}API Endpoints Sandbox - Developer HUD - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Cyber DevOps Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-indigo-600 p-0.5 shadow-2xl shadow-cyan-500/30 shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-cyan-400 text-2xl font-mono">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono mb-2 shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="font-bold">RESTFUL JSON API SPECIFICATION</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black font-outfit text-white tracking-tight">API Endpoints Sandbox &amp; Documentation</h1>
+                    <p class="text-xs sm:text-sm text-slate-400 font-mono mt-1">
+                        Interact with Kociemba solver endpoints, scramble generators, and custom puzzle payloads
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "developer/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: API Sandbox -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80 font-mono text-xs space-y-6">
+                
+                <!-- Endpoint 1 -->
+                <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-bold">POST</span>
+                        <span class="text-white font-bold">/api/solve</span>
+                    </div>
+                    <p class="text-slate-400">Solves any valid 3x3 Rubik's cube state or scramble string using Kociemba Two-Phase algorithm.</p>
+                    <div class="p-3 rounded-xl bg-black/80 text-cyan-300">
+                        Request Payload: {"scramble": "R U R' U' F' U2"}<br>
+                        Response: {"success": true, "solution": "U2 F U R U' R'", "moves": 6, "time_taken_ms": 0.35}
+                    </div>
+                </div>
+
+                <!-- Endpoint 2 -->
+                <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-950 text-blue-300 font-bold">GET</span>
+                        <span class="text-white font-bold">/api/scramble</span>
+                    </div>
+                    <p class="text-slate-400">Generates official WCA compliant pseudorandom scramble sequences.</p>
+                    <div class="p-3 rounded-xl bg-black/80 text-cyan-300">
+                        Response: {"success": true, "scramble": "D2 R F2 U' R2 B' L2 ...", "length": 20}
+                    </div>
+                </div>
+
+                <!-- Endpoint 3 -->
+                <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-purple-950 text-purple-300 font-bold">GET</span>
+                        <span class="text-white font-bold">/custom-cubes/api/&lt;id&gt;</span>
+                    </div>
+                    <p class="text-slate-400">Retrieves full 10-shape archetype data, color schemes, and sticker states for client studios.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

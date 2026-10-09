@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Custom Cube Shape Geometries Engine - Developer HUD - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Cyber DevOps Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-indigo-600 p-0.5 shadow-2xl shadow-cyan-500/30 shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-cyan-400 text-2xl font-mono">
+                        <i class="fa-solid fa-shapes"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono mb-2 shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="font-bold">PARTICULA 10 SHAPES &bull; KINEMATIC GEOMETRY ENGINE</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black font-outfit text-white tracking-tight">Cube Geometries &amp; Cutting Planes Debugger</h1>
+                    <p class="text-xs sm:text-sm text-slate-400 font-mono mt-1">
+                        Technical specifications, piece permutations, face counts, and Cayley diameters for all 10 supported puzzle archetypes
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <a href="{{ url_for('custom_cubes.builder') }}" class="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-cube"></i> Open Studio
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "developer/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: 10 Shapes Debugger -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
+                {% for sid, s in supported_shapes.items() %}
+                    <div class="glass-card p-6 rounded-3xl border border-slate-800 hover:border-cyan-500/40 transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 font-bold border border-cyan-500/40">
+                                    {{ s.faces }} Faces &bull; {{ s.pieces }}
+                                </span>
+                                <i class="{{ s.icon }} text-xl text-cyan-400"></i>
+                            </div>
+
+                            <h3 class="font-bold text-white text-base font-outfit mb-1">{{ s.name }}</h3>
+                            <p class="text-slate-400 text-xs mb-3 font-sans">{{ s.description }}</p>
+
+                            <div class="p-3 rounded-xl bg-black/80 border border-slate-800/80 space-y-1 text-[11px] mb-3">
+                                <div class="text-slate-500 uppercase text-[10px] font-bold">Cutting Plane &amp; Group Orbit:</div>
+                                <div class="text-slate-300">Default Palette: <span class="text-cyan-300 font-bold">{{ s.default_palette }}</span></div>
+                                <div class="text-slate-300">Internal Axle: <span class="text-amber-300">{{ 'Spherical Core' if '3x3' in sid or 'mini' in sid else 'Deep-Cut / Polyhedral' }}</span></div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+                            <span class="text-[11px] text-slate-500">ID: {{ sid }}</span>
+                            <a href="{{ url_for('custom_cubes.builder', shape=sid) }}" class="text-cyan-400 hover:underline font-bold">Launch Studio &rarr;</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

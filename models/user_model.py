@@ -39,10 +39,10 @@ class UserModel:
     @staticmethod
     def find_by_id(user_id):
         """
-        User ID diye user data fetch kore.
+        User ID diye user data fetch kore including all personal info.
         """
-        sql_mysql = "SELECT id, username, email, bio, avatar_color, created_at FROM users WHERE id = %s"
-        sql_sqlite = "SELECT id, username, email, bio, avatar_color, created_at FROM users WHERE id = ?"
+        sql_mysql = "SELECT * FROM users WHERE id = %s"
+        sql_sqlite = "SELECT * FROM users WHERE id = ?"
         return query_one(sql_mysql, sql_sqlite, (user_id,))
 
     @staticmethod
@@ -53,10 +53,21 @@ class UserModel:
         return check_password_hash(stored_hash, password)
 
     @staticmethod
-    def update_profile(user_id, bio, avatar_color):
+    def update_profile(user_id, bio, avatar_color, wca_id='', country='', main_cube='', preferred_method='', pb_single='', pb_ao5=''):
         """
-        User er bio ebong custom avatar accent color update kore.
+        User er bio, avatar color, ebong personal speedcubing credentials update kore.
         """
-        sql_mysql = "UPDATE users SET bio = %s, avatar_color = %s WHERE id = %s"
-        sql_sqlite = "UPDATE users SET bio = ?, avatar_color = ? WHERE id = ?"
-        return execute_update(sql_mysql, sql_sqlite, (bio, avatar_color, user_id))
+        sql_mysql = """
+            UPDATE users 
+            SET bio = %s, avatar_color = %s, wca_id = %s, country = %s, main_cube = %s, preferred_method = %s, pb_single = %s, pb_ao5 = %s
+            WHERE id = %s
+        """
+        sql_sqlite = """
+            UPDATE users 
+            SET bio = ?, avatar_color = ?, wca_id = ?, country = ?, main_cube = ?, preferred_method = ?, pb_single = ?, pb_ao5 = ?
+            WHERE id = ?
+        """
+        return execute_update(
+            sql_mysql, sql_sqlite,
+            (bio, avatar_color, wca_id, country, main_cube, preferred_method, pb_single, pb_ao5, user_id)
+        )

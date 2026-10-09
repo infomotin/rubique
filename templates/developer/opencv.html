@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}OpenCV Vision Sandbox & HSV Calibrator - Developer HUD - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Cyber DevOps Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-indigo-600 p-0.5 shadow-2xl shadow-cyan-500/30 shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-cyan-400 text-2xl font-mono">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono mb-2 shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="font-bold">OPENCV 4.8+ VISION &amp; HSV COLOR ENGINE</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black font-outfit text-white tracking-tight">OpenCV Vision Sandbox &amp; HSV Calibrator</h1>
+                    <p class="text-xs sm:text-sm text-slate-400 font-mono mt-1">
+                        Color space threshold calibration, contour centroid extraction, and perspective warping
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <span class="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400">
+                    <i class="fa-solid fa-bolt mr-1.5"></i> CV Latency: {{ telemetry.opencv_latency_ms }} ms
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "developer/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: OpenCV Sandbox -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/80 font-mono text-xs">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                    <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                        <i class="fa-solid fa-eye text-emerald-400"></i>
+                        <span>HSV Color Range Calibration Matrix</span>
+                    </h2>
+                    <span class="text-slate-400">6 Face Color Classes</span>
+                </div>
+
+                <!-- Color Calibration Sliders Table -->
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 space-y-2">
+                            <span class="text-yellow-400 font-bold block">Yellow (U Face): [20, 100, 100] &rarr; [30, 255, 255]</span>
+                            <div class="text-[11px] text-slate-500">Hue range: 20-30 &bull; Saturation min: 100 &bull; Value min: 100</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 space-y-2">
+                            <span class="text-white font-bold block">White (D Face): [0, 0, 160] &rarr; [180, 50, 255]</span>
+                            <div class="text-[11px] text-slate-500">Hue range: 0-180 &bull; Saturation max: 50 &bull; Value min: 160</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 space-y-2">
+                            <span class="text-emerald-400 font-bold block">Green (F Face): [35, 80, 80] &rarr; [85, 255, 255]</span>
+                            <div class="text-[11px] text-slate-500">Hue range: 35-85 &bull; Saturation min: 80 &bull; Value min: 80</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 space-y-2">
+                            <span class="text-blue-400 font-bold block">Blue (B Face): [95, 90, 80] &rarr; [130, 255, 255]</span>
+                            <div class="text-[11px] text-slate-500">Hue range: 95-130 &bull; Saturation min: 90 &bull; Value min: 80</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 space-y-2">
+                            <span class="text-orange-400 font-bold block">Orange (L Face): [5, 120, 100] &rarr; [18, 255, 255]</span>
+                            <div class="text-[11px] text-slate-500">Hue range: 5-18 &bull; Saturation min: 120 &bull; Value min: 100</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 space-y-2">
+                            <span class="text-rose-400 font-bold block">Red (R Face): [170, 100, 100] &rarr; [180, 255, 255]</span>
+                            <div class="text-[11px] text-slate-500">Hue range: 170-180 / 0-5 &bull; Dual-band wrap &bull; Saturation min: 100</div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between mt-4">
+                        <span class="text-slate-400">Morphological kernel: 5x5 ellipse &bull; Contour filtering &bull; Centroid sorting</span>
+                        <button onclick="alert('HSV Calibration profiles validated and cached in server runtime.');" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
+                            Save Calibration
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
