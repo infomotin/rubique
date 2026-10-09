@@ -275,13 +275,18 @@ def init_database():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
 
-            # 16. Chess Games Table (GoChess Smart Board)
+            # 16. Chess Games Table (GoChess Smart Board with 1v1, Clan vs Clan & Clan vs Public)
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS chess_games (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     user_id INT NOT NULL,
+                    white_user_id INT NULL,
+                    black_user_id INT NULL,
+                    white_group_id INT NULL,
+                    black_group_id INT NULL,
                     title VARCHAR(150) DEFAULT 'GoChess Smart Session',
                     game_mode VARCHAR(30) DEFAULT 'ai',
+                    match_type VARCHAR(30) DEFAULT 'ai',
                     ai_level INT DEFAULT 2,
                     board_theme VARCHAR(50) DEFAULT 'obsidian',
                     fen VARCHAR(200) DEFAULT 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -289,10 +294,26 @@ def init_database():
                     moves_count INT DEFAULT 0,
                     status VARCHAR(30) DEFAULT 'active',
                     winner VARCHAR(30) NULL,
+                    is_public INT DEFAULT 1,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+
+            # Defensive migration: multiplayer columns for pre-existing chess_games tables
+            for _col_sql in (
+                "white_user_id INT NULL",
+                "black_user_id INT NULL",
+                "white_group_id INT NULL",
+                "black_group_id INT NULL",
+                "match_type VARCHAR(30) DEFAULT 'ai'",
+                "is_public INT DEFAULT 1",
+            ):
+                try:
+                    cur.execute(f"ALTER TABLE chess_games ADD COLUMN {_col_sql}")
+                except Exception:
+                    pass
+
             # 17. Chess Clan Challenges Table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS chess_clan_challenges (
@@ -305,6 +326,53 @@ def init_database():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (game_id) REFERENCES chess_games(id) ON DELETE CASCADE,
                     FOREIGN KEY (group_id) REFERENCES chat_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 18. Chess Problems Table (Author by Super Admin, Solved by Subscribers)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chess_problems (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    author_id INT NOT NULL,
+                    title VARCHAR(150) NOT NULL,
+                    difficulty VARCHAR(50) DEFAULT 'Grandmaster',
+                    fen VARCHAR(200) NOT NULL,
+                    solution_moves TEXT NOT NULL,
+                    hint TEXT,
+                    xp_reward INT DEFAULT 100,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 19. Chess Problem Submissions Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chess_problem_submissions (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    problem_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    submitted_moves TEXT NOT NULL,
+                    is_solved INT DEFAULT 0,
+                    xp_earned INT DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (problem_id) REFERENCES chess_problems(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 20. Chess Multiplayer Team Moves (Clan vs Clan & Group vs Public Multi-Player)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chess_team_moves (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    game_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    team VARCHAR(20) DEFAULT 'white',
+                    move_uci VARCHAR(10) NOT NULL,
+                    move_san VARCHAR(15),
+                    comment VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (game_id) REFERENCES chess_games(id) ON DELETE CASCADE,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
@@ -544,13 +612,18 @@ def init_database():
             )
         """)
 
-        # 16. Chess Games Table (GoChess Smart Board)
+        # 16. Chess Games Table (GoChess Smart Board with 1v1, Clan vs Clan & Clan vs Public)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS chess_games (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
+                white_user_id INTEGER,
+                black_user_id INTEGER,
+                white_group_id INTEGER,
+                black_group_id INTEGER,
                 title TEXT DEFAULT 'GoChess Smart Session',
                 game_mode TEXT DEFAULT 'ai',
+                match_type TEXT DEFAULT 'ai',
                 ai_level INTEGER DEFAULT 2,
                 board_theme TEXT DEFAULT 'obsidian',
                 fen TEXT DEFAULT 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -558,10 +631,28 @@ def init_database():
                 moves_count INTEGER DEFAULT 0,
                 status TEXT DEFAULT 'active',
                 winner TEXT,
+                is_public INTEGER DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
+
+        # Defensive migration: multiplayer columns for pre-existing chess_games tables
+        cur.execute("PRAGMA table_info(chess_games)")
+        _cg_cols = {row[1] for row in cur.fetchall()}
+        for _col_name, _col_sql in (
+            ("white_user_id", "INTEGER"),
+            ("black_user_id", "INTEGER"),
+            ("white_group_id", "INTEGER"),
+            ("black_group_id", "INTEGER"),
+            ("match_type", "TEXT DEFAULT 'ai'"),
+            ("is_public", "INTEGER DEFAULT 1"),
+        ):
+            if _col_name not in _cg_cols:
+                try:
+                    cur.execute(f"ALTER TABLE chess_games ADD COLUMN {_col_name} {_col_sql}")
+                except Exception:
+                    pass
 
         # 17. Chess Clan Challenges Table
         cur.execute("""
@@ -575,6 +666,53 @@ def init_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (game_id) REFERENCES chess_games(id),
                 FOREIGN KEY (group_id) REFERENCES chat_groups(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 18. Chess Problems Table (Author by Super Admin, Solved by Subscribers)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chess_problems (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                author_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                difficulty TEXT DEFAULT 'Grandmaster',
+                fen TEXT NOT NULL,
+                solution_moves TEXT NOT NULL,
+                hint TEXT,
+                xp_reward INTEGER DEFAULT 100,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (author_id) REFERENCES users(id)
+            )
+        """)
+
+        # 19. Chess Problem Submissions Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chess_problem_submissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                problem_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                submitted_moves TEXT NOT NULL,
+                is_solved INTEGER DEFAULT 0,
+                xp_earned INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (problem_id) REFERENCES chess_problems(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 20. Chess Multiplayer Team Moves (Clan vs Clan & Group vs Public Multi-Player)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chess_team_moves (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                team TEXT DEFAULT 'white',
+                move_uci TEXT NOT NULL,
+                move_san TEXT,
+                comment TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (game_id) REFERENCES chess_games(id),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
@@ -776,6 +914,60 @@ def seed_demo_data():
                    VALUES (?, ?, ?, ?, 'open')""",
                 (cube1_id, grp['id'], uid, "Clan Challenge: Can anyone find a solution algorithm under 22 moves for this Cyber Neon cube?")
             )
+
+    # 18. Seed Very Hard Grandmaster Chess Problems (Posted by Super Admin)
+    prob = query_one("SELECT id FROM chess_problems LIMIT 1", "SELECT id FROM chess_problems LIMIT 1")
+    if not prob:
+        admin_user = query_one("SELECT id FROM users WHERE role = 'super_admin'", "SELECT id FROM users WHERE role = 'super_admin'")
+        admin_id = admin_user['id'] if admin_user else 1
+
+        execute_insert(
+            """INSERT INTO chess_problems (author_id, title, difficulty, fen, solution_moves, hint, xp_reward)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO chess_problems (author_id, title, difficulty, fen, solution_moves, hint, xp_reward)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                admin_id,
+                "The Greek Gift Sacrifice (Bxh7+ Breakthrough)",
+                "Grandmaster (2400 ELO)",
+                "r1bq1rk1/ppp2ppp/2n5/3pP3/1b1P4/2NB1N2/PP3PPP/R1BQK2R w KQ - 0 10",
+                "d3h7,g8h7,f3g5,h7g8,d1h5",
+                "Sacrifice the bishop on h7 with check to rip open the opponent's king safety, then follow up with Ng5 and Qh5.",
+                250
+            )
+        )
+
+        execute_insert(
+            """INSERT INTO chess_problems (author_id, title, difficulty, fen, solution_moves, hint, xp_reward)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO chess_problems (author_id, title, difficulty, fen, solution_moves, hint, xp_reward)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                admin_id,
+                "Morphy's Parisian Queen Deflection",
+                "Very Hard (2200 ELO)",
+                "rn3rk1/pbpp1ppp/1p6/8/2B1q3/5N2/PPP2PPP/R2QR1K1 w - - 0 13",
+                "c4f7,f8f7,e1e4,b7e4",
+                "Deflect the defending Black rook from the back rank by sacrificing on f7, completely exposing the unprotected black Queen on e4.",
+                200
+            )
+        )
+
+        execute_insert(
+            """INSERT INTO chess_problems (author_id, title, difficulty, fen, solution_moves, hint, xp_reward)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO chess_problems (author_id, title, difficulty, fen, solution_moves, hint, xp_reward)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                admin_id,
+                "Kasparov's Immortal Queen Deflection to Mate",
+                "Extreme Tactical (2600 ELO)",
+                "r1b2rk1/pp3ppp/2n1p3/2qp4/8/2B1PN2/PPP2PPP/R2QKB1R w KQ - 0 1",
+                "c3g7,g8g7,d1d4",
+                "Sacrifice the dark-squared bishop to destroy the pawn shield and setup a devastating double-attack fork.",
+                350
+            )
+        )
 
 def query_one(sql_mysql, sql_sqlite, params=()):
     """Single row fetch helper"""

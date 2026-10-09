@@ -1,0 +1,1104 @@
+{% extends "base.html" %}
+
+{% block title %}GoChess 3D Smart Robotic Board - CubePermutation AI{% endblock %}
+
+{% block extra_head %}
+<!-- GoChess Smart Board Studio CSS & Theme Styles -->
+<style>
+    .gochess-canvas-container {
+        position: relative;
+        width: 100%;
+        height: 620px;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+    .eval-bar-track {
+        width: 8px;
+        height: 100%;
+        background: #1e293b;
+        border-radius: 9999px;
+        overflow: hidden;
+        position: relative;
+    }
+    .eval-bar-fill {
+        width: 100%;
+        background: linear-gradient(to top, #ffffff, #e2e8f0);
+        transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .led-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.65rem;
+        border-radius: 9999px;
+        font-family: monospace;
+        font-size: 0.7rem;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        background: rgba(6, 182, 212, 0.1);
+        color: #67e8f9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Studio Header (Particula GoChess Pattern) -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-600 p-0.5 shadow-2xl shadow-amber-500/30 flex-shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-amber-400 text-2xl">
+                        <i class="fa-solid fa-chess-knight"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                        <span class="led-pill">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                            <span>XR DUAL-MOTOR ROBOTIC ARRAY: ONLINE</span>
+                        </span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-slate-300">
+                            PARTICULA GOCHESS SPEC
+                        </span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight flex items-center gap-3">
+                        <span>GoChess 3D Smart Board</span>
+                        <span class="text-xs px-2.5 py-1 rounded-xl bg-amber-950/80 border border-amber-500/40 text-amber-300 font-mono">
+                            PRO STUDIO
+                        </span>
+                    </h1>
+                    <p class="text-xs text-slate-400 font-mono">
+                        Autonomous robotic piece gliding, multi-zone RGB LED coaching, and multiplayer clan war arena.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Header Quick Stats & Sound Switch -->
+            <div class="flex flex-wrap items-center gap-3 font-mono text-xs">
+                <button id="sound-toggle-btn" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 transition-all flex items-center gap-2">
+                    <i id="sound-icon" class="fa-solid fa-volume-high text-cyan-400"></i>
+                    <span id="sound-label">Audio: ON</span>
+                </button>
+                <button id="reset-game-btn" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-rotate text-amber-400"></i>
+                    <span>New Game</span>
+                </button>
+                {% if user and user.role == 'super_admin' %}
+                <button id="admin-post-problem-btn" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition-all shadow-lg shadow-amber-600/30 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>Post Hard Problem</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Layout with Sidebar -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <!-- Left Column: User Navigation Stages -->
+        <div class="lg:col-span-1">
+            {% include "user/sidebar.html" with context %}
+        </div>
+
+        <!-- Right 3 Columns: 3D Board Studio & Mode Tabs -->
+        <div class="lg:col-span-3 space-y-6">
+
+            <!-- Mode Tabs Header -->
+            <div class="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800 backdrop-blur-xl font-mono text-xs">
+                <button class="mode-tab-btn active px-4 py-2 rounded-xl bg-amber-600 text-white font-bold transition-all flex items-center gap-2" data-tab="studio">
+                    <i class="fa-solid fa-chess-board text-sm"></i>
+                    <span>3D Smart Studio</span>
+                </button>
+                <button class="mode-tab-btn px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2" data-tab="problems">
+                    <i class="fa-solid fa-fire text-amber-400"></i>
+                    <span>Grandmaster Problems ({{ problems|length }})</span>
+                </button>
+                <button class="mode-tab-btn px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2" data-tab="multiplayer">
+                    <i class="fa-solid fa-users-viewfinder text-cyan-400"></i>
+                    <span>Clan &amp; Public Arena</span>
+                </button>
+                <button class="mode-tab-btn px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2" data-tab="demos">
+                    <i class="fa-solid fa-robot text-purple-400"></i>
+                    <span>Master Replays</span>
+                </button>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- TAB 1: 3D SMART CHESS STUDIO -->
+            <!-- ============================================================= -->
+            <div id="tab-studio" class="tab-pane space-y-6">
+                
+                <!-- 3D Canvas Card -->
+                <div class="glass-card p-4 sm:p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-2xl shadow-2xl">
+                    
+                    <!-- Controls Toolbar Above Canvas -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-800/80 text-xs font-mono">
+                        
+                        <!-- Theme Presets -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400">Surface:</span>
+                            <div class="inline-flex rounded-xl bg-slate-900 p-1 border border-slate-800">
+                                <button class="theme-btn px-2.5 py-1 rounded-lg text-slate-300 hover:text-white active bg-slate-800 font-bold" data-theme="obsidian">Obsidian</button>
+                                <button class="theme-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white" data-theme="walnut">Walnut</button>
+                                <button class="theme-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white" data-theme="cyber">Cyber Neon</button>
+                            </div>
+                        </div>
+
+                        <!-- Camera Perspective -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400">View:</span>
+                            <div class="inline-flex rounded-xl bg-slate-900 p-1 border border-slate-800">
+                                <button class="cam-btn px-2.5 py-1 rounded-lg text-slate-300 active bg-slate-800" data-view="white">White</button>
+                                <button class="cam-btn px-2.5 py-1 rounded-lg text-slate-400" data-view="black">Black</button>
+                                <button class="cam-btn px-2.5 py-1 rounded-lg text-slate-400" data-view="top">2D Top</button>
+                            </div>
+                        </div>
+
+                        <!-- RGB LED Coaching Mode -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400">LED Coach:</span>
+                            <select id="led-mode-select" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-cyan-300 focus:outline-none">
+                                <option value="all">Full Coaching (RGB Hints &amp; Dots)</option>
+                                <option value="minimal">Minimal (Legal Moves Only)</option>
+                                <option value="off">Off (Tournament Pure)</option>
+                            </select>
+                        </div>
+
+                        <!-- AI Level Selector -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400">AI Opponent:</span>
+                            <select id="ai-level-select" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-amber-300 focus:outline-none">
+                                <option value="1">Novice (800 ELO)</option>
+                                <option value="2" selected>Club Player (1400 ELO)</option>
+                                <option value="3">Master (2000 ELO)</option>
+                                <option value="4">Grandmaster (2600 ELO)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 3D Canvas with Real-Time Advantage Eval Bar -->
+                    <div class="flex gap-4">
+                        
+                        <!-- Dynamic Evaluation Advantage Bar -->
+                        <div class="flex flex-col items-center gap-1 w-6 py-2">
+                            <span class="text-[9px] font-mono text-slate-400">+</span>
+                            <div class="eval-bar-track flex-grow">
+                                <div id="eval-bar-fill" class="eval-bar-fill" style="height: 50%;"></div>
+                            </div>
+                            <span class="text-[9px] font-mono text-slate-400">-</span>
+                            <div id="eval-score-label" class="text-[10px] font-mono font-bold text-slate-300">0.0</div>
+                        </div>
+
+                        <!-- Three.js Canvas Container -->
+                        <div class="flex-grow">
+                            <div id="gochess-canvas" class="gochess-canvas-container"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Live Status & Coach Insight Bar -->
+                    <div class="mt-4 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-400">Status:</span>
+                            <span id="game-status-label" class="font-bold text-cyan-400">White to move</span>
+                            <span id="check-alert-label" class="hidden text-rose-400 font-bold animate-pulse">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i> IN CHECK!
+                            </span>
+                        </div>
+
+                        <!-- AI Coach Hint -->
+                        <div class="flex items-center gap-2">
+                            <button id="get-hint-btn" class="px-3 py-1.5 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 hover:bg-amber-900/60 transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                                <span>Coach Hint</span>
+                            </button>
+                            <span id="hint-display" class="text-slate-400 italic">Click Coach Hint for Grandmaster suggestion</span>
+                        </div>
+
+                        <!-- Dispatch Clan Challenge -->
+                        <button id="open-clan-challenge-btn" class="px-3 py-1.5 rounded-xl bg-indigo-950/60 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-900/60 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-share-nodes text-indigo-400"></i>
+                            <span>Challenge Clan</span>
+                        </button>
+                    </div>
+
+                    <!-- Move History PGN Log -->
+                    <div class="mt-4 p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs font-mono">
+                        <div class="text-slate-400 mb-1 flex items-center justify-between">
+                            <span>MOVE LOG &bull; SAN NOTATION</span>
+                            <span id="moves-count-display" class="text-cyan-400">0 moves</span>
+                        </div>
+                        <div id="move-history-log" class="text-slate-300 flex flex-wrap gap-2 max-h-16 overflow-y-auto scrollbar-thin">
+                            <span class="text-slate-500 italic">Game ready. Play White to begin.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- TAB 2: GRANDMASTER PROBLEMS (POSTED BY SUPER ADMIN) -->
+            <!-- ============================================================= -->
+            <div id="tab-problems" class="tab-pane hidden space-y-6">
+                
+                <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-[11px] font-mono mb-1">
+                                <i class="fa-solid fa-crown text-amber-400"></i>
+                                <span>OFFICIAL SUPER ADMIN STUDIES</span>
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-bold font-outfit text-white">Very Hard Grandmaster Chess Problems</h2>
+                            <p class="text-xs text-slate-400 font-mono">Subscriber Challenge Arena: Study the master board, play your sequence, and submit your solution.</p>
+                        </div>
+                        {% if user and user.role == 'super_admin' %}
+                        <button class="open-post-problem-modal px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition-all shadow-md text-xs font-mono">
+                            <i class="fa-solid fa-plus-circle mr-1"></i> Post New Problem
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Active Problem Solver Box (When a problem is selected) -->
+                    <div id="active-problem-card" class="hidden p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 to-slate-900 border border-amber-500/40 mb-6">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-3">
+                            <div>
+                                <span id="prob-diff-badge" class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-mono text-[10px] uppercase font-bold">Grandmaster</span>
+                                <h3 id="prob-title" class="text-lg font-bold text-white mt-1">The Greek Gift Sacrifice</h3>
+                                <p id="prob-hint" class="text-xs text-slate-400 font-mono mt-1">Hint: Sacrifice the bishop on h7 to shatter the king defense.</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs font-mono text-amber-400 font-bold">+<span id="prob-reward">250</span> XP Reward</div>
+                                <span class="text-[10px] font-mono text-slate-400">Loaded onto 3D Studio</span>
+                            </div>
+                        </div>
+
+                        <!-- Solver Controls -->
+                        <div class="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-400">Your Moves:</span>
+                                <input id="subscriber-moves-input" type="text" placeholder="e.g. d3h7 or play on 3D board" class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-white w-56 focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="submit-problem-solution-btn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg shadow-emerald-600/30">
+                                    <i class="fa-solid fa-check-circle mr-1"></i> Submit Solution
+                                </button>
+                                <button id="cancel-problem-btn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                        <div id="solution-feedback-alert" class="hidden mt-3 p-3 rounded-xl text-xs font-mono"></div>
+                    </div>
+
+                    <!-- Problems Grid List -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for prob in problems %}
+                        <div class="glass-card p-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 hover:border-amber-500/50 transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-950 border border-amber-500/40 text-amber-300 font-bold">
+                                        {{ prob.difficulty }}
+                                    </span>
+                                    <span class="text-[10px] font-mono text-emerald-400 font-bold">
+                                        +{{ prob.xp_reward }} XP
+                                    </span>
+                                </div>
+                                <h3 class="text-base font-bold text-white mb-1.5">{{ prob.title }}</h3>
+                                <p class="text-xs text-slate-400 font-mono line-clamp-2 mb-3">{{ prob.hint or 'High-level tactical study authored by Super Admin.' }}</p>
+                            </div>
+                            <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                                <span class="text-slate-500">
+                                    <i class="fa-solid fa-trophy text-amber-400 mr-1"></i> {{ prob.solvers_count }} solved
+                                </span>
+                                <button class="load-problem-btn px-3 py-1.5 rounded-xl bg-amber-600/20 border border-amber-500/40 text-amber-300 hover:bg-amber-600 hover:text-white transition-all font-bold"
+                                        data-id="{{ prob.id }}"
+                                        data-title="{{ prob.title }}"
+                                        data-diff="{{ prob.difficulty }}"
+                                        data-fen="{{ prob.fen }}"
+                                        data-hint="{{ prob.hint }}"
+                                        data-reward="{{ prob.xp_reward }}">
+                                    Try Solve &rarr;
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- TAB 3: MULTIPLAYER ARENA (1v1, CLAN VS CLAN, CLAN VS PUBLIC) -->
+            <!-- ============================================================= -->
+            <div id="tab-multiplayer" class="tab-pane hidden space-y-6">
+                
+                <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-[11px] font-mono mb-1">
+                                <i class="fa-solid fa-users text-cyan-400"></i>
+                                <span>MULTIPLAYER &bull; CLAN TO CLAN &bull; CLAN TO PUBLIC</span>
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-bold font-outfit text-white">Cyber Chess Matchmaking Arena</h2>
+                            <p class="text-xs text-slate-400 font-mono">Play peer-to-peer 1v1, rally your clan against rival clans, or battle Clan vs The World!</p>
+                        </div>
+                        <button id="create-match-modal-btn" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-md text-xs font-mono">
+                            <i class="fa-solid fa-plus-circle mr-1"></i> Create Match
+                        </button>
+                    </div>
+
+                    <!-- Multiplayer Matches Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for match in multiplayer_matches %}
+                        <div class="glass-card p-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 hover:border-cyan-500/50 transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full 
+                                        {% if match.match_type == 'group_vs_group' %}bg-purple-950 text-purple-300 border border-purple-500/40
+                                        {% elif match.match_type == 'group_vs_public' %}bg-rose-950 text-rose-300 border border-rose-500/40
+                                        {% else %}bg-cyan-950 text-cyan-300 border border-cyan-500/40{% endif %} font-bold uppercase">
+                                        {% if match.match_type == 'group_vs_group' %}Clan vs Clan
+                                        {% elif match.match_type == 'group_vs_public' %}Clan vs Public
+                                        {% else %}1v1 Peer{% endif %}
+                                    </span>
+                                    <span class="text-[10px] font-mono text-slate-400">
+                                        {{ match.status|capitalize }}
+                                    </span>
+                                </div>
+                                <h3 class="text-base font-bold text-white mb-1.5">{{ match.title }}</h3>
+                                <p class="text-xs text-slate-400 font-mono mb-3">
+                                    Creator: <span class="text-cyan-300">{{ match.creator_name or 'Speedcuber' }}</span> &bull; Moves: {{ match.moves_count }}
+                                </p>
+                            </div>
+                            <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                                <span class="text-slate-500">
+                                    <i class="fa-solid fa-gamepad text-cyan-400 mr-1"></i> {{ match.team_moves_count }} actions
+                                </span>
+                                <button class="join-match-btn px-3 py-1.5 rounded-xl bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-600 hover:text-white transition-all font-bold"
+                                        data-id="{{ match.id }}"
+                                        data-fen="{{ match.fen }}"
+                                        data-title="{{ match.title }}">
+                                    Enter Battle &rarr;
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-span-full p-8 text-center rounded-2xl bg-slate-900/40 border border-slate-800 font-mono text-xs text-slate-400">
+                            No active multiplayer battles right now. Click "Create Match" to challenge a clan or host a Clan vs Public game!
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- TAB 4: AUTONOMOUS MASTER REPLAYS (GOCHESS ROBOTIC PLAYBACK) -->
+            <!-- ============================================================= -->
+            <div id="tab-demos" class="tab-pane hidden space-y-6">
+                
+                <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+                    <div class="mb-6">
+                        <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 text-[11px] font-mono mb-1">
+                            <i class="fa-solid fa-robot text-purple-400"></i>
+                            <span>XR SELF-MOVEMENT MOTOR DEMONSTRATIONS</span>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-bold font-outfit text-white">Historic Grandmaster Masterpieces</h2>
+                        <p class="text-xs text-slate-400 font-mono">Watch the GoChess dual-motor robotic mechanism glide physical pieces across the board autonomously.</p>
+                    </div>
+
+                    <!-- Master Games Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {% for game in famous_games %}
+                        <div class="glass-card p-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 hover:border-purple-500/50 transition-all flex flex-col justify-between">
+                            <div>
+                                <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-950 border border-purple-500/40 text-purple-300 font-bold">
+                                    {{ game.event }}
+                                </span>
+                                <h3 class="text-base font-bold text-white mt-2 mb-1">{{ game.title }}</h3>
+                                <p class="text-xs text-slate-300 font-mono mb-2">
+                                    <span class="text-white font-bold">{{ game.white }}</span> vs <span class="text-slate-400">{{ game.black }}</span>
+                                </p>
+                                <p class="text-xs text-slate-400 font-mono line-clamp-3 mb-4">{{ game.description }}</p>
+                            </div>
+                            <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
+                                <span class="text-slate-500">Autonomous</span>
+                                <button class="start-demo-btn px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all shadow-md shadow-purple-600/30 flex items-center gap-1.5"
+                                        data-game-id="{{ game.id }}">
+                                    <i class="fa-solid fa-play text-xs"></i>
+                                    <span>Robotic Replay</span>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: SUPER ADMIN POST GRANDMASTER PROBLEM -->
+<!-- ========================================================================= -->
+{% if user and user.role == 'super_admin' %}
+<div id="post-problem-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-card max-w-xl w-full p-6 sm:p-8 rounded-3xl border border-amber-500/40 bg-slate-950 shadow-2xl relative">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-crown text-amber-400"></i>
+                <span>Author Grandmaster Chess Problem</span>
+            </h3>
+            <button class="close-modal-btn text-slate-400 hover:text-white text-lg">&times;</button>
+        </div>
+
+        <form id="post-problem-form" class="space-y-4 font-mono text-xs">
+            <div>
+                <label class="block text-slate-300 mb-1">Problem Title</label>
+                <input id="problem-title-input" type="text" required placeholder="e.g. Kasparov's Immortal Rook Sacrifice" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-amber-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-slate-300 mb-1">Difficulty</label>
+                    <select id="problem-diff-select" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 focus:outline-none">
+                        <option value="Very Hard (2200 ELO)">Very Hard (2200 ELO)</option>
+                        <option value="Grandmaster (2400 ELO)" selected>Grandmaster (2400 ELO)</option>
+                        <option value="Extreme Tactical (2600 ELO)">Extreme Tactical (2600 ELO)</option>
+                        <option value="World Championship (2800 ELO)">World Championship (2800 ELO)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">XP Reward</label>
+                    <input id="problem-xp-input" type="number" value="250" min="50" max="1000" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-emerald-400 focus:outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-slate-300 mb-1">Board FEN Setup</label>
+                <input id="problem-fen-input" type="text" required placeholder="r1bq1rk1/ppp2ppp/2n5/3pP3/1b1P4/2NB1N2/PP3PPP/R1BQK2R w KQ - 0 10" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-slate-300 mb-1">Solution Moves (Comma separated UCI or SAN)</label>
+                <input id="problem-solution-input" type="text" required placeholder="e.g. d3h7,g8h7,f3g5,h7g8,d1h5" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-slate-300 mb-1">Hint / Strategic Clue</label>
+                <textarea id="problem-hint-input" rows="2" placeholder="e.g. Deflect the dark bishop with tempo to breach the king fortress." class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button type="button" class="close-modal-btn px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition-all shadow-lg shadow-amber-600/30">Publish Problem</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- ========================================================================= -->
+<!-- MODAL: CREATE MULTIPLAYER BATTLE (1v1, CLAN VS CLAN, CLAN VS PUBLIC) -->
+<!-- ========================================================================= -->
+<div id="create-match-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-cyan-500/40 bg-slate-950 shadow-2xl relative font-mono text-xs">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-swords text-cyan-400"></i>
+                <span>Initiate Multiplayer Chess Battle</span>
+            </h3>
+            <button class="close-match-modal-btn text-slate-400 hover:text-white text-lg">&times;</button>
+        </div>
+
+        <form id="create-match-form" class="space-y-4">
+            <div>
+                <label class="block text-slate-300 mb-1">Match Title</label>
+                <input id="match-title-input" type="text" required value="Cyber Arena Battle" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-cyan-500">
+            </div>
+
+            <div>
+                <label class="block text-slate-300 mb-1">Match Type</label>
+                <select id="match-type-select" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 focus:outline-none">
+                    <option value="pvp">1v1 Direct Peer Battle</option>
+                    <option value="group_vs_group">Group vs Group (Clan vs Clan Multi-Player)</option>
+                    <option value="group_vs_public">Group vs Public (Clan vs The World - Any Public Player Can Attack)</option>
+                </select>
+            </div>
+
+            <div id="white-clan-picker" class="space-y-1">
+                <label class="block text-slate-300">Your Clan (White Team)</label>
+                <select id="match-white-group" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">
+                    <option value="">None (Personal)</option>
+                    {% for g in groups %}
+                    <option value="{{ g.id }}">{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="black-clan-picker" class="space-y-1">
+                <label class="block text-slate-300">Target Clan (Black Team)</label>
+                <select id="match-black-group" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">
+                    <option value="">Any Rival Clan</option>
+                    {% for g in groups %}
+                    <option value="{{ g.id }}">{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button type="button" class="close-match-modal-btn px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-lg shadow-cyan-600/30">Start Battle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: CHALLENGE CLAN -->
+<!-- ========================================================================= -->
+<div id="clan-challenge-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-card max-w-md w-full p-6 rounded-3xl border border-indigo-500/40 bg-slate-950 shadow-2xl relative font-mono text-xs">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-share-nodes text-indigo-400"></i>
+                <span>Dispatch Position to Clan</span>
+            </h3>
+            <button class="close-clan-modal-btn text-slate-400 hover:text-white text-lg">&times;</button>
+        </div>
+
+        <form id="clan-challenge-form" class="space-y-4">
+            <div>
+                <label class="block text-slate-300 mb-1">Select Study Clan</label>
+                <select id="target-clan-select" required class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">
+                    {% for g in groups %}
+                    <option value="{{ g.id }}">{{ g.name }}</option>
+                    {% else %}
+                    <option value="1">General Speedcubing &amp; Tactics Clan</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-slate-300 mb-1">Challenge Message / Prompt</label>
+                <textarea id="clan-note-input" rows="3" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300">Can anyone find the winning line on this GoChess smart position?</textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button type="button" class="close-clan-modal-btn px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-md">Dispatch</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/gochess3d.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let activeGameId = null;
+    let activeProblemId = null;
+    let currentFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    let moveLog = [];
+    let isReplaying = false;
+
+    // Initialize 3D GoChess Engine
+    const chess3d = new GoChess3D('gochess-canvas', {
+        theme: 'obsidian',
+        ledMode: 'all',
+        aiLevel: 2,
+        interactive: true,
+        soundEnabled: true,
+        onMove: function(fromSq, toSq) {
+            handlePlayerMove(fromSq, toSq);
+        }
+    });
+
+    // Start a fresh game session
+    startNewGame();
+
+    // =========================================================================
+    // GAME INITIALIZATION & MOVE HANDLING
+    // =========================================================================
+    function startNewGame() {
+        const aiLevel = parseInt(document.getElementById('ai-level-select').value, 10);
+        fetch('/chess/new-game', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: 'GoChess Smart Session',
+                ai_level: aiLevel,
+                game_mode: 'ai'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                activeGameId = data.game_id;
+                currentFen = data.fen;
+                moveLog = [];
+                chess3d.loadFen(currentFen);
+                updateHints(data.hints);
+                updateEvalBar(data.hints ? data.hints.eval_advantage_white : 0);
+                updateMoveLogUI();
+                document.getElementById('game-status-label').innerText = "White to move";
+                document.getElementById('check-alert-label').classList.add('hidden');
+            }
+        });
+    }
+
+    function handlePlayerMove(fromSq, toSq) {
+        const aiLevel = parseInt(document.getElementById('ai-level-select').value, 10);
+
+        // Animate player move
+        chess3d.roboticMovePiece(fromSq, toSq, function() {
+            // Send move to backend
+            fetch('/chess/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    game_id: activeGameId,
+                    fen: currentFen,
+                    from: fromSq,
+                    to: toSq,
+                    ai_level: aiLevel,
+                    game_mode: 'ai'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentFen = data.fen;
+                    moveLog.push(`W: ${data.player_move.san}`);
+                    updateMoveLogUI();
+
+                    // If In Active Problem Mode, auto-append move
+                    const movesInput = document.getElementById('subscriber-moves-input');
+                    if (movesInput && activeProblemId) {
+                        const currentVal = movesInput.value.trim();
+                        movesInput.value = currentVal ? `${currentVal},${data.player_move.uci}` : data.player_move.uci;
+                    }
+
+                    // Check status
+                    if (data.is_check) {
+                        chess3d.playSound('check');
+                        document.getElementById('check-alert-label').classList.remove('hidden');
+                    } else {
+                        document.getElementById('check-alert-label').classList.add('hidden');
+                    }
+
+                    // If Game Over
+                    if (data.is_game_over) {
+                        chess3d.playSound('victory');
+                        document.getElementById('game-status-label').innerText = data.result_message || "Game Over";
+                        return;
+                    }
+
+                    // Execute AI Robotic Glide Move
+                    if (data.ai_move) {
+                        document.getElementById('game-status-label').innerText = "GoChess XR internal motors gliding...";
+                        setTimeout(() => {
+                            chess3d.roboticMovePiece(data.ai_move.from, data.ai_move.to, function() {
+                                moveLog.push(`B: ${data.ai_move.san}`);
+                                updateMoveLogUI();
+                                document.getElementById('game-status-label').innerText = "White to move";
+
+                                if (data.is_check) {
+                                    chess3d.playSound('check');
+                                    document.getElementById('check-alert-label').classList.remove('hidden');
+                                }
+
+                                if (data.is_game_over) {
+                                    document.getElementById('game-status-label').innerText = data.result_message || "Game Over";
+                                }
+
+                                updateHints(data.hints);
+                                if (data.hints) {
+                                    updateEvalBar(data.hints.eval_advantage_white);
+                                }
+                            });
+                        }, 400);
+                    } else {
+                        updateHints(data.hints);
+                        if (data.hints) {
+                            updateEvalBar(data.hints.eval_advantage_white);
+                        }
+                    }
+                } else {
+                    // Illegal move
+                    chess3d.loadFen(currentFen);
+                    alert(data.message || "Illegal move!");
+                }
+            });
+        });
+    }
+
+    function updateHints(hints) {
+        if (!hints) return;
+        chess3d.legalMoves = hints.moves_map || {};
+        chess3d.bestMove = hints.best_move || null;
+        chess3d.checkSquare = hints.check_square || null;
+
+        if (hints.best_move) {
+            document.getElementById('hint-display').innerHTML = `Best GM Move: <strong class="text-amber-300">${hints.best_move.san}</strong> (${hints.best_move.from} &rarr; ${hints.best_move.to})`;
+        }
+    }
+
+    function updateEvalBar(advWhite = 0) {
+        // Clamp between -10 and +10
+        const clamped = Math.max(-10, Math.min(10, advWhite));
+        // Map to 0% - 100% (50% is even)
+        const pct = 50 + (clamped / 10) * 45;
+        document.getElementById('eval-bar-fill').style.height = `${pct}%`;
+        document.getElementById('eval-score-label').innerText = (advWhite >= 0 ? `+${advWhite.toFixed(1)}` : advWhite.toFixed(1));
+    }
+
+    function updateMoveLogUI() {
+        const container = document.getElementById('move-history-log');
+        document.getElementById('moves-count-display').innerText = `${moveLog.length} moves`;
+        if (moveLog.length === 0) {
+            container.innerHTML = '<span class="text-slate-500 italic">Game ready. Play White to begin.</span>';
+            return;
+        }
+        container.innerHTML = moveLog.map(m => `<span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300 font-bold">${m}</span>`).join(' ');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // =========================================================================
+    // TOOLBAR CONTROLS & EVENT LISTENERS
+    // =========================================================================
+    // Tab Switching
+    document.querySelectorAll('.mode-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.mode-tab-btn').forEach(b => {
+                b.classList.remove('active', 'bg-amber-600', 'text-white', 'font-bold');
+                b.classList.add('text-slate-400');
+            });
+            this.classList.add('active', 'bg-amber-600', 'text-white', 'font-bold');
+            this.classList.remove('text-slate-400');
+
+            const targetTab = this.getAttribute('data-tab');
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+
+            if (targetTab === 'studio') {
+                chess3d.onResize();
+            }
+        });
+    });
+
+    // Theme buttons
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.theme-btn').forEach(b => {
+                b.classList.remove('active', 'bg-slate-800', 'font-bold', 'text-white');
+                b.classList.add('text-slate-400');
+            });
+            this.classList.add('active', 'bg-slate-800', 'font-bold', 'text-white');
+            chess3d.setTheme(this.getAttribute('data-theme'));
+        });
+    });
+
+    // Camera view buttons
+    document.querySelectorAll('.cam-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.cam-btn').forEach(b => {
+                b.classList.remove('active', 'bg-slate-800', 'text-slate-300');
+                b.classList.add('text-slate-400');
+            });
+            this.classList.add('active', 'bg-slate-800', 'text-slate-300');
+            chess3d.setCameraView(this.getAttribute('data-view'));
+        });
+    });
+
+    // LED Mode select
+    document.getElementById('led-mode-select').addEventListener('change', function() {
+        chess3d.options.ledMode = this.value;
+        chess3d.clearAllLeds();
+    });
+
+    // Sound toggle
+    document.getElementById('sound-toggle-btn').addEventListener('click', function() {
+        chess3d.options.soundEnabled = !chess3d.options.soundEnabled;
+        const icon = document.getElementById('sound-icon');
+        const label = document.getElementById('sound-label');
+        if (chess3d.options.soundEnabled) {
+            icon.className = 'fa-solid fa-volume-high text-cyan-400';
+            label.innerText = 'Audio: ON';
+        } else {
+            icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+            label.innerText = 'Audio: OFF';
+        }
+    });
+
+    // Reset game button
+    document.getElementById('reset-game-btn').addEventListener('click', function() {
+        startNewGame();
+    });
+
+    // Coach hint button
+    document.getElementById('get-hint-btn').addEventListener('click', function() {
+        fetch('/chess/hint', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fen: currentFen })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success' && data.hints && data.hints.best_move) {
+                chess3d.setSquareLed(data.hints.best_move.from, 'selected');
+                chess3d.setSquareLed(data.hints.best_move.to, 'best');
+                document.getElementById('hint-display').innerHTML = `Best Move: <strong class="text-amber-300">${data.hints.best_move.san}</strong> (${data.hints.best_move.from} &rarr; ${data.hints.best_move.to})`;
+            }
+        });
+    });
+
+    // =========================================================================
+    // GRANDMASTER PROBLEM SOLVER ARENA
+    // =========================================================================
+    document.querySelectorAll('.load-problem-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const probId = this.getAttribute('data-id');
+            const title = this.getAttribute('data-title');
+            const diff = this.getAttribute('data-diff');
+            const fen = this.getAttribute('data-fen');
+            const hint = this.getAttribute('data-hint');
+            const reward = this.getAttribute('data-reward');
+
+            activeProblemId = probId;
+            currentFen = fen;
+            chess3d.loadFen(fen);
+
+            // Populate active problem card
+            document.getElementById('prob-title').innerText = title;
+            document.getElementById('prob-diff-badge').innerText = diff;
+            document.getElementById('prob-hint').innerText = hint ? `Hint: ${hint}` : 'Tactical study.';
+            document.getElementById('prob-reward').innerText = reward;
+            document.getElementById('subscriber-moves-input').value = '';
+            document.getElementById('solution-feedback-alert').className = 'hidden';
+
+            document.getElementById('active-problem-card').classList.remove('hidden');
+
+            // Switch to studio tab
+            document.querySelector('.mode-tab-btn[data-tab="studio"]').click();
+            document.getElementById('game-status-label').innerText = `Solving: ${title}`;
+        });
+    });
+
+    document.getElementById('cancel-problem-btn').addEventListener('click', function() {
+        activeProblemId = null;
+        document.getElementById('active-problem-card').classList.add('hidden');
+        startNewGame();
+    });
+
+    document.getElementById('submit-problem-solution-btn').addEventListener('click', function() {
+        if (!activeProblemId) return;
+        const moves = document.getElementById('subscriber-moves-input').value.trim();
+        if (!moves) {
+            alert('Please play your move sequence on the 3D board first!');
+            return;
+        }
+
+        fetch(`/chess/problems/${activeProblemId}/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ moves: moves })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const alertBox = document.getElementById('solution-feedback-alert');
+            alertBox.classList.remove('hidden');
+
+            if (data.is_solved) {
+                chess3d.playSound('victory');
+                alertBox.className = 'mt-3 p-3 rounded-xl text-xs font-mono bg-emerald-950/80 border border-emerald-500/50 text-emerald-200';
+                alertBox.innerHTML = `<i class="fa-solid fa-trophy mr-1 text-amber-400"></i> ${data.message} +<strong>${data.xp_earned} XP</strong> awarded to your speedcubing profile!`;
+            } else {
+                chess3d.playSound('check');
+                alertBox.className = 'mt-3 p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-500/50 text-rose-200';
+                alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1 text-rose-400"></i> ${data.message}`;
+            }
+        });
+    });
+
+    // =========================================================================
+    // MULTIPLAYER MATCHMAKING
+    // =========================================================================
+    const matchModal = document.getElementById('create-match-modal');
+    document.getElementById('create-match-modal-btn').addEventListener('click', () => {
+        matchModal.classList.remove('hidden');
+    });
+    document.querySelectorAll('.close-match-modal-btn').forEach(btn => {
+        btn.addEventListener('click', () => matchModal.classList.add('hidden'));
+    });
+
+    document.getElementById('create-match-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const title = document.getElementById('match-title-input').value;
+        const matchType = document.getElementById('match-type-select').value;
+        const whiteGroup = document.getElementById('match-white-group').value || null;
+        const blackGroup = document.getElementById('match-black-group').value || null;
+
+        fetch('/chess/multiplayer/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                match_type: matchType,
+                white_group_id: whiteGroup,
+                black_group_id: blackGroup,
+                is_public: 1
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            matchModal.classList.add('hidden');
+            if (data.status === 'success') {
+                alert(`Match "${title}" initiated! Loading on 3D board...`);
+                location.reload();
+            }
+        });
+    });
+
+    document.querySelectorAll('.join-match-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const mId = this.getAttribute('data-id');
+            const mFen = this.getAttribute('data-fen');
+            const mTitle = this.getAttribute('data-title');
+
+            activeGameId = mId;
+            currentFen = mFen;
+            chess3d.loadFen(mFen);
+
+            document.querySelector('.mode-tab-btn[data-tab="studio"]').click();
+            document.getElementById('game-status-label').innerText = `Multiplayer Arena: ${mTitle}`;
+        });
+    });
+
+    // =========================================================================
+    // AUTONOMOUS ROBOTIC MASTERPIECE REPLAY
+    // =========================================================================
+    document.querySelectorAll('.start-demo-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const gameId = this.getAttribute('data-game-id');
+            fetch(`/chess/famous/${gameId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success' && data.playback) {
+                    playRoboticDemo(data.playback);
+                }
+            });
+        });
+    });
+
+    function playRoboticDemo(playback) {
+        document.querySelector('.mode-tab-btn[data-tab="studio"]').click();
+        const info = playback.info;
+        const steps = playback.steps;
+        let stepIdx = 0;
+
+        document.getElementById('game-status-label').innerText = `Robotic Replay: ${info.title}`;
+        chess3d.loadFen(steps[0].fen);
+        moveLog = [];
+        updateMoveLogUI();
+
+        if (chess3d.autoPlayTimer) clearInterval(chess3d.autoPlayTimer);
+
+        chess3d.autoPlayTimer = setInterval(() => {
+            stepIdx++;
+            if (stepIdx >= steps.length) {
+                clearInterval(chess3d.autoPlayTimer);
+                document.getElementById('game-status-label').innerText = `Replay Completed: ${info.title}`;
+                chess3d.playSound('victory');
+                return;
+            }
+
+            const curStep = steps[stepIdx];
+            if (curStep.from_sq && curStep.to_sq) {
+                chess3d.roboticMovePiece(curStep.from_sq, curStep.to_sq, () => {
+                    moveLog.push(curStep.move_san);
+                    updateMoveLogUI();
+                });
+            }
+        }, 1200);
+    }
+
+    // =========================================================================
+    // SUPER ADMIN PROBLEM AUTHORING MODAL
+    // =========================================================================
+    const probModal = document.getElementById('post-problem-modal');
+    if (probModal) {
+        document.querySelectorAll('.open-post-problem-modal, #admin-post-problem-btn').forEach(b => {
+            b.addEventListener('click', () => probModal.classList.remove('hidden'));
+        });
+        document.querySelectorAll('.close-modal-btn').forEach(b => {
+            b.addEventListener('click', () => probModal.classList.add('hidden'));
+        });
+
+        document.getElementById('post-problem-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById('problem-title-input').value,
+                difficulty: document.getElementById('problem-diff-select').value,
+                xp_reward: parseInt(document.getElementById('problem-xp-input').value, 10),
+                fen: document.getElementById('problem-fen-input').value,
+                solution_moves: document.getElementById('problem-solution-input').value,
+                hint: document.getElementById('problem-hint-input').value
+            };
+
+            fetch('/chess/problems/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                probModal.classList.add('hidden');
+                if (data.status === 'success') {
+                    alert('Grandmaster Problem published successfully!');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error creating problem');
+                }
+            });
+        });
+    }
+
+    // Clan Challenge Modal
+    const clanModal = document.getElementById('clan-challenge-modal');
+    document.getElementById('open-clan-challenge-btn').addEventListener('click', () => {
+        clanModal.classList.remove('hidden');
+    });
+    document.querySelectorAll('.close-clan-modal-btn').forEach(b => {
+        b.addEventListener('click', () => clanModal.classList.add('hidden'));
+    });
+
+    document.getElementById('clan-challenge-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const groupId = document.getElementById('target-clan-select').value;
+        const note = document.getElementById('clan-note-input').value;
+
+        fetch('/chess/challenge-clan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                game_id: activeGameId || 1,
+                group_id: groupId,
+                note: note
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            clanModal.classList.add('hidden');
+            if (data.status === 'success') {
+                alert('Position dispatched to clan chat feed!');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

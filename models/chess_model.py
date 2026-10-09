@@ -376,3 +376,248 @@ class ChessModel:
             VALUES (?, ?, ?, ?, 'open')
         """
         return execute_insert(sql_mysql, sql_sqlite, (game_id, group_id, user_id, challenge_note))
+
+    # =========================================================================
+    # SUPER ADMIN CHESS PROBLEMS & SUBSCRIBER SUBMISSIONS
+    # =========================================================================
+    @staticmethod
+    def create_problem(author_id, title, difficulty, fen, solution_moves, hint="", xp_reward=150):
+        sql_mysql = """
+            INSERT INTO chess_problems (author_id, title, difficulty, fen, solution_moves, hint, xp_reward)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        sql_sqlite = """
+            INSERT INTO chess_problems (author_id, title, difficulty, fen, solution_moves, hint, xp_reward)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """
+        return execute_insert(sql_mysql, sql_sqlite, (author_id, title, difficulty, fen, solution_moves, hint, xp_reward))
+
+    @staticmethod
+    def get_problems(limit=50):
+        sql_mysql = """
+            SELECT cp.*, u.username as author_name,
+                   (SELECT COUNT(*) FROM chess_problem_submissions cps WHERE cps.problem_id = cp.id AND cps.is_solved = 1) as solvers_count
+            FROM chess_problems cp
+            LEFT JOIN users u ON cp.author_id = u.id
+            ORDER BY cp.created_at DESC LIMIT %s
+        """
+        sql_sqlite = """
+            SELECT cp.*, u.username as author_name,
+                   (SELECT COUNT(*) FROM chess_problem_submissions cps WHERE cps.problem_id = cp.id AND cps.is_solved = 1) as solvers_count
+            FROM chess_problems cp
+            LEFT JOIN users u ON cp.author_id = u.id
+            ORDER BY cp.created_at DESC LIMIT ?
+        """
+        return query_all(sql_mysql, sql_sqlite, (limit,))
+
+    @staticmethod
+    def get_problem(problem_id):
+        sql_mysql = """
+            SELECT cp.*, u.username as author_name
+            FROM chess_problems cp
+            LEFT JOIN users u ON cp.author_id = u.id
+            WHERE cp.id = %s
+        """
+        sql_sqlite = """
+            SELECT cp.*, u.username as author_name
+            FROM chess_problems cp
+            LEFT JOIN users u ON cp.author_id = u.id
+            WHERE cp.id = ?
+        """
+        return query_one(sql_mysql, sql_sqlite, (problem_id,))
+
+    @staticmethod
+    def _parse_move_token(board, token):
+        """Parse one move token as UCI or SAN against the given board."""
+        tok = token.strip()
+        if not tok:
+            return None
+        try:
+            mv = chess.Move.from_uci(tok.lower())
+            if mv in board.legal_moves:
+                return mv
+        except ValueError:
+            pass
+        try:
+            return board.parse_san(tok)
+        except ValueError:
+            return None
+
+    @classmethod
+    def verify_and_submit_solution(cls, problem_id, user_id, submitted_moves_str):
+        """
+        Verifies subscriber's solution moves against the problem solution.
+        Accepts comma-separated UCI or SAN moves; both the official line and the
+        submitted line are replayed on the problem FEN with python-chess, so
+        either notation is always accepted. Solved when the key (first) move
+        matches, the full line matches, or the line legally checkmates the
+        opponent within a sensible move budget.
+        """
+        problem = cls.get_problem(problem_id)
+        if not problem:
+            return {"status": "error", "message": "Problem not found", "is_solved": False}
+
+        expected_tokens = [m.strip() for m in problem['solution_moves'].replace(';', ',').split(',') if m.strip()]
+        submitted_tokens = [m.strip() for m in submitted_moves_str.replace(';', ',').split(',') if m.strip()]
+
+        is_solved = False
+        expected_first_uci = expected_tokens[0].lower() if expected_tokens else ""
+        try:
+            start_board = chess.Board(problem['fen'])
+            start_turn = start_board.turn
+
+            exp_board = start_board.copy()
+            expected_uci = []
+            for tok in expected_tokens:
+                mv = cls._parse_move_token(exp_board, tok)
+                if mv is None:
+                    break
+                expected_uci.append(mv.uci())
+                exp_board.push(mv)
+            if expected_uci:
+                expected_first_uci = expected_uci[0]
+
+            sub_board = start_board.copy()
+            submitted_uci = []
+            for tok in submitted_tokens:
+                mv = cls._parse_move_token(sub_board, tok)
+                if mv is None:
+                    submitted_uci = None  # illegal move -> never solved
+                    break
+                submitted_uci.append(mv.uci())
+                sub_board.push(mv)
+
+            if submitted_uci:
+                if expected_uci and submitted_uci[0] == expected_uci[0]:
+                    is_solved = True
+                elif (sub_board.is_checkmate() and sub_board.turn != start_turn
+                      and len(submitted_uci) <= max(len(expected_uci), 1) + 2):
+                    is_solved = True
+            elif submitted_tokens and expected_tokens:
+                # Fallback (unparseable FEN): raw first-move / full-line compare
+                sub_lower = [t.lower() for t in submitted_tokens]
+                exp_lower = [t.lower() for t in expected_tokens]
+                is_solved = sub_lower[0] == exp_lower[0] or sub_lower == exp_lower
+        except Exception:
+            is_solved = False
+
+        xp_earned = problem.get('xp_reward', 100) if is_solved else 0
+
+        sql_mysql = """
+            INSERT INTO chess_problem_submissions (problem_id, user_id, submitted_moves, is_solved, xp_earned)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        sql_sqlite = """
+            INSERT INTO chess_problem_submissions (problem_id, user_id, submitted_moves, is_solved, xp_earned)
+            VALUES (?, ?, ?, ?, ?)
+        """
+        sub_id = execute_insert(sql_mysql, sql_sqlite, (problem_id, user_id, submitted_moves_str, 1 if is_solved else 0, xp_earned))
+
+        return {
+            "status": "success",
+            "submission_id": sub_id,
+            "is_solved": is_solved,
+            "xp_earned": xp_earned,
+            "expected_first_move": expected_first_uci,
+            "message": "Outstanding tactical vision! Problem solved!" if is_solved else "Incorrect tactical sequence. Try another combination or inspect hints."
+        }
+
+    @staticmethod
+    def get_problem_submissions(problem_id, limit=20):
+        sql_mysql = """
+            SELECT cps.*, u.username, u.avatar_color
+            FROM chess_problem_submissions cps
+            JOIN users u ON cps.user_id = u.id
+            WHERE cps.problem_id = %s
+            ORDER BY cps.created_at DESC LIMIT %s
+        """
+        sql_sqlite = """
+            SELECT cps.*, u.username, u.avatar_color
+            FROM chess_problem_submissions cps
+            JOIN users u ON cps.user_id = u.id
+            WHERE cps.problem_id = ?
+            ORDER BY cps.created_at DESC LIMIT ?
+        """
+        return query_all(sql_mysql, sql_sqlite, (problem_id, limit))
+
+    # =========================================================================
+    # MULTIPLAYER MATCHMAKING: 1v1, GROUP VS GROUP, GROUP VS PUBLIC
+    # =========================================================================
+    @staticmethod
+    def create_multiplayer_match(user_id, match_type='1v1', title='GoChess Cyber Arena', white_group_id=None, black_group_id=None, is_public=1):
+        sql_mysql = """
+            INSERT INTO chess_games (user_id, white_user_id, match_type, title, white_group_id, black_group_id, is_public, fen, pgn, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'active')
+        """
+        sql_sqlite = """
+            INSERT INTO chess_games (user_id, white_user_id, match_type, title, white_group_id, black_group_id, is_public, fen, pgn, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+        """
+        initial_fen = chess.STARTING_FEN
+        return execute_insert(sql_mysql, sql_sqlite, (user_id, user_id, match_type, title, white_group_id, black_group_id, is_public, initial_fen, ""))
+
+    @staticmethod
+    def get_multiplayer_matches(match_type=None, limit=20):
+        where_sql_mysql = "WHERE cg.match_type != 'ai'"
+        where_sql_sqlite = "WHERE cg.match_type != 'ai'"
+        params = []
+        if match_type:
+            where_sql_mysql += " AND cg.match_type = %s"
+            where_sql_sqlite += " AND cg.match_type = ?"
+            params.append(match_type)
+
+        params.append(limit)
+
+        sql_mysql = f"""
+            SELECT cg.*, u.username as creator_name,
+                   wg.name as white_group_name, bg.name as black_group_name,
+                   (SELECT COUNT(*) FROM chess_team_moves tm WHERE tm.game_id = cg.id) as team_moves_count
+            FROM chess_games cg
+            LEFT JOIN users u ON cg.user_id = u.id
+            LEFT JOIN chat_groups wg ON cg.white_group_id = wg.id
+            LEFT JOIN chat_groups bg ON cg.black_group_id = bg.id
+            {where_sql_mysql}
+            ORDER BY cg.created_at DESC LIMIT %s
+        """
+        sql_sqlite = f"""
+            SELECT cg.*, u.username as creator_name,
+                   wg.name as white_group_name, bg.name as black_group_name,
+                   (SELECT COUNT(*) FROM chess_team_moves tm WHERE tm.game_id = cg.id) as team_moves_count
+            FROM chess_games cg
+            LEFT JOIN users u ON cg.user_id = u.id
+            LEFT JOIN chat_groups wg ON cg.white_group_id = wg.id
+            LEFT JOIN chat_groups bg ON cg.black_group_id = bg.id
+            {where_sql_sqlite}
+            ORDER BY cg.created_at DESC LIMIT ?
+        """
+        return query_all(sql_mysql, sql_sqlite, tuple(params))
+
+    @staticmethod
+    def record_team_move(game_id, user_id, team, move_uci, move_san="", comment=""):
+        sql_mysql = """
+            INSERT INTO chess_team_moves (game_id, user_id, team, move_uci, move_san, comment)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        sql_sqlite = """
+            INSERT INTO chess_team_moves (game_id, user_id, team, move_uci, move_san, comment)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """
+        return execute_insert(sql_mysql, sql_sqlite, (game_id, user_id, team, move_uci, move_san, comment))
+
+    @staticmethod
+    def get_game_team_moves(game_id, limit=30):
+        sql_mysql = """
+            SELECT tm.*, u.username, u.avatar_color
+            FROM chess_team_moves tm
+            JOIN users u ON tm.user_id = u.id
+            WHERE tm.game_id = %s
+            ORDER BY tm.created_at DESC LIMIT %s
+        """
+        sql_sqlite = """
+            SELECT tm.*, u.username, u.avatar_color
+            FROM chess_team_moves tm
+            JOIN users u ON tm.user_id = u.id
+            WHERE tm.game_id = ?
+            ORDER BY tm.created_at DESC LIMIT ?
+        """
+        return query_all(sql_mysql, sql_sqlite, (game_id, limit))
