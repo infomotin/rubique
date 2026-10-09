@@ -100,7 +100,7 @@ def process_cube_image(image_bytes):
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if img is None:
-        raise ValueError("Image decode kora jayni!")
+        raise ValueError("The uploaded file could not be decoded as an image.")
         
     target_size = 500
     img = cv2.resize(img, (target_size, target_size), interpolation=cv2.INTER_AREA)
@@ -182,9 +182,20 @@ def solve():
     facelet_string = data.get('facelet_string') or data.get('cube_state')
     custom_moves = data.get('custom_moves')
 
-    # Choose solver target
-    if facelet_string and len(str(facelet_string).strip()) == 54:
-        target_state = str(facelet_string).strip()
+    # Choose solver target. A supplied sticker state must be a complete
+    # 54-facelet string - silently falling back would hide client errors.
+    if facelet_string is not None and str(facelet_string).strip() != '':
+        facelet_string = str(facelet_string).strip()
+        if len(facelet_string) != 54:
+            return jsonify({
+                'success': False,
+                'error': f'Facelet string must be exactly 54 characters (received {len(facelet_string)}).',
+                'solution': '',
+                'moves': [],
+                'steps': [],
+                'move_count': 0
+            }), 422
+        target_state = facelet_string
     else:
         target_state = (custom_moves or "").strip()
 

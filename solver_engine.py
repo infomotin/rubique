@@ -195,6 +195,23 @@ def validate_facelet_state(facelets):
     return True, ''
 
 
+def validate_move_sequence(text):
+    """
+    Validates a move sequence token by token.
+    Returns (True, '') when every token is a legal basic move, else (False, reason).
+    """
+    tokens = text.split()
+    if not tokens:
+        return True, ''
+    for token in tokens:
+        if token not in BASIC_MOVES:
+            return False, (
+                f"Illegal move '{token}'. Only the face turns "
+                "U, U', U2, D, D', D2, F, F', F2, B, B', B2, L, L', L2, R, R', R2 are allowed."
+            )
+    return True, ''
+
+
 def solve_facelet_state(facelets):
     """
     Solves a 54-character facelet state with the first available engine:
@@ -265,8 +282,10 @@ def solve_state(state_or_scramble):
 
     text = state_or_scramble.strip()
 
-    # 1. Facelet state (54 stickers, only URFDLB)
-    if len(text) == 54 and not (set(text) - set('URFDLB')):
+    # 1. Facelet state (54 stickers, only URFDLB). A 54 character payload without
+    #    separators is always a sticker state attempt - never a move sequence.
+    looks_like_facelets = len(text) == 54 and not any(c in text for c in " '")
+    if len(text) == 54 and (not (set(text) - set('URFDLB')) or looks_like_facelets):
         solution, error = solve_facelet_state(text)
         if error:
             return {'solution': '', 'moves': [], 'error': error, 'engine': 'none'}
@@ -274,6 +293,10 @@ def solve_state(state_or_scramble):
         return {'solution': solution, 'moves': moves, 'error': None, 'engine': 'two_phase'}
 
     # 2. Move sequence (scramble / custom moves) -> inverse group element
+    ok, reason = validate_move_sequence(text)
+    if not ok:
+        return {'solution': '', 'moves': [], 'error': reason, 'engine': 'none'}
+
     moves = simplify_moves(invert_sequence(text).split())
     return {'solution': " ".join(moves), 'moves': moves, 'error': None, 'engine': 'group_inversion'}
 

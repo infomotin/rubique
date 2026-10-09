@@ -106,13 +106,51 @@
                     </div>
                 </div>
 
-                <!-- 3. BOTTOM GRAPHIC: CIRCULAR PERMUTATION ORBIT NETWORK (Group Theory Orbit Rings) -->
-                <div class="relative z-10 w-full flex items-center justify-center my-4">
-                    <div class="w-full max-w-md h-72 sm:h-80 relative flex items-center justify-center">
-                        <svg id="permutation-orbit-svg" viewBox="-220 -220 440 440" class="w-full h-full">
-                            <!-- Circular Orbits, Intersecting Rings, Nodes & Dynamic Glowing Highlight Arc rendered via JS -->
+                <!-- 3. REAL-TIME CUBE PERMUTATION ORBIT ENGINE -->
+                <div class="relative z-10 w-full flex flex-col items-center justify-center my-3">
+                    
+                    <!-- Mode & Face Selector Navigation Bar -->
+                    <div class="flex items-center justify-between w-full max-w-md px-2 mb-2 text-xs font-mono">
+                        <!-- Orbit Display Mode -->
+                        <div class="flex items-center gap-1 p-0.5 rounded-xl bg-slate-900/90 border border-slate-800">
+                            <button type="button" id="orbit-mode-live" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Real-Time Piece Permutation Orbit">
+                                <i class="fa-solid fa-arrows-spin text-[10px]"></i>
+                                <span>Real-Time Orbit</span>
+                            </button>
+                            <button type="button" id="orbit-mode-matrix" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-1.5" title="Group Theory Cayley Network">
+                                <i class="fa-solid fa-atom text-[10px]"></i>
+                                <span>Cayley S₅₄</span>
+                            </button>
+                        </div>
+
+                        <!-- Active Face Quick Tabs -->
+                        <div class="flex items-center gap-1 p-0.5 rounded-xl bg-slate-900/70 border border-slate-800/80">
+                            <button type="button" class="orbit-face-chip px-1.5 py-0.5 rounded text-[10px] font-bold text-amber-300 hover:bg-slate-800 transition-all active bg-slate-800" data-face="U">U</button>
+                            <button type="button" class="orbit-face-chip px-1.5 py-0.5 rounded text-[10px] font-bold text-orange-400 hover:bg-slate-800 transition-all" data-face="L">L</button>
+                            <button type="button" class="orbit-face-chip px-1.5 py-0.5 rounded text-[10px] font-bold text-emerald-400 hover:bg-slate-800 transition-all" data-face="F">F</button>
+                            <button type="button" class="orbit-face-chip px-1.5 py-0.5 rounded text-[10px] font-bold text-rose-400 hover:bg-slate-800 transition-all" data-face="R">R</button>
+                            <button type="button" class="orbit-face-chip px-1.5 py-0.5 rounded text-[10px] font-bold text-blue-400 hover:bg-slate-800 transition-all" data-face="B">B</button>
+                            <button type="button" class="orbit-face-chip px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-100 hover:bg-slate-800 transition-all" data-face="D">D</button>
+                        </div>
+                    </div>
+
+                    <!-- Orbit SVG Stage -->
+                    <div class="w-full max-w-md h-72 sm:h-80 relative flex items-center justify-center p-2 rounded-2xl bg-slate-950/70 border border-slate-900/90 shadow-2xl backdrop-blur-xl">
+                        <svg id="permutation-orbit-svg" viewBox="-220 -220 440 440" class="w-full h-full filter drop-shadow-[0_0_25px_rgba(99,102,241,0.2)]">
+                            <!-- Real-Time Dynamic Moving Orbit rendered via visualizer.js -->
                         </svg>
                     </div>
+
+                    <!-- Live Permutation Cycle Info Bar -->
+                    <div id="orbit-cycle-info" class="w-full max-w-md mt-2 px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-300">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                            <span id="cycle-type-label" class="text-slate-400 font-semibold">Live Orbit:</span>
+                            <span id="cycle-formula-label" class="text-cyan-300 font-bold truncate max-w-[210px] sm:max-w-xs">4-Cycle (UB &rarr; UR &rarr; UF &rarr; UL)</span>
+                        </div>
+                        <span id="cycle-invariants-label" class="text-emerald-400 text-[10px] font-bold">↻ +90° Active</span>
+                    </div>
+
                 </div>
 
                 <!-- 4. MOVE RIBBON: HORIZONTAL SEQUENCE WITH ACTIVE MOVE HIGHLIGHT -->
@@ -964,7 +1002,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{{ url_for('static', filename='js/cube3d.js') }}"></script>
-<script src="{{ url_for('static', filename='js/visualizer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cube3d.js') }}?v=2.0.1"></script>
+<script src="{{ url_for('static', filename='js/visualizer.js') }}?v=2.0.1"></script>
 {% endblock %}
 

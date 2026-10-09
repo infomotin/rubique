@@ -91,8 +91,10 @@ def create_group():
     user_id = session.get('user_id')
     name = request.form.get('name', '').strip()
     description = request.form.get('description', '').strip()
-    is_private = 1 if request.form.get('is_private') == '1' else 0
     passcode = request.form.get('passcode', '').strip() or None
+    # The create form has no is_private control: a group with a passcode is
+    # private by definition ("leave empty for public"), otherwise public.
+    is_private = 1 if (request.form.get('is_private') == '1' or passcode) else 0
 
     if name:
         CommunityModel.create_group(name, description, is_private, passcode, user_id)

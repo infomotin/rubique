@@ -992,12 +992,23 @@
                                         <h3 class="font-bold text-white text-sm mb-2 font-outfit">{{ v.title }}</h3>
                                         <p class="text-xs text-slate-400 mb-3 font-sans">{{ v.description }}</p>
 
-                                        <!-- Video Player -->
+                                        <!-- Video Player (YouTube / Vimeo embeds or direct file) -->
                                         <div class="rounded-2xl overflow-hidden bg-black/90 border border-slate-800 mb-3">
-                                            <video controls class="w-full max-h-48 object-cover">
-                                                <source src="{{ v.video_url }}" type="video/mp4">
-                                                Your browser does not support video playback.
-                                            </video>
+                                            {% if 'youtube.com/watch' in v.video_url %}
+                                                <iframe class="w-full h-48" src="https://www.youtube.com/embed/{{ v.video_url.split('v=')[-1].split('&')[0] }}"
+                                                        title="{{ v.title }}" frameborder="0" allowfullscreen></iframe>
+                                            {% elif 'youtu.be/' in v.video_url %}
+                                                <iframe class="w-full h-48" src="https://www.youtube.com/embed/{{ v.video_url.split('youtu.be/')[-1].split('?')[0] }}"
+                                                        title="{{ v.title }}" frameborder="0" allowfullscreen></iframe>
+                                            {% elif 'vimeo.com/' in v.video_url %}
+                                                <iframe class="w-full h-48" src="https://player.vimeo.com/video/{{ v.video_url.split('vimeo.com/')[-1].split('?')[0] }}"
+                                                        title="{{ v.title }}" frameborder="0" allowfullscreen></iframe>
+                                            {% else %}
+                                                <video controls class="w-full max-h-48 object-cover">
+                                                    <source src="{{ v.video_url }}">
+                                                    Your browser does not support video playback.
+                                                </video>
+                                            {% endif %}
                                         </div>
                                     </div>
 
@@ -1946,7 +1957,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{{ url_for('static', filename='js/cube3d.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cube3d.js') }}?v=2.0.1"></script>
 <script>
     // Audio Synth Web Audio Cues
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2080,12 +2091,15 @@
     // -------------------------------------------------------------
     function initBattleCubes() {
         if (typeof Interactive3DCube === 'undefined') return;
-        
-        if (!humanDuelCube && document.getElementById('battle-cube-human')) {
-            humanDuelCube = new Interactive3DCube('battle-cube-human', { autoRotate: false });
-        }
-        if (!aiDuelCube && document.getElementById('battle-cube-ai')) {
-            aiDuelCube = new Interactive3DCube('battle-cube-ai', { autoRotate: false });
+        try {
+            if (!humanDuelCube && document.getElementById('battle-cube-human')) {
+                humanDuelCube = new Interactive3DCube('battle-cube-human', { autoRotate: false });
+            }
+            if (!aiDuelCube && document.getElementById('battle-cube-ai')) {
+                aiDuelCube = new Interactive3DCube('battle-cube-ai', { autoRotate: false });
+            }
+        } catch (err) {
+            console.warn('[Battle] Duel 3D cubes init skipped:', err);
         }
     }
 
@@ -2289,11 +2303,15 @@
         if (typeof Interactive3DCube === 'undefined') return;
         const canvasContainer = document.getElementById('learning-3d-canvas');
         if (!canvasContainer) return;
-        if (!learningCube) {
-            learningCube = new Interactive3DCube('learning-3d-canvas', { autoRotate: false });
-        }
-        if (learningCube) {
-            learningCube.onResize();
+        try {
+            if (!learningCube) {
+                learningCube = new Interactive3DCube('learning-3d-canvas', { autoRotate: false });
+            }
+            if (learningCube && learningCube.onResize) {
+                learningCube.onResize();
+            }
+        } catch (err) {
+            console.warn('[Learning] Learning cube init skipped:', err);
         }
         renderLearningRibbon();
     }
@@ -2487,11 +2505,15 @@
         if (typeof Interactive3DCube === 'undefined') return;
         const canvasContainer = document.getElementById('guide-3d-canvas');
         if (!canvasContainer) return;
-        if (!guideCube) {
-            guideCube = new Interactive3DCube('guide-3d-canvas', { autoRotate: false });
-        }
-        if (guideCube) {
-            guideCube.onResize();
+        try {
+            if (!guideCube) {
+                guideCube = new Interactive3DCube('guide-3d-canvas', { autoRotate: false });
+            }
+            if (guideCube && guideCube.onResize) {
+                guideCube.onResize();
+            }
+        } catch (err) {
+            console.warn('[Guide] Guide cube init skipped:', err);
         }
         renderGuideRibbon();
     }
@@ -2929,8 +2951,12 @@
     // Initialize 3D Preview Cube
     function initNetPreviewCube() {
         if (typeof Interactive3DCube === 'undefined') return;
-        if (!netPreviewCube && document.getElementById('net-3d-preview-canvas')) {
-            netPreviewCube = new Interactive3DCube('net-3d-preview-canvas', { autoRotate: false });
+        try {
+            if (!netPreviewCube && document.getElementById('net-3d-preview-canvas')) {
+                netPreviewCube = new Interactive3DCube('net-3d-preview-canvas', { autoRotate: false });
+            }
+        } catch (err) {
+            console.warn('[Net] Preview cube init skipped:', err);
         }
         updateNet3DPreview();
     }

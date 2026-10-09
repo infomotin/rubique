@@ -298,24 +298,30 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{{ url_for('static', filename='js/cube3d.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cube3d.js') }}?v=2.0.1"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Initialize Three.js 3D Interactive Rubik's Cube on Landing Page Hero
         if (document.getElementById('hero-3d-cube')) {
-            const heroCube = new Interactive3DCube('hero-3d-cube', {
-                autoRotate: true,
-                rotationSpeed: 0.005
-            });
-
-            // Quick Generator face turn buttons on Landing Page
-            document.querySelectorAll('.hero-turn-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const move = btn.dataset.move;
-                    heroCube.animateLayerTurn(move);
+            try {
+                const heroCube = new Interactive3DCube('hero-3d-cube', {
+                    autoRotate: true,
+                    rotationSpeed: 0.005
                 });
-            });
+
+                // Quick Generator face turn buttons on Landing Page
+                document.querySelectorAll('.hero-turn-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const move = btn.dataset.move;
+                        if (heroCube && heroCube.animateLayerTurn) {
+                            heroCube.animateLayerTurn(move);
+                        }
+                    });
+                });
+            } catch (err) {
+                console.warn('[Landing] 3D Hero Cube initialization skipped:', err);
+            }
         }
     });
 </script>
