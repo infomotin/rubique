@@ -1080,3 +1080,85 @@
     gap: 4px;
 }
 
+/* =====================================================================
+   11. PLAYER DISCOVERY & WHATSAPP / SOCIAL SHARE HUB
+   ===================================================================== */
+.lobby-tab-btn {
+    cursor: pointer;
+    border-radius: 0.75rem;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lobby-tab-btn.active {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px -3px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(52, 211, 153, 0.6);
+}
+
+.whatsapp-share-btn {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 24px -6px rgba(37, 211, 102, 0.5);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.whatsapp-share-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 30px -4px rgba(37, 211, 102, 0.65);
+    filter: brightness(1.08);
+}
+
+.telegram-share-btn {
+    background: linear-gradient(135deg, #0088cc 0%, #229ED9 100%);
+    color: #ffffff !important;
+    box-shadow: 0 8px 24px -6px rgba(34, 158, 217, 0.5);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.telegram-share-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 30px -4px rgba(34, 158, 217, 0.65);
+    filter: brightness(1.08);
+}
+
+.player-avatar-chip {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+}
+
+.player-online-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #020617;
+    box-shadow: 0 0 8px #10b981;
+}
+
+.share-link-input-box {
+    background: rgba(2, 6, 23, 0.85);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.share-link-input-box:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+

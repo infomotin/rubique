@@ -8,6 +8,7 @@ handler, so HTTP polling and websocket play stay consistent.
 
 import json
 from functools import wraps
+from urllib.parse import quote
 
 from flask import (Blueprint, render_template, request, session, jsonify,
                    redirect, url_for, flash)
@@ -114,23 +115,88 @@ def age_gate():
 
 # ------------------------------------------------------------------- section
 
+def _list_lobby_tables(user_id):
+    rows = query_all(
+        """SELECT t.id, t.group_id, t.game_slug, t.name, t.stake, t.max_seats, t.status,
+                  g.name AS group_name, g.invite_code, u.username AS host_name,
+                  (SELECT COUNT(*) FROM club_seats s WHERE s.table_id = t.id) AS seated_count
+           FROM club_tables t
+           JOIN club_groups g ON g.id = t.group_id
+           JOIN club_group_members gm ON gm.group_id = g.id AND gm.user_id = %s
+           JOIN users u ON u.id = t.created_by
+           WHERE t.status IN ('waiting', 'active')
+           ORDER BY t.id DESC LIMIT 12""",
+        """SELECT t.id, t.group_id, t.game_slug, t.name, t.stake, t.max_seats, t.status,
+                  g.name AS group_name, g.invite_code, u.username AS host_name,
+                  (SELECT COUNT(*) FROM club_seats s WHERE s.table_id = t.id) AS seated_count
+           FROM club_tables t
+           JOIN club_groups g ON g.id = t.group_id
+           JOIN club_group_members gm ON gm.group_id = g.id AND gm.user_id = ?
+           JOIN users u ON u.id = t.created_by
+           WHERE t.status IN ('waiting', 'active')
+           ORDER BY t.id DESC LIMIT 12""",
+        (user_id,))
+    return rows or []
+
+
 @card_club_bp.route('/', methods=['GET'])
 @login_required
 @age_gate_required
 def section():
     uid = _user_id()
+    my_grps = groups.list_my_groups(uid)
+    active_players = UserModel.list_active_players(exclude_user_id=uid, limit=12)
+    lobby_tables = _list_lobby_tables(uid)
+    host_url = request.host_url.rstrip('/')
     return render_template(
         'card_club/section.html',
         active_page='card_club',
         user=_current_user(),
-        my_groups=groups.list_my_groups(uid),
+        my_groups=my_grps,
         invites=groups.list_pending_invites(uid),
         catalog=ordered_catalog(),
         wallet=economy.balances_view(uid),
         transfers=economy.list_transfers(uid),
         escrows=_my_escrows(uid),
         pool_seed=economy.GROUP_POOL_ALLOCATION,
+        active_players=active_players,
+        lobby_tables=lobby_tables,
+        host_url=host_url,
         age_gate='ok')
+
+
+# ------------------------------------------------------------- join / invite links
+
+@card_club_bp.route('/join/<invite_code>', methods=['GET'])
+def join_with_link(invite_code):
+    group = groups.get_group_by_invite_code(invite_code)
+    if not group:
+        flash('Invalid or expired Card Club invitation link.', 'error')
+        return redirect(url_for('card_club.section'))
+    gid = int(group['id'])
+    uid = _user_id()
+    if not uid:
+        session['pending_invite_code'] = invite_code
+        return redirect(url_for('auth.register', invite=invite_code, next=url_for('card_club.group_page', gid=gid)))
+
+    user = _current_user()
+    dob = groups.parse_dob(user.get('date_of_birth', '')) if user else None
+    if not dob or not groups.is_adult(dob):
+        session['pending_invite_code'] = invite_code
+        return redirect(url_for('card_club.age_gate', next=url_for('card_club.group_page', gid=gid)))
+
+    try:
+        groups.join_group_by_invite_code(invite_code, uid)
+        flash(f"Welcome to '{group['name']}'! You are now a member.", 'success')
+    except Exception as e:
+        flash(str(e), 'info')
+    return redirect(url_for('card_club.group_page', gid=gid))
+
+
+@card_club_bp.route('/invite/<token_or_code>', methods=['GET'])
+def invite_alias(token_or_code):
+    return redirect(url_for('card_club.join_with_link', invite_code=token_or_code))
+
 
 
 def _my_escrows(uid):
@@ -310,6 +376,47 @@ def api_list_groups():
             ORDER BY m.joined_at DESC""",
         (uid,))
     return jsonify({"ok": True, "groups": rows or []})
+
+
+@card_club_bp.route('/api/members/search', methods=['GET'])
+@api_required
+def api_search_members():
+    uid = _user_id()
+    q = request.args.get('q', '').strip()
+    members = UserModel.search_users(q, exclude_user_id=uid, limit=15)
+    return jsonify({"ok": True, "members": members})
+
+
+@card_club_bp.route('/api/invite-link', methods=['POST'])
+@api_required
+def api_generate_invite_link():
+    uid = _user_id()
+    data = request.get_json(silent=True) or request.form or {}
+    gid = data.get('group_id')
+    if not gid:
+        my_grps = groups.list_my_groups(uid)
+        if not my_grps:
+            return jsonify({"ok": False, "error": "No groups found. Please create a group first."}), 400
+        gid = my_grps[0]['id']
+    group = groups.get_group(int(gid))
+    if not group:
+        return jsonify({"ok": False, "error": "Group not found"}), 404
+    code = group['invite_code']
+    base = request.host_url.rstrip('/')
+    join_url = f"{base}/club/join/{code}"
+    text = f"🃏 Hey! Join my private Card Club room '{group['name']}' on Rubique to play games (Call Break, 29, Spades, Hearts, Bridge, Poker): {join_url}"
+    wa_url = f"https://api.whatsapp.com/send?text={quote(text)}"
+    tg_url = f"https://t.me/share/url?url={quote(join_url)}&text={quote('Join my private Card Club room on Rubique: ' + group['name'])}"
+    return jsonify({
+        "ok": True,
+        "group_id": gid,
+        "group_name": group['name'],
+        "invite_code": code,
+        "join_url": join_url,
+        "whatsapp_url": wa_url,
+        "telegram_url": tg_url,
+        "share_text": text
+    })
 
 
 @card_club_bp.route('/api/groups/<int:gid>/invites', methods=['POST'])

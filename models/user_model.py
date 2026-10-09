@@ -71,3 +71,35 @@ class UserModel:
             sql_mysql, sql_sqlite,
             (bio, avatar_color, wca_id, country, main_cube, preferred_method, pb_single, pb_ao5, user_id)
         )
+
+    @staticmethod
+    def search_users(query, exclude_user_id=None, limit=10):
+        """
+        Search registered users by username for card game lobby and invites.
+        """
+        pattern = f"%{query.strip()}%" if query else "%"
+        limit = max(1, min(int(limit or 10), 50))
+        if exclude_user_id:
+            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE %s AND id != %s ORDER BY username ASC LIMIT %s"
+            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE ? AND id != ? ORDER BY username ASC LIMIT ?"
+            return query_all(sql_m, sql_s, (pattern, int(exclude_user_id), limit)) or []
+        else:
+            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE %s ORDER BY username ASC LIMIT %s"
+            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE ? ORDER BY username ASC LIMIT ?"
+            return query_all(sql_m, sql_s, (pattern, limit)) or []
+
+    @staticmethod
+    def list_active_players(exclude_user_id=None, limit=12):
+        """
+        List registered users to find playing partners for games.
+        """
+        limit = max(1, min(int(limit or 12), 50))
+        if exclude_user_id:
+            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE id != %s ORDER BY id DESC LIMIT %s"
+            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE id != ? ORDER BY id DESC LIMIT ?"
+            return query_all(sql_m, sql_s, (int(exclude_user_id), limit)) or []
+        else:
+            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users ORDER BY id DESC LIMIT %s"
+            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users ORDER BY id DESC LIMIT ?"
+            return query_all(sql_m, sql_s, (limit,)) or []
+

@@ -27,8 +27,27 @@ def login_required(f):
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """Separate User Registration Controller"""
+    invite_code = request.args.get('invite') or request.form.get('invite') or session.get('pending_invite_code')
+    next_url = request.args.get('next') or request.form.get('next')
+
+    invite_group = None
+    if invite_code:
+        invite_group = club_groups.get_group_by_invite_code(invite_code)
+        if invite_group:
+            session['pending_invite_code'] = invite_code
+            if not next_url:
+                next_url = url_for('card_club.group_page', gid=invite_group['id'])
+
     if 'user_id' in session:
-        return redirect(url_for('visualizer.index'))
+        if invite_code and invite_group:
+            try:
+                gid = club_groups.join_group_by_invite_code(invite_code, session['user_id'])
+                session.pop('pending_invite_code', None)
+                flash(f"Welcome to {invite_group['name']}! You are now a member.", 'success')
+                return redirect(url_for('card_club.group_page', gid=gid))
+            except Exception:
+                pass
+        return redirect(next_url or url_for('visualizer.index'))
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -40,44 +59,42 @@ def register():
         # Validation
         if not username or not password:
             flash('Username and password are required.', 'error')
-            return render_template('register.html')
+            return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
 
         if len(password) < 6:
             flash('Password must be at least 6 characters long.', 'error')
-            return render_template('register.html')
+            return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
 
         if password != confirm_password:
             flash('Passwords do not match. Please try again.', 'error')
-            return render_template('register.html')
+            return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
 
         # Age gate (Card Club is 18+): date of birth is mandatory
         if not date_of_birth:
             flash('Date of birth is required (18+ services on this site).', 'error')
-            return render_template('register.html')
+            return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
         dob = club_groups.parse_dob(date_of_birth)
         if dob is None:
             flash('Date of birth must be in YYYY-MM-DD format.', 'error')
-            return render_template('register.html')
+            return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
         if not club_groups.is_adult(dob):
             flash('You must be at least 18 years old to register.', 'error')
-            return render_template('register.html')
+            return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
 
         # Device binding (one account per device - multi-account guard)
         _strength, device_key = club_devices.compose_device_key(request)
         ok, device_msg = club_devices.check_registration(0, device_key)
         if not ok:
             flash(device_msg, 'error')
-            return render_template('register.html')
+            return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
 
         # Check unique username
         existing_user = UserModel.find_by_username(username)
         if existing_user:
             flash('Username is already taken. Please choose another username.', 'error')
-            return render_template('register.html')
+            return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
 
         # Create user in database (MySQL / SQLite).
-        # Public registration always creates a standard 'user' account so the
-        # RBAC roles (developer / super_admin) can only be granted by an admin.
         user_id = None
         try:
             user_id = UserModel.create_user(username, email, password)
@@ -96,17 +113,51 @@ def register():
             except Exception:
                 flash('Account created, but your starting coin grant failed. '
                       'Please contact support.', 'warning')
+
+            # Auto-login newly registered user
+            session.clear()
+            session['user_id'] = user_id
+            session['username'] = username
+            session['role'] = 'user'
+
+            # If user registered via Card Club invite:
+            inv_code = request.form.get('invite') or session.pop('pending_invite_code', None)
+            if inv_code:
+                try:
+                    target_gid = club_groups.join_group_by_invite_code(inv_code, user_id)
+                    g_info = club_groups.get_group(target_gid)
+                    flash(f"Account created! Welcome to {g_info['name'] if g_info else 'the group'}. Let's play!", 'success')
+                    return redirect(url_for('card_club.group_page', gid=target_gid))
+                except Exception:
+                    pass
+
+            if next_url and next_url.startswith('/') and not next_url.startswith('//'):
+                flash(f'Registration successful! Welcome, {username}!', 'success')
+                return redirect(next_url)
+
             flash('Registration successful! Please sign in to continue.', 'success')
             return redirect(url_for('auth.login'))
         else:
             flash('Registration failed. Please try again.', 'error')
 
-    return render_template('register.html')
+    return render_template('register.html', invite_code=invite_code, invite_group=invite_group, next_url=next_url)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Separate User Login Controller with Role Redirection"""
+    invite_code = request.args.get('invite') or session.get('pending_invite_code')
+    next_url = request.args.get('next')
+
     if 'user_id' in session:
+        if invite_code:
+            try:
+                target_gid = club_groups.join_group_by_invite_code(invite_code, session['user_id'])
+                session.pop('pending_invite_code', None)
+                g_info = club_groups.get_group(target_gid)
+                flash(f"Joined {g_info['name'] if g_info else 'the group'}.", 'success')
+                return redirect(url_for('card_club.group_page', gid=target_gid))
+            except Exception:
+                pass
         role = session.get('role', 'user')
         if role == 'super_admin':
             return redirect(url_for('super_admin.dashboard'))
@@ -125,7 +176,7 @@ def login():
             device_ok, device_msg = club_devices.check_login(user, device_key)
             if not device_ok:
                 flash(device_msg, 'error')
-                return render_template('login.html')
+                return render_template('login.html', invite_code=invite_code, next=next_url)
 
             session.clear()
             session['user_id'] = user['id']
@@ -134,10 +185,21 @@ def login():
             
             flash(f'Welcome back, {user["username"]} ({user.get("role", "user").upper()})!', 'success')
             
-            next_url = request.args.get('next')
+            # Check invite code for Card Club group redirect
+            inv_code = request.form.get('invite') or request.args.get('invite') or session.pop('pending_invite_code', None)
+            if inv_code:
+                try:
+                    target_gid = club_groups.join_group_by_invite_code(inv_code, user['id'])
+                    g_info = club_groups.get_group(target_gid)
+                    flash(f"Welcome back! You have joined {g_info['name'] if g_info else 'the group'}.", 'success')
+                    return redirect(url_for('card_club.group_page', gid=target_gid))
+                except Exception:
+                    pass
+
+            target_next = request.form.get('next') or request.args.get('next')
             # Only honour same-origin relative paths (prevents open redirect)
-            if next_url and next_url.startswith('/') and not next_url.startswith('//'):
-                return redirect(next_url)
+            if target_next and target_next.startswith('/') and not target_next.startswith('//'):
+                return redirect(target_next)
                 
             # Role-Specific Dashboard Redirection
             if session['role'] == 'super_admin':
@@ -149,7 +211,7 @@ def login():
             
         flash('Invalid username or password. Please verify your credentials and try again.', 'error')
 
-    return render_template('login.html')
+    return render_template('login.html', invite_code=invite_code, next=next_url)
 
 @auth_bp.route('/logout', methods=['GET', 'POST'])
 def logout():

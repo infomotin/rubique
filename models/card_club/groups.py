@@ -2,7 +2,7 @@
 member removal (balance sweep + seat vacate)."""
 
 import secrets
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from models.db import query_one, query_all, execute_insert, execute_update
 from models.card_club import economy
@@ -259,6 +259,41 @@ def accept_invite(user_id, invite_id):
     return gid
 
 
+def get_group_by_invite_code(invite_code):
+    """Retrieve group record by its unique public/shareable invite code."""
+    if not invite_code:
+        return None
+    code = str(invite_code).strip().upper()
+    return query_one(
+        "SELECT * FROM club_groups WHERE UPPER(invite_code) = %s",
+        "SELECT * FROM club_groups WHERE UPPER(invite_code) = ?",
+        (code,))
+
+
+def join_group_by_invite_code(invite_code, user_id):
+    """Admit a registered user into a private group via shareable invite code.
+    Auto-initializes membership and returns the group id."""
+    if not invite_code:
+        raise NotFoundError("Invite code missing")
+    code = str(invite_code).strip().upper()
+    group = get_group_by_invite_code(code)
+    if not group:
+        raise NotFoundError("Invalid or expired invitation link")
+    gid = int(group["id"] if isinstance(group, dict) else group[0])
+    if is_member(gid, user_id):
+        return gid
+    default_role = group.get("default_role") if isinstance(group, dict) else "member"
+    default_role = default_role or "member"
+    try:
+        execute_insert(
+            "INSERT INTO club_group_members (group_id, user_id, role) VALUES (%s,%s,%s)",
+            "INSERT INTO club_group_members (group_id, user_id, role) VALUES (?,?,?)",
+            (gid, user_id, default_role))
+    except Exception:
+        pass
+    return gid
+
+
 # ------------------------------------------------------------ role proposals
 
 def active_role_set(group_id):
@@ -486,7 +521,7 @@ def send_group_encrypted_message(group_id, user_id, ciphertext, iv, salt=None):
         "ciphertext": ciphertext,
         "iv": iv,
         "salt": salt,
-        "created_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     }
 
 

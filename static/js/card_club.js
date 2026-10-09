@@ -585,7 +585,14 @@ const ClubSection = (() => {
             const winBtn = document.getElementById('hero-act-win');
             if (winBtn) {
                 winBtn.addEventListener('click', () => {
-                    if (window.ClubAudio) window.ClubAudio.win();
+                    if (window.ClubAudio) {
+                        window.ClubAudio.win();
+                        setTimeout(() => window.ClubAudio.coins(), 750);
+                    }
+                    const r = winBtn.getBoundingClientRect();
+                    if (typeof this.confettiBurst === 'function') {
+                        this.confettiBurst(r.left + r.width / 2, r.top, 130);
+                    }
                     toast('🏆 Victory Fanfare: Triad Harmony Sound Triggered!', true);
                 });
             }
@@ -636,6 +643,7 @@ const ClubTable = (() => {
     let prevCenterIds = new Set();
     let justStarted = false;
     let lastLocalMoveAt = 0;
+    let firstLoad = true;
 
     const C = () => window.CLUB;
 
@@ -741,6 +749,19 @@ const ClubTable = (() => {
         if (seatsEl) {
             const turn = (t.status === 'active') ? g.turn : null;
             const finish = v.finish || [];
+
+            // First paint of a live table: deal ceremony (cards fan in with
+            // stagger + flick sounds), so refreshing never feels static.
+            if (firstLoad) {
+                firstLoad = false;
+                if (t.status === 'active') {
+                    justStarted = true;
+                    if (window.ClubAudio) {
+                        const n = (g.hand && Array.isArray(g.hand)) ? g.hand.length : 6;
+                        setTimeout(() => window.ClubAudio.dealFan(Math.min(n, 14)), 450);
+                    }
+                }
+            }
 
             // waiting -> active: fire the shuffle + deal sequence once
             if (prevStatus === 'waiting' && t.status === 'active') {
