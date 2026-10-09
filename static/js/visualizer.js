@@ -952,7 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Move Ribbon, Step Indicators, ebong Visualizer graphics update kore
      */
-    function updateVisualizerUI() {
+    function updateVisualizerUI(isAnimating = false) {
         const activeMove = currentMoves[currentStepIndex] || 'U';
         const totalSteps = currentMoves.length;
 
@@ -984,9 +984,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWalkthroughCard(activeMove, currentStepIndex, totalSteps);
 
         // 5. Render Isometric Cube & Permutation Orbit Network
-        const twistAngle = (activeMove === 'U' || activeMove === "U'" || activeMove === 'U2') ? 22 : 0;
-        renderIsometricCube(twistAngle);
-        renderPermutationOrbit(activeMove);
+        const twistAngle = (activeMove.startsWith('U')) ? (activeMove.includes("'") ? -22 : 22) : 0;
+        renderIsometricCube(twistAngle, activeMove, isAnimating);
+        renderPermutationOrbit(activeMove, isAnimating);
     }
 
     /**
@@ -1103,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentStepIndex < currentMoves.length - 1) {
             currentStepIndex++;
             reconstructCubeStateUpToStep(currentStepIndex);
-            updateVisualizerUI();
+            updateVisualizerUI(true);
             playTone(520, 'sine', 0.05);
             if (visualizer3DCube && currentMoves[currentStepIndex]) {
                 visualizer3DCube.animateLayerTurn(currentMoves[currentStepIndex]);
@@ -1118,7 +1118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentStepIndex > 0) {
             currentStepIndex--;
             reconstructCubeStateUpToStep(currentStepIndex);
-            updateVisualizerUI();
+            updateVisualizerUI(true);
             playTone(440, 'sine', 0.05);
         }
     }
@@ -1127,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (idx >= 0 && idx < currentMoves.length) {
             currentStepIndex = idx;
             reconstructCubeStateUpToStep(currentStepIndex);
-            updateVisualizerUI();
+            updateVisualizerUI(true);
             playTone(560, 'sine', 0.05);
             if (visualizer3DCube && currentMoves[currentStepIndex]) {
                 visualizer3DCube.animateLayerTurn(currentMoves[currentStepIndex]);
@@ -1205,10 +1205,11 @@ document.addEventListener('DOMContentLoaded', () => {
             pausePlayback();
             const move = btn.dataset.move;
             playTone(480, 'sine', 0.05);
+            selectedOrbitFace = null; // Auto-follow executed face move
             applyFaceTurn(move);
             currentMoves.push(move);
             currentStepIndex = currentMoves.length - 1;
-            updateVisualizerUI();
+            updateVisualizerUI(true);
             if (visualizer3DCube) {
                 visualizer3DCube.animateLayerTurn(move);
             }
@@ -1756,6 +1757,43 @@ document.addEventListener('DOMContentLoaded', () => {
             if (seq) {
                 window.loadAndPlaySequence(seq, true);
             }
+        });
+    });
+
+    // Orbit Visualizer Mode Toggle & Face Selector Listeners
+    const btnOrbitLive = document.getElementById('orbit-mode-live');
+    const btnOrbitMatrix = document.getElementById('orbit-mode-matrix');
+
+    btnOrbitLive?.addEventListener('click', () => {
+        orbitDisplayMode = 'live';
+        btnOrbitLive.classList.add('bg-indigo-600', 'text-white', 'font-semibold', 'shadow-sm');
+        btnOrbitLive.classList.remove('text-slate-400');
+        btnOrbitMatrix?.classList.remove('bg-indigo-600', 'text-white', 'font-semibold', 'shadow-sm');
+        btnOrbitMatrix?.classList.add('text-slate-400');
+        playTone(600, 'sine', 0.04);
+        renderPermutationOrbit(currentMoves[currentStepIndex] || 'U', false);
+    });
+
+    btnOrbitMatrix?.addEventListener('click', () => {
+        orbitDisplayMode = 'matrix';
+        btnOrbitMatrix.classList.add('bg-indigo-600', 'text-white', 'font-semibold', 'shadow-sm');
+        btnOrbitMatrix.classList.remove('text-slate-400');
+        btnOrbitLive?.classList.remove('bg-indigo-600', 'text-white', 'font-semibold', 'shadow-sm');
+        btnOrbitLive?.classList.add('text-slate-400');
+        playTone(650, 'sine', 0.04);
+        renderPermutationOrbit(currentMoves[currentStepIndex] || 'U', false);
+    });
+
+    document.querySelectorAll('.orbit-face-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const face = chip.dataset.face;
+            if (selectedOrbitFace === face) {
+                selectedOrbitFace = null; // Revert to auto-follow active move
+            } else {
+                selectedOrbitFace = face;
+            }
+            playTone(520, 'sine', 0.04);
+            renderPermutationOrbit(currentMoves[currentStepIndex] || 'U', false);
         });
     });
 

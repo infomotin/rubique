@@ -151,7 +151,8 @@ def get_chat_mentions():
 def add_friend():
     """Adds a speedcubing friend by username"""
     user_id = session.get('user_id')
-    friend_username = request.form.get('username', '').strip()
+    # The form posts "username"; also accept "friend_username" for API clients.
+    friend_username = (request.form.get('username') or request.form.get('friend_username') or '').strip()
     friend = query_one(
         "SELECT id, username FROM users WHERE username = %s",
         "SELECT id, username FROM users WHERE username = ?",
