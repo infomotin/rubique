@@ -457,11 +457,16 @@ def init_database():
                     name VARCHAR(120) NOT NULL,
                     description VARCHAR(255) DEFAULT '',
                     invite_code VARCHAR(20) NOT NULL UNIQUE,
+                    default_role VARCHAR(20) DEFAULT 'member',
                     created_by INT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            try:
+                cur.execute("ALTER TABLE club_groups ADD COLUMN default_role VARCHAR(20) DEFAULT 'member'")
+            except Exception:
+                pass
             # 26. Card Club - Group membership & roles
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS club_group_members (
@@ -1117,11 +1122,19 @@ def init_database():
                 name TEXT NOT NULL,
                 description TEXT DEFAULT '',
                 invite_code TEXT NOT NULL UNIQUE,
+                default_role TEXT DEFAULT 'member',
                 created_by INTEGER NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (created_by) REFERENCES users(id)
             )
         """)
+        cur.execute("PRAGMA table_info(club_groups)")
+        _gg_cols = {row[1] for row in cur.fetchall()}
+        if "default_role" not in _gg_cols:
+            try:
+                cur.execute("ALTER TABLE club_groups ADD COLUMN default_role TEXT DEFAULT 'member'")
+            except Exception:
+                pass
         # 26. Card Club - Group membership & roles
         cur.execute("""
             CREATE TABLE IF NOT EXISTS club_group_members (

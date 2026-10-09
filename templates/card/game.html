@@ -16,6 +16,35 @@
     </div>
     {% endif %}
 
+    <!-- Speedcuber QA Testing Suite Banner -->
+    {% if is_speedcuber %}
+    <div class="p-4 sm:p-5 rounded-2xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl shadow-emerald-950/40">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-lg shadow-md">
+                <i class="fa-solid fa-flask-vial"></i>
+            </div>
+            <div>
+                <div class="font-bold text-white flex items-center gap-2">
+                    <span>TESTING SUITE ACTIVE:</span>
+                    <span class="px-2 py-0.5 rounded bg-emerald-900 border border-emerald-400/40 text-emerald-300 font-bold">@speedcuber</span>
+                    <span class="px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-500/40 text-cyan-300 text-[10px]">ALL CARDS OPENED</span>
+                </div>
+                <div class="text-[11px] text-emerald-300/80 mt-0.5">All 16 cards are unlocked &amp; opened face-up for testing purposes on this account.</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <button id="speedcuber-toggle-open-btn" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md flex items-center gap-1.5">
+                <i id="speedcuber-open-icon" class="fa-solid fa-eye-slash"></i>
+                <span id="speedcuber-open-label">Close Cards</span>
+            </button>
+            <button id="speedcuber-auto-solve-btn" class="px-3.5 py-2 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-200 font-bold transition-all flex items-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-bolt text-amber-400"></i>
+                <span>Instant Auto-Solve</span>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Top Breadcrumb & Executive Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
         <div>
@@ -141,11 +170,16 @@
 
         </div>
     </div>
+    <!-- Speedcuber Testing Config Metadata -->
+    <div id="speedcuber-meta" data-is-speedcuber="{{ 'true' if is_speedcuber else 'false' }}" class="hidden"></div>
 </div>
 
 <!-- Web Audio & Interactive JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const isSpeedcuberAccount = document.getElementById('speedcuber-meta')?.dataset.isSpeedcuber === 'true';
+    let isCardsOpenedTestMode = isSpeedcuberAccount; // Defaults to OPEN for speedcuber testing
+
     let activeCardGameId = null;
     let cardDeck = [];
     let flippedCards = [];
@@ -225,17 +259,47 @@ document.addEventListener('DOMContentLoaded', function() {
         grid.innerHTML = '';
         cardDeck.forEach((card, idx) => {
             const cardEl = document.createElement('div');
-            cardEl.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border border-slate-800 bg-slate-900 transition-all duration-300 transform hover:scale-105 flex items-center justify-center p-2';
             cardEl.dataset.index = idx;
 
-            cardEl.innerHTML = `
-                <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center">
-                    <i class="fa-solid fa-fingerprint text-2xl text-slate-700"></i>
-                    <span class="text-[9px] font-mono text-slate-600 mt-1">LOCKED</span>
-                </div>
-            `;
+            if (card.matched) {
+                // MATCHED STATE
+                cardEl.className = 'card-item relative h-28 sm:h-36 rounded-2xl border border-emerald-500/80 bg-emerald-950/50 shadow-xl flex items-center justify-center p-2 opacity-90';
+                cardEl.innerHTML = `
+                    <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center">
+                        <i class="fa-solid fa-circle-check text-emerald-400 text-xs absolute top-2 right-2"></i>
+                        <i class="fa-solid ${card.icon} text-3xl mb-1.5" style="color: ${card.color}"></i>
+                        <span class="text-[10px] font-mono font-bold text-white leading-tight">${card.name}</span>
+                        <span class="text-[8px] font-mono text-emerald-300 mt-0.5 font-bold">MATCHED</span>
+                    </div>
+                `;
+            } else if (isCardsOpenedTestMode) {
+                // SPEEDCUBER OPEN TESTING MODE: CARD IS OPEN FACE-UP
+                const isSelected = flippedCards.some(f => f.index === idx);
+                cardEl.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border ' + 
+                    (isSelected ? 'border-amber-400 ring-2 ring-amber-400/60 bg-slate-900 scale-105' : 'border-cyan-500/40 bg-gradient-to-tr from-slate-900 via-slate-900 to-cyan-950/30 hover:border-cyan-400 hover:scale-105') + 
+                    ' transition-all duration-200 shadow-xl flex items-center justify-center p-2';
+                
+                cardEl.innerHTML = `
+                    <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center relative">
+                        <span class="absolute top-1.5 right-1.5 px-1 py-0.2 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-[8px] font-mono">TEST</span>
+                        <i class="fa-solid ${card.icon} text-3xl mb-1.5" style="color: ${card.color}"></i>
+                        <span class="text-[10px] font-mono font-bold text-white leading-tight">${card.name}</span>
+                        <span class="text-[8px] font-mono text-cyan-400 mt-0.5 font-bold uppercase tracking-wider">${card.category}</span>
+                    </div>
+                `;
+                cardEl.addEventListener('click', () => onCardClick(idx, cardEl));
+            } else {
+                // NORMAL FACE-DOWN CARD
+                cardEl.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border border-slate-800 bg-slate-900 hover:border-cyan-500/50 hover:bg-slate-900/90 transition-all duration-300 transform hover:scale-105 flex items-center justify-center p-2 group';
+                cardEl.innerHTML = `
+                    <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center">
+                        <i class="fa-solid fa-layer-group text-2xl text-slate-600 group-hover:text-cyan-400 group-hover:scale-110 transition-all mb-1"></i>
+                        <span class="text-[9px] font-mono text-slate-500 group-hover:text-cyan-300 uppercase tracking-widest font-bold">CLICK TO FLIP</span>
+                    </div>
+                `;
+                cardEl.addEventListener('click', () => onCardClick(idx, cardEl));
+            }
 
-            cardEl.addEventListener('click', () => onCardClick(idx, cardEl));
             grid.appendChild(cardEl);
         });
     }
@@ -246,7 +310,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const card = cardDeck[idx];
         flippedCards.push({ index: idx, card: card, el: el });
-        revealCard(el, card);
+
+        if (isCardsOpenedTestMode) {
+            // Selected highlight in open mode
+            el.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border-amber-400 ring-2 ring-amber-400/60 bg-slate-900 shadow-2xl flex items-center justify-center p-2 transform scale-105 transition-all';
+        } else {
+            // Normal flip animation
+            revealCard(el, card);
+        }
         playTone(550, 'triangle', 0.08);
 
         if (flippedCards.length === 2) {
@@ -268,13 +339,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function hideCard(el) {
-        el.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border border-slate-800 bg-slate-900 transition-all duration-300 transform hover:scale-105 flex items-center justify-center p-2';
-        el.innerHTML = `
-            <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center">
-                <i class="fa-solid fa-fingerprint text-2xl text-slate-700"></i>
-                <span class="text-[9px] font-mono text-slate-600 mt-1">LOCKED</span>
-            </div>
-        `;
+        if (isCardsOpenedTestMode) {
+            el.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border border-cyan-500/40 bg-gradient-to-tr from-slate-900 via-slate-900 to-cyan-950/30 hover:border-cyan-400 hover:scale-105 transition-all duration-200 shadow-xl flex items-center justify-center p-2';
+        } else {
+            el.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border border-slate-800 bg-slate-900 hover:border-cyan-500/50 transition-all duration-300 transform hover:scale-105 flex items-center justify-center p-2 group';
+            el.innerHTML = `
+                <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center">
+                    <i class="fa-solid fa-layer-group text-2xl text-slate-600 group-hover:text-cyan-400 group-hover:scale-110 transition-all mb-1"></i>
+                    <span class="text-[9px] font-mono text-slate-500 group-hover:text-cyan-300 uppercase tracking-widest font-bold">CLICK TO FLIP</span>
+                </div>
+            `;
+        }
     }
 
     function checkMatch() {
@@ -287,8 +362,8 @@ document.addEventListener('DOMContentLoaded', function() {
             score += 150;
             document.getElementById('hud-score').innerText = score;
             document.getElementById('hud-pairs').innerText = `${8 - matchedPairs} / 8`;
-            c1.el.classList.add('border-emerald-500/80', 'bg-emerald-950/40');
-            c2.el.classList.add('border-emerald-500/80', 'bg-emerald-950/40');
+            c1.el.className = 'card-item relative h-28 sm:h-36 rounded-2xl border border-emerald-500/80 bg-emerald-950/50 shadow-xl flex items-center justify-center p-2 opacity-90';
+            c2.el.className = 'card-item relative h-28 sm:h-36 rounded-2xl border border-emerald-500/80 bg-emerald-950/50 shadow-xl flex items-center justify-center p-2 opacity-90';
             flippedCards = [];
             playTone(880, 'sine', 0.2);
 
@@ -311,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 hideCard(c2.el);
                 flippedCards = [];
                 playTone(220, 'sawtooth', 0.1);
-            }, 900);
+            }, 800);
         }
     }
 
@@ -328,6 +403,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 status: status,
                 deck_state: cardDeck
             })
+        });
+    }
+
+    // Speedcuber Testing Mode Handlers
+    const speedcuberToggleBtn = document.getElementById('speedcuber-toggle-open-btn');
+    if (speedcuberToggleBtn) {
+        speedcuberToggleBtn.addEventListener('click', function() {
+            isCardsOpenedTestMode = !isCardsOpenedTestMode;
+            const icon = document.getElementById('speedcuber-open-icon');
+            const label = document.getElementById('speedcuber-open-label');
+            if (isCardsOpenedTestMode) {
+                icon.className = 'fa-solid fa-eye-slash';
+                label.innerText = 'Close Cards';
+                speedcuberToggleBtn.className = 'px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md flex items-center gap-1.5';
+            } else {
+                icon.className = 'fa-solid fa-eye';
+                label.innerText = 'Open All Cards (Test Mode)';
+                speedcuberToggleBtn.className = 'px-3.5 py-2 rounded-xl bg-slate-900 border border-emerald-500/40 text-emerald-300 font-bold hover:bg-emerald-950/60 transition-all shadow-md flex items-center gap-1.5';
+            }
+            flippedCards = [];
+            renderDeck();
+        });
+    }
+
+    const speedcuberAutoSolveBtn = document.getElementById('speedcuber-auto-solve-btn');
+    if (speedcuberAutoSolveBtn) {
+        speedcuberAutoSolveBtn.addEventListener('click', function() {
+            if (!activeCardGameId || !cardDeck.length) return;
+            // Instantly match all remaining cards
+            cardDeck.forEach(c => c.matched = true);
+            matchedPairs = 8;
+            movesCount += 8;
+            score = 1200;
+            document.getElementById('hud-score').innerText = score;
+            document.getElementById('hud-moves').innerText = movesCount;
+            document.getElementById('hud-pairs').innerText = '0 / 8';
+            clearInterval(timerInterval);
+            renderDeck();
+            document.getElementById('vic-moves').innerText = movesCount;
+            document.getElementById('vic-time').innerText = formatTime(timerSeconds);
+            document.getElementById('victory-card-overlay').classList.remove('hidden');
+            syncProgress('completed');
+            playTone(1050, 'sine', 0.4);
         });
     }
 

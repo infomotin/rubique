@@ -60,13 +60,17 @@ def index():
         client_ip=client_ip
     )
 
+    username = user.get('username') if user else session.get('username', '')
+    is_speedcuber = (username == 'speedcuber') or (request.args.get('test_user') == 'speedcuber') or (request.args.get('account') == 'speedcuber')
+
     return render_template(
         'card/game.html',
         user=user,
         active_page='cards',
         symbols=CARD_SYMBOLS,
         saved_games=saved_games,
-        is_override=admin_override
+        is_override=admin_override,
+        is_speedcuber=is_speedcuber
     )
 
 @card_bp.route('/new-game', methods=['POST'])
