@@ -89,6 +89,7 @@ def init_database():
                     preferred_method VARCHAR(50) DEFAULT 'CFOP',
                     pb_single VARCHAR(30) DEFAULT '',
                     pb_ao5 VARCHAR(30) DEFAULT '',
+                    date_of_birth DATE NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
@@ -374,6 +375,72 @@ def init_database():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (game_id) REFERENCES chess_games(id) ON DELETE CASCADE,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 21. System Settings & Game Feature Toggles
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS system_settings (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    setting_key VARCHAR(100) UNIQUE NOT NULL,
+                    setting_value TEXT,
+                    setting_type VARCHAR(50) DEFAULT 'boolean',
+                    description VARCHAR(255),
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 22. Game Security & Anti-Cheat Events
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS game_security_events (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NULL,
+                    game_type VARCHAR(50) NOT NULL,
+                    game_id INT NULL,
+                    event_type VARCHAR(50) NOT NULL,
+                    severity VARCHAR(20) DEFAULT 'warning',
+                    client_ip VARCHAR(50),
+                    user_agent VARCHAR(255),
+                    details TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 23. Card Games (Memory Deck & Puzzle Match)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS card_games (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    game_type VARCHAR(50) DEFAULT 'cyber_deck_match',
+                    card_pairs INT DEFAULT 8,
+                    moves_count INT DEFAULT 0,
+                    time_seconds INT DEFAULT 0,
+                    score INT DEFAULT 0,
+                    status VARCHAR(30) DEFAULT 'active',
+                    deck_state TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 24. Developer Bit-Level Telemetry Stream
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS developer_telemetry_stream (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    trace_id VARCHAR(64) NOT NULL,
+                    client_ip VARCHAR(50),
+                    user_id INT NULL,
+                    role VARCHAR(30) DEFAULT 'guest',
+                    module VARCHAR(50) NOT NULL,
+                    action VARCHAR(100) NOT NULL,
+                    payload_bytes INT DEFAULT 0,
+                    payload_bits INT DEFAULT 0,
+                    payload_hex TEXT,
+                    latency_ms FLOAT DEFAULT 0.0,
+                    http_status INT DEFAULT 200,
+                    severity VARCHAR(20) DEFAULT 'INFO',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
         conn.close()
@@ -717,6 +784,72 @@ def init_database():
             )
         """)
 
+        # 21. System Settings & Game Feature Toggles
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS system_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                setting_key TEXT UNIQUE NOT NULL,
+                setting_value TEXT,
+                setting_type TEXT DEFAULT 'boolean',
+                description TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 22. Game Security & Anti-Cheat Events
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS game_security_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                game_type TEXT NOT NULL,
+                game_id INTEGER,
+                event_type TEXT NOT NULL,
+                severity TEXT DEFAULT 'warning',
+                client_ip TEXT,
+                user_agent TEXT,
+                details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 23. Card Games (Memory Deck & Puzzle Match)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS card_games (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                game_type TEXT DEFAULT 'cyber_deck_match',
+                card_pairs INTEGER DEFAULT 8,
+                moves_count INTEGER DEFAULT 0,
+                time_seconds INTEGER DEFAULT 0,
+                score INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                deck_state TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 24. Developer Bit-Level Telemetry Stream
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS developer_telemetry_stream (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trace_id TEXT NOT NULL,
+                client_ip TEXT,
+                user_id INTEGER,
+                role TEXT DEFAULT 'guest',
+                module TEXT NOT NULL,
+                action TEXT NOT NULL,
+                payload_bytes INTEGER DEFAULT 0,
+                payload_bits INTEGER DEFAULT 0,
+                payload_hex TEXT,
+                latency_ms REAL DEFAULT 0.0,
+                http_status INTEGER DEFAULT 200,
+                severity TEXT DEFAULT 'INFO',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
         conn.commit()
         conn.close()
 
@@ -748,6 +881,28 @@ def seed_demo_data():
                 "INSERT INTO users (username, email, password_hash, role, bio, avatar_color) VALUES (%s, %s, %s, %s, %s, %s)",
                 "INSERT INTO users (username, email, password_hash, role, bio, avatar_color) VALUES (?, ?, ?, ?, ?, ?)",
                 (uname, email, pw_hash, role, bio, color)
+            )
+
+    # 0. Seed Default System Settings & Game Feature Toggles
+    default_settings = [
+        ('chess_game_enabled', '1', 'boolean', 'Enable or disable GoChess 3D Smart Board for players'),
+        ('card_game_enabled', '1', 'boolean', 'Enable or disable CyberDeck Card Game for players'),
+        ('speedcube_game_enabled', '1', 'boolean', 'Enable or disable 3D Rubik Speedcube for players'),
+        ('game_anti_cheat_enabled', '1', 'boolean', 'Anti-Cheat engine: detects rapid-move bots & anomalies'),
+        ('security_audit_logging', '1', 'boolean', 'Bit-level security and technical telemetry logging'),
+        ('bit_telemetry_enabled', '1', 'boolean', 'Developer panel real-time bit stream monitoring')
+    ]
+    for skey, sval, stype, sdesc in default_settings:
+        stg = query_one(
+            "SELECT id FROM system_settings WHERE setting_key = %s",
+            "SELECT id FROM system_settings WHERE setting_key = ?",
+            (skey,)
+        )
+        if not stg:
+            execute_insert(
+                "INSERT INTO system_settings (setting_key, setting_value, setting_type, description) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO system_settings (setting_key, setting_value, setting_type, description) VALUES (?, ?, ?, ?)",
+                (skey, sval, stype, sdesc)
             )
 
     # Seed Initial Competitions if none exist

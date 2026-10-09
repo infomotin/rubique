@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}CyberDeck Card Memory Protocol - Rubique{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Super Admin Override Alert if Game is Disabled -->
+    {% if is_override %}
+    <div class="p-4 rounded-2xl bg-amber-950/80 border border-amber-500/50 text-amber-200 text-xs font-mono flex items-center justify-between gap-4 animate-pulse">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-amber-400 text-base"></i>
+            <span><strong>SUPER ADMIN OVERRIDE ACTIVE:</strong> Card game is currently disabled for public subscribers. You have privileged administrative testing access.</span>
+        </div>
+        <a href="{{ url_for('super_admin.games_page') }}" class="px-3 py-1 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition-all">Admin Controls</a>
+    </div>
+    {% endif %}
+
+    <!-- Top Breadcrumb & Executive Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+        <div>
+            <div class="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-1">
+                <i class="fa-solid fa-clone"></i>
+                <span>ALGORITHMIC MEMORY PROTOCOL</span>
+                <span class="text-slate-600">&bull;</span>
+                <span class="px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/30 text-cyan-300 text-[10px]">CYBERDECK v2.4</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold font-outfit text-white tracking-tight">CyberDeck Card Matrix</h1>
+            <p class="text-sm text-slate-400 font-mono mt-1">Match God's Number Rubik phases and Grandmaster tactical chess pieces in high-speed cognitive memory trials.</p>
+        </div>
+
+        <!-- Top Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2.5 font-mono text-xs">
+            <button id="card-new-game-btn" class="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-lg shadow-cyan-600/30 flex items-center gap-2">
+                <i class="fa-solid fa-rotate"></i>
+                <span>New Match</span>
+            </button>
+            <button id="card-stop-btn" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-amber-950/60 border border-slate-700 hover:border-amber-500/40 text-amber-300 transition-all flex items-center gap-2">
+                <i id="card-stop-icon" class="fa-solid fa-pause text-amber-400"></i>
+                <span id="card-stop-label">Stop / Pause</span>
+            </button>
+            <button id="card-destroy-btn" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/40 text-rose-300 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-trash-can text-rose-400"></i>
+                <span>Destroy</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Workspace Layout with User Sidebar -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <!-- Left Sidebar Column -->
+        <div class="lg:col-span-1">
+            {% include "user/sidebar.html" with context %}
+        </div>
+
+        <!-- Right Main Arena Column -->
+        <div class="lg:col-span-3 space-y-6">
+
+            <!-- HUD Stats Banner -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="glass-card p-4 rounded-2xl border border-slate-800 bg-slate-900/60 font-mono">
+                    <span class="text-[10px] text-slate-400 uppercase">SCORE</span>
+                    <div id="hud-score" class="text-2xl font-bold font-outfit text-amber-400">0</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-slate-800 bg-slate-900/60 font-mono">
+                    <span class="text-[10px] text-slate-400 uppercase">MOVES / FLIPS</span>
+                    <div id="hud-moves" class="text-2xl font-bold font-outfit text-cyan-400">0</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-slate-800 bg-slate-900/60 font-mono">
+                    <span class="text-[10px] text-slate-400 uppercase">TIME ELAPSED</span>
+                    <div id="hud-timer" class="text-2xl font-bold font-outfit text-emerald-400">00:00</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-slate-800 bg-slate-900/60 font-mono">
+                    <span class="text-[10px] text-slate-400 uppercase">PAIRS REMAINING</span>
+                    <div id="hud-pairs" class="text-2xl font-bold font-outfit text-indigo-400">8 / 8</div>
+                </div>
+            </div>
+
+            <!-- 16-Card CyberDeck Interactive Grid -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-2xl shadow-2xl relative">
+                
+                <!-- Card Grid Container -->
+                <div id="cyber-deck-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 perspective-1000 min-h-[360px]">
+                    <!-- Dynamically populated cards -->
+                </div>
+
+                <!-- Victory Overlay -->
+                <div id="victory-card-overlay" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center p-6 text-center space-y-4 z-20">
+                    <div class="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center animate-bounce">
+                        <i class="fa-solid fa-trophy text-4xl text-emerald-400"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold font-outfit text-white">CyberDeck Decrypted!</h2>
+                    <p class="text-xs text-slate-300 font-mono max-w-md">All algorithmic pairs successfully verified across quantum dimensions.</p>
+                    <div class="flex items-center gap-4 text-xs font-mono text-cyan-400">
+                        <span>Total Flips: <strong id="vic-moves">0</strong></span>
+                        <span>&bull;</span>
+                        <span>Clear Time: <strong id="vic-time">00:00</strong></span>
+                    </div>
+                    <button id="vic-restart-btn" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-xl font-mono text-xs">
+                        Play Another Matrix
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stored Card Play Stages Section -->
+            <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 font-mono">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2 text-xs text-slate-300 font-bold">
+                        <i class="fa-solid fa-box-archive text-emerald-400"></i>
+                        <span>Card Game Saved Stages (Stop / Resume / Destroy)</span>
+                    </div>
+                    <span class="text-[11px] text-slate-500">{{ saved_games|length }} sessions</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    {% for g in saved_games %}
+                    <div id="card-stage-{{ g.id }}" class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between gap-3">
+                        <div>
+                            <div class="font-bold text-white mb-1">Matrix #{{ g.id }} &bull; {{ g.status|capitalize }}</div>
+                            <div class="text-[11px] text-slate-400">
+                                Flips: {{ g.moves_count }} &bull; Time: {{ g.time_seconds }}s &bull; Score: {{ g.score }}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="resume-card-stage-btn px-2.5 py-1.5 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-white font-bold" data-id="{{ g.id }}" title="Resume Stage">
+                                <i class="fa-solid fa-play"></i>
+                            </button>
+                            <button class="destroy-card-stage-btn px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border border-slate-700" data-id="{{ g.id }}" title="Destroy Stage">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-span-full p-6 text-center text-slate-500 text-xs">
+                        No previous card stages recorded. Play a match and use Stop/Pause to save anytime!
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Web Audio & Interactive JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let activeCardGameId = null;
+    let cardDeck = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let movesCount = 0;
+    let score = 0;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let isPaused = false;
+
+    // Web Audio Sound Synthesizer
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function playTone(freq, type, duration) {
+        try {
+            if (!audioCtx) audioCtx = new AudioCtx();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type || 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    function formatTime(sec) {
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if (!isPaused) {
+                timerSeconds++;
+                document.getElementById('hud-timer').innerText = formatTime(timerSeconds);
+            }
+        }, 1000);
+    }
+
+    function startNewCardGame() {
+        fetch('/cards/new-game', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_pairs: 8 })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                activeCardGameId = data.game_id;
+                cardDeck = data.deck;
+                flippedCards = [];
+                matchedPairs = 0;
+                movesCount = 0;
+                score = 0;
+                timerSeconds = 0;
+                isPaused = false;
+                document.getElementById('victory-card-overlay').classList.add('hidden');
+                document.getElementById('hud-score').innerText = '0';
+                document.getElementById('hud-moves').innerText = '0';
+                document.getElementById('hud-timer').innerText = '00:00';
+                document.getElementById('hud-pairs').innerText = '8 / 8';
+                renderDeck();
+                startTimer();
+                playTone(440, 'sine', 0.15);
+            }
+        });
+    }
+
+    function renderDeck() {
+        const grid = document.getElementById('cyber-deck-grid');
+        grid.innerHTML = '';
+        cardDeck.forEach((card, idx) => {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border border-slate-800 bg-slate-900 transition-all duration-300 transform hover:scale-105 flex items-center justify-center p-2';
+            cardEl.dataset.index = idx;
+
+            cardEl.innerHTML = `
+                <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center">
+                    <i class="fa-solid fa-fingerprint text-2xl text-slate-700"></i>
+                    <span class="text-[9px] font-mono text-slate-600 mt-1">LOCKED</span>
+                </div>
+            `;
+
+            cardEl.addEventListener('click', () => onCardClick(idx, cardEl));
+            grid.appendChild(cardEl);
+        });
+    }
+
+    function onCardClick(idx, el) {
+        if (isPaused || cardDeck[idx].matched || flippedCards.length >= 2) return;
+        if (flippedCards.some(f => f.index === idx)) return;
+
+        const card = cardDeck[idx];
+        flippedCards.push({ index: idx, card: card, el: el });
+        revealCard(el, card);
+        playTone(550, 'triangle', 0.08);
+
+        if (flippedCards.length === 2) {
+            movesCount++;
+            document.getElementById('hud-moves').innerText = movesCount;
+            checkMatch();
+        }
+    }
+
+    function revealCard(el, card) {
+        el.className = 'card-item relative h-28 sm:h-36 rounded-2xl border border-cyan-500/60 bg-gradient-to-tr from-slate-900 to-cyan-950/40 shadow-xl flex items-center justify-center p-2 transform scale-105';
+        el.innerHTML = `
+            <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center animate-fade-in">
+                <i class="fa-solid ${card.icon} text-3xl mb-1.5" style="color: ${card.color}"></i>
+                <span class="text-[10px] font-mono font-bold text-white leading-tight">${card.name}</span>
+                <span class="text-[8px] font-mono text-slate-400 mt-0.5">${card.category}</span>
+            </div>
+        `;
+    }
+
+    function hideCard(el) {
+        el.className = 'card-item cursor-pointer relative h-28 sm:h-36 rounded-2xl border border-slate-800 bg-slate-900 transition-all duration-300 transform hover:scale-105 flex items-center justify-center p-2';
+        el.innerHTML = `
+            <div class="card-inner w-full h-full flex flex-col items-center justify-center text-center">
+                <i class="fa-solid fa-fingerprint text-2xl text-slate-700"></i>
+                <span class="text-[9px] font-mono text-slate-600 mt-1">LOCKED</span>
+            </div>
+        `;
+    }
+
+    function checkMatch() {
+        const [c1, c2] = flippedCards;
+        if (c1.card.pair_key === c2.card.pair_key) {
+            // Match found!
+            cardDeck[c1.index].matched = true;
+            cardDeck[c2.index].matched = true;
+            matchedPairs++;
+            score += 150;
+            document.getElementById('hud-score').innerText = score;
+            document.getElementById('hud-pairs').innerText = `${8 - matchedPairs} / 8`;
+            c1.el.classList.add('border-emerald-500/80', 'bg-emerald-950/40');
+            c2.el.classList.add('border-emerald-500/80', 'bg-emerald-950/40');
+            flippedCards = [];
+            playTone(880, 'sine', 0.2);
+
+            // Sync with backend
+            syncProgress('active');
+
+            if (matchedPairs === 8) {
+                // Victory
+                clearInterval(timerInterval);
+                document.getElementById('vic-moves').innerText = movesCount;
+                document.getElementById('vic-time').innerText = formatTime(timerSeconds);
+                document.getElementById('victory-card-overlay').classList.remove('hidden');
+                syncProgress('completed');
+                playTone(1050, 'sine', 0.4);
+            }
+        } else {
+            // No match
+            setTimeout(() => {
+                hideCard(c1.el);
+                hideCard(c2.el);
+                flippedCards = [];
+                playTone(220, 'sawtooth', 0.1);
+            }, 900);
+        }
+    }
+
+    function syncProgress(status) {
+        if (!activeCardGameId) return;
+        fetch('/cards/update-progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                game_id: activeCardGameId,
+                moves: movesCount,
+                time_seconds: timerSeconds,
+                score: score,
+                status: status,
+                deck_state: cardDeck
+            })
+        });
+    }
+
+    // Stop / Pause Button
+    const stopBtn = document.getElementById('card-stop-btn');
+    if (stopBtn) {
+        stopBtn.addEventListener('click', function() {
+            if (!activeCardGameId) return;
+            isPaused = !isPaused;
+            const icon = document.getElementById('card-stop-icon');
+            const label = document.getElementById('card-stop-label');
+            if (isPaused) {
+                icon.className = 'fa-solid fa-play text-emerald-400';
+                label.innerText = 'Resume Stage';
+                stopBtn.className = 'px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all flex items-center gap-2';
+                fetch(`/cards/game/${activeCardGameId}/pause`, { method: 'POST' });
+            } else {
+                icon.className = 'fa-solid fa-pause text-amber-400';
+                label.innerText = 'Stop / Pause';
+                stopBtn.className = 'px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-amber-950/60 border border-slate-700 text-amber-300 transition-all flex items-center gap-2';
+                fetch(`/cards/game/${activeCardGameId}/resume`, { method: 'POST' });
+            }
+        });
+    }
+
+    // Destroy Button
+    const destroyBtn = document.getElementById('card-destroy-btn');
+    if (destroyBtn) {
+        destroyBtn.addEventListener('click', function() {
+            if (!activeCardGameId) return;
+            if (confirm('Permanently destroy this card play stage?')) {
+                fetch(`/cards/game/${activeCardGameId}/destroy`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    startNewCardGame();
+                });
+            }
+        });
+    }
+
+    document.getElementById('card-new-game-btn')?.addEventListener('click', startNewCardGame);
+    document.getElementById('vic-restart-btn')?.addEventListener('click', startNewCardGame);
+
+    // Initial Start
+    startNewCardGame();
+});
+</script>
+{% endblock %}
