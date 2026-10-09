@@ -105,11 +105,11 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
             '/dashboard/guide': 'guide-3d-canvas',
             '/dashboard/videos': 'upload-video-form-box',
             '/dashboard/chat': 'chat-messages-container',
-            '/dashboard/friends': 'add-friend',
+            '/dashboard/friends': 'friends/add',
             '/dashboard/blog': 'blog',
             '/dashboard/competitions': 'competition',
             '/dashboard/courses': 'course-modal',
-            '/dashboard/scan': 'net-grid',
+            '/dashboard/scan': 'net-solve-btn',
             '/dashboard/trophies': 'trophy',
         }
         for path, marker in menu_pages.items():
