@@ -530,8 +530,7 @@ def init_database():
                     user_id INT DEFAULT 0,
                     balance BIGINT NOT NULL DEFAULT 0,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    UNIQUE KEY uq_club_wallet (group_id, user_id),
-                    FOREIGN KEY (group_id) REFERENCES club_groups(id) ON DELETE CASCADE
+                    UNIQUE KEY uq_club_wallet (group_id, user_id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
             # 31. Card Club - Wallet ledger (every coin movement audited)
@@ -676,6 +675,21 @@ def init_database():
                     cur.execute(_ledger_sql)
                 except Exception:
                     pass
+            # club_wallets.group_id = 0 is the global namespace: drop its FK
+            try:
+                cur.execute("""SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
+                               WHERE TABLE_SCHEMA = DATABASE()
+                                 AND TABLE_NAME = 'club_wallets'
+                                 AND REFERENCED_TABLE_NAME = 'club_groups'""")
+                for _fkr in cur.fetchall():
+                    _fkname = _fkr.get("CONSTRAINT_NAME") if isinstance(_fkr, dict) else _fkr[0]
+                    if _fkname:
+                        try:
+                            cur.execute(f"ALTER TABLE club_wallets DROP FOREIGN KEY {_fkname}")
+                        except Exception:
+                            pass
+            except Exception:
+                pass
             try:
                 cur.execute("INSERT INTO club_chain_head (id, seq, last_hash) VALUES (1, 0, %s)",
                             ("0" * 64,))
@@ -1176,8 +1190,7 @@ def init_database():
                 user_id INTEGER DEFAULT 0,
                 balance INTEGER NOT NULL DEFAULT 0,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE (group_id, user_id),
-                FOREIGN KEY (group_id) REFERENCES club_groups(id)
+                UNIQUE (group_id, user_id)
             )
         """)
         # 31. Card Club - Wallet ledger (every coin movement audited)

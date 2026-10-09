@@ -64,29 +64,60 @@ def _tx():
 
 def _one(conn, db_type, sql_mysql, sql_sqlite, params=()):
     sql = sql_mysql if db_type == "mysql" else sql_sqlite
-    with conn.cursor() as cur if db_type == "mysql" else conn.cursor() as cur:
+    cur = conn.cursor()
+    try:
         cur.execute(sql, params)
-        return cur.fetchone()
+        row = cur.fetchone()
+        if isinstance(row, dict):
+            return tuple(row.values())
+        return row
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            pass
 
 
 def _all(conn, db_type, sql_mysql, sql_sqlite, params=()):
     sql = sql_mysql if db_type == "mysql" else sql_sqlite
-    with conn.cursor() as cur if db_type == "mysql" else conn.cursor() as cur:
+    cur = conn.cursor()
+    try:
         cur.execute(sql, params)
-        return cur.fetchall()
+        rows = cur.fetchall()
+        if rows and isinstance(rows[0], dict):
+            return [tuple(r.values()) for r in rows]
+        return rows
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            pass
 
 
 def _exec(conn, db_type, sql_mysql, sql_sqlite, params=()):
     sql = sql_mysql if db_type == "mysql" else sql_sqlite
-    with conn.cursor() as cur if db_type == "mysql" else conn.cursor() as cur:
-        return cur.execute(sql, params)
+    cur = conn.cursor()
+    try:
+        affected = cur.execute(sql, params)
+        return affected if affected is not None else cur.rowcount
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            pass
 
 
-def _row(d, row):
-    """Mapping access for both dict (Cursor DictCursor?) and tuple rows."""
-    if d == "mysql":
-        return row[0] if not isinstance(row, dict) else row
-    return row[0] if not isinstance(row, dict) else row
+def _insert(conn, db_type, sql_mysql, sql_sqlite, params=()):
+    sql = sql_mysql if db_type == "mysql" else sql_sqlite
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, params)
+        return cur.lastrowid
+    finally:
+        try:
+            cur.close()
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------- ledger core
@@ -144,10 +175,25 @@ def _owner_key(group_id, user_id):
 
 
 def _ensure_wallet(conn, db_type, group_id, user_id):
-    _exec(conn, db_type,
-          "INSERT IGNORE INTO club_wallets (group_id, user_id, balance) VALUES (%s,%s,0)",
-          "INSERT OR IGNORE INTO club_wallets (group_id, user_id, balance) VALUES (?,?,0)",
-          (group_id, user_id))
+    if db_type == "sqlite":
+        _exec(conn, db_type,
+              "INSERT OR IGNORE INTO club_wallets (group_id, user_id, balance) VALUES (?,?,0)",
+              "INSERT OR IGNORE INTO club_wallets (group_id, user_id, balance) VALUES (?,?,0)",
+              (group_id, user_id))
+        return
+    try:
+        _exec(conn, db_type,
+              "INSERT INTO club_wallets (group_id, user_id, balance) VALUES (%s,%s,0)",
+              "INSERT INTO club_wallets (group_id, user_id, balance) VALUES (%s,%s,0)",
+              (group_id, user_id))
+    except Exception:
+        # Duplicate key on MySQL does not abort the transaction: confirm row.
+        row = _one(conn, db_type,
+                   "SELECT balance FROM club_wallets WHERE group_id = %s AND user_id = %s",
+                   "SELECT balance FROM club_wallets WHERE group_id = %s AND user_id = %s",
+                   (group_id, user_id))
+        if not row:
+            raise
 
 
 def _balance_locked(conn, db_type, group_id, user_id):
@@ -431,10 +477,10 @@ def place_bet(table_id, group_id, user_id, amount):
     with _tx() as (conn, db_type):
         if amount > 0:
             outstanding = _one(conn, db_type,
-                               """SELECT COALESCE(SUM(b.amount),0) FROM club_bets b
-                                  WHERE b.user_id = %s AND b.status = 'escrowed'""",
-                               """SELECT COALESCE(SUM(b.amount),0) FROM club_bets b
-                                  WHERE b.user_id = ? AND b.status = 'escrowed'""",
+                               """SELECT COALESCE(SUM(amount),0) FROM club_bets
+                                  WHERE user_id = %s AND status = 'escrowed'""",
+                               """SELECT COALESCE(SUM(amount),0) FROM club_bets
+                                  WHERE user_id = ? AND status = 'escrowed'""",
                                (user_id,))
             held = int(outstanding[0]) if outstanding else 0
             if held + amount > MAX_OUTSTANDING_EXPOSURE:
@@ -443,18 +489,10 @@ def place_bet(table_id, group_id, user_id, amount):
             _move(conn, db_type, (group_id, user_id), HOLD_WALLET, amount,
                   "bet_escrow", ref_type="table", ref_id=table_id,
                   note="seat stake escrowed")
-        from models.db import execute_insert
-        with conn.cursor() as cur:
-            cur.execute(
-                "INSERT INTO club_bets (table_id, user_id, amount) VALUES (%s,%s,%s)" % ()
-                if db_type == "mysql" else
-                "INSERT INTO club_bets (table_id, user_id, amount) VALUES (?,?,?)",
-                (table_id, user_id, amount))
-        bet_id = cur.lastrowid
-        _ledger_append(conn, db_type, _owner_key(group_id, user_id), -amount,
-                       _balance_locked(conn, db_type, group_id, user_id),
-                       "bet_escrow", group_id=group_id, user_id=user_id,
-                       ref_type="table", ref_id=table_id, note="stake recorded")
+        bet_id = _insert(conn, db_type,
+                         "INSERT INTO club_bets (table_id, user_id, amount) VALUES (%s,%s,%s)",
+                         "INSERT INTO club_bets (table_id, user_id, amount) VALUES (?,?,?)",
+                         (table_id, user_id, amount))
         return bet_id
 
 
@@ -521,13 +559,6 @@ def settle_zero_sum(table_id, payouts, pool_bonus):
             _move(conn, db_type, HOLD_WALLET, (group_id, int(user)), amount,
                   "payout", ref_type="table", ref_id=table_id,
                   note="zero-sum settlement")
-        for bet in bets:
-            _exec(conn, db_type,
-                  "UPDATE club_bets SET status = 'paid' WHERE id = %s AND table_id = %s",
-                  "UPDATE club_bets SET status = 'paid' WHERE id = ? AND table_id = ?",
-                  (int(bet[0]) if False else table_id, table_id) if False else
-                  ("UPDATE club_bets SET status = 'paid' WHERE table_id = %s" % () if False else table_id, table_id)) \
-            if False else None
         _exec(conn, db_type,
               "UPDATE club_bets SET status = 'paid' WHERE table_id = %s AND status = 'escrowed'",
               "UPDATE club_bets SET status = 'paid' WHERE table_id = ? AND status = 'escrowed'",
@@ -561,28 +592,33 @@ def verify_ledger():
     with _tx() as (conn, db_type):
         rows = _all(conn, db_type,
                     """SELECT id, seq, owner_key, amount, balance_after,
-                              entry_type, prev_hash, entry_hash
+                              entry_type, ref_type, ref_id, note,
+                              prev_hash, entry_hash
                        FROM club_ledger ORDER BY id ASC""",
                     """SELECT id, seq, owner_key, amount, balance_after,
-                              entry_type, prev_hash, entry_hash
+                              entry_type, ref_type, ref_id, note,
+                              prev_hash, entry_hash
                        FROM club_ledger ORDER BY id ASC""")
         prev_hash = GENESIS
         prev_seq = 0
         recomputed = {}
         for r in rows:
-            (rid, seq, owner_key, amount, balance_after,
-             entry_type, rprev, rhash) = (
-                int(r[0]), int(r[1]), r[2], int(r[3]), int(r[4]), r[5], r[6], r[7]))
+            rid = int(r[0]); seq = int(r[1]); owner_key = r[2]
+            amount = int(r[3]); balance_after = int(r[4]); entry_type = r[5]
+            ref_type = r[6]; ref_id = r[7]; note = r[8]
+            rprev = r[9]; rhash = r[10]
             if rprev != prev_hash:
                 report["chain_ok"] = False
                 report["violations"].append(f"entry {rid}: prev_hash mismatch")
-            if int(prev_seq) + 1 != seq:
+            if prev_seq + 1 != seq:
                 report["chain_ok"] = False
                 report["violations"].append(f"entry {rid}: seq gap")
             fields = _entry_fields(seq, owner_key, amount, balance_after,
-                                   entry_type, None, None, "")
-            # ref_type/ref_id/note are not re-fed here: hash excludes them? no -
-            # they are part of fields; fetch them properly below instead.
+                                   entry_type, ref_type, ref_id, note)
+            expect = _hash(prev_hash, fields)
+            if expect != rhash:
+                report["chain_ok"] = False
+                report["violations"].append(f"entry {rid}: content hash mismatch (tampered?)")
             prev_hash, prev_seq = rhash, seq
             recomputed[owner_key] = recomputed.get(owner_key, 0) + int(amount)
         head = _one(conn, db_type,
@@ -609,8 +645,10 @@ def verify_ledger():
                 report["violations"].append(
                     f"wallet {key}: balance {b} != ledger {recomputed.get(key, 0)}")
         if recomputed.get("reserve", 0) != reserve - SUPPLY:
-            # ledger reserve deltas must equal current - initial supply
-            pass  # reserve starts at SUPPLY before any delta
+            report["balances_ok"] = False
+            report["violations"].append(
+                f"reserve ledger sum {recomputed.get('reserve', 0)} != "
+                f"current reserve {reserve} - supply {SUPPLY}")
         if reserve + circ + pools != SUPPLY:
             report["supply_ok"] = False
             report["violations"].append(

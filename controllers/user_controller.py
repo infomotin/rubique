@@ -11,6 +11,7 @@ from models.solve_model import SolveModel
 from models.admin_model import AdminModel
 from models.community_model import CommunityModel
 from models.custom_cube_model import CustomCubeModel, SUPPORTED_SHAPES
+from models.card_model import CardModel
 from models.db import query_one, query_all, execute_insert
 from .auth_controller import login_required
 
@@ -45,6 +46,9 @@ def dashboard():
     public_cubes = CustomCubeModel.get_public_cubes(limit=15)
     group_challenges = CustomCubeModel.get_group_challenges(limit=25)
 
+    # Card Game Saved Stages
+    card_games = CardModel.get_user_games(user_id, limit=5)
+
     return render_template(
         'user/overview.html',
         user=user,
@@ -61,6 +65,7 @@ def dashboard():
         public_cubes=public_cubes,
         group_challenges=group_challenges,
         supported_shapes=SUPPORTED_SHAPES,
+        card_games=card_games,
         active_page='overview'
     )
 
