@@ -695,6 +695,21 @@ def init_database():
                             pass
             except Exception:
                 pass
+            # club_transfers.group_id = 0 is the global namespace: drop its FK
+            try:
+                cur.execute("""SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
+                               WHERE TABLE_SCHEMA = DATABASE()
+                                 AND TABLE_NAME = 'club_transfers'
+                                 AND REFERENCED_TABLE_NAME = 'club_groups'""")
+                for _fkr in cur.fetchall():
+                    _fkname = _fkr.get("CONSTRAINT_NAME") if isinstance(_fkr, dict) else _fkr[0]
+                    if _fkname:
+                        try:
+                            cur.execute(f"ALTER TABLE club_transfers DROP FOREIGN KEY {_fkname}")
+                        except Exception:
+                            pass
+            except Exception:
+                pass
             try:
                 cur.execute("INSERT INTO club_chain_head (id, seq, last_hash) VALUES (1, 0, %s)",
                             ("0" * 64,))
