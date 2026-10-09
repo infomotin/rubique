@@ -15,7 +15,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Ai page access korte hole age login korun!', 'warning')
+            flash('Please log in to access this page.', 'warning')
             return redirect(url_for('auth.login', next=request.full_path.rstrip('?')))
         return f(*args, **kwargs)
     return decorated_function
@@ -34,21 +34,21 @@ def register():
 
         # Validation
         if not username or not password:
-            flash('Username ebong Password dewa baddhotamulok!', 'error')
+            flash('Username and password are required.', 'error')
             return render_template('register.html')
 
         if len(password) < 6:
-            flash('Password ontoto 6 character er hote hobe!', 'error')
+            flash('Password must be at least 6 characters long.', 'error')
             return render_template('register.html')
 
         if password != confirm_password:
-            flash('Password duto match koreni! Abar cheshta korun.', 'error')
+            flash('Passwords do not match. Please try again.', 'error')
             return render_template('register.html')
 
         # Check unique username
         existing_user = UserModel.find_by_username(username)
         if existing_user:
-            flash('Ai username ti already ache! Onno username select korun.', 'error')
+            flash('Username is already taken. Please choose another username.', 'error')
             return render_template('register.html')
 
         # Create user in database (MySQL / SQLite).
@@ -61,10 +61,10 @@ def register():
             user_id = None
 
         if user_id:
-            flash('Registration successful! Ekhon sign in korun.', 'success')
+            flash('Registration successful! Please sign in to continue.', 'success')
             return redirect(url_for('auth.login'))
         else:
-            flash('Registration e somoshya hoyeche! Abar cheshta korun.', 'error')
+            flash('Registration failed. Please try again.', 'error')
 
     return render_template('register.html')
 
@@ -90,7 +90,7 @@ def login():
             session['username'] = user['username']
             session['role'] = user.get('role', 'user')
             
-            flash(f'Swagotom, {user["username"]} ({user.get("role", "user").upper()})!', 'success')
+            flash(f'Welcome back, {user["username"]} ({user.get("role", "user").upper()})!', 'success')
             
             next_url = request.args.get('next')
             # Only honour same-origin relative paths (prevents open redirect)
@@ -105,7 +105,7 @@ def login():
             else:
                 return redirect(url_for('user.dashboard'))
             
-        flash('Invalid username ba password! Sothik tottho din.', 'error')
+        flash('Invalid username or password. Please verify your credentials and try again.', 'error')
 
     return render_template('login.html')
 
@@ -113,5 +113,5 @@ def login():
 def logout():
     """User Logout Controller"""
     session.clear()
-    flash('Apni successfully logged out hoyechen.', 'info')
+    flash('You have been logged out successfully.', 'info')
     return redirect(url_for('home.index'))

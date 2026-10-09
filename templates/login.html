@@ -137,12 +137,23 @@
 
             </form>
 
-            <!-- Quick Demo Credentials Filler Button -->
-            <div class="mt-4 p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
-                <span class="text-slate-400">Need a quick test?</span>
-                <button type="button" id="fill-demo-btn" class="text-indigo-400 hover:text-indigo-300 font-semibold underline flex items-center gap-1">
-                    <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Fill Demo Account
-                </button>
+            <!-- Quick Demo Credentials Filler Buttons -->
+            <div class="mt-4 p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs font-mono">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-400">Quick Test Accounts:</span>
+                    <span class="text-[10px] text-slate-500">Click to autofill</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" class="demo-fill-btn px-2.5 py-1.5 rounded-lg bg-indigo-950/70 border border-indigo-500/30 hover:border-indigo-400 text-indigo-300 text-[11px] font-medium transition-all text-center" data-user="speedcuber" data-pass="user123">
+                        <i class="fa-solid fa-cube mr-1 text-[10px]"></i> User
+                    </button>
+                    <button type="button" class="demo-fill-btn px-2.5 py-1.5 rounded-lg bg-amber-950/70 border border-amber-500/30 hover:border-amber-400 text-amber-300 text-[11px] font-medium transition-all text-center" data-user="admin" data-pass="admin123">
+                        <i class="fa-solid fa-crown mr-1 text-[10px]"></i> Admin
+                    </button>
+                    <button type="button" class="demo-fill-btn px-2.5 py-1.5 rounded-lg bg-cyan-950/70 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-[11px] font-medium transition-all text-center" data-user="developer" data-pass="dev123">
+                        <i class="fa-solid fa-terminal mr-1 text-[10px]"></i> Dev
+                    </button>
+                </div>
             </div>
 
             <!-- Footer Switcher Link -->
@@ -181,12 +192,13 @@
             }
         });
 
-        // Demo account autofill helper
-        const demoBtn = document.getElementById('fill-demo-btn');
+        // Demo account autofill buttons
         const usernameInput = document.getElementById('username');
-        demoBtn?.addEventListener('click', () => {
-            usernameInput.value = 'rubikmaster';
-            pwInput.value = 'password123';
+        document.querySelectorAll('.demo-fill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                usernameInput.value = btn.dataset.user;
+                pwInput.value = btn.dataset.pass;
+            });
         });
     });
 </script>

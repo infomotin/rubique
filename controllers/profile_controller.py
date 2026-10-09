@@ -18,7 +18,7 @@ def index():
     user_id = session.get('user_id')
     user = UserModel.find_by_id(user_id)
     if not user:
-        flash('User account khuje paoa jayni!', 'error')
+        flash('User account not found.', 'error')
         return redirect(url_for('auth.logout'))
 
     stats = SolveModel.get_user_stats(user_id)

@@ -354,7 +354,7 @@
                                 <tbody class="divide-y divide-slate-900">
                                     {% for row in history %}
                                         <tr class="hover:bg-slate-900/50 transition-colors">
-                                            <td class="py-3 px-3 text-slate-500 whitespace-nowrap">{{ row.created_at[:16] if row.created_at else 'Just now' }}</td>
+                                            <td class="py-3 px-3 text-slate-500 whitespace-nowrap">{{ (row.created_at|string)[:16] if row.created_at else 'Just now' }}</td>
                                             <td class="py-3 px-3 text-indigo-300 max-w-xs truncate" title="{{ row.scramble }}">{{ row.scramble | safe }}</td>
                                             <td class="py-3 px-3 text-emerald-400 max-w-xs truncate" title="{{ row.solution }}">{{ row.solution | safe }}</td>
                                             <td class="py-3 px-3 text-center">
@@ -981,7 +981,7 @@
                                                 </div>
                                                 <div>
                                                     <span class="font-bold text-white text-xs block">{{ v.username }}</span>
-                                                    <span class="text-[10px] text-slate-500 font-mono">{{ v.created_at[:16] if v.created_at else 'Recent' }}</span>
+                                                    <span class="text-[10px] text-slate-500 font-mono">{{ (v.created_at|string)[:16] if v.created_at else 'Recent' }}</span>
                                                 </div>
                                             </div>
                                             <span class="px-2.5 py-0.5 rounded-full bg-pink-950 text-pink-300 text-[10px] font-mono font-bold border border-pink-500/40">
@@ -1270,7 +1270,7 @@
                                             </div>
                                             <div>
                                                 <span class="font-bold text-white text-sm block">{{ p.username }}</span>
-                                                <span class="text-[10px] text-slate-500 font-mono">{{ p.created_at[:16] if p.created_at else 'Recent' }}</span>
+                                                <span class="text-[10px] text-slate-500 font-mono">{{ (p.created_at|string)[:16] if p.created_at else 'Recent' }}</span>
                                             </div>
                                         </div>
                                         <div class="flex gap-1.5">
