@@ -169,10 +169,10 @@
                             {{ supported_shapes[cube.shape_type].name if cube.shape_type in supported_shapes else cube.shape_type }}
                         </span>
                         <span class="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
-                            <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] text-white font-bold" style="background: {{ cube.author_avatar or '#818cf8' }};">
-                                {{ cube.author_name[0] | upper }}
+                            <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] text-white font-bold" style="background: {{ cube.avatar_color or cube.author_avatar or '#818cf8' }};">
+                                {{ (cube.creator_name or cube.author_name or 'S')[0] | upper }}
                             </span>
-                            <span>{{ cube.author_name }}</span>
+                            <span>{{ cube.creator_name or cube.author_name or 'Speedcuber' }}</span>
                         </span>
                     </div>
 

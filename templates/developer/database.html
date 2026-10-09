@@ -62,18 +62,23 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-900">
-                            {% for tbl, cnt in db_stats.items() %}
+                            {% for s in db_stats %}
                                 <tr class="hover:bg-slate-900/50">
-                                    <td class="py-2.5 px-3 font-bold text-cyan-300">{{ tbl }}</td>
-                                    <td class="py-2.5 px-3 font-bold text-amber-300">{{ cnt }} rows</td>
+                                    <td class="py-2.5 px-3 font-bold text-cyan-300 font-mono">{{ s.table }}</td>
+                                    <td class="py-2.5 px-3 font-bold text-amber-300 font-mono">{{ s.count }} rows</td>
+                                    <td class="py-2.5 px-3">
+                                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full {% if s.status == 'ONLINE' %}bg-emerald-950 border border-emerald-500/40 text-emerald-300{% else %}bg-slate-800 text-slate-400{% endif %}">
+                                            {{ s.status }}
+                                        </span>
+                                    </td>
                                     <td class="py-2.5 px-3 text-slate-400">
-                                        {% if tbl == 'users' %}Core Multi-Role RBAC authentication accounts
-                                        {% elif tbl == 'solves' %}WCA solve records with moves and times
-                                        {% elif tbl == 'competitions' %}Speedcubing tournament declarations
-                                        {% elif tbl == 'custom_cubes' %}10 Particula shape geometries &amp; palettes
-                                        {% elif tbl == 'cube_group_challenges' %}Study clan mentions and challenge states
-                                        {% elif tbl == 'videos' %}Community speedcuber solve tutorials
-                                        {% elif tbl == 'chat_groups' %}Public and private speedcubing clans
+                                        {% if s.table == 'users' %}Core Multi-Role RBAC authentication accounts
+                                        {% elif s.table == 'solves' %}WCA solve records with moves and times
+                                        {% elif s.table == 'competitions' %}Speedcubing tournament declarations
+                                        {% elif s.table == 'custom_cubes' %}10 Particula shape geometries &amp; palettes
+                                        {% elif s.table == 'cube_group_challenges' %}Study clan mentions and challenge states
+                                        {% elif s.table == 'videos' %}Community speedcuber solve tutorials
+                                        {% elif s.table == 'chat_groups' %}Public and private speedcubing clans
                                         {% else %}Platform relational data
                                         {% endif %}
                                     </td>

@@ -126,7 +126,8 @@ class DevModel:
         tables = [
             'users', 'solves', 'competitions', 'competition_entries',
             'courses', 'coupons', 'system_logs', 'videos', 'chat_groups',
-            'chat_messages', 'friends', 'blog_posts', 'blog_comments'
+            'chat_messages', 'friends', 'blog_posts', 'blog_comments',
+            'custom_cubes', 'cube_group_challenges'
         ]
         stats = []
         for t in tables:
