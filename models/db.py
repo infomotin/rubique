@@ -15,22 +15,43 @@ from config import Config
 
 ACTIVE_DB_TYPE = 'sqlite'
 
+# pymysql >= 2 builds a fresh SSLContext (and reloads the system CA bundle,
+# ~20ms) for EVERY connection in TLS-preferred mode. Share one context for the
+# whole process instead - identical behavior, no per-connection CA reload.
+_SHARED_SSL_CTX = None
+try:
+    _ORIG_CREATE_SSL_CTX = pymysql.connections.Connection._create_ssl_ctx
+
+    def _shared_create_ssl_ctx(self, ssl_conf):
+        global _SHARED_SSL_CTX
+        if _SHARED_SSL_CTX is None:
+            _SHARED_SSL_CTX = _ORIG_CREATE_SSL_CTX(self, ssl_conf)
+        return _SHARED_SSL_CTX
+
+    pymysql.connections.Connection._create_ssl_ctx = _shared_create_ssl_ctx
+except Exception:
+    pass
+
+_MYSQL_DB_ENSURED = False
+
 def try_mysql_connection():
     """MySQL server connect kore database create kore connection return kore"""
-    global ACTIVE_DB_TYPE
+    global ACTIVE_DB_TYPE, _MYSQL_DB_ENSURED
     try:
-        server_conn = pymysql.connect(
-            host=Config.MYSQL_HOST,
-            user=Config.MYSQL_USER,
-            password=Config.MYSQL_PASSWORD,
-            port=Config.MYSQL_PORT,
-            cursorclass=pymysql.cursors.DictCursor,
-            connect_timeout=3
-        )
-        with server_conn.cursor() as cur:
-            cur.execute(f"CREATE DATABASE IF NOT EXISTS `{Config.MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-        server_conn.commit()
-        server_conn.close()
+        if not _MYSQL_DB_ENSURED:
+            server_conn = pymysql.connect(
+                host=Config.MYSQL_HOST,
+                user=Config.MYSQL_USER,
+                password=Config.MYSQL_PASSWORD,
+                port=Config.MYSQL_PORT,
+                cursorclass=pymysql.cursors.DictCursor,
+                connect_timeout=3
+            )
+            with server_conn.cursor() as cur:
+                cur.execute(f"CREATE DATABASE IF NOT EXISTS `{Config.MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+            server_conn.commit()
+            server_conn.close()
+            _MYSQL_DB_ENSURED = True
 
         db_conn = pymysql.connect(
             host=Config.MYSQL_HOST,

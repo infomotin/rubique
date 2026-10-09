@@ -1,5 +1,3 @@
-"""Game catalogue: slug -> engine metadata (player ranges, real-time flags)."""
-
 from models.card_club.engines.shedding import (
     Blitz, Cheat, FanTan, Mao, Palace, President, RanterGoRound,
 )
@@ -8,10 +6,16 @@ from models.card_club.engines.tricks import KnockOutWhist
 from models.card_club.engines.rummy import Rummy
 from models.card_club.engines.scopa import Scopa
 from models.card_club.engines.strategy import GOPS, Golf
+from models.card_club.engines.popular_classics import (
+    CallBreak, Hazari, TwentyNine, TeenPatti, ContractBridge,
+    TexasHoldem, Blackjack, CrazyEights
+)
 
 ENGINES = [
-    Blitz, Cheat, EgyptianRatscrew, FanTan, Golf, GOPS, KnockOutWhist,
-    Mao, Palace, President, RanterGoRound, Rummy, Scopa, Speed, Spoons,
+    CallBreak, Hazari, TwentyNine, TeenPatti, Rummy, ContractBridge,
+    TexasHoldem, Blackjack, President, Cheat, Speed, CrazyEights,
+    Blitz, EgyptianRatscrew, FanTan, Golf, GOPS, KnockOutWhist,
+    Mao, Palace, RanterGoRound, Scopa, Spoons,
 ]
 
 CATALOG = {
@@ -27,11 +31,12 @@ CATALOG = {
     for cls in ENGINES
 }
 
-# Spec order for listings: Blitz ... Spoons
+# Spec order for listings prioritizing the user's requested 12 games first
 SPEC_ORDER = [
-    "blitz", "cheat", "ers", "fantan", "golf", "gops", "knockout_whist",
-    "mao", "palace", "president", "rantergoround", "rummy", "scopa",
-    "speed", "spoons",
+    "call_break", "hazari", "29", "teen_patti", "rummy", "bridge",
+    "poker", "blackjack", "president", "cheat", "speed", "crazy_eights",
+    "blitz", "ers", "fantan", "golf", "gops", "knockout_whist",
+    "mao", "palace", "rantergoround", "scopa", "spoons",
 ]
 
 

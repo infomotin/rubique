@@ -69,7 +69,12 @@ class Blitz(BaseCardGame):
         top = self._top()
         acts = []
         for c in s["hands"][str(seat)]:
-            if c[1] == "8" or c[1] == top[1] or suit_of(c) == suit_of(top):
+            if c[1] == "8":
+                for suit in "SHDC":          # an 8 must declare its suit
+                    acts.append({"action": "play", "card": c, "suit": suit})
+            elif s["pending_draw"]:
+                continue                     # only an 8 beats a pending draw
+            elif c[1] == top[1] or suit_of(c) == suit_of(top):
                 acts.append({"action": "play", "card": c, "suit": None})
         acts.append({"action": "draw"})
         if s["pending_draw"] == 0 and not s["draw"] and not acts[:-1]:
@@ -90,7 +95,7 @@ class Blitz(BaseCardGame):
             if card[1] != "8" and card[1] != top[1] and suit_of(card) != suit_of(top):
                 raise IllegalMove("Card does not match rank or suit")
             named = action.get("suit")
-            if card[1] == "8" and named not in "SHDC":
+            if card[1] == "8" and (not isinstance(named, str) or named not in "SHDC"):
                 raise IllegalMove("Declare the suit for an 8")
             hands.remove(card)
             s["discard"].append(card)

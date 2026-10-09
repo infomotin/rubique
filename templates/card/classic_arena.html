@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+
+{% block title %}Classic Playing Card Arena - 29, Bridge, Spades, Hearts & More - Rubique{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Top Card Mode Navigation Tabs -->
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4 flex-wrap gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs font-mono text-emerald-400 mb-1">
+                <i class="fa-solid fa-diamond"></i>
+                <span>CLASSIC PLAYING CARDS SUITE</span>
+                <span class="text-slate-600">&bull;</span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/30 text-emerald-300 text-[10px]">AI BOTS &bull; 4-PLAYER PARTNERSHIPS</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight" id="arena-game-title">29 Card Game (Twenty-Nine)</h1>
+            <p class="text-xs text-slate-400 font-mono mt-0.5" id="arena-game-desc">South Asian classic trick game: Jack=3, 9=2, Ace=1, 10=1, 28/29 points bidding.</p>
+        </div>
+
+        <!-- Section Navigation Switchers -->
+        <div class="flex items-center gap-2 font-mono text-xs">
+            <a href="{{ url_for('card_club.section') }}" class="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 font-bold transition-all flex items-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-users-rectangle text-emerald-400"></i>
+                <span>Private Card Club (18+)</span>
+            </a>
+            <a href="{{ url_for('card.index') }}" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-clone text-violet-400"></i>
+                <span>CyberDeck Memory</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Game Selector Ribbon -->
+    <div class="glass-card p-3 rounded-2xl border border-slate-800 bg-slate-950/70 overflow-x-auto scrollbar-none font-mono text-xs">
+        <div class="flex items-center gap-2 min-w-max" id="game-selector-ribbon">
+            <button data-slug="29" class="game-select-btn active-game px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold transition-all shadow-md flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-300"></i>
+                <span>29 (Twenty-Nine)</span>
+            </button>
+            <button data-slug="bridge" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-handshake text-indigo-400"></i>
+                <span>Contract Bridge</span>
+            </button>
+            <button data-slug="spades" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-spade text-cyan-400"></i>
+                <span>Spades</span>
+            </button>
+            <button data-slug="hearts" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-heart text-rose-500"></i>
+                <span>Hearts</span>
+            </button>
+            <button data-slug="whist" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-crown text-amber-400"></i>
+                <span>Whist</span>
+            </button>
+            <button data-slug="oh_hell" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-bullseye text-emerald-400"></i>
+                <span>Oh Hell!</span>
+            </button>
+            <button data-slug="euchre" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-fuchsia-400"></i>
+                <span>Euchre (24 Cards)</span>
+            </button>
+            <button data-slug="call_break" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-flag-checkered text-amber-400"></i>
+                <span>Call Break</span>
+            </button>
+            <button data-slug="hazari" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-star text-yellow-400"></i>
+                <span>Hazari (1000 Pts)</span>
+            </button>
+            <button data-slug="teen_patti" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-coins text-amber-400"></i>
+                <span>Teen Patti (3 Cards)</span>
+            </button>
+            <button data-slug="poker" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-dice text-blue-400"></i>
+                <span>Texas Hold'em</span>
+            </button>
+            <button data-slug="blackjack" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-clover text-emerald-400"></i>
+                <span>Blackjack (21)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Playing Card Arena Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+
+        <!-- Left Column: User Sidebar + Game Rules / Scoreboard -->
+        <div class="lg:col-span-1 space-y-4">
+            {% include "user/sidebar.html" with context %}
+
+            <!-- Live HUD / Match Status Card -->
+            <div class="glass-card p-5 rounded-3xl border border-slate-800 bg-slate-950/80 font-mono text-xs space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <span class="text-slate-400 font-bold uppercase text-[10px]">MATCH HUD</span>
+                    <span id="hud-phase-badge" class="px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300 text-[10px] font-bold">BIDDING</span>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span class="text-slate-500">Trump Suit:</span>
+                        <span id="hud-trump-disp" class="font-bold text-white text-sm">--</span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span class="text-slate-500">Contract / High Bid:</span>
+                        <span id="hud-bid-disp" class="font-bold text-amber-400">--</span>
+                    </div>
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span class="text-slate-500">Turn to Play:</span>
+                        <span id="hud-turn-disp" class="font-bold text-emerald-400">You (South)</span>
+                    </div>
+                </div>
+
+                <!-- Scores Breakdown -->
+                <div class="pt-3 border-t border-slate-800 space-y-1.5" id="hud-scores-container">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold">Trick &amp; Points Count</div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-indigo-300">Team South &amp; North:</span>
+                        <span id="hud-team0-score" class="font-bold text-white">0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-amber-300">Team West &amp; East:</span>
+                        <span id="hud-team1-score" class="font-bold text-white">0</span>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="pt-3 border-t border-slate-800 flex gap-2">
+                    <button id="arena-restart-btn" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold transition-all flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-rotate text-emerald-400"></i> New Deal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Game Log -->
+            <div class="glass-card p-4 rounded-3xl border border-slate-800 bg-slate-950/80 font-mono text-[11px]">
+                <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
+                    <span>TABLE LOG</span>
+                    <i class="fa-solid fa-scroll text-slate-600"></i>
+                </div>
+                <div id="arena-game-log" class="space-y-1 max-h-48 overflow-y-auto pr-1 text-slate-300 scrollbar-thin">
+                    <div class="text-slate-500">Waiting for game start...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right 3 Columns: 4-Player Velvet Felt Table Arena -->
+        <div class="lg:col-span-3 space-y-6">
+
+            <!-- Green Velvet Felt Table Container -->
+            <div class="relative rounded-[2.5rem] border-4 border-amber-900/40 bg-gradient-to-b from-emerald-950 via-[#07301c] to-emerald-950 shadow-2xl p-6 sm:p-10 min-h-[560px] flex flex-col justify-between overflow-hidden">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.15),transparent_70%)] pointer-events-none"></div>
+
+                <!-- North Seat (Partner AI) -->
+                <div class="flex flex-col items-center space-y-2 relative z-10">
+                    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/80 border border-emerald-500/30 text-emerald-300 font-mono text-xs shadow-lg">
+                        <i class="fa-solid fa-robot text-emerald-400"></i>
+                        <span>North (Partner Bot)</span>
+                        <span id="north-card-count" class="px-1.5 py-0.2 rounded bg-emerald-900 text-[10px] text-white">0 cards</span>
+                    </div>
+                    <!-- North Card Backs or Dummy Hands -->
+                    <div id="north-hand-cards" class="flex justify-center -space-x-3 sm:-space-x-4 max-w-full overflow-hidden">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Middle Zone: West Seat + Center Trick Table + East Seat -->
+                <div class="grid grid-cols-12 items-center gap-2 sm:gap-4 my-auto relative z-10">
+                    
+                    <!-- West Seat (Opponent AI) -->
+                    <div class="col-span-3 flex flex-col items-center space-y-2">
+                        <div class="flex flex-col items-center px-2 sm:px-3 py-1.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-slate-300 font-mono text-[11px] text-center shadow-lg">
+                            <i class="fa-solid fa-robot text-amber-400 mb-1"></i>
+                            <span>West (Bot)</span>
+                            <span id="west-card-count" class="text-[10px] text-slate-500">0 cards</span>
+                        </div>
+                    </div>
+
+                    <!-- Center Trick Surface -->
+                    <div class="col-span-6 flex flex-col items-center justify-center p-4 rounded-3xl bg-emerald-950/60 border border-emerald-500/20 backdrop-blur-sm min-h-[180px] shadow-inner relative">
+                        <div class="text-[9px] font-mono text-emerald-400/80 uppercase tracking-widest mb-2 font-bold flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-to-circle text-emerald-400"></i>
+                            <span>CENTER TRICK</span>
+                        </div>
+
+                        <!-- 4 Played Cards on Table -->
+                        <div id="center-trick-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 items-center justify-center min-h-[90px]">
+                            <!-- Cards played during the trick -->
+                        </div>
+
+                        <!-- Round / Trick Winner Announcement -->
+                        <div id="trick-banner" class="hidden mt-2 px-3 py-1 rounded-full bg-emerald-900/90 border border-emerald-400 text-white font-mono text-[10px] font-bold animate-bounce">
+                            Winner takes trick!
+                        </div>
+                    </div>
+
+                    <!-- East Seat (Opponent AI) -->
+                    <div class="col-span-3 flex flex-col items-center space-y-2">
+                        <div class="flex flex-col items-center px-2 sm:px-3 py-1.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-slate-300 font-mono text-[11px] text-center shadow-lg">
+                            <i class="fa-solid fa-robot text-amber-400 mb-1"></i>
+                            <span>East (Bot)</span>
+                            <span id="east-card-count" class="text-[10px] text-slate-500">0 cards</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- South Seat (You / Player 0) -->
+                <div class="flex flex-col items-center space-y-3 relative z-10 pt-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/90 border border-cyan-500/40 text-cyan-300 font-mono text-xs shadow-lg">
+                            <i class="fa-solid fa-user text-cyan-400"></i>
+                            <span class="font-bold">You (South)</span>
+                            <span id="south-turn-indicator" class="hidden px-1.5 py-0.2 rounded bg-emerald-500 text-slate-950 text-[10px] font-bold animate-pulse">YOUR TURN</span>
+                        </div>
+
+                        <!-- Action Toolbar (Reveal Trump in 29, etc.) -->
+                        <div id="extra-actions-toolbar" class="flex gap-2"></div>
+                    </div>
+
+                    <!-- Bidding Overlay / Drawer (When Phase is Bidding) -->
+                    <div id="bidding-drawer" class="hidden glass-card p-4 rounded-2xl border border-amber-500/40 bg-slate-950/95 font-mono text-xs flex flex-wrap items-center justify-center gap-2 shadow-2xl">
+                        <span class="text-amber-300 font-bold uppercase text-[11px] mr-2">Your Bid:</span>
+                        <div id="bid-buttons-container" class="flex flex-wrap items-center gap-1.5">
+                            <!-- Populated with legal bids -->
+                        </div>
+                    </div>
+
+                    <!-- Human Hand (Cards with Real Faces, Click to Play) -->
+                    <div id="human-hand-container" class="flex justify-center -space-x-4 sm:-space-x-5 max-w-full overflow-x-auto p-2 scrollbar-none transition-all">
+                        <!-- Populated with actual cards -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Victory / End of Round Modal -->
+            <div id="arena-victory-modal" class="hidden p-6 rounded-3xl border border-emerald-500 bg-slate-950/95 backdrop-blur-md shadow-2xl flex flex-col items-center justify-center text-center space-y-4">
+                <div class="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-3xl text-emerald-400 animate-bounce">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 class="text-2xl font-bold font-outfit text-white" id="victory-title">Deal Completed!</h2>
+                <p class="text-xs font-mono text-slate-300 max-w-md" id="victory-desc">Scores have been settled. Review final standings below.</p>
+                <button id="victory-restart-btn" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs shadow-xl transition-all">
+                    Deal Next Hand
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Client-side Card Engine JS -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentSlug = '29';
+    let gameState = null;
+
+    // Web Audio Synthesizer
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function playTone(freq, type = 'sine', duration = 0.1) {
+        try {
+            if (!audioCtx) audioCtx = new AudioCtx();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    const SUIT_SYMBOLS = { 'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣' };
+    const SUIT_NAMES = { 'S': 'Spades', 'H': 'Hearts', 'D': 'Diamonds', 'C': 'Clubs' };
+    const SUIT_COLORS = { 'S': '#cbd5e1', 'H': '#ef4444', 'D': '#f97316', 'C': '#38bdf8' };
+
+    function createCardHTML(card, isPlayable = false, isSmall = false) {
+        if (!card) return '';
+        const s = card[0];
+        const r = card.slice(1);
+        const r_disp = r === 'T' ? '10' : r;
+        const sym = SUIT_SYMBOLS[s] || s;
+        const col = SUIT_COLORS[s] || '#fff';
+        const isRed = s === 'H' || s === 'D';
+
+        const sizeClasses = isSmall 
+            ? 'w-10 h-14 sm:w-12 sm:h-16 text-[10px] rounded-lg'
+            : 'w-14 h-20 sm:w-16 sm:h-24 text-xs rounded-xl';
+
+        const borderClasses = isPlayable
+            ? 'cursor-pointer hover:-translate-y-3 hover:scale-110 hover:shadow-cyan-500/40 border-2 border-cyan-400 bg-slate-900 ring-2 ring-cyan-400/50'
+            : 'border border-slate-700 bg-slate-900/90';
+
+        return `
+            <div class="card-obj relative ${sizeClasses} ${borderClasses} shadow-xl flex flex-col justify-between p-1.5 transition-all duration-200 select-none" data-card="${card}">
+                <div class="flex items-center justify-between leading-none font-bold font-mono" style="color: ${col}">
+                    <span>${r_disp}</span>
+                    <span class="text-[10px]">${sym}</span>
+                </div>
+                <div class="flex items-center justify-center text-lg sm:text-xl font-bold" style="color: ${col}">
+                    ${sym}
+                </div>
+                <div class="flex items-center justify-between leading-none font-bold font-mono rotate-180" style="color: ${col}">
+                    <span>${r_disp}</span>
+                    <span class="text-[10px]">${sym}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function createCardBackHTML(isSmall = false) {
+        const sizeClasses = isSmall 
+            ? 'w-8 h-12 sm:w-10 sm:h-14 rounded-lg'
+            : 'w-12 h-18 sm:w-14 sm:h-20 rounded-xl';
+        return `
+            <div class="${sizeClasses} border border-amber-500/40 bg-gradient-to-tr from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-diamond text-emerald-400/40 text-xs"></i>
+            </div>
+        `;
+    }
+
+    function loadGame(slug) {
+        currentSlug = slug;
+        fetch('/cards/classic/new-game', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug: slug })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.ok) {
+                gameState = data.state;
+                renderState();
+                playTone(440, 'sine', 0.15);
+            }
+        });
+    }
+
+    function renderState() {
+        if (!gameState) return;
+
+        // Title and description
+        document.getElementById('arena-game-title').innerText = gameState.title || currentSlug.toUpperCase();
+        document.getElementById('arena-game-desc').innerText = gameState.description || '';
+
+        // Phase badge
+        const phaseBadge = document.getElementById('hud-phase-badge');
+        phaseBadge.innerText = (gameState.phase || 'PLAYING').toUpperCase();
+
+        // Trump display
+        const trumpDisp = document.getElementById('hud-trump-disp');
+        if (gameState.trump_suit) {
+            const sym = SUIT_SYMBOLS[gameState.trump_suit] || gameState.trump_suit;
+            const name = SUIT_NAMES[gameState.trump_suit] || '';
+            trumpDisp.innerHTML = `<span style="color: ${SUIT_COLORS[gameState.trump_suit] || '#fff'}">${sym} ${name}</span>`;
+        } else if (gameState.trump_card) {
+            trumpDisp.innerText = gameState.trump_card;
+        } else {
+            trumpDisp.innerText = 'None / NT';
+        }
+
+        // Bids display
+        const bidDisp = document.getElementById('hud-bid-disp');
+        if (gameState.high_bid) {
+            bidDisp.innerText = `${gameState.high_bid} pts (${gameState.high_bidder === 0 ? 'You' : 'Seat ' + gameState.high_bidder})`;
+        } else if (gameState.contract) {
+            bidDisp.innerText = `${gameState.contract} (by Seat ${gameState.declarer})`;
+        } else if (gameState.team_bids && gameState.team_bids.team0) {
+            bidDisp.innerText = `S+N: ${gameState.team_bids.team0} | W+E: ${gameState.team_bids.team1}`;
+        } else {
+            bidDisp.innerText = '--';
+        }
+
+        // Turn indicator
+        const isMyTurn = (gameState.phase === 'bidding' && gameState.bid_turn === 0) || (gameState.phase === 'playing' && gameState.turn === 0);
+        document.getElementById('hud-turn-disp').innerText = isMyTurn ? 'You (South)' : `Seat ${gameState.turn} (Bot)`;
+        const turnBadge = document.getElementById('south-turn-indicator');
+        if (isMyTurn && !gameState.over) {
+            turnBadge.classList.remove('hidden');
+        } else {
+            turnBadge.classList.add('hidden');
+        }
+
+        // Score container
+        if (gameState.card_points && gameState.card_points.team0 !== undefined) {
+            document.getElementById('hud-team0-score').innerText = `${gameState.card_points.team0} pts (Tricks: ${gameState.tricks['0'] + gameState.tricks['2']})`;
+            document.getElementById('hud-team1-score').innerText = `${gameState.card_points.team1} pts (Tricks: ${gameState.tricks['1'] + gameState.tricks['3']})`;
+        } else if (gameState.team_tricks && gameState.team_tricks.team0 !== undefined) {
+            document.getElementById('hud-team0-score').innerText = `${gameState.team_tricks.team0} tricks`;
+            document.getElementById('hud-team1-score').innerText = `${gameState.team_tricks.team1} tricks`;
+        } else if (gameState.penalty_points) {
+            document.getElementById('hud-team0-score').innerText = `You: ${gameState.penalty_points['0']} pen pts`;
+            document.getElementById('hud-team1-score').innerText = `Bots: ${gameState.penalty_points['1'] + gameState.penalty_points['2'] + gameState.penalty_points['3']} pts`;
+        }
+
+        // Other players' card counts
+        document.getElementById('west-card-count').innerText = `${gameState.counts['1'] || 0} cards`;
+        document.getElementById('north-card-count').innerText = `${gameState.counts['2'] || 0} cards`;
+        document.getElementById('east-card-count').innerText = `${gameState.counts['3'] || 0} cards`;
+
+        // North Hand cards (dummy if Bridge revealed, else card backs)
+        const northCardsEl = document.getElementById('north-hand-cards');
+        northCardsEl.innerHTML = '';
+        if (gameState.dummy_hand && gameState.dummy_hand.length > 0) {
+            gameState.dummy_hand.forEach(c => {
+                northCardsEl.innerHTML += createCardHTML(c, false, true);
+            });
+        } else {
+            const n_count = Math.min(13, gameState.counts['2'] || 0);
+            for (let i = 0; i < n_count; i++) {
+                northCardsEl.innerHTML += createCardBackHTML(true);
+            }
+        }
+
+        // Center Trick Cards
+        const trickZone = document.getElementById('center-trick-cards');
+        trickZone.innerHTML = '';
+        if (gameState.trick && gameState.trick.length > 0) {
+            gameState.trick.forEach(e => {
+                const seatNames = ['South (You)', 'West', 'North', 'East'];
+                trickZone.innerHTML += `
+                    <div class="flex flex-col items-center gap-1">
+                        <span class="text-[9px] font-mono text-slate-400 font-bold">${seatNames[e.seat]}</span>
+                        ${createCardHTML(e.card, false, false)}
+                    </div>
+                `;
+            });
+        } else {
+            trickZone.innerHTML = `<span class="col-span-full text-xs font-mono text-emerald-400/50 italic text-center">Lead a card to start trick</span>`;
+        }
+
+        // Human Hand (South)
+        const humanHandEl = document.getElementById('human-hand-container');
+        humanHandEl.innerHTML = '';
+        const legalPlays = (gameState.legal_actions || []).filter(a => a.action === 'play').map(a => a.card);
+
+        if (gameState.hand && gameState.hand.length > 0) {
+            gameState.hand.forEach(card => {
+                const isPlayable = isMyTurn && legalPlays.includes(card) && gameState.phase === 'playing';
+                const el = document.createElement('div');
+                el.innerHTML = createCardHTML(card, isPlayable, false);
+                const cardDiv = el.firstElementChild;
+                if (isPlayable) {
+                    cardDiv.addEventListener('click', () => {
+                        sendAction({ action: 'play', card: card });
+                        playTone(600, 'triangle', 0.08);
+                    });
+                }
+                humanHandEl.appendChild(cardDiv);
+            });
+        }
+
+        // Bidding drawer
+        const biddingDrawer = document.getElementById('bidding-drawer');
+        const bidButtonsContainer = document.getElementById('bid-buttons-container');
+        bidButtonsContainer.innerHTML = '';
+        const legalBids = (gameState.legal_actions || []).filter(a => a.action !== 'play');
+
+        if (gameState.phase === 'bidding' && isMyTurn && legalBids.length > 0) {
+            biddingDrawer.classList.remove('hidden');
+            legalBids.forEach(a => {
+                const btn = document.createElement('button');
+                btn.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md';
+                if (a.action === 'pass') {
+                    btn.className = 'px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all';
+                    btn.innerText = 'Pass';
+                } else if (a.value !== undefined) {
+                    btn.innerText = `Bid ${a.value}`;
+                } else if (a.level !== undefined) {
+                    btn.innerText = `Bid ${a.level}${a.suit}`;
+                } else {
+                    btn.innerText = a.action;
+                }
+                btn.addEventListener('click', () => {
+                    sendAction(a);
+                    playTone(500, 'sine', 0.1);
+                });
+                bidButtonsContainer.appendChild(btn);
+            });
+        } else {
+            biddingDrawer.classList.add('hidden');
+        }
+
+        // Extra Actions (Reveal Trump, etc.)
+        const extraToolbar = document.getElementById('extra-actions-toolbar');
+        extraToolbar.innerHTML = '';
+        const revealAct = (gameState.legal_actions || []).find(a => a.action === 'reveal_trump');
+        if (revealAct && isMyTurn) {
+            const revBtn = document.createElement('button');
+            revBtn.className = 'px-3 py-1 rounded-full bg-amber-600 hover:bg-amber-500 text-white font-mono font-bold text-xs transition-all flex items-center gap-1.5 shadow-md animate-pulse';
+            revBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Reveal Trump';
+            revBtn.addEventListener('click', () => sendAction(revealAct));
+            extraToolbar.appendChild(revBtn);
+        }
+
+        // Game Log
+        const logContainer = document.getElementById('arena-game-log');
+        logContainer.innerHTML = '';
+        (gameState.log || []).forEach(msg => {
+            const line = document.createElement('div');
+            line.className = 'text-slate-300 leading-tight';
+            line.innerText = msg;
+            logContainer.appendChild(line);
+        });
+        logContainer.scrollTop = logContainer.scrollHeight;
+
+        // Victory Modal
+        const vicModal = document.getElementById('arena-victory-modal');
+        if (gameState.over) {
+            vicModal.classList.remove('hidden');
+            playTone(880, 'sine', 0.4);
+        } else {
+            vicModal.classList.add('hidden');
+        }
+    }
+
+    function sendAction(actionObj) {
+        fetch('/cards/classic/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(actionObj)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.ok) {
+                gameState = data.state;
+                renderState();
+            } else {
+                alert(data.error || 'Action failed');
+            }
+        });
+    }
+
+    // Ribbon Switcher
+    document.querySelectorAll('.game-select-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.game-select-btn').forEach(b => {
+                b.className = 'game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2';
+            });
+            this.className = 'game-select-btn active-game px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold transition-all shadow-md flex items-center gap-2';
+            loadGame(this.dataset.slug);
+        });
+    });
+
+    document.getElementById('arena-restart-btn')?.addEventListener('click', () => loadGame(currentSlug));
+    document.getElementById('victory-restart-btn')?.addEventListener('click', () => loadGame(currentSlug));
+
+    // Initial game deal
+    loadGame('29');
+});
+</script>
+{% endblock %}

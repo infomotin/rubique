@@ -15,6 +15,14 @@ ADMIN = "admin"
 
 # Role sets proposed must come from the ACTIVE game's role set (spec 2.3).
 GAME_ROLE_SETS = {
+    "call_break": ("dealer", "bid-master", "member"),
+    "hazari": ("dealer", "scorekeeper", "member"),
+    "29": ("dealer", "trump-bidder", "member"),
+    "teen_patti": ("dealer", "table-host", "member"),
+    "bridge": ("dealer", "declarer", "member"),
+    "poker": ("dealer", "floor-manager", "member"),
+    "blackjack": ("dealer", "pit-boss", "member"),
+    "crazy_eights": ("dealer", "caller", "member"),
     "blitz": ("dealer", "caller", "member"),
     "cheat": ("dealer", "caller", "member"),
     "ers": ("dealer", "caller", "member"),

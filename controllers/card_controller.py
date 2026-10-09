@@ -10,6 +10,10 @@ from flask import Blueprint, render_template, request, session, jsonify, redirec
 from models.user_model import UserModel
 from models.card_model import CardModel, CARD_SYMBOLS
 from models.security_model import SecurityModel
+from models.card_club.engines.classic_tricks import (
+    create_classic_game, get_game_view, step_ai_until_human,
+    CLASSIC_CATALOG, GAME_ENGINES
+)
 
 card_bp = Blueprint('card', __name__, url_prefix='/cards')
 
@@ -176,3 +180,61 @@ def destroy_game(game_id):
     user_id = session.get('user_id')
     CardModel.destroy_game(game_id, user_id)
     return jsonify({"status": "success", "message": "Card stage destroyed."})
+
+
+# =====================================================================
+# CLASSIC PLAYING CARD SUITE (29, Bridge, Spades, Hearts, Whist, Oh Hell, Euchre)
+# =====================================================================
+
+@card_bp.route('/classic')
+def classic_arena():
+    """Classic 4-Player Partnership & Trick-Taking Card Arena View"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id) if user_id else None
+    return render_template(
+        'card/classic_arena.html',
+        user=user,
+        active_page='cards',
+        catalog=CLASSIC_CATALOG
+    )
+
+@card_bp.route('/classic/new-game', methods=['POST'])
+def classic_new_game():
+    data = request.get_json() or {}
+    slug = data.get('slug', '29')
+    state = create_classic_game(slug)
+    state = step_ai_until_human(state)
+    session['classic_card_state'] = state
+    view = get_game_view(state, seat=0)
+    return jsonify({"ok": True, "state": view})
+
+@card_bp.route('/classic/action', methods=['POST'])
+def classic_action():
+    state = session.get('classic_card_state')
+    if not state:
+        state = create_classic_game('29')
+    data = request.get_json() or {}
+    slug = state.get('slug', '29')
+    engine = GAME_ENGINES.get(slug)
+    if not engine:
+        return jsonify({"ok": False, "error": f"Unknown game '{slug}'"}), 400
+
+    try:
+        engine.apply(state, 0, data)
+        state = step_ai_until_human(state)
+        session['classic_card_state'] = state
+        view = get_game_view(state, seat=0)
+        return jsonify({"ok": True, "state": view})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+@card_bp.route('/classic/state', methods=['GET'])
+def classic_state():
+    state = session.get('classic_card_state')
+    if not state:
+        state = create_classic_game('29')
+        state = step_ai_until_human(state)
+        session['classic_card_state'] = state
+    view = get_game_view(state, seat=0)
+    return jsonify({"ok": True, "state": view})
+
