@@ -15,7 +15,7 @@ import uuid
 from app import create_app
 from models.db import init_database, query_one, execute_update
 from models.user_model import UserModel
-from models.card_club import economy, groups
+from models.card_club import economy, groups, gameplay
 from models.card_club.engines import CATALOG
 from models.card_club.engines.popular_classics import (
     CallBreak, Hazari, TwentyNine, TeenPatti, ContractBridge,
@@ -381,6 +381,94 @@ class CardGameEnginesTest(unittest.TestCase):
             self.assertTrue(eng.is_over(), f"{slug} failed to terminate")
             self.assertGreaterEqual(len(eng.finish_order()), 1, f"{slug} must have finish order")
 
+    # =========================================================================
+    # 5. STRICT RULES & CAMERA SHARING AND ENCRYPTED GROUP CHAT VAULT
+    # =========================================================================
+
+    def test_strict_rules_and_camera_unlock(self):
+        """Test strict tournament rules agreement gating camera sharing."""
+        u = f'cam_{self.run}'
+        self.register_user(u)
+        self.login_user(u)
+        u_row = UserModel.find_by_username(u)
+        gid = groups.create_group(u_row['id'], f'CamGroup {u}')['id']
+        tid = gameplay.create_table(gid, u_row['id'], 'blackjack', stake=10)['id']
+
+        # View before rules read
+        view = gameplay.get_view(tid, u_row['id'])
+        self.assertFalse(view['my_rules_read'])
+        self.assertFalse(view['my_camera_active'])
+
+        # Attempting to activate camera before rules read must fail
+        code, body = self.api('POST', f'/club/api/tables/{tid}/camera', {'active': True})
+        self.assertEqual(code, 400)
+        self.assertIn("Strict Rules must be read", body.get('error', ''))
+
+        # Acknowledge strict rules
+        code, body = self.api('POST', f'/club/api/tables/{tid}/strict-rules', {})
+        self.assertEqual(code, 200)
+        self.assertTrue(body.get('rules_read'))
+
+        # Now camera toggle succeeds
+        code, body = self.api('POST', f'/club/api/tables/{tid}/camera', {'active': True})
+        self.assertEqual(code, 200)
+        self.assertTrue(body.get('camera_active'))
+
+        view2 = gameplay.get_view(tid, u_row['id'])
+        self.assertTrue(view2['my_rules_read'])
+        self.assertTrue(view2['my_camera_active'])
+        self.assertTrue(view2['seats'][0]['camera_active'])
+
+    def test_encrypted_group_chat_isolation_and_vault(self):
+        """Test isolated end-to-end encrypted group chat vault (AES-256-GCM ciphertext)."""
+        u1 = f'chat_adm_{self.run}'
+        u2 = f'chat_mbr_{self.run}'
+        u_out = f'chat_out_{self.run}'
+        self.register_user(u1)
+        self.register_user(u2)
+        self.register_user(u_out)
+
+        uid1 = UserModel.find_by_username(u1)['id']
+        uid2 = UserModel.find_by_username(u2)['id']
+        uid_out = UserModel.find_by_username(u_out)['id']
+
+        self.login_user(u1)
+        gid = groups.create_group(uid1, f'Secret Vault {u1}')['id']
+        inv = groups.create_invite(gid, uid1, u2)
+        groups.accept_invite(uid2, inv['id'])
+
+        # u1 sends encrypted message (AES-256-GCM ciphertext)
+        cipher_sample = "mQENBF4G+z8BCAC3+9kLmX0aV998Z5dE"
+        iv_sample = "dGVzdF9pdl8xMmJ5dGVz"
+        code, body = self.api('POST', f'/club/api/groups/{gid}/chat', {
+            'ciphertext': cipher_sample,
+            'iv': iv_sample,
+            'salt': 'salt123'
+        })
+        self.assertEqual(code, 200)
+        self.assertTrue(body.get('ok'))
+        self.assertEqual(body['message']['ciphertext'], cipher_sample)
+
+        # u2 (member) reads encrypted messages
+        self.login_user(u2)
+        code, body = self.api('GET', f'/club/api/groups/{gid}/chat')
+        self.assertEqual(code, 200)
+        msgs = body.get('messages', [])
+        self.assertEqual(len(msgs), 1)
+        self.assertEqual(msgs[0]['ciphertext'], cipher_sample)
+        self.assertEqual(msgs[0]['iv'], iv_sample)
+        self.assertEqual(msgs[0]['username'], u1)
+
+        # Non-member u_out attempts to read or post chat -> must be rejected (isolation)
+        self.login_user(u_out)
+        code, body = self.api('GET', f'/club/api/groups/{gid}/chat')
+        self.assertEqual(code, 403)
+        code, body = self.api('POST', f'/club/api/groups/{gid}/chat', {
+            'ciphertext': 'hack', 'iv': 'hack'
+        })
+        self.assertEqual(code, 403)
+
 
 if __name__ == '__main__':
     unittest.main()
+

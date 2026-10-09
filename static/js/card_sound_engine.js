@@ -17,6 +17,7 @@
 const ClubAudio = (() => {
     let audioCtx = null;
     let masterGain = null;
+    let reverbSend = null;
     let isMuted = false;
     let currentVolume = 0.85;
 
@@ -27,14 +28,52 @@ const ClubAudio = (() => {
         if (savedVol !== null) currentVolume = parseFloat(savedVol);
     } catch (e) {}
 
+    // Random in range - keeps every performance organic/unique
+    function rr(a, b) { return a + Math.random() * (b - a); }
+
+    // Procedural room impulse response (concert-hall style, no audio files)
+    function makeImpulse(ctx, seconds, decay) {
+        const rate = ctx.sampleRate;
+        const len = Math.max(1, Math.floor(rate * seconds));
+        const impulse = ctx.createBuffer(2, len, rate);
+        for (let ch = 0; ch < 2; ch++) {
+            const data = impulse.getChannelData(ch);
+            for (let i = 0; i < len; i++) {
+                const t = i / len;
+                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, decay);
+            }
+        }
+        return impulse;
+    }
+
     function getContext() {
         if (!audioCtx) {
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (!AudioContextClass) return null;
             audioCtx = new AudioContextClass();
+
+            // Master fader
             masterGain = audioCtx.createGain();
             masterGain.gain.setValueAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime);
+
+            // Dry path -> destination
             masterGain.connect(audioCtx.destination);
+
+            // Wet path: master -> convolver room -> output gain -> destination.
+            // Every sound automatically gains a cohesive "casino room" ambience
+            // without per-sound routing changes.
+            try {
+                const convolver = audioCtx.createConvolver();
+                convolver.buffer = makeImpulse(audioCtx, 1.35, 3.2);
+                reverbSend = audioCtx.createGain();
+                reverbSend.gain.value = 0.22;
+                const wetOut = audioCtx.createGain();
+                wetOut.gain.value = 0.55;
+                masterGain.connect(reverbSend);
+                reverbSend.connect(convolver);
+                convolver.connect(wetOut);
+                wetOut.connect(audioCtx.destination);
+            } catch (e) { reverbSend = null; }
         }
         if (audioCtx.state === 'suspended') {
             audioCtx.resume();
@@ -53,13 +92,25 @@ const ClubAudio = (() => {
         return buffer;
     }
 
+    function pulseVisualizer(ms = 500) {
+        if (isMuted) return;
+        const els = document.querySelectorAll('.audio-visualizer-container, #club-audio-visualizer');
+        els.forEach(el => {
+            el.classList.add('is-audio-playing');
+            clearTimeout(el._eqTimer);
+            el._eqTimer = setTimeout(() => el.classList.remove('is-audio-playing'), ms);
+        });
+    }
+
     return {
         // =============================================================
         // 1. CARD SHUFFLE / MIXING RIFFLE SOUND
         // =============================================================
         shuffle() {
             if (isMuted) return;
+            pulseVisualizer(750);
             const ctx = getContext();
+
             if (!ctx) return;
             const now = ctx.currentTime;
 
@@ -133,6 +184,7 @@ const ClubAudio = (() => {
         // =============================================================
         slap() {
             if (isMuted) return;
+            pulseVisualizer(300);
             const ctx = getContext();
             if (!ctx) return;
             const now = ctx.currentTime;
@@ -197,6 +249,7 @@ const ClubAudio = (() => {
         // =============================================================
         throw() {
             if (isMuted) return;
+            pulseVisualizer(350);
             const ctx = getContext();
             if (!ctx) return;
             const now = ctx.currentTime;
@@ -243,6 +296,7 @@ const ClubAudio = (() => {
         // =============================================================
         deal() {
             if (isMuted) return;
+            pulseVisualizer(250);
             const ctx = getContext();
             if (!ctx) return;
             const now = ctx.currentTime;
@@ -271,6 +325,7 @@ const ClubAudio = (() => {
         // =============================================================
         chips() {
             if (isMuted) return;
+            pulseVisualizer(300);
             const ctx = getContext();
             if (!ctx) return;
             const now = ctx.currentTime;
@@ -298,6 +353,7 @@ const ClubAudio = (() => {
         // =============================================================
         win() {
             if (isMuted) return;
+            pulseVisualizer(800);
             const ctx = getContext();
             if (!ctx) return;
             const now = ctx.currentTime;
@@ -331,13 +387,14 @@ const ClubAudio = (() => {
         // =============================================================
         hover() {
             if (isMuted) return;
+            pulseVisualizer(120);
             const ctx = getContext();
             if (!ctx) return;
             const now = ctx.currentTime;
 
             const osc = ctx.createOscillator();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(3200, now);
+            osc.frequency.setValueAtTime(rr(3000, 3600), now);
 
             const gain = ctx.createGain();
             gain.gain.setValueAtTime(0.025, now);
@@ -349,7 +406,210 @@ const ClubAudio = (() => {
             osc.stop(now + 0.02);
         },
 
+        // =============================================================
+        // 8. CARD FLIP (reveal) - two-stage paper flip with air catch
+        // =============================================================
+        flip() {
+            if (isMuted) return;
+            const ctx = getContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            // Stage 1: finger snaps card over
+            const n1 = ctx.createBufferSource();
+            n1.buffer = createNoiseBuffer(ctx, 0.04);
+            const f1 = ctx.createBiquadFilter();
+            f1.type = 'bandpass';
+            f1.frequency.setValueAtTime(rr(2400, 3000), now);
+            f1.Q.value = 2.5;
+            const g1 = ctx.createGain();
+            g1.gain.setValueAtTime(0.28, now);
+            g1.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+            n1.connect(f1); f1.connect(g1); g1.connect(masterGain);
+            n1.start(now); n1.stop(now + 0.04);
+
+            // Stage 2: card lands face-up (soft tick + air)
+            const n2 = ctx.createBufferSource();
+            n2.buffer = createNoiseBuffer(ctx, 0.05);
+            const f2 = ctx.createBiquadFilter();
+            f2.type = 'highpass';
+            f2.frequency.setValueAtTime(900, now + 0.05);
+            const g2 = ctx.createGain();
+            g2.gain.setValueAtTime(0.001, now + 0.05);
+            g2.gain.linearRampToValueAtTime(0.22, now + 0.058);
+            g2.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            n2.connect(f2); f2.connect(g2); g2.connect(masterGain);
+            n2.start(now + 0.05); n2.stop(now + 0.1);
+
+            const tick = ctx.createOscillator();
+            tick.type = 'triangle';
+            tick.frequency.setValueAtTime(rr(700, 850), now + 0.055);
+            tick.frequency.exponentialRampToValueAtTime(280, now + 0.1);
+            const tg = ctx.createGain();
+            tg.gain.setValueAtTime(0.12, now + 0.055);
+            tg.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+            tick.connect(tg); tg.connect(masterGain);
+            tick.start(now + 0.055); tick.stop(now + 0.12);
+        },
+
+        // =============================================================
+        // 9. TURN TICK - soft table-clock awareness ping
+        // =============================================================
+        turn() {
+            if (isMuted) return;
+            const ctx = getContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1180, now);
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+            osc.connect(gain); gain.connect(masterGain);
+            osc.start(now); osc.stop(now + 0.15);
+
+            const harm = ctx.createOscillator();
+            harm.type = 'sine';
+            harm.frequency.setValueAtTime(2360, now);
+            const hg = ctx.createGain();
+            hg.gain.setValueAtTime(0.03, now);
+            hg.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+            harm.connect(hg); hg.connect(masterGain);
+            harm.start(now); harm.stop(now + 0.1);
+        },
+
+        // =============================================================
+        // 10. COIN POUR - payout cascade of raining coins
+        // =============================================================
+        coins() {
+            if (isMuted) return;
+            const ctx = getContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            const drops = 22;
+            for (let i = 0; i < drops; i++) {
+                const t = now + i * rr(0.028, 0.055);
+                const f = rr(1700, 5200);
+                const osc = ctx.createOscillator();
+                osc.type = Math.random() < 0.5 ? 'sine' : 'triangle';
+                osc.frequency.setValueAtTime(f, t);
+                osc.frequency.exponentialRampToValueAtTime(f * rr(0.55, 0.8), t + 0.07);
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0, t);
+                g.gain.linearRampToValueAtTime(rr(0.05, 0.14), t + 0.004);
+                g.gain.exponentialRampToValueAtTime(0.001, t + rr(0.06, 0.12));
+                osc.connect(g); g.connect(masterGain);
+                osc.start(t); osc.stop(t + 0.14);
+            }
+
+            // metallic shimmer bed under the cascade
+            const bed = ctx.createBufferSource();
+            bed.buffer = createNoiseBuffer(ctx, 0.7);
+            const bf = ctx.createBiquadFilter();
+            bf.type = 'bandpass';
+            bf.frequency.setValueAtTime(3400, now);
+            bf.frequency.linearRampToValueAtTime(5600, now + 0.6);
+            bf.Q.value = 1.6;
+            const bg = ctx.createGain();
+            bg.gain.setValueAtTime(0.05, now);
+            bg.gain.linearRampToValueAtTime(0.09, now + 0.25);
+            bg.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+            bed.connect(bf); bf.connect(bg); bg.connect(masterGain);
+            bed.start(now); bed.stop(now + 0.72);
+        },
+
+        // =============================================================
+        // 11. SUCCESS CHIME - actions confirmed (create/accept/verify)
+        // =============================================================
+        success() {
+            if (isMuted) return;
+            const ctx = getContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            const notes = [
+                { f: 659.25, t: 0.00 },
+                { f: 830.61, t: 0.07 },
+                { f: 987.77, t: 0.14 },
+                { f: 1318.51, t: 0.22 },
+            ];
+            notes.forEach((n, i) => {
+                const osc = ctx.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(n.f, now + n.t);
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0.001, now + n.t);
+                g.gain.linearRampToValueAtTime(0.14 - i * 0.02, now + n.t + 0.012);
+                g.gain.exponentialRampToValueAtTime(0.001, now + n.t + 0.45);
+                osc.connect(g); g.connect(masterGain);
+                osc.start(now + n.t); osc.stop(now + n.t + 0.5);
+            });
+        },
+
+        // =============================================================
+        // 12. ERROR BUZZ - rejected action
+        // =============================================================
+        error() {
+            if (isMuted) return;
+            const ctx = getContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            for (let i = 0; i < 2; i++) {
+                const t = now + i * 0.11;
+                const osc = ctx.createOscillator();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(196, t);
+                const f = ctx.createBiquadFilter();
+                f.type = 'lowpass';
+                f.frequency.value = 900;
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0.12, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.085);
+                osc.connect(f); f.connect(g); g.connect(masterGain);
+                osc.start(t); osc.stop(t + 0.09);
+            }
+        },
+
+        // =============================================================
+        // 13. DEAL FAN - n staggered crisp flicks from the shoe
+        // =============================================================
+        dealFan(count) {
+            if (isMuted) return;
+            const ctx = getContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const n = Math.max(1, Math.min(count || 5, 26));
+            for (let i = 0; i < n; i++) {
+                const t = now + i * 0.11;
+                const noise = ctx.createBufferSource();
+                noise.buffer = createNoiseBuffer(ctx, 0.07);
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(rr(1700, 2300), t);
+                filter.Q.setValueAtTime(rr(2.6, 3.6), t);
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(rr(0.16, 0.26), t + 0.004);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.062);
+                noise.connect(filter); filter.connect(gain); gain.connect(masterGain);
+                noise.start(t); noise.stop(t + 0.07);
+            }
+        },
+
+        // =============================================================
         // Controls
+        // =============================================================
+        unlock() {
+            // Called on the first user gesture (autoplay policy).
+            const ctx = getContext();
+            if (ctx && ctx.state === 'suspended') ctx.resume();
+            return !!ctx;
+        },
+
         setMuted(muted) {
             isMuted = !!muted;
             try { localStorage.setItem('card_club_muted', String(isMuted)); } catch (e) {}

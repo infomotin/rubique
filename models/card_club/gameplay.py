@@ -32,13 +32,14 @@ def get_table(table_id):
 
 def seats(table_id):
     return query_all(
-        """SELECT s.id, s.user_id, s.seat_index, s.status, u.username
+        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, u.username
            FROM club_seats s JOIN users u ON u.id = s.user_id
            WHERE s.table_id = %s ORDER BY s.seat_index ASC""",
-        """SELECT s.id, s.user_id, s.seat_index, s.status, u.username
+        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, u.username
            FROM club_seats s JOIN users u ON u.id = s.user_id
            WHERE s.table_id = ? ORDER BY s.seat_index ASC""",
         (table_id,))
+
 
 
 def list_tables(group_id, include_finished=False):
@@ -202,13 +203,31 @@ def get_view(table_id, user_id=None):
     if not t:
         raise NotFoundError("Table not found")
     seat = seat_index_of(table_id, user_id) if user_id else None
+    all_seats = seats(table_id)
+    seat_list = []
+    my_rules_read = False
+    my_camera_active = False
+    for s in all_seats:
+        s_uid = int(s["user_id"] if isinstance(s, dict) else s[1])
+        r_read = bool(s.get("rules_read") if isinstance(s, dict) else s[4])
+        c_act = bool(s.get("camera_active") if isinstance(s, dict) else s[5])
+        if user_id and s_uid == int(user_id):
+            my_rules_read = r_read
+            my_camera_active = c_act
+        seat_list.append({
+            "seat_index": int(s["seat_index"] if isinstance(s, dict) else s[2]),
+            "user_id": s_uid,
+            "username": s["username"] if isinstance(s, dict) else s[6],
+            "rules_read": r_read,
+            "camera_active": c_act,
+        })
     view = {"table": {k: t[k] for k in
                       ("id", "group_id", "game_slug", "name", "stake",
                        "pool_bonus", "max_seats", "status", "created_by")},
             "seat": seat, "pot": table_pot(table_id),
-            "seats": [{"seat_index": int(s["seat_index"]),
-                       "user_id": int(s["user_id"]),
-                       "username": s["username"]} for s in seats(table_id)]}
+            "seats": seat_list,
+            "my_rules_read": my_rules_read,
+            "my_camera_active": my_camera_active}
     if t["status"] == "active" and t["state"]:
         info, eng = _engine_for(t)
         view["game"] = eng.view(seat)
@@ -228,6 +247,43 @@ def get_view(table_id, user_id=None):
         view["max_players"] = info["max"]
         view["rules"] = info["rules"]
     return view
+
+
+def acknowledge_strict_rules(table_id, user_id):
+    """Player marks that they have read and agreed to strict tournament rules.
+    Required before camera sharing can be activated."""
+    s = query_one(
+        "SELECT id FROM club_seats WHERE table_id = %s AND user_id = %s",
+        "SELECT id FROM club_seats WHERE table_id = ? AND user_id = ?",
+        (table_id, user_id))
+    if not s:
+        raise PermissionDenied("You must take a seat at the table first.")
+    execute_update(
+        "UPDATE club_seats SET rules_read = 1 WHERE table_id = %s AND user_id = %s",
+        "UPDATE club_seats SET rules_read = 1 WHERE table_id = ? AND user_id = ?",
+        (table_id, user_id))
+    return True
+
+
+def toggle_camera(table_id, user_id, active):
+    """Enables or disables camera stream on the player's seat pod.
+    STRICT CHECK: Player MUST read and agree to strict tournament rules first!"""
+    s = query_one(
+        "SELECT id, rules_read FROM club_seats WHERE table_id = %s AND user_id = %s",
+        "SELECT id, rules_read FROM club_seats WHERE table_id = ? AND user_id = ?",
+        (table_id, user_id))
+    if not s:
+        raise PermissionDenied("You must take a seat at the table first.")
+    rules_read = bool(s.get("rules_read") if isinstance(s, dict) else s[1])
+    if not rules_read:
+        raise CardClubError("Strict Rules must be read and acknowledged before camera sharing is unlocked.")
+    val = 1 if active else 0
+    execute_update(
+        "UPDATE club_seats SET camera_active = %s WHERE table_id = %s AND user_id = %s",
+        "UPDATE club_seats SET camera_active = ? WHERE table_id = ? AND user_id = ?",
+        (val, table_id, user_id))
+    return bool(val)
+
 
 
 def perform_move(group_id, user_id, table_id, action):

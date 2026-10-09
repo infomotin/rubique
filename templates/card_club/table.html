@@ -143,6 +143,62 @@
     </div>
 </div>
 
+<!-- Strict Tournament Rules Modal ("Read Strict & Unlock Camera") -->
+<div id="modal-strict-rules" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full p-6 rounded-3xl border border-amber-500/50 bg-slate-950/95 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold font-outfit text-white">Strict Tournament Rules & Integrity Pledge</h3>
+                    <p class="text-[10px] text-amber-400 font-mono">Mandatory reading before table play & camera sharing</p>
+                </div>
+            </div>
+            <button onclick="document.getElementById('modal-strict-rules').classList.add('hidden')" class="text-slate-500 hover:text-white text-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="space-y-2.5 text-xs font-sans text-slate-300 max-h-72 overflow-y-auto pr-1 leading-relaxed">
+            <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <h4 class="font-bold text-white font-outfit text-xs mb-1 flex items-center gap-1.5 text-amber-300">
+                    <i class="fa-solid fa-ban"></i> 1. Anti-Collusion & Zero Ghosting
+                </h4>
+                <p class="text-[11px] text-slate-400">No external signaling, shared accounts, or ghosting is tolerated. Violations result in automatic seat forfeiture and escrow confiscation to the group pool.</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <h4 class="font-bold text-white font-outfit text-xs mb-1 flex items-center gap-1.5 text-cyan-300">
+                    <i class="fa-solid fa-stopwatch"></i> 2. Strict Turn Clock (30 Seconds)
+                </h4>
+                <p class="text-[11px] text-slate-400">Each move must be declared within 30 seconds. Inactive players will be timed out or auto-folded to preserve high-velocity gameplay.</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <h4 class="font-bold text-white font-outfit text-xs mb-1 flex items-center gap-1.5 text-emerald-300">
+                    <i class="fa-solid fa-video"></i> 3. Live Camera Sharing Etiquette
+                </h4>
+                <p class="text-[11px] text-slate-400">Sharing your camera provides an authentic, transparent high-stakes casino experience. Face must remain visible to all seated players.</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <h4 class="font-bold text-white font-outfit text-xs mb-1 flex items-center gap-1.5 text-rose-300">
+                    <i class="fa-solid fa-coins"></i> 4. Zero-Sum Escrow Settlement
+                </h4>
+                <p class="text-[11px] text-slate-400">Pot calculations are deterministic and backed by the fixed 1,000,000,000 supply hash-chained ledger. Settlement is mathematically verified upon completion.</p>
+            </div>
+        </div>
+
+        <div class="pt-2 flex flex-col gap-2">
+            <button id="modal-strict-ack-btn"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-black text-xs font-mono transition-all shadow-xl shadow-amber-950/40 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-certificate"></i>
+                <span>I Have Read & Agree to Strict Tournament Rules</span>
+            </button>
+            <p class="text-center text-[10px] text-slate-500 font-mono">Acknowledging unlocks Camera Sharing and marks your seat as Verified.</p>
+        </div>
+    </div>
+</div>
+
 <div id="club-toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl font-mono text-xs font-bold shadow-2xl border"></div>
 
 <script type="application/json" id="club-view-json">{{ view_json | replace('</', '<\\/') | safe }}</script>
@@ -157,12 +213,15 @@
     "joinUrl": {{ url_for('card_club.api_join_table', tid=table.id) | tojson }},
     "leaveUrl": {{ url_for('card_club.api_leave_table', tid=table.id) | tojson }},
     "startUrl": {{ url_for('card_club.api_start_table', tid=table.id) | tojson }},
-    "abandonUrl": {{ url_for('card_club.api_abandon_table', tid=table.id) | tojson }}
+    "abandonUrl": {{ url_for('card_club.api_abandon_table', tid=table.id) | tojson }},
+    "strictRulesUrl": {{ url_for('card_club.api_strict_rules', tid=table.id) | tojson }},
+    "cameraUrl": {{ url_for('card_club.api_toggle_camera', tid=table.id) | tojson }}
 }
 </script>
 <script>
     window.CLUB = JSON.parse(document.getElementById('club-config-json').textContent);
 </script>
+
 <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
 <script>

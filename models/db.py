@@ -691,6 +691,29 @@ def init_database():
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            # 41. Card Club - Private Group Encrypted Chat (E2EE AES-256-GCM Zero Knowledge)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_group_messages (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    ciphertext TEXT NOT NULL,
+                    iv VARCHAR(64) NOT NULL,
+                    salt VARCHAR(64) NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (group_id) REFERENCES club_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            for _seat_col in (
+                "ALTER TABLE club_seats ADD COLUMN rules_read TINYINT DEFAULT 0",
+                "ALTER TABLE club_seats ADD COLUMN camera_active TINYINT DEFAULT 0",
+            ):
+                try:
+                    cur.execute(_seat_col)
+                except Exception:
+                    pass
+
             for _ledger_sql in (
                 "ALTER TABLE club_ledger ADD COLUMN seq INT NOT NULL DEFAULT 0",
                 "ALTER TABLE club_ledger ADD COLUMN owner_key VARCHAR(80) NOT NULL DEFAULT ''",
@@ -1374,6 +1397,29 @@ def init_database():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
+        # 41. Card Club - Private Group Encrypted Chat (E2EE AES-256-GCM Zero Knowledge)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_group_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                ciphertext TEXT NOT NULL,
+                iv TEXT NOT NULL,
+                salt TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES club_groups(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        cur.execute("PRAGMA table_info(club_seats)")
+        _seat_cols = {row[1] for row in cur.fetchall()}
+        for _scol in ("rules_read", "camera_active"):
+            if _scol not in _seat_cols:
+                try:
+                    cur.execute(f"ALTER TABLE club_seats ADD COLUMN {_scol} INTEGER DEFAULT 0")
+                except Exception:
+                    pass
+
         cur.execute("PRAGMA table_info(club_ledger)")
         _led_cols = {row[1] for row in cur.fetchall()}
         for _col_name, _col_sql in (

@@ -3,6 +3,8 @@
 {% block title %}{{ group.name }} - Card Club{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/card_club.css') }}">
+<script src="{{ url_for('static', filename='js/card_sound_engine.js') }}"></script>
 <div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
 
     <!-- Group Header -->
@@ -265,14 +267,82 @@
                 </div>
             </div>
 
+            <!-- Encrypted Group Chat Vault -->
+            <div class="glass-card p-5 rounded-3xl border border-emerald-500/40 bg-slate-950/70 shadow-xl">
+                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <div>
+                        <h3 class="text-sm font-bold font-outfit text-white flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-emerald-400"></i> Encrypted Member Chat Vault
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-[9px] font-mono font-bold">AES-256-GCM E2EE</span>
+                        </h3>
+                        <p class="text-[10px] text-slate-400 font-mono">Isolated group communications. Plaintext never touches server or network.</p>
+                    </div>
+                    <div class="flex items-center gap-2 font-mono text-[10px]">
+                        <span id="chat-key-fingerprint" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-emerald-500/30 text-emerald-300">KEY: INIT...</span>
+                        <button id="chat-change-key-btn" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 transition-all">
+                            <i class="fa-solid fa-key mr-1"></i> Passphrase
+                        </button>
+                        <a href="{{ url_for('card_club.group_chat_page', gid=group.id) }}" class="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 font-bold transition-all">
+                            <i class="fa-solid fa-expand mr-1"></i> Full View
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Chat Feed -->
+                <div id="group-chat-messages" class="h-64 overflow-y-auto pr-2 space-y-1 mb-3 scrollbar-thin scrollbar-thumb-emerald-600/30 p-3 rounded-2xl bg-slate-900/60 border border-slate-800/80">
+                    <div class="text-center py-10 text-slate-500 font-mono text-xs">
+                        <i class="fa-solid fa-circle-notch fa-spin text-emerald-400 mb-1.5 block"></i>
+                        Deriving AES-256-GCM encryption key...
+                    </div>
+                </div>
+
+                <!-- Input Box -->
+                <form id="group-chat-send-form" class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-400/60">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                        </div>
+                        <input type="text" id="group-chat-input" required autocomplete="off"
+                               placeholder="Type an end-to-end encrypted message (AES-256-GCM)..."
+                               class="w-full pl-8 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <button type="submit"
+                            class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs transition-all shadow-md shadow-emerald-950 flex items-center gap-1.5 whitespace-nowrap">
+                        <span>Send</span>
+                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                    </button>
+                </form>
+            </div>
+
         </div>
     </div>
 </div>
+
+<div id="club-meta" class="hidden"
+     data-user-id="{{ user.id if user else 0 }}"
+     data-group-id="{{ group.id }}"
+     data-secret="{{ group.invite_code }}"></div>
 
 <div id="club-toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl font-mono text-xs font-bold shadow-2xl border"></div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/card_sound_engine.js') }}"></script>
+<script src="{{ url_for('static', filename='js/card_crypto_chat.js') }}"></script>
 <script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
-<script>document.addEventListener('DOMContentLoaded', () => ClubSection.init());</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const meta = document.getElementById('club-meta');
+        if (meta) {
+            window.CLUB_USER_ID = parseInt(meta.dataset.userId || '0', 10);
+            ClubSection.init();
+            CardCryptoChat.init({
+                groupId: parseInt(meta.dataset.groupId, 10),
+                defaultSecret: meta.dataset.secret || ''
+            });
+        }
+    });
+</script>
 {% endblock %}
+
+

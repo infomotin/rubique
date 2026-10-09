@@ -3,42 +3,186 @@
 {% block title %}Card Club - Private Card Rooms{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/card_club.css') }}">
+<script src="{{ url_for('static', filename='js/card_sound_engine.js') }}"></script>
+
 <div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
 
-    <!-- Header Banner -->
-    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-emerald-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
-        <div class="absolute -top-24 -right-24 w-80 h-80 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none"></div>
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
-            <div class="flex items-center gap-4">
-                <div class="w-16 h-16 rounded-2xl bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-2xl font-bold">
-                    <i class="fa-solid fa-diamond"></i>
+    <!-- ============================ HERO ============================ -->
+    <div class="club-hero p-5 sm:p-7 mb-6 reveal" style="--reveal-delay:0s">
+
+        <!-- Top row: fan, title, stats -->
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+
+            <div class="flex items-center gap-5">
+                <!-- Floating 3D card fan -->
+                <div class="hero-card-fan hidden sm:block" aria-hidden="true">
+                    <div class="hero-fan-glow"></div>
+                    <div class="playing-card-3d hf-card-1">
+                        <div class="card-face suit-black">
+                            <div class="card-corner card-corner-top"><span class="card-val">A</span><span class="card-suit-sm">&spades;</span></div>
+                            <div class="card-center">&spades;</div>
+                            <div class="card-corner card-corner-bottom"><span class="card-val">A</span><span class="card-suit-sm">&spades;</span></div>
+                        </div>
+                    </div>
+                    <div class="playing-card-3d hf-card-2">
+                        <div class="card-face suit-red">
+                            <div class="card-corner card-corner-top"><span class="card-val">K</span><span class="card-suit-sm">&hearts;</span></div>
+                            <div class="card-center court-card">K</div>
+                            <div class="card-corner card-corner-bottom"><span class="card-val">K</span><span class="card-suit-sm">&hearts;</span></div>
+                        </div>
+                    </div>
+                    <div class="playing-card-3d hf-card-3">
+                        <div class="card-face suit-red">
+                            <div class="card-corner card-corner-top"><span class="card-val">Q</span><span class="card-suit-sm">&diams;</span></div>
+                            <div class="card-center court-card">Q</div>
+                            <div class="card-corner card-corner-bottom"><span class="card-val">Q</span><span class="card-suit-sm">&diams;</span></div>
+                        </div>
+                    </div>
                 </div>
+
                 <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono mb-1">
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono mb-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         18+ PRIVATE CARD ROOMS
                     </div>
-                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight">Card Club</h1>
-                    <p class="text-xs text-slate-400 font-mono">15 games &bull; private groups &bull; fixed-supply coin tables</p>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold font-outfit tracking-tight shimmer-gold leading-none mb-1.5">
+                        CARD CLUB
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-300 font-mono">
+                        {{ catalog|length }} games &bull; private groups &bull; fixed-supply coin tables
+                    </p>
+
+                    <!-- Audio controls + equalizer -->
+                    <div class="flex flex-wrap items-center gap-2.5 mt-3.5">
+                        <button id="hero-mute-btn" class="px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-amber-300 font-bold text-xs transition-all flex items-center gap-1.5 shadow-md" title="Toggle all card sounds">
+                            <i id="hero-mute-icon" class="fa-solid fa-volume-high text-emerald-400"></i>
+                            <span>Sound</span>
+                        </button>
+                        <div id="hero-audio-viz" class="flex items-end gap-[3px] h-5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800" title="Audio visualizer">
+                            <span class="audio-visualizer-bar"></span>
+                            <span class="audio-visualizer-bar"></span>
+                            <span class="audio-visualizer-bar"></span>
+                            <span class="audio-visualizer-bar"></span>
+                        </div>
+                        <input type="range" id="hero-vol-slider" min="0" max="100" step="1" value="85"
+                               class="w-24 accent-emerald-500 h-1 bg-slate-800 rounded-lg cursor-pointer" title="Volume">
+                    </div>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3 font-mono text-xs">
-                <div class="px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-300">
-                    <i class="fa-solid fa-wallet text-emerald-400 mr-1.5"></i>
-                    Personal <strong class="text-white ml-1">{{ wallet.personal }}</strong>
+
+            <!-- Right: live stats + actions -->
+            <div class="flex flex-col items-start lg:items-end gap-3 font-mono text-xs w-full lg:w-auto">
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div class="px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-amber-500/40 shadow-xl flex items-center gap-2.5">
+                        <i class="fa-solid fa-coins text-amber-400 text-lg coin-spin"></i>
+                        <div class="leading-tight">
+                            <div class="text-[9px] uppercase text-slate-500 tracking-widest">Personal</div>
+                            <div class="text-white font-bold text-base" id="club-wallet-count" data-target="{{ wallet.personal }}">0</div>
+                        </div>
+                    </div>
+                    <div class="px-3.5 py-2.5 rounded-2xl bg-slate-950/80 border border-emerald-500/40 text-emerald-300 shadow-xl">
+                        <i class="fa-solid fa-dice text-emerald-400 mr-1.5"></i>
+                        {{ catalog|length }} GAMES
+                    </div>
+                    <div class="px-3.5 py-2.5 rounded-2xl bg-slate-950/80 border border-indigo-500/40 text-indigo-300 shadow-xl">
+                        <i class="fa-solid fa-user-group text-indigo-400 mr-1.5"></i>
+                        {{ my_groups|length }} GROUPS
+                    </div>
                 </div>
-                <a href="{{ url_for('card_club.ledger_page') }}"
-                   class="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 font-bold transition-all">
-                    <i class="fa-solid fa-link mr-1.5"></i> Ledger
-                </a>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ url_for('card_club.ledger_page') }}"
+                       class="btn-shimmer px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold transition-all shadow-lg shadow-emerald-950/50">
+                        <i class="fa-solid fa-link mr-1.5"></i> Ledger
+                    </a>
+                    <button id="hero-act-win" class="btn-shimmer px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white font-bold transition-all shadow-lg shadow-amber-950/50">
+                        <i class="fa-solid fa-trophy mr-1.5"></i> Victory Fanfare
+                    </button>
+                </div>
             </div>
         </div>
+
+        <!-- Interactive felt demo table: shuffle / slap / throw / deal / chips -->
+        <div class="mt-6 relative z-10">
+            <div class="flex items-center justify-between mb-2.5 px-1">
+                <span class="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-amber-400/90">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Live Sound &amp; Motion Playground
+                </span>
+                <div class="flex items-center gap-1.5 text-[10px]">
+                    <span class="text-slate-500 uppercase font-bold mr-1">FELT:</span>
+                    <button class="hero-felt-theme-btn px-2 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-bold" data-felt-theme="felt-emerald">Emerald</button>
+                    <button class="hero-felt-theme-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold" data-felt-theme="felt-midnight">Midnight</button>
+                    <button class="hero-felt-theme-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold" data-felt-theme="felt-crimson">Crimson</button>
+                </div>
+            </div>
+
+            <div id="hero-felt-table" class="casino-table-felt felt-emerald p-4 sm:p-5 min-h-[240px] relative">
+                <div class="felt-inner-ring"></div>
+
+                <div class="relative z-10 flex flex-col lg:flex-row items-center gap-4">
+                    <!-- Riffle shuffle deck -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div id="hero-riffle-deck" class="riffle-deck-container">
+                            <div class="riffle-half-left">
+                                <div class="card-back w-full h-full"><div class="card-back-pattern">&Omega;</div></div>
+                            </div>
+                            <div class="riffle-half-right">
+                                <div class="card-back w-full h-full"><div class="card-back-pattern">&Omega;</div></div>
+                            </div>
+                            <div id="hero-flutter-cards" class="absolute inset-0 pointer-events-none"></div>
+                        </div>
+                        <button id="hero-act-shuffle" class="btn-shimmer px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-xs font-bold shadow-lg shadow-amber-950/50">
+                            <i class="fa-solid fa-shuffle mr-1.5"></i>Mix Cards
+                        </button>
+                    </div>
+
+                    <!-- Dropzones -->
+                    <div class="flex-1 w-full grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="flex flex-col items-center gap-1.5">
+                            <div id="hero-slap-dropzone" class="relative w-full h-24 rounded-xl bg-black/35 border border-dashed border-rose-500/40 flex items-center justify-center overflow-visible">
+                                <span class="text-[9px] font-mono text-rose-300/70 uppercase">slap zone</span>
+                            </div>
+                            <button id="hero-act-slap" class="px-3 py-1.5 rounded-xl bg-rose-700 hover:bg-rose-600 text-white text-xs font-bold shadow-lg transition-all w-full">
+                                <i class="fa-solid fa-hand-sparkles mr-1"></i>Slap
+                            </button>
+                        </div>
+                        <div class="flex flex-col items-center gap-1.5">
+                            <div id="hero-throw-dropzone" class="relative w-full h-24 rounded-xl bg-black/35 border border-dashed border-cyan-500/40 flex items-center justify-center overflow-hidden">
+                                <span class="text-[9px] font-mono text-cyan-300/70 uppercase">throw arc</span>
+                            </div>
+                            <button id="hero-act-throw" class="px-3 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold shadow-lg transition-all w-full">
+                                <i class="fa-solid fa-wind mr-1"></i>Throw
+                            </button>
+                        </div>
+                        <div class="flex flex-col items-center gap-1.5">
+                            <div id="hero-deal-dropzone" class="relative w-full h-24 rounded-xl bg-black/35 border border-dashed border-emerald-500/40 flex items-center justify-center overflow-hidden px-2">
+                                <span class="text-[9px] font-mono text-emerald-300/70 uppercase">deal here</span>
+                            </div>
+                            <button id="hero-act-deal" class="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold shadow-lg transition-all w-full">
+                                <i class="fa-solid fa-layer-group mr-1"></i>Deal
+                            </button>
+                        </div>
+                        <div class="flex flex-col items-center gap-1.5">
+                            <div id="hero-chips-dropzone" class="relative w-full h-24 rounded-xl bg-black/35 border border-dashed border-amber-500/40 flex items-end justify-center pb-1.5 gap-1 overflow-hidden">
+                                <span class="text-[9px] font-mono text-amber-300/70 uppercase absolute top-2">chip stack</span>
+                            </div>
+                            <button id="hero-act-chips" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg transition-all w-full">
+                                <i class="fa-solid fa-coins mr-1"></i>Chips
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ambient floating suits -->
+        <div id="hero-suits-canvas" class="floating-suits-canvas" aria-hidden="true"></div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
         <!-- Sidebar Navigation -->
-        <div class="lg:col-span-3">
+        <div class="lg:col-span-3 reveal" style="--reveal-delay:.08s">
             {% include "user/sidebar.html" %}
         </div>
 
@@ -47,7 +191,7 @@
 
             <!-- Invites -->
             {% if invites %}
-            <div class="glass-card p-5 rounded-3xl border border-amber-500/30 bg-slate-950/70">
+            <div class="club-panel glass-card p-5 rounded-3xl border border-amber-500/30 bg-slate-950/70 reveal" style="--reveal-delay:.12s">
                 <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-envelope-open-text text-amber-400"></i> Pending Invitations
                 </h3>
@@ -55,7 +199,7 @@
                     {% for inv in invites %}
                     <div class="flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-900/70 border border-slate-800 font-mono text-xs">
                         <span class="text-slate-300"><strong class="text-amber-300">{{ inv.name }}</strong> invited you</span>
-                        <button data-club-post="/club/api/invites/{{ inv.id }}/accept" class="club-post-btn px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
+                        <button data-club-post="/club/api/invites/{{ inv.id }}/accept" class="club-post-btn btn-shimmer px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
                             Accept
                         </button>
                     </div>
@@ -66,7 +210,7 @@
 
             <!-- Groups + Create -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="glass-card p-5 rounded-3xl border border-emerald-500/30 bg-slate-950/70">
+                <div class="club-panel glass-card p-5 rounded-3xl border border-emerald-500/30 bg-slate-950/70 reveal" style="--reveal-delay:.18s">
                     <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
                         <i class="fa-solid fa-user-group text-emerald-400"></i> My Groups
                     </h3>
@@ -74,7 +218,7 @@
                     <div class="space-y-2">
                         {% for g in my_groups %}
                         <a href="{{ url_for('card_club.group_page', gid=g.id) }}"
-                           class="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/50 transition-all group">
+                           class="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/50 hover:translate-x-1 transition-all group">
                             <div>
                                 <div class="text-xs font-bold text-white group-hover:text-emerald-300">{{ g.name }}</div>
                                 <div class="text-[10px] text-slate-500 font-mono">{{ g.description or 'No description' }}</div>
@@ -92,14 +236,14 @@
                                class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500">
                         <input type="text" name="description" placeholder="Description (optional)"
                                class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500">
-                        <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-all">
+                        <button type="submit" class="btn-shimmer w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-all">
                             <i class="fa-solid fa-plus mr-1.5"></i> Create Group ({{ pool_seed }} coin pool seeded)
                         </button>
                     </form>
                 </div>
 
                 <!-- Transfers -->
-                <div class="glass-card p-5 rounded-3xl border border-cyan-500/30 bg-slate-950/70">
+                <div class="club-panel glass-card p-5 rounded-3xl border border-cyan-500/30 bg-slate-950/70 reveal" style="--reveal-delay:.24s">
                     <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
                         <i class="fa-solid fa-money-bill-transfer text-cyan-400"></i> Transfers
                         <span class="text-[10px] text-slate-500 font-normal">recipient must approve</span>
@@ -133,7 +277,7 @@
                                class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500">
                         <input type="number" name="amount" required min="1" placeholder="Coins"
                                class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500">
-                        <button type="submit" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all">
+                        <button type="submit" class="btn-shimmer w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all">
                             Propose Transfer
                         </button>
                     </form>
@@ -141,7 +285,7 @@
             </div>
 
             <!-- Escrow -->
-            <div class="glass-card p-5 rounded-3xl border border-fuchsia-500/30 bg-slate-950/70">
+            <div class="club-panel glass-card p-5 rounded-3xl border border-fuchsia-500/30 bg-slate-950/70 reveal" style="--reveal-delay:.3s">
                 <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-vault text-fuchsia-400"></i> Coin Escrow
                     <span class="text-[10px] text-slate-500 font-normal">offer &rarr; fund &rarr; complete / refund</span>
@@ -183,14 +327,14 @@
                            class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-fuchsia-500">
                     <input type="text" name="description" placeholder="For what"
                            class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-fuchsia-500">
-                    <button type="submit" class="sm:col-span-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-bold rounded-lg transition-all">
+                    <button type="submit" class="btn-shimmer sm:col-span-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-bold rounded-lg transition-all">
                         Offer Escrow
                     </button>
                 </form>
             </div>
 
             <!-- Game Catalog -->
-            <div class="glass-card p-5 rounded-3xl border border-indigo-500/30 bg-slate-950/70">
+            <div class="club-panel glass-card p-5 rounded-3xl border border-indigo-500/30 bg-slate-950/70 reveal" style="--reveal-delay:.36s">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-sm font-bold font-outfit text-white flex items-center gap-2">
                         <i class="fa-solid fa-layer-group text-indigo-400"></i> Game Catalog
@@ -200,12 +344,19 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {% for game in catalog %}
-                    <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-indigo-500/50 transition-all">
-                        <div class="flex items-center justify-between mb-1">
+                    <div class="game-tile catalog-game-card p-3 rounded-2xl bg-slate-900/70 border border-slate-800 reveal"
+                         data-suit="{{ ['♠','♥','♦','♣'][loop.index0 % 4] }}"
+                         style="--reveal-delay:{{ 0.4 + loop.index0 * 0.03 }}s">
+                        <div class="flex items-center justify-between mb-1.5">
                             <span class="text-xs font-bold text-white">{{ game.name }}</span>
                             {% if game.real_time %}
                             <span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 text-[9px] font-mono font-bold">LIVE</span>
                             {% endif %}
+                        </div>
+                        <div class="flex items-center gap-1.5 mb-1.5">
+                            <span class="catalog-mini-card {{ 'is-red' if loop.index0 % 2 else '' }}"><b>{{ ['A','K','Q','J','10'][loop.index0 % 5] }}</b><i>{{ ['♠','♥','♦','♣'][loop.index0 % 4] }}</i></span>
+                            <span class="catalog-mini-card {{ 'is-red' if loop.index0 % 3 == 0 else '' }}"><b>{{ ['Q','10','A','K','J'][loop.index0 % 5] }}</b><i>{{ ['♦','♣','♥','♠','♦'][loop.index0 % 5] }}</i></span>
+                            <span class="catalog-mini-card"><b>{{ ['J','9','8','7','6'][loop.index0 % 5] }}</b><i>{{ ['♣','♠','♥','♦','♣'][loop.index0 % 5] }}</i></span>
                         </div>
                         <div class="text-[10px] text-slate-500 font-mono mb-1.5">{{ game.min }}-{{ game.max }} players</div>
                         <div class="text-[10px] text-slate-400 font-sans leading-snug line-clamp-3">{{ game.rules }}</div>

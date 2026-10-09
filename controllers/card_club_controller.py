@@ -191,7 +191,27 @@ def group_page(gid):
         group_id=gid)
 
 
+@card_club_bp.route('/groups/<int:gid>/chat', methods=['GET'])
+@login_required
+@age_gate_required
+def group_chat_page(gid):
+    uid = _user_id()
+    try:
+        role = groups.require_member(gid, uid)
+    except CardClubError as e:
+        return _deny(e)
+    group = groups.get_group(gid)
+    return render_template(
+        'card_club/group_chat.html',
+        active_page='card_club',
+        user=_current_user(),
+        group=group,
+        role=role,
+        group_id=gid)
+
+
 # --------------------------------------------------------------------- table
+
 
 @card_club_bp.route('/tables/<int:tid>', methods=['GET'])
 @login_required
@@ -368,7 +388,42 @@ def api_remove_member(gid, uid):
         return _deny(e)
 
 
+# =============================================== API: encrypted group chat ===
+
+@card_club_bp.route('/api/groups/<int:gid>/chat', methods=['GET'])
+@api_required
+def api_get_group_chat(gid):
+    uid = _user_id()
+    try:
+        limit = request.args.get('limit', 50)
+        messages = groups.list_group_encrypted_messages(gid, uid, limit=limit)
+        return jsonify({"ok": True, "messages": messages})
+    except CardClubError as e:
+        return _deny(e)
+
+
+@card_club_bp.route('/api/groups/<int:gid>/chat', methods=['POST'])
+@api_required
+def api_send_group_chat(gid):
+    uid = _user_id()
+    data = request.get_json(silent=True) or request.form
+    ciphertext = data.get('ciphertext')
+    iv = data.get('iv')
+    salt = data.get('salt')
+    try:
+        msg = groups.send_group_encrypted_message(gid, uid, ciphertext, iv, salt)
+        if _socketio:
+            try:
+                _socketio.emit('group_encrypted_chat', msg, room=f'group:{gid}')
+            except Exception:
+                pass
+        return jsonify({"ok": True, "message": msg})
+    except CardClubError as e:
+        return _deny(e)
+
+
 # ============================================================ API: wallet ===
+
 
 @card_club_bp.route('/api/wallet', methods=['GET'])
 @api_required
@@ -579,7 +634,34 @@ def api_table_state(tid):
         return _deny(e)
 
 
+@card_club_bp.route('/api/tables/<int:tid>/strict-rules', methods=['POST'])
+@api_required
+def api_strict_rules(tid):
+    try:
+        t, gid, uid = _table_context(tid)
+        gameplay.acknowledge_strict_rules(tid, uid)
+        _broadcast_table(tid)
+        return jsonify({"ok": True, "rules_read": True})
+    except CardClubError as e:
+        return _deny(e)
+
+
+@card_club_bp.route('/api/tables/<int:tid>/camera', methods=['POST'])
+@api_required
+def api_toggle_camera(tid):
+    data = request.get_json(silent=True) or {}
+    active = bool(data.get('active', False))
+    try:
+        t, gid, uid = _table_context(tid)
+        res = gameplay.toggle_camera(tid, uid, active)
+        _broadcast_table(tid)
+        return jsonify({"ok": True, "camera_active": res})
+    except CardClubError as e:
+        return _deny(e)
+
+
 # ============================================================ play service ===
+
 
 def _do_move(gid, uid, tid, action):
     result = gameplay.perform_move(gid, uid, tid, action)
@@ -680,4 +762,27 @@ def init_socketio(app):
         except CardClubError as e:
             return {"ok": False, "error": str(e)}
 
+    @_socketio.on('join_group_chat')
+    def _on_join_group(data):
+        from flask import session as flask_session
+        uid = flask_session.get('user_id')
+        if not uid:
+            return {"ok": False, "error": "Login required"}
+        gid = int((data or {}).get('group_id', 0))
+        try:
+            groups.require_member(gid, uid)
+        except CardClubError as e:
+            return {"ok": False, "error": str(e)}
+        from flask_socketio import join_room
+        join_room(f'group:{gid}')
+        return {"ok": True}
+
+    @_socketio.on('leave_group_chat')
+    def _on_leave_group(data):
+        from flask_socketio import leave_room
+        gid = int((data or {}).get('group_id', 0))
+        leave_room(f'group:{gid}')
+        return {"ok": True}
+
     return _socketio
+

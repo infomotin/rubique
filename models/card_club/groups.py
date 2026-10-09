@@ -449,3 +449,78 @@ def remove_member(group_id, admin_id, target_user_id):
         "UPDATE club_invites SET status = 'revoked' WHERE group_id = ? AND invitee_user_id = ? AND status = 'pending'",
         (group_id, target_user_id))
     return True
+
+
+# ------------------------------------ isolated end-to-end encrypted chat vault
+
+def send_group_encrypted_message(group_id, user_id, ciphertext, iv, salt=None):
+    """Stores client-side encrypted ciphertext in the group-isolated vault.
+    Strictly isolated: only members can submit.
+    Server never receives plaintext ('No one capture or Decrypted it')."""
+    require_member(group_id, user_id)
+    ciphertext = (ciphertext or "").strip()
+    iv = (iv or "").strip()
+    salt = (salt or "").strip() if salt else None
+    if not ciphertext or not iv:
+        raise CardClubError("Ciphertext and IV are required for encrypted message")
+    if len(ciphertext) > 65535:
+        raise CardClubError("Encrypted payload exceeds size limit")
+
+    mid = execute_insert(
+        """INSERT INTO club_group_messages (group_id, user_id, ciphertext, iv, salt)
+           VALUES (%s,%s,%s,%s,%s)""",
+        """INSERT INTO club_group_messages (group_id, user_id, ciphertext, iv, salt)
+           VALUES (?,?,?,?,?)""",
+        (group_id, user_id, ciphertext, iv, salt))
+
+    u = query_one(
+        "SELECT username FROM users WHERE id = %s",
+        "SELECT username FROM users WHERE id = ?",
+        (user_id,))
+    username = u["username"] if isinstance(u, dict) else u[0]
+    return {
+        "id": mid,
+        "group_id": group_id,
+        "user_id": user_id,
+        "username": username,
+        "ciphertext": ciphertext,
+        "iv": iv,
+        "salt": salt,
+        "created_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+
+def list_group_encrypted_messages(group_id, user_id, limit=50):
+    """Retrieves encrypted message stream strictly for group members.
+    Completely isolated from non-members and other groups."""
+    require_member(group_id, user_id)
+    limit = min(max(1, int(limit or 50)), 100)
+    rows = query_all(
+        """SELECT m.id, m.group_id, m.user_id, m.ciphertext, m.iv, m.salt,
+                  m.created_at, u.username
+           FROM club_group_messages m
+           JOIN users u ON u.id = m.user_id
+           WHERE m.group_id = %s
+           ORDER BY m.id ASC
+           LIMIT %s""",
+        """SELECT m.id, m.group_id, m.user_id, m.ciphertext, m.iv, m.salt,
+                  m.created_at, u.username
+           FROM club_group_messages m
+           JOIN users u ON u.id = m.user_id
+           WHERE m.group_id = ?
+           ORDER BY m.id ASC
+           LIMIT ?""",
+        (group_id, limit))
+    out = []
+    for r in rows or []:
+        d = dict(r) if isinstance(r, dict) else {
+            "id": r[0], "group_id": r[1], "user_id": r[2], "ciphertext": r[3],
+            "iv": r[4], "salt": r[5], "created_at": str(r[6]), "username": r[7]
+        }
+        if "created_at" in d and hasattr(d["created_at"], "strftime"):
+            d["created_at"] = d["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            d["created_at"] = str(d.get("created_at") or "")
+        out.append(d)
+    return out
+

@@ -180,6 +180,7 @@
     letter-spacing: -1px;
     background: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.6));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -191,6 +192,7 @@
 .suit-red .card-center.court-card {
     background: linear-gradient(180deg, #dc2626, #991b1b);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -460,3 +462,621 @@
 .vip-gold-glow {
     text-shadow: 0 0 15px rgba(245, 158, 11, 0.6), 0 0 30px rgba(245, 158, 11, 0.3);
 }
+
+/* ---------------------------------------------------------------------
+   7. Advanced 3D Riffle Shuffle & Mixing Animation Suite
+   --------------------------------------------------------------------- */
+.riffle-deck-container {
+    position: relative;
+    width: 220px;
+    height: 140px;
+    perspective: 800px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.riffle-half-left, .riffle-half-right {
+    position: absolute;
+    width: var(--card-w);
+    height: var(--card-h);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.is-shuffling .riffle-half-left {
+    animation: riffleSplitLeft 0.75s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.is-shuffling .riffle-half-right {
+    animation: riffleSplitRight 0.75s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes riffleSplitLeft {
+    0% { transform: translateX(0) rotate(0deg); }
+    20% { transform: translateX(-48px) rotate(-18deg) translateY(-14px); }
+    55% { transform: translateX(-16px) rotate(-8deg) translateY(-28px); }
+    85% { transform: translateX(-4px) rotate(-2deg) translateY(0); }
+    100% { transform: translateX(0) rotate(0deg) translateY(0); }
+}
+
+@keyframes riffleSplitRight {
+    0% { transform: translateX(0) rotate(0deg); }
+    20% { transform: translateX(48px) rotate(18deg) translateY(-14px); }
+    55% { transform: translateX(16px) rotate(8deg) translateY(-28px); }
+    85% { transform: translateX(4px) rotate(2deg) translateY(0); }
+    100% { transform: translateX(0) rotate(0deg) translateY(0); }
+}
+
+/* Waterfall Flutter Interleave */
+.is-shuffling .riffle-interleave-card {
+    animation: riffleFlutterCascade 0.6s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+}
+
+@keyframes riffleFlutterCascade {
+    0% {
+        transform: translateY(-50px) scale(0.9) rotate(var(--flutter-rot, 0deg));
+        opacity: 0.2;
+    }
+    40% {
+        opacity: 1;
+        transform: translateY(-15px) scale(1.05) rotate(calc(var(--flutter-rot, 0deg) * 0.5));
+    }
+    100% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* Slap Shockwave Ring */
+.slap-shockwave {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 3px solid rgba(251, 191, 36, 0.9);
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.8), inset 0 0 20px rgba(245, 158, 11, 0.5);
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.2);
+    animation: shockwaveExpand 0.45s ease-out forwards;
+}
+
+@keyframes shockwaveExpand {
+    0% {
+        transform: scale(0.2);
+        opacity: 1;
+        border-width: 4px;
+    }
+    60% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1.8);
+        opacity: 0;
+        border-width: 1px;
+    }
+}
+
+/* Dynamic Aerodynamic Throw Flight Arc */
+.anim-card-flight {
+    animation: cardFlightArc 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardFlightArc {
+    0% {
+        transform: translate(var(--throw-from-x, 0px), var(--throw-from-y, 160px)) scale(0.6) rotate(-28deg);
+        opacity: 0;
+    }
+    30% {
+        opacity: 1;
+        transform: translate(calc(var(--throw-to-x, 0px) * 0.4), -30px) scale(1.15) rotate(8deg);
+    }
+    100% {
+        transform: translate(var(--throw-to-x, 0px), var(--throw-to-y, 0px)) scale(1) rotate(var(--throw-rot, 0deg));
+        opacity: 1;
+    }
+}
+
+/* Audio Visualizer Equalizer Bar Pulse */
+.audio-visualizer-bar {
+    width: 3px;
+    height: 14px;
+    background: #10b981;
+    border-radius: 9999px;
+    transition: height 0.1s ease;
+}
+
+.is-audio-playing .audio-visualizer-bar:nth-child(1) { animation: eqBounce 0.35s infinite alternate ease-in-out; }
+.is-audio-playing .audio-visualizer-bar:nth-child(2) { animation: eqBounce 0.28s infinite alternate ease-in-out 0.08s; }
+.is-audio-playing .audio-visualizer-bar:nth-child(3) { animation: eqBounce 0.42s infinite alternate ease-in-out 0.16s; }
+.is-audio-playing .audio-visualizer-bar:nth-child(4) { animation: eqBounce 0.31s infinite alternate ease-in-out 0.04s; }
+
+@keyframes eqBounce {
+    0% { height: 4px; background: #059669; }
+    100% { height: 20px; background: #34d399; box-shadow: 0 0 8px #34d399; }
+}
+
+/* Catalog Card 3D Tilt Card */
+.catalog-game-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+    transform-style: preserve-3d;
+}
+
+.catalog-game-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 16px 30px -10px rgba(0, 0, 0, 0.7), 0 0 20px 1px rgba(99, 102, 241, 0.3);
+    border-color: rgba(129, 140, 248, 0.6);
+}
+
+.catalog-mini-card {
+    width: 28px;
+    height: 40px;
+    border-radius: 4px;
+    background: white;
+    color: #111827;
+    font-size: 9px;
+    font-weight: 800;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    user-select: none;
+    transition: transform 0.2s ease;
+}
+
+.catalog-mini-card.is-red {
+    color: #dc2626;
+}
+
+.catalog-game-card:hover .catalog-mini-card:nth-child(1) { transform: rotate(-8deg) translateY(-2px); }
+.catalog-game-card:hover .catalog-mini-card:nth-child(2) { transform: rotate(0deg) translateY(-4px); }
+.catalog-game-card:hover .catalog-mini-card:nth-child(3) { transform: rotate(8deg) translateY(-2px); }
+
+
+/* =====================================================================
+   7. SECTION HERO - Aurora, Floating Cards, Shimmer Title
+   ===================================================================== */
+.club-hero {
+    position: relative;
+    border-radius: 2rem;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+        radial-gradient(1200px 500px at 15% -10%, rgba(16, 185, 129, 0.28), transparent 60%),
+        radial-gradient(900px 480px at 85% 0%, rgba(99, 102, 241, 0.24), transparent 60%),
+        radial-gradient(700px 420px at 55% 120%, rgba(245, 158, 11, 0.20), transparent 65%),
+        linear-gradient(160deg, #020c0a 0%, #071026 55%, #12081f 100%);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Slow-drifting aurora blobs */
+.club-hero::before {
+    content: '';
+    position: absolute;
+    inset: -40%;
+    background:
+        radial-gradient(38% 45% at 25% 35%, rgba(16, 185, 129, 0.30), transparent 70%),
+        radial-gradient(32% 40% at 75% 30%, rgba(99, 102, 241, 0.26), transparent 70%),
+        radial-gradient(30% 38% at 55% 75%, rgba(245, 158, 11, 0.18), transparent 70%);
+    animation: heroAuroraDrift 16s ease-in-out infinite alternate;
+    z-index: 0;
+    pointer-events: none;
+}
+
+@keyframes heroAuroraDrift {
+    0%   { transform: translate3d(-3%, -2%, 0) rotate(-4deg) scale(1); }
+    50%  { transform: translate3d(3%, 2%, 0) rotate(3deg) scale(1.06); }
+    100% { transform: translate3d(-2%, 3%, 0) rotate(-2deg) scale(1.02); }
+}
+
+/* Felt texture + vignette over hero */
+.club-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        radial-gradient(rgba(0, 0, 0, 0.18) 1px, transparent 1px);
+    background-size: 7px 7px;
+    background-position: 0 0, 3px 4px;
+    box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.75);
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.55;
+}
+
+.club-hero > * { position: relative; z-index: 2; }
+
+/* Animated gold shimmer title */
+.shimmer-gold {
+    background: linear-gradient(100deg,
+        #fde68a 0%, #f59e0b 25%, #fff7d6 45%, #f59e0b 60%, #fbbf24 78%, #fde68a 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmerSweep 4.5s linear infinite;
+}
+
+@keyframes shimmerSweep {
+    0% { background-position: 120% 0; }
+    100% { background-position: -120% 0; }
+}
+
+/* Floating 3D card fan in hero */
+.hero-card-fan {
+    position: relative;
+    width: 190px;
+    height: 150px;
+    flex-shrink: 0;
+    perspective: 900px;
+}
+
+.hero-card-fan .playing-card-3d {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 84px;
+    height: 122px;
+    margin: -61px 0 0 -42px;
+    box-shadow: 0 18px 35px -12px rgba(0, 0, 0, 0.85), 0 0 24px rgba(245, 158, 11, 0.25);
+}
+
+.hero-card-fan .hf-card-1 {
+    animation: heroFloat1 6.5s ease-in-out infinite;
+    z-index: 3;
+}
+.hero-card-fan .hf-card-2 {
+    animation: heroFloat2 7.5s ease-in-out infinite 0.6s;
+    z-index: 2;
+}
+.hero-card-fan .hf-card-3 {
+    animation: heroFloat3 8.5s ease-in-out infinite 1.2s;
+    z-index: 1;
+}
+
+@keyframes heroFloat1 {
+    0%, 100% { transform: translate(-64px, -6px) rotate(-18deg); }
+    50%      { transform: translate(-58px, -30px) rotate(-11deg); }
+}
+@keyframes heroFloat2 {
+    0%, 100% { transform: translate(-8px, 6px) rotate(2deg) scale(1.05); }
+    50%      { transform: translate(-8px, -18px) rotate(-3deg) scale(1.08); }
+}
+@keyframes heroFloat3 {
+    0%, 100% { transform: translate(48px, -4px) rotate(17deg); }
+    50%      { transform: translate(54px, -26px) rotate(11deg); }
+}
+
+/* Pulsing halo behind the fan */
+.hero-fan-glow {
+    position: absolute;
+    left: 50%;
+    top: 55%;
+    width: 190px;
+    height: 190px;
+    margin: -95px 0 0 -95px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(245, 158, 11, 0.08) 45%, transparent 70%);
+    animation: fanGlowPulse 3.2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes fanGlowPulse {
+    0%, 100% { transform: scale(0.92); opacity: 0.7; }
+    50%      { transform: scale(1.1); opacity: 1; }
+}
+
+/* =====================================================================
+   8. ENTRANCE / SCROLL REVEAL + PANEL MOTION
+   ===================================================================== */
+.reveal {
+    opacity: 0;
+    transform: translateY(26px) scale(0.985);
+    transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) var(--reveal-delay, 0s),
+                transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) var(--reveal-delay, 0s);
+    will-change: opacity, transform;
+}
+
+.reveal.revealed {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Panel hover lift */
+.club-panel {
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1),
+                box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.club-panel:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 26px 50px -22px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(52, 211, 153, 0.25);
+}
+
+/* Shimmer sweep CTA button */
+.btn-shimmer {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.btn-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.45) 50%, transparent 80%);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.btn-shimmer:hover::after {
+    left: 130%;
+    animation: btnSweep 0.9s ease;
+}
+
+@keyframes btnSweep {
+    from { left: -120%; }
+    to   { left: 130%; }
+}
+
+/* =====================================================================
+   9. GAME CATALOG TILES
+   ===================================================================== */
+.game-tile {
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.3, 1),
+                border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    cursor: default;
+}
+
+.game-tile::before {
+    content: attr(data-suit);
+    position: absolute;
+    right: -8px;
+    bottom: -14px;
+    font-size: 4.2rem;
+    opacity: 0.07;
+    transform: scale(0.85) rotate(-12deg);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.3, 1), opacity 0.4s ease;
+    pointer-events: none;
+    color: #fbbf24;
+}
+
+.game-tile:hover {
+    transform: translateY(-6px) scale(1.02);
+    border-color: rgba(129, 140, 248, 0.65);
+    box-shadow: 0 22px 40px -18px rgba(0, 0, 0, 0.9), 0 0 22px rgba(99, 102, 241, 0.28);
+    background: rgba(15, 23, 42, 0.95);
+}
+
+.game-tile:hover::before {
+    opacity: 0.2;
+    transform: scale(1.1) rotate(6deg);
+}
+
+/* =====================================================================
+   10. CONFETTI + IMPACT FX + SHUFFLE OVERLAY
+   ===================================================================== */
+.club-confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Expanding shockwave ring at slap/impact point */
+.impact-ring {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border: 3px solid rgba(251, 191, 36, 0.9);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 50;
+    animation: impactRing 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes impactRing {
+    0%   { transform: scale(0.4); opacity: 1; box-shadow: 0 0 18px rgba(251, 191, 36, 0.8); }
+    100% { transform: scale(9); opacity: 0; box-shadow: 0 0 2px rgba(251, 191, 36, 0); }
+}
+
+/* Full-table shuffle overlay: two decks riffle into each other */
+.club-shuffle-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 10, 0.72);
+    backdrop-filter: blur(6px);
+    border-radius: inherit;
+    animation: shuffleOverlayIn 0.25s ease;
+}
+
+@keyframes shuffleOverlayIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.shuffle-decks {
+    position: relative;
+    width: 220px;
+    height: 130px;
+}
+
+.shuffle-deck {
+    position: absolute;
+    top: 20px;
+    width: 64px;
+    height: 96px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1e3a8a, #0f172a);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), inset 0 0 0 2px #d97706;
+}
+
+.shuffle-deck.left  { left: 24px; animation: riffleL 1.05s ease-in-out infinite; }
+.shuffle-deck.right { right: 24px; animation: riffleR 1.05s ease-in-out infinite; }
+
+@keyframes riffleL {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    35%      { transform: translateX(26px) rotate(8deg) translateY(-8px); }
+    60%      { transform: translateX(6px) rotate(-3deg); }
+}
+@keyframes riffleR {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    35%      { transform: translateX(-26px) rotate(-8deg) translateY(-8px); }
+    60%      { transform: translateX(-6px) rotate(3deg); }
+}
+
+.shuffle-caption {
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font: 700 11px/1 'Outfit', sans-serif;
+    letter-spacing: 0.35em;
+    color: #fbbf24;
+    text-transform: uppercase;
+    animation: captionBlink 1.05s ease-in-out infinite;
+}
+
+@keyframes captionBlink {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+}
+
+/* Deal stagger: hand cards fly in one-by-one */
+.deal-stagger .playing-card-3d {
+    opacity: 0;
+    animation: dealStaggerIn 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.05) forwards;
+    animation-delay: var(--deal-delay, 0s);
+}
+
+@keyframes dealStaggerIn {
+    0%   { opacity: 0; transform: translate(-90px, -130px) scale(0.3) rotate(38deg); }
+    70%  { opacity: 1; transform: translate(0, 4px) scale(1.03) rotate(var(--rest-rot, 0deg)); }
+    100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(var(--rest-rot, 0deg)); }
+}
+
+/* Seat pod entrance pop */
+.seat-pod.seat-pop {
+    animation: seatPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes seatPop {
+    0%   { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Header wallet coin spin */
+.coin-spin {
+    display: inline-block;
+    animation: coinSpin 3.5s ease-in-out infinite;
+}
+
+@keyframes coinSpin {
+    0%, 100% { transform: rotateY(0deg); }
+    50%      { transform: rotateY(180deg); }
+}
+
+/* =====================================================================
+   11. ACCESSIBILITY - respect reduced motion
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .club-hero::before,
+    .hero-card-fan .playing-card-3d,
+    .hero-fan-glow,
+    .shimmer-gold,
+    .coin-spin,
+    .shuffle-deck,
+    .playing-card-3d.is-playable {
+        animation: none !important;
+    }
+    .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
+
+/* =====================================================================
+   12. Live Camera Streaming & Strict Rules Badges
+   ===================================================================== */
+.player-cam-tile {
+    width: 88px;
+    height: 64px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    background: #020617;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.player-cam-tile video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Mirror camera for natural look */
+}
+
+.cam-live-indicator {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 8px;
+    font-family: 'Fira Code', monospace;
+    font-weight: 800;
+    color: #ef4444;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 1px 4px;
+    border-radius: 4px;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 5;
+}
+
+.cam-live-indicator .pulse-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ef4444;
+    animation: camDotPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes camDotPulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.strict-rules-seal {
+    font-size: 9px;
+    font-family: 'Fira Code', monospace;
+    color: #10b981;
+    background: rgba(6, 78, 59, 0.5);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 6px;
+    padding: 2px 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
