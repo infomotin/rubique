@@ -3,7 +3,7 @@
 import random
 
 from models.card_club.errors import IllegalMove
-from models.card_club.engines.base import BaseCardGame, full_deck, rank_val
+from models.card_club.engines.base import BaseCardGame, full_deck, rank_val, RANK_VALUE
 
 
 class GOPS(BaseCardGame):
@@ -140,7 +140,7 @@ class Golf(BaseCardGame):
             def v(card):
                 r = card[1]
                 return 0 if r == "K" else 1 if r == "A" else \
-                    11 if r == "J" else 12 if r == "Q" else rank_val(r)
+                    11 if r == "J" else 12 if r == "Q" else RANK_VALUE[r]
             total += v(a) + v(b)
         return total
 

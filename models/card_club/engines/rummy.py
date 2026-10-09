@@ -51,7 +51,7 @@ class Rummy(BaseCardGame):
             "hands": {str(k): v for k, v in hands.items()},
             "stock": deck, "discard": [deck.pop()],
             "melds": {str(i): [] for i in range(len(players))},
-            "drew": False, "melded": False, "turn": 0,
+            "drew": False, "melded": False, "turn": 0, "turns": 0,
             "finish": [], "log": [], "over": False,
         }
 
@@ -151,8 +151,12 @@ class Rummy(BaseCardGame):
             s["discard"].append(card)
             s["drew"] = False
             s["melded"] = False
+            s["turns"] += 1
             s["turn"] = self._next(s, seat)
             if not s["stock"]:
+                self._exhaust()
+            elif s["turns"] > len(s["players"]) * 80:
+                self._say(s, None, "stalemate - deadwood decides")
                 self._exhaust()
             return
         raise IllegalMove("Unknown action")
