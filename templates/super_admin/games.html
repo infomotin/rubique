@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}Game Controls & Security Observability - Super Admin - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Executive Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-rose-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-rose-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-600 to-amber-600 p-0.5 shadow-2xl shadow-rose-500/30">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-rose-400 text-2xl">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                        <span>SUPER ADMIN &bull; GAME CONTROLS &amp; SECURITY OBSERVABILITY</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">Game Module Control &amp; Observation Center</h1>
+                    <p class="text-xs text-slate-400 font-mono">Globally enable/disable games, observe live matches in real time, and audit anti-cheat anomalies</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                <a href="{{ url_for('developer.activity_monitor_page') }}" class="px-3 py-2 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900/60 transition-all flex items-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-microchip text-xs"></i> Dev Bit Monitor
+                </a>
+                <a href="{{ url_for('chess.index', admin_override=1) }}" target="_blank" class="px-3 py-2 rounded-xl bg-amber-950/80 border border-amber-500/40 text-amber-300 hover:bg-amber-900/60 transition-all flex items-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-chess text-xs"></i> Test Chess (Bypass)
+                </a>
+                <a href="{{ url_for('cards.index', admin_override=1) }}" target="_blank" class="px-3 py-2 rounded-xl bg-violet-950/80 border border-violet-500/40 text-violet-300 hover:bg-violet-900/60 transition-all flex items-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-clone text-xs"></i> Test Cards (Bypass)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "super_admin/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace -->
+        <div class="lg:col-span-9 space-y-8">
+            
+            <!-- Quick Metric Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="glass-card p-4 rounded-2xl border border-amber-500/30 bg-slate-900/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-mono text-slate-400 uppercase">Chess Matches</span>
+                        <i class="fa-solid fa-chess text-amber-400 text-sm"></i>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-black text-white font-mono">{{ game_stats.total_chess_games }}</div>
+                    <div class="text-[10px] text-amber-300/80 mt-1 font-mono flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        {{ game_stats.active_chess_games }} Currently Active
+                    </div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl border border-violet-500/30 bg-slate-900/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-mono text-slate-400 uppercase">Card Games</span>
+                        <i class="fa-solid fa-clone text-violet-400 text-sm"></i>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-black text-white font-mono">{{ game_stats.total_card_games }}</div>
+                    <div class="text-[10px] text-violet-300/80 mt-1 font-mono flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        {{ game_stats.active_card_games }} Currently Active
+                    </div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl border border-rose-500/30 bg-slate-900/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-mono text-slate-400 uppercase">Security Flags</span>
+                        <i class="fa-solid fa-shield-virus text-rose-400 text-sm"></i>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-black text-white font-mono">{{ game_stats.security_events_count }}</div>
+                    <div class="text-[10px] text-rose-300/80 mt-1 font-mono">Anti-Cheat Anomalies</div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl border border-cyan-500/30 bg-slate-900/60">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-mono text-slate-400 uppercase">Bit Telemetry</span>
+                        <i class="fa-solid fa-wave-square text-cyan-400 text-sm"></i>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-black text-white font-mono">
+                        {% if game_settings.get('bit_telemetry_enabled') == '1' %}LIVE{% else %}OFF{% endif %}
+                    </div>
+                    <div class="text-[10px] text-cyan-300/80 mt-1 font-mono">Microsecond Trace</div>
+                </div>
+            </div>
+
+            <!-- SECTION 1: GAME FEATURE TOGGLES (SUPER ADMIN SWITCHES) -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 bg-slate-950/80 shadow-2xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-slate-900 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold font-outfit text-white flex items-center gap-2">
+                            <i class="fa-solid fa-toggle-on text-amber-400"></i>
+                            <span>Master Game Enable / Disable Controls</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 font-mono mt-0.5">Toggle games on/off instantly. If disabled, non-admin subscribers will see the cyber maintenance lock.</p>
+                    </div>
+                    <span class="text-[10px] font-mono px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">
+                        Zero Server Restart Required
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- Toggle 1: 3D Chess Board -->
+                    <div class="p-5 rounded-2xl border {% if game_settings.get('chess_game_enabled') == '1' %}border-amber-500/40 bg-amber-950/15{% else %}border-rose-900/40 bg-rose-950/15{% endif %} flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl {% if game_settings.get('chess_game_enabled') == '1' %}bg-amber-900/40 text-amber-400 border border-amber-500/30{% else %}bg-slate-900 text-slate-500 border border-slate-800{% endif %}">
+                                <i class="fa-solid fa-chess-knight"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm flex items-center gap-2">
+                                    <span>3D Smart Chess Game</span>
+                                    {% if game_settings.get('chess_game_enabled') == '1' %}
+                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono font-bold">ONLINE</span>
+                                    {% else %}
+                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-rose-950 border border-rose-500/40 text-rose-300 font-mono font-bold">DISABLED</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-slate-400 font-mono mt-0.5">GoChess robotic 3D glide, single &amp; multi-player</div>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('super_admin.toggle_game_setting') }}">
+                            <input type="hidden" name="setting_key" value="chess_game_enabled">
+                            <input type="hidden" name="setting_value" value="{% if game_settings.get('chess_game_enabled') == '1' %}0{% else %}1{% endif %}">
+                            <button type="submit" class="px-4 py-2 rounded-xl font-mono text-xs font-bold transition-all {% if game_settings.get('chess_game_enabled') == '1' %}bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700{% else %}bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30{% endif %}">
+                                {% if game_settings.get('chess_game_enabled') == '1' %}
+                                    <i class="fa-solid fa-power-off mr-1"></i> Disable
+                                {% else %}
+                                    <i class="fa-solid fa-play mr-1"></i> Enable
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Toggle 2: CyberDeck Memory Card Game -->
+                    <div class="p-5 rounded-2xl border {% if game_settings.get('card_game_enabled') == '1' %}border-violet-500/40 bg-violet-950/15{% else %}border-rose-900/40 bg-rose-950/15{% endif %} flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl {% if game_settings.get('card_game_enabled') == '1' %}bg-violet-900/40 text-violet-400 border border-violet-500/30{% else %}bg-slate-900 text-slate-500 border border-slate-800{% endif %}">
+                                <i class="fa-solid fa-clone"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm flex items-center gap-2">
+                                    <span>CyberDeck Card Game</span>
+                                    {% if game_settings.get('card_game_enabled') == '1' %}
+                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono font-bold">ONLINE</span>
+                                    {% else %}
+                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-rose-950 border border-rose-500/40 text-rose-300 font-mono font-bold">DISABLED</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-slate-400 font-mono mt-0.5">Tactical 16-card grandmaster memory puzzle</div>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('super_admin.toggle_game_setting') }}">
+                            <input type="hidden" name="setting_key" value="card_game_enabled">
+                            <input type="hidden" name="setting_value" value="{% if game_settings.get('card_game_enabled') == '1' %}0{% else %}1{% endif %}">
+                            <button type="submit" class="px-4 py-2 rounded-xl font-mono text-xs font-bold transition-all {% if game_settings.get('card_game_enabled') == '1' %}bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700{% else %}bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30{% endif %}">
+                                {% if game_settings.get('card_game_enabled') == '1' %}
+                                    <i class="fa-solid fa-power-off mr-1"></i> Disable
+                                {% else %}
+                                    <i class="fa-solid fa-play mr-1"></i> Enable
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Toggle 3: Speedcube Engine -->
+                    <div class="p-5 rounded-2xl border {% if game_settings.get('speedcube_game_enabled') == '1' %}border-cyan-500/40 bg-cyan-950/15{% else %}border-rose-900/40 bg-rose-950/15{% endif %} flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl {% if game_settings.get('speedcube_game_enabled') == '1' %}bg-cyan-900/40 text-cyan-400 border border-cyan-500/30{% else %}bg-slate-900 text-slate-500 border border-slate-800{% endif %}">
+                                <i class="fa-solid fa-cube"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm flex items-center gap-2">
+                                    <span>Speedcube 3D &amp; Shapes</span>
+                                    {% if game_settings.get('speedcube_game_enabled') == '1' %}
+                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono font-bold">ONLINE</span>
+                                    {% else %}
+                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-rose-950 border border-rose-500/40 text-rose-300 font-mono font-bold">DISABLED</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-slate-400 font-mono mt-0.5">3D WebGL simulator &amp; 10 geometry shapes</div>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('super_admin.toggle_game_setting') }}">
+                            <input type="hidden" name="setting_key" value="speedcube_game_enabled">
+                            <input type="hidden" name="setting_value" value="{% if game_settings.get('speedcube_game_enabled') == '1' %}0{% else %}1{% endif %}">
+                            <button type="submit" class="px-4 py-2 rounded-xl font-mono text-xs font-bold transition-all {% if game_settings.get('speedcube_game_enabled') == '1' %}bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700{% else %}bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30{% endif %}">
+                                {% if game_settings.get('speedcube_game_enabled') == '1' %}
+                                    <i class="fa-solid fa-power-off mr-1"></i> Disable
+                                {% else %}
+                                    <i class="fa-solid fa-play mr-1"></i> Enable
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Toggle 4: Anti-Cheat & Bot Blocker -->
+                    <div class="p-5 rounded-2xl border {% if game_settings.get('game_anti_cheat_enabled') == '1' %}border-rose-500/40 bg-rose-950/15{% else %}border-slate-800 bg-slate-900/30{% endif %} flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl {% if game_settings.get('game_anti_cheat_enabled') == '1' %}bg-rose-900/40 text-rose-400 border border-rose-500/30{% else %}bg-slate-900 text-slate-500 border border-slate-800{% endif %}">
+                                <i class="fa-solid fa-shield-virus"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm flex items-center gap-2">
+                                    <span>Anti-Cheat Bot Filter</span>
+                                    {% if game_settings.get('game_anti_cheat_enabled') == '1' %}
+                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono font-bold">GUARD ACTIVE</span>
+                                    {% else %}
+                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono font-bold">BYPASS</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-slate-400 font-mono mt-0.5">Detects sub-50ms moves, illegal moves, bot attacks</div>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('super_admin.toggle_game_setting') }}">
+                            <input type="hidden" name="setting_key" value="game_anti_cheat_enabled">
+                            <input type="hidden" name="setting_value" value="{% if game_settings.get('game_anti_cheat_enabled') == '1' %}0{% else %}1{% endif %}">
+                            <button type="submit" class="px-4 py-2 rounded-xl font-mono text-xs font-bold transition-all {% if game_settings.get('game_anti_cheat_enabled') == '1' %}bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700{% else %}bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30{% endif %}">
+                                {% if game_settings.get('game_anti_cheat_enabled') == '1' %}
+                                    <i class="fa-solid fa-pause mr-1"></i> Pause Guard
+                                {% else %}
+                                    <i class="fa-solid fa-shield-halved mr-1"></i> Arm Guard
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- SECTION 2: LIVE GAME ACTIVITIES OBSERVATION (SUPER ADMIN REAL-TIME OVERSIGHT) -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 bg-slate-950/80 shadow-2xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-slate-900 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold font-outfit text-white flex items-center gap-2">
+                            <i class="fa-solid fa-satellite-dish text-emerald-400 animate-pulse"></i>
+                            <span>Live Game Activities &amp; Player Observation Stream</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 font-mono mt-0.5">Super Admin oversight: Monitor every player move, session FEN, status, and freeze or terminate offending matches.</p>
+                    </div>
+                    <span class="text-[10px] font-mono px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300">
+                        {{ activities|length }} Sessions Tracked
+                    </span>
+                </div>
+
+                {% if activities %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                                <th class="py-2.5 px-3">Session &amp; Game</th>
+                                <th class="py-2.5 px-3">Player</th>
+                                <th class="py-2.5 px-3">Match Type</th>
+                                <th class="py-2.5 px-3">Moves</th>
+                                <th class="py-2.5 px-3">Status</th>
+                                <th class="py-2.5 px-3">State / FEN Preview</th>
+                                <th class="py-2.5 px-3">Started</th>
+                                <th class="py-2.5 px-3 text-right">Admin Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">
+                            {% for a in activities %}
+                            <tr class="hover:bg-slate-900/50 transition-colors">
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-2">
+                                        {% if a.game_category == 'chess' %}
+                                            <span class="w-6 h-6 rounded bg-amber-950 border border-amber-500/40 text-amber-400 flex items-center justify-center text-xs">
+                                                <i class="fa-solid fa-chess"></i>
+                                            </span>
+                                            <div>
+                                                <span class="font-bold text-white">#{{ a.id }}</span>
+                                                <div class="text-[10px] text-slate-500 font-sans">Chess: {{ a.title }}</div>
+                                            </div>
+                                        {% else %}
+                                            <span class="w-6 h-6 rounded bg-violet-950 border border-violet-500/40 text-violet-400 flex items-center justify-center text-xs">
+                                                <i class="fa-solid fa-clone"></i>
+                                            </span>
+                                            <div>
+                                                <span class="font-bold text-white">#{{ a.id }}</span>
+                                                <div class="text-[10px] text-slate-500 font-sans">Cards: {{ a.title }}</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="text-slate-200 font-bold">{{ a.player_name or 'Guest' }}</span>
+                                    {% if a.player_role %}
+                                    <span class="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">{{ a.player_role }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-700 text-slate-300">
+                                        {{ a.match_type or 'single' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 font-bold text-amber-400">
+                                    {{ a.moves_count or 0 }}
+                                </td>
+                                <td class="py-3 px-3">
+                                    {% if a.status == 'active' %}
+                                        <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> active
+                                        </span>
+                                    {% elif a.status == 'paused' %}
+                                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-950 border border-amber-500/40 text-amber-300">
+                                            frozen
+                                        </span>
+                                    {% else %}
+                                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                                            {{ a.status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-3 max-w-[200px] truncate text-[10px] text-slate-400 font-mono" title="{{ a.fen }}">
+                                    {{ (a.fen or 'standard_start')[:30] }}...
+                                </td>
+                                <td class="py-3 px-3 text-slate-400 text-[11px]">
+                                    {{ a.created_at }}
+                                </td>
+                                <td class="py-3 px-3 text-right">
+                                    <div class="inline-flex items-center gap-1.5">
+                                        {% if a.status == 'active' %}
+                                        <form method="POST" action="{{ url_for('super_admin.game_action') }}" class="inline">
+                                            <input type="hidden" name="game_type" value="{{ a.game_category }}">
+                                            <input type="hidden" name="game_id" value="{{ a.id }}">
+                                            <input type="hidden" name="action" value="freeze">
+                                            <button type="submit" class="p-1 px-2 rounded bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-500/30 text-[10px]" title="Freeze / Pause Session">
+                                                <i class="fa-solid fa-snowflake"></i> Freeze
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        {% if a.status != 'completed' %}
+                                        <form method="POST" action="{{ url_for('super_admin.game_action') }}" class="inline">
+                                            <input type="hidden" name="game_type" value="{{ a.game_category }}">
+                                            <input type="hidden" name="game_id" value="{{ a.id }}">
+                                            <input type="hidden" name="action" value="terminate">
+                                            <button type="submit" class="p-1 px-2 rounded bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-500/30 text-[10px]" title="Terminate Session">
+                                                <i class="fa-solid fa-ban"></i> Stop
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-8 text-center text-slate-500 font-mono text-sm">
+                    <i class="fa-solid fa-gamepad text-3xl mb-3 text-slate-600 block"></i>
+                    No game sessions recorded yet. Launch a chess or card match to observe here!
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- SECTION 3: SECURITY & ANTI-CHEAT ANOMALY AUDIT TRAIL -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-rose-900/40 bg-slate-950/80 shadow-2xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-slate-900 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold font-outfit text-white flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-rose-400"></i>
+                            <span>Security &amp; Anti-Cheat Incident Trail</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 font-mono mt-0.5">Automated detection of rapid move bot spam, illegal move injections, and unauthorized maintenance bypass attempts.</p>
+                    </div>
+                    <span class="text-[10px] font-mono px-3 py-1 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300">
+                        {{ security_events|length }} Incidents Logged
+                    </span>
+                </div>
+
+                {% if security_events %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                                <th class="py-2.5 px-3">Severity</th>
+                                <th class="py-2.5 px-3">Event Type</th>
+                                <th class="py-2.5 px-3">Game / Source</th>
+                                <th class="py-2.5 px-3">User &amp; IP</th>
+                                <th class="py-2.5 px-3">Details / Anomaly Vector</th>
+                                <th class="py-2.5 px-3">Time</th>
+                                <th class="py-2.5 px-3 text-right">Dismiss</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">
+                            {% for e in security_events %}
+                            <tr class="hover:bg-slate-900/50 transition-colors">
+                                <td class="py-3 px-3">
+                                    {% if e.severity == 'critical' %}
+                                        <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-bold text-[10px]">CRITICAL</span>
+                                    {% elif e.severity == 'warning' %}
+                                        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold text-[10px]">WARNING</span>
+                                    {% else %}
+                                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 font-bold text-[10px]">INFO</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-3 font-bold text-slate-200">
+                                    {{ e.event_type }}
+                                </td>
+                                <td class="py-3 px-3 text-slate-400">
+                                    {{ e.game_type or 'global' }} #{{ e.game_id or 'sys' }}
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="text-slate-200 font-bold">{{ e.username or 'Anon' }}</span>
+                                    <div class="text-[10px] text-slate-500">{{ e.client_ip }}</div>
+                                </td>
+                                <td class="py-3 px-3 text-slate-300 max-w-[280px] break-words text-[11px]">
+                                    {{ e.details }}
+                                </td>
+                                <td class="py-3 px-3 text-slate-400 text-[11px]">
+                                    {{ e.created_at }}
+                                </td>
+                                <td class="py-3 px-3 text-right">
+                                    <form method="POST" action="{{ url_for('super_admin.dismiss_security_event') }}" class="inline">
+                                        <input type="hidden" name="event_id" value="{{ e.id }}">
+                                        <button type="submit" class="p-1 px-2.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-[10px]" title="Acknowledge & Clear Incident">
+                                            <i class="fa-solid fa-check mr-1 text-emerald-400"></i> Clear
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-8 text-center text-emerald-400 font-mono text-sm">
+                    <i class="fa-solid fa-shield-heart text-3xl mb-3 text-emerald-500 block"></i>
+                    All systems secure! No anomalies or bot intrusions flagged.
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

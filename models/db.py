@@ -443,6 +443,187 @@ def init_database():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+
+            # Age gate: self-declared DOB for Card Club (18+ check at sign-up)
+            try:
+                cur.execute("ALTER TABLE users ADD COLUMN date_of_birth DATE NULL")
+            except Exception:
+                pass
+
+            # 25. Card Club - Private closed groups (invisible to outsiders)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_groups (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(120) NOT NULL,
+                    description VARCHAR(255) DEFAULT '',
+                    invite_code VARCHAR(20) NOT NULL UNIQUE,
+                    created_by INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 26. Card Club - Group membership & roles
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_group_members (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    role VARCHAR(20) DEFAULT 'member',
+                    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uq_club_member (group_id, user_id),
+                    FOREIGN KEY (group_id) REFERENCES club_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 27. Card Club - Admin-only invitations (no self-discovery)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_invites (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    invitee_user_id INT NULL,
+                    token VARCHAR(64) NOT NULL UNIQUE,
+                    status VARCHAR(20) DEFAULT 'pending',
+                    created_by INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    resolved_at TIMESTAMP NULL,
+                    FOREIGN KEY (group_id) REFERENCES club_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (invitee_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 28. Card Club - Role change / default role proposals (majority approval)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_role_proposals (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    proposer_id INT NOT NULL,
+                    target_user_id INT NULL,
+                    proposal_type VARCHAR(40) NOT NULL,
+                    payload TEXT,
+                    status VARCHAR(20) DEFAULT 'open',
+                    votes_for INT DEFAULT 0,
+                    votes_against INT DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    resolved_at TIMESTAMP NULL,
+                    FOREIGN KEY (group_id) REFERENCES club_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (proposer_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 29. Card Club - Proposal votes (one vote per member)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_role_votes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    proposal_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    vote VARCHAR(10) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uq_club_vote (proposal_id, user_id),
+                    FOREIGN KEY (proposal_id) REFERENCES club_role_proposals(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 30. Card Club - Group-isolated wallets (user_id=0 is the group pool)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_wallets (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    user_id INT DEFAULT 0,
+                    balance BIGINT NOT NULL DEFAULT 0,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY uq_club_wallet (group_id, user_id),
+                    FOREIGN KEY (group_id) REFERENCES club_groups(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 31. Card Club - Wallet ledger (every coin movement audited)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_ledger (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    amount BIGINT NOT NULL,
+                    balance_after BIGINT NOT NULL,
+                    entry_type VARCHAR(30) NOT NULL,
+                    ref_type VARCHAR(30),
+                    ref_id INT,
+                    note VARCHAR(255) DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 32. Card Club - Transfers requiring recipient approval
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_transfers (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    from_user_id INT NOT NULL,
+                    to_user_id INT NOT NULL,
+                    amount BIGINT NOT NULL,
+                    status VARCHAR(20) DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    resolved_at TIMESTAMP NULL,
+                    FOREIGN KEY (group_id) REFERENCES club_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 33. Card Club - Game tables (state JSON, seat order, stake & pool bonus)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_tables (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    group_id INT NOT NULL,
+                    game_slug VARCHAR(40) NOT NULL,
+                    name VARCHAR(120) DEFAULT '',
+                    stake BIGINT DEFAULT 0,
+                    pool_bonus BIGINT DEFAULT 0,
+                    max_seats INT NOT NULL,
+                    status VARCHAR(20) DEFAULT 'waiting',
+                    state TEXT,
+                    created_by INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    started_at TIMESTAMP NULL,
+                    finished_at TIMESTAMP NULL,
+                    FOREIGN KEY (group_id) REFERENCES club_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 34. Card Club - Seats at a table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_seats (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    table_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    seat_index INT NOT NULL,
+                    status VARCHAR(20) DEFAULT 'seated',
+                    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uq_club_seat (table_id, user_id),
+                    FOREIGN KEY (table_id) REFERENCES club_tables(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 35. Card Club - Escrowed bets (zero-sum settlement)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_bets (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    table_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    amount BIGINT NOT NULL,
+                    status VARCHAR(20) DEFAULT 'escrowed',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (table_id) REFERENCES club_tables(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 36. Card Club - Move log (audit trail)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_moves (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    table_id INT NOT NULL,
+                    seq INT NOT NULL,
+                    user_id INT NULL,
+                    move_json TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (table_id) REFERENCES club_tables(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
         conn.close()
     else:
         print("[Database] Initializing SQLite Multi-Role RBAC Tables...")
@@ -458,6 +639,7 @@ def init_database():
                 role TEXT DEFAULT 'user',
                 bio TEXT DEFAULT 'Group Theory Explorer & Speedcuber',
                 avatar_color TEXT DEFAULT '#818cf8',
+                date_of_birth TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -466,6 +648,8 @@ def init_database():
         cols = [col[1] for col in cur.fetchall()]
         if 'role' not in cols:
             cur.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
+        if 'date_of_birth' not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN date_of_birth TEXT")
         if 'bio' not in cols:
             cur.execute("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT 'Group Theory Explorer & Speedcuber'")
         if 'avatar_color' not in cols:
@@ -847,6 +1031,181 @@ def init_database():
                 http_status INTEGER DEFAULT 200,
                 severity TEXT DEFAULT 'INFO',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 25. Card Club - Private closed groups (invisible to outsiders)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_groups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT DEFAULT '',
+                invite_code TEXT NOT NULL UNIQUE,
+                created_by INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (created_by) REFERENCES users(id)
+            )
+        """)
+        # 26. Card Club - Group membership & roles
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_group_members (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                role TEXT DEFAULT 'member',
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (group_id, user_id),
+                FOREIGN KEY (group_id) REFERENCES club_groups(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        # 27. Card Club - Admin-only invitations (no self-discovery)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_invites (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                invitee_user_id INTEGER,
+                token TEXT NOT NULL UNIQUE,
+                status TEXT DEFAULT 'pending',
+                created_by INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES club_groups(id),
+                FOREIGN KEY (invitee_user_id) REFERENCES users(id),
+                FOREIGN KEY (created_by) REFERENCES users(id)
+            )
+        """)
+        # 28. Card Club - Role change / default role proposals (majority approval)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_role_proposals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                proposer_id INTEGER NOT NULL,
+                target_user_id INTEGER,
+                proposal_type TEXT NOT NULL,
+                payload TEXT,
+                status TEXT DEFAULT 'open',
+                votes_for INTEGER DEFAULT 0,
+                votes_against INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES club_groups(id),
+                FOREIGN KEY (proposer_id) REFERENCES users(id)
+            )
+        """)
+        # 29. Card Club - Proposal votes (one vote per member)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_role_votes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                proposal_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                vote TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (proposal_id, user_id),
+                FOREIGN KEY (proposal_id) REFERENCES club_role_proposals(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        # 30. Card Club - Group-isolated wallets (user_id=0 is the group pool)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_wallets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                user_id INTEGER DEFAULT 0,
+                balance INTEGER NOT NULL DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (group_id, user_id),
+                FOREIGN KEY (group_id) REFERENCES club_groups(id)
+            )
+        """)
+        # 31. Card Club - Wallet ledger (every coin movement audited)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_ledger (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                balance_after INTEGER NOT NULL,
+                entry_type TEXT NOT NULL,
+                ref_type TEXT,
+                ref_id INTEGER,
+                note TEXT DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # 32. Card Club - Transfers requiring recipient approval
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_transfers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                from_user_id INTEGER NOT NULL,
+                to_user_id INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES club_groups(id),
+                FOREIGN KEY (from_user_id) REFERENCES users(id),
+                FOREIGN KEY (to_user_id) REFERENCES users(id)
+            )
+        """)
+        # 33. Card Club - Game tables (state JSON, seat order, stake & pool bonus)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_tables (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                game_slug TEXT NOT NULL,
+                name TEXT DEFAULT '',
+                stake INTEGER DEFAULT 0,
+                pool_bonus INTEGER DEFAULT 0,
+                max_seats INTEGER NOT NULL,
+                status TEXT DEFAULT 'waiting',
+                state TEXT,
+                created_by INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                started_at TIMESTAMP,
+                finished_at TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES club_groups(id),
+                FOREIGN KEY (created_by) REFERENCES users(id)
+            )
+        """)
+        # 34. Card Club - Seats at a table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_seats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                table_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                seat_index INTEGER NOT NULL,
+                status TEXT DEFAULT 'seated',
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (table_id, user_id),
+                FOREIGN KEY (table_id) REFERENCES club_tables(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        # 35. Card Club - Escrowed bets (zero-sum settlement)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_bets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                table_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                status TEXT DEFAULT 'escrowed',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (table_id) REFERENCES club_tables(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        # 36. Card Club - Move log (audit trail)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_moves (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                table_id INTEGER NOT NULL,
+                seq INTEGER NOT NULL,
+                user_id INTEGER,
+                move_json TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (table_id) REFERENCES club_tables(id)
             )
         """)
 

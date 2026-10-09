@@ -9,6 +9,7 @@ from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from models.dev_model import DevModel
 from models.user_model import UserModel
+from models.security_model import SecurityModel
 
 developer_bp = Blueprint('developer', __name__, url_prefix='/developer')
 
@@ -171,3 +172,94 @@ def create_log():
         DevModel.log_event(level, module, message)
         flash('Log injected successfully.', 'success')
     return redirect(url_for('developer.dashboard'))
+
+# =============================================================================
+# REAL-TIME BIT-LEVEL ACTIVITY MONITORING & TELEMETRY STREAM
+# =============================================================================
+
+@developer_bp.route('/activity-monitor')
+@developer_required
+def activity_monitor_page():
+    """Dedicated Bit-Level Activity Telemetry Monitor Workspace"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    telemetry = DevModel.get_telemetry()
+    stream = SecurityModel.get_telemetry_stream(limit=100)
+    settings = SecurityModel.get_all_game_settings()
+    
+    return render_template(
+        'developer/activity_monitor.html',
+        user=user,
+        telemetry=telemetry,
+        stream=stream,
+        settings=settings,
+        active_page='activity_monitor'
+    )
+
+@developer_bp.route('/api/telemetry-stream')
+@developer_required
+def api_telemetry_stream():
+    """Live JSON API stream of microsecond bit activities for developer console"""
+    try:
+        limit = int(request.args.get('limit', 60))
+    except (ValueError, TypeError):
+        limit = 60
+    limit = max(10, min(limit, 300))
+
+    module = request.args.get('module', '').strip() or None
+    severity = request.args.get('severity', '').strip() or None
+
+    stream = SecurityModel.get_telemetry_stream(limit=limit, module=module, severity=severity)
+    return jsonify({
+        'success': True,
+        'stream': stream,
+        'count': len(stream),
+        'filters': {'module': module, 'severity': severity, 'limit': limit}
+    })
+
+@developer_bp.route('/api/telemetry-clear', methods=['POST'])
+@developer_required
+def api_telemetry_clear():
+    """Clears developer telemetry stream records"""
+    SecurityModel.clear_telemetry_stream()
+    SecurityModel.log_telemetry_bit(
+        module="DevStream",
+        action="TELEMETRY_STREAM_PURGED",
+        payload_data="Stream cache flushed by developer",
+        user_id=session.get('user_id'),
+        role=session.get('role'),
+        client_ip=request.remote_addr
+    )
+    if request.is_json:
+        return jsonify({'success': True, 'message': 'Telemetry stream purged'})
+    flash('Telemetry bit-stream cleared successfully.', 'info')
+    return redirect(url_for('developer.activity_monitor_page'))
+
+@developer_bp.route('/api/telemetry-probe', methods=['POST'])
+@developer_required
+def api_telemetry_probe():
+    """Fires a synthetic bit-stream probe to verify telemetry pipeline"""
+    import random
+    probe_id = random.randint(1000, 9999)
+    sample_payload = f'{{"probe_id": {probe_id}, "signal": "CYBER_BIT_PULSE_OK", "entropy": {random.random()}}}'
+    latency = round(random.uniform(1.2, 8.5), 2)
+
+    SecurityModel.log_telemetry_bit(
+        module="ProbeEngine",
+        action="SYNTHETIC_BIT_INSPECTION",
+        payload_data=sample_payload,
+        latency_ms=latency,
+        http_status=200,
+        severity="INFO",
+        user_id=session.get('user_id'),
+        role=session.get('role'),
+        client_ip=request.remote_addr
+    )
+    return jsonify({
+        'success': True,
+        'probe_id': probe_id,
+        'payload_bytes': len(sample_payload.encode('utf-8')),
+        'payload_bits': len(sample_payload.encode('utf-8')) * 8,
+        'latency_ms': latency
+    })
+

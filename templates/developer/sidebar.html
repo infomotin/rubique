@@ -77,5 +77,15 @@
             <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300">10 DDL</span>
         </a>
 
+        <!-- 8. Real-Time Bit-Level Activity Telemetry Monitor -->
+        <a href="{{ url_for('developer.activity_monitor_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'activity_monitor' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-microchip text-sm w-5 text-center text-emerald-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Bit Activity Monitor</div>
+                <div class="text-[10px] text-slate-500 font-sans">Every Bit Telemetry</div>
+            </div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 font-bold border border-emerald-500/30 animate-pulse">BITS</span>
+        </a>
+
     </nav>
 </div>

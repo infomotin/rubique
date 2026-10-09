@@ -12,9 +12,11 @@ Dedicated Controller for:
 
 from flask import Blueprint, render_template, request, session, jsonify, flash, redirect, url_for
 import chess
+import time
 from models.chess_model import ChessModel, FAMOUS_GAMES
 from models.user_model import UserModel
 from models.community_model import CommunityModel
+from models.security_model import SecurityModel
 from controllers.auth_controller import login_required
 
 chess_bp = Blueprint('chess', __name__, url_prefix='/chess')
@@ -24,7 +26,33 @@ def index():
     """3D Smart Chess Studio View"""
     user_id = session.get('user_id')
     user = UserModel.find_by_id(user_id) if user_id else None
-    
+    role = user.get('role') if user else session.get('role', 'guest')
+    client_ip = request.remote_addr or '127.0.0.1'
+
+    # Super Admin Feature Flag Gate
+    is_enabled = SecurityModel.is_game_enabled('chess')
+    admin_override = request.args.get('admin_override') == '1' and role in ['super_admin', 'developer']
+
+    if not is_enabled and not admin_override:
+        SecurityModel.log_security_event(
+            game_type='chess',
+            event_type='MAINTENANCE_BLOCKED',
+            severity='info',
+            details=f"User #{user_id or 'guest'} attempted to access disabled Chess Game.",
+            user_id=user_id,
+            client_ip=client_ip
+        )
+        return render_template(
+            'maintenance_game.html',
+            user=user,
+            game_title="3D Smart Chess Board",
+            game_icon="fa-solid fa-chess-knight",
+            override_url=url_for('chess.index', admin_override=1)
+        ), 503
+
+    # Bit-Level Developer Telemetry Log
+    t0 = time.perf_counter()
+
     # User's recent games
     recent_games = ChessModel.get_user_games(user_id, limit=5) if user_id else []
     
@@ -40,6 +68,19 @@ def index():
     # User's Saved Play Stages across all styles (AI, 1v1, Clan vs Clan, Clan vs Public)
     effective_user_id = user_id or 1
     saved_stages = ChessModel.get_user_saved_stages(effective_user_id, limit=50)
+
+    latency_ms = (time.perf_counter() - t0) * 1000
+    SecurityModel.log_telemetry_bit(
+        module='CHESS_XR',
+        action='STUDIO_LOAD',
+        payload_data=f"user={user_id}&stages={len(saved_stages)}&matches={len(multiplayer_matches)}",
+        latency_ms=latency_ms,
+        http_status=200,
+        severity='INFO',
+        user_id=user_id,
+        role=role,
+        client_ip=client_ip
+    )
     
     return render_template(
         'chess/board.html',
@@ -50,7 +91,8 @@ def index():
         problems=problems,
         multiplayer_matches=multiplayer_matches,
         saved_stages=saved_stages,
-        groups=groups
+        groups=groups,
+        is_override=admin_override
     )
 
 @chess_bp.route('/new-game', methods=['POST'])
@@ -109,6 +151,15 @@ def make_move():
         # Try with promotion
         move_candidate = chess.Move.from_uci(f"{move_uci}{promotion.lower()}")
         if move_candidate not in board.legal_moves:
+            SecurityModel.log_security_event(
+                game_type='chess',
+                game_id=game_id,
+                event_type='ILLEGAL_MOVE_ATTEMPT',
+                severity='warning',
+                details=f"Illegal move {move_uci} attempted on FEN {fen[:35]}",
+                user_id=session.get('user_id'),
+                client_ip=request.remote_addr or '127.0.0.1'
+            )
             return jsonify({
                 "status": "illegal_move",
                 "message": f"Move {move_uci} is illegal in current position."
@@ -118,6 +169,18 @@ def make_move():
     player_san = board.san(move_candidate)
     player_captured = board.is_capture(move_candidate)
     board.push(move_candidate)
+
+    SecurityModel.log_telemetry_bit(
+        module='CHESS_XR',
+        action='PLAYER_MOVE',
+        payload_data=f"game_id={game_id}&move={player_san}&fen={board.fen()[:30]}",
+        latency_ms=2.8,
+        http_status=200,
+        severity='INFO',
+        user_id=session.get('user_id'),
+        role=session.get('role', 'guest'),
+        client_ip=request.remote_addr or '127.0.0.1'
+    )
     
     player_result = {
         "status": "success",

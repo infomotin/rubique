@@ -11,6 +11,7 @@ from models.admin_model import AdminModel
 from models.user_model import UserModel
 from models.custom_cube_model import CustomCubeModel, SUPPORTED_SHAPES
 from models.dev_model import DevModel
+from models.security_model import SecurityModel
 
 super_admin_bp = Blueprint('super_admin', __name__, url_prefix='/admin')
 
@@ -158,6 +159,112 @@ def logs_page():
         logs=logs,
         active_page='logs'
     )
+
+@super_admin_bp.route('/games')
+@super_admin_required
+def games_page():
+    """Dedicated Game Toggles & Real-Time Security Observation Command Center"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = AdminModel.get_system_stats()
+    game_settings = SecurityModel.get_all_game_settings()
+    activities = SecurityModel.get_all_game_activities(limit=60)
+    security_events = SecurityModel.get_recent_security_events(limit=60)
+    game_stats = SecurityModel.get_game_activity_stats()
+    
+    return render_template(
+        'super_admin/games.html',
+        user=user,
+        stats=stats,
+        game_settings=game_settings,
+        activities=activities,
+        security_events=security_events,
+        game_stats=game_stats,
+        active_page='games'
+    )
+
+@super_admin_bp.route('/games/toggle', methods=['POST'])
+@super_admin_required
+def toggle_game_setting():
+    """Toggles or updates game module status (Chess, Card, Speedcube, Anti-Cheat)"""
+    if request.is_json:
+        data = request.get_json() or {}
+        setting_key = data.get('setting_key')
+        setting_value = '1' if data.get('setting_value') in [1, '1', True, 'true'] else '0'
+    else:
+        setting_key = request.form.get('setting_key')
+        setting_value = '1' if request.form.get('setting_value') in ['1', 'on', 'true', True] else '0'
+
+    valid_keys = [
+        'chess_game_enabled',
+        'card_game_enabled',
+        'speedcube_game_enabled',
+        'game_anti_cheat_enabled',
+        'security_audit_logging',
+        'bit_telemetry_enabled'
+    ]
+
+    if setting_key in valid_keys:
+        SecurityModel.set_setting(setting_key, setting_value)
+        status_text = "ENABLED" if setting_value == '1' else "DISABLED"
+        friendly_name = setting_key.replace('_', ' ').title()
+        
+        # Log to telemetry
+        SecurityModel.log_telemetry_bit(
+            module="AdminSecurity",
+            action=f"TOGGLE_{setting_key.upper()}",
+            payload_data=f"{setting_key}={setting_value}",
+            user_id=session.get('user_id'),
+            role=session.get('role'),
+            client_ip=request.remote_addr
+        )
+
+        if request.is_json:
+            return jsonify({'success': True, 'setting_key': setting_key, 'setting_value': setting_value, 'status': status_text})
+        flash(f"{friendly_name} is now {status_text} globally across the platform.", 'success')
+    else:
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Invalid setting key'}), 400
+        flash('Invalid setting key specified!', 'error')
+
+    return redirect(url_for('super_admin.games_page'))
+
+@super_admin_bp.route('/games/action', methods=['POST'])
+@super_admin_required
+def game_action():
+    """Intervenes in live game sessions: Freeze or Terminate"""
+    game_type = request.form.get('game_type', '').strip().lower()
+    game_id = request.form.get('game_id')
+    action = request.form.get('action', '').strip().lower()
+
+    if game_type in ['chess', 'card'] and game_id:
+        if action == 'freeze':
+            SecurityModel.freeze_game(game_type, game_id)
+            flash(f"Game session #{game_id} ({game_type.title()}) has been FROZEN by Super Admin.", 'warning')
+        elif action == 'terminate':
+            SecurityModel.terminate_game(game_type, game_id)
+            flash(f"Game session #{game_id} ({game_type.title()}) has been TERMINATED immediately.", 'info')
+
+        SecurityModel.log_telemetry_bit(
+            module="AdminOversight",
+            action=f"{action.upper()}_SESSION",
+            payload_data=f"{game_type}#{game_id}",
+            user_id=session.get('user_id'),
+            role=session.get('role'),
+            client_ip=request.remote_addr
+        )
+
+    return redirect(url_for('super_admin.games_page'))
+
+@super_admin_bp.route('/security/dismiss', methods=['POST'])
+@super_admin_required
+def dismiss_security_event():
+    """Dismisses / acknowledges a security anomaly event"""
+    event_id = request.form.get('event_id')
+    if event_id:
+        SecurityModel.dismiss_security_event(event_id)
+        flash('Security incident alert acknowledged and cleared.', 'info')
+    return redirect(url_for('super_admin.games_page'))
 
 @super_admin_bp.route('/users/role', methods=['POST'])
 @super_admin_required
