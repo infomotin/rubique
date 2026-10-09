@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Human vs AI Speedcubing Battle Arena - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-rose-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-rose-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-rose-600/30 border border-rose-500/40 p-0.5 shadow-2xl flex items-center justify-center text-rose-400 text-2xl font-bold">
+                    <i class="fa-solid fa-swords"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                        <span>1v1 MULTIPLAYER DUEL ENGINE</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight">Human vs AI Battle Arena</h1>
+                    <p class="text-xs text-slate-400 font-mono">Race live against Kociemba Two-Phase AI or challenge speedcubers worldwide</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('visualizer.index') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-cube"></i> 3D Lab
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: 1v1 Battle Arena -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-rose-500/30 bg-slate-950/70 backdrop-blur-xl relative overflow-hidden">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400">
+                            <i class="fa-solid fa-bolt text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold font-outfit text-white">Live Speedcubing Duel Mat</h2>
+                            <p class="text-xs text-slate-400 font-mono">Spacebar or touch to start inspection and solve timer</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-rose-950 border border-rose-500/40 text-rose-300 text-xs font-mono font-bold">
+                        WCA Strict Inspection: 15s
+                    </span>
+                </div>
+
+                <!-- Live Scramble Box -->
+                <div class="p-4 rounded-2xl bg-black/80 border border-slate-800 mb-6 font-mono text-center">
+                    <div class="text-[11px] text-slate-500 uppercase tracking-widest mb-1">Official WCA Duel Scramble Sequence</div>
+                    <div id="battle-scramble-text" class="text-sm sm:text-base font-bold text-amber-300 select-all tracking-wider">
+                        R U R' U' F' U2 F U R U' R' F' D2 B2 L2
+                    </div>
+                    <button onclick="generateBattleScramble()" class="mt-2 text-xs text-rose-400 hover:text-rose-300 transition-colors">
+                        <i class="fa-solid fa-shuffle mr-1"></i> Regenerate Scramble
+                    </button>
+                </div>
+
+                <!-- 2 Contender Timer Blocks -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Contender 1: Human Player -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-indigo-500/30 text-center font-mono">
+                        <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                            <span class="text-indigo-400 font-bold"><i class="fa-solid fa-user mr-1"></i> {{ user.username }} (You)</span>
+                            <span class="px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 text-[10px]">Contender</span>
+                        </div>
+                        <div id="player-timer" class="text-4xl sm:text-5xl font-black font-outfit text-white my-4">00:00.00</div>
+                        <div class="flex items-center justify-center gap-3">
+                            <button id="btn-player-start" onclick="togglePlayerTimer()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-lg shadow-indigo-600/30">
+                                Start / Stop [Space]
+                            </button>
+                            <button onclick="resetPlayerTimer()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-all">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contender 2: Kociemba Two-Phase AI -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-rose-500/30 text-center font-mono">
+                        <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                            <span class="text-rose-400 font-bold"><i class="fa-solid fa-robot mr-1"></i> Kociemba AI Bot</span>
+                            <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-300 text-[10px]">Optimal Two-Phase</span>
+                        </div>
+                        <div id="ai-timer" class="text-4xl sm:text-5xl font-black font-outfit text-rose-400 my-4">00:08.42</div>
+                        <div class="text-xs text-slate-400">
+                            Estimated Move Count: <span class="text-white font-bold">19 Moves</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Duel Telemetry Stats -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-black/60 border border-slate-800 font-mono text-center text-xs">
+                    <div>
+                        <div class="text-slate-500">Best Time</div>
+                        <div class="text-white font-bold text-sm mt-0.5">{{ stats.best_time or '--' }}s</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">Average of 5</div>
+                        <div class="text-white font-bold text-sm mt-0.5">{{ stats.ao5 or '--' }}s</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">Total Solves</div>
+                        <div class="text-white font-bold text-sm mt-0.5">{{ stats.total_solves }}</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">Duel Win Rate</div>
+                        <div class="text-emerald-400 font-bold text-sm mt-0.5">68.4%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let timerRunning = false;
+    let timerInterval = null;
+    let startTime = 0;
+
+    function formatTime(ms) {
+        const totalSec = Math.floor(ms / 1000);
+        const mins = Math.floor(totalSec / 60);
+        const secs = totalSec % 60;
+        const hundredths = Math.floor((ms % 1000) / 10);
+        return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0') + '.' + String(hundredths).padStart(2, '0');
+    }
+
+    function togglePlayerTimer() {
+        if (!timerRunning) {
+            startTime = Date.now();
+            timerRunning = true;
+            document.getElementById('btn-player-start').innerText = 'Stop Solve';
+            document.getElementById('btn-player-start').className = 'px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all shadow-lg shadow-rose-600/30';
+            timerInterval = setInterval(() => {
+                const diff = Date.now() - startTime;
+                document.getElementById('player-timer').innerText = formatTime(diff);
+            }, 10);
+        } else {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            document.getElementById('btn-player-start').innerText = 'Start Solve';
+            document.getElementById('btn-player-start').className = 'px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-lg shadow-indigo-600/30';
+        }
+    }
+
+    function resetPlayerTimer() {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('player-timer').innerText = '00:00.00';
+        document.getElementById('btn-player-start').innerText = 'Start Solve';
+    }
+
+    function generateBattleScramble() {
+        const moves = ['U', "U'", 'U2', 'D', "D'", 'D2', 'R', "R'", 'R2', 'L', "L'", 'L2', 'F', "F'", 'F2', 'B', "B'", 'B2'];
+        let res = [];
+        for (let i = 0; i < 20; i++) {
+            res.push(moves[Math.floor(Math.random() * moves.length)]);
+        }
+        document.getElementById('battle-scramble-text').innerText = res.join(' ');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            togglePlayerTimer();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Competitions - Super Admin - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Executive Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-600 p-0.5 shadow-2xl shadow-amber-500/30">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-amber-400 text-2xl">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>SUPER ADMIN &bull; TOURNAMENT CURATION</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">Competition &amp; Tournament Command</h1>
+                    <p class="text-xs text-slate-400 font-mono">Declare global competitions, define official scrambles, and award trophies</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-amber-400">
+                    <i class="fa-solid fa-trophy mr-1.5"></i> {{ competitions|length }} Tournaments Active
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "super_admin/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Competitions Management -->
+        <div class="lg:col-span-9 space-y-6">
+            
+            <!-- Declare New Tournament Form -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <div class="flex items-center gap-2 pb-4 border-b border-slate-800 mb-6">
+                    <i class="fa-solid fa-bullhorn text-amber-400 text-lg"></i>
+                    <h2 class="text-base font-bold font-outfit text-white">Declare New Speedcubing Tournament</h2>
+                </div>
+
+                <form method="POST" action="{{ url_for('super_admin.create_competition') }}" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1">Competition Title:</label>
+                        <input type="text" name="title" required placeholder="e.g. World Group Theory Open 2026"
+                               class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1">Official WCA Scramble Sequence:</label>
+                        <input type="text" name="scramble" required placeholder="e.g. R U R' U' F' U2 F U R U' R' F'"
+                               class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-indigo-300 text-xs font-mono focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Prize Trophy:</label>
+                            <input type="text" name="prize_trophy" value="Platinum Polyhedron"
+                                   class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Description:</label>
+                            <input type="text" name="description" placeholder="Solve in fewest moves or fastest time"
+                                   class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bullhorn"></i>
+                        <span>Declare &amp; Broadcast Competition Worldwide</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Active Tournaments List -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <h3 class="text-base font-bold font-outfit text-white mb-4">Live Registered Tournaments</h3>
+                <div class="space-y-3 font-mono text-xs">
+                    {% for comp in competitions %}
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-white text-sm block font-sans">{{ comp.title }}</span>
+                                <span class="text-indigo-300 text-[11px] truncate block max-w-md mt-0.5">{{ comp.scramble }}</span>
+                                <span class="text-amber-400 text-[10px] mt-1 block"><i class="fa-solid fa-trophy mr-1"></i> {{ comp.prize_trophy }}</span>
+                            </div>
+                            <form method="POST" action="{{ url_for('super_admin.delete_competition', comp_id=comp.id) }}" onsubmit="return confirm('Delete tournament?');">
+                                <button type="submit" class="p-2 rounded-xl bg-rose-950/40 hover:bg-rose-900 border border-rose-500/30 text-rose-400 transition-all">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Trophies Cabinet & Coupon Rewards - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-yellow-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-yellow-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-yellow-600/30 border border-yellow-500/40 p-0.5 shadow-2xl flex items-center justify-center text-yellow-400 text-2xl font-bold">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-yellow-950/80 border border-yellow-500/40 text-yellow-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                        <span data-i18n="stage_trophies">{{ t('stage_trophies') }}</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight" data-i18n="trophies_title">{{ t('trophies_title') }}</h1>
+                    <p class="text-xs text-slate-400 font-mono">Unlock speedcubing achievement trophies and redeem exclusive coupon codes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Trophies -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                
+                <!-- Trophy Showcase -->
+                <div class="md:col-span-7 glass-card p-6 sm:p-8 rounded-3xl border border-yellow-500/30 bg-slate-950/90">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-6">
+                        <h3 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                            <i class="fa-solid fa-award text-amber-400"></i> Speedcubing Badges
+                        </h3>
+                        <span class="text-xs font-mono text-amber-400">5 Badges Unlocked</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center font-mono text-xs">
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-amber-500/30">
+                            <i class="fa-solid fa-trophy text-3xl text-amber-400 mb-2 block animate-bounce"></i>
+                            <div class="font-bold text-white text-xs">Platinum Polyhedron</div>
+                            <span class="text-[10px] text-amber-400">Grand Champion</span>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-cyan-500/30">
+                            <i class="fa-solid fa-medal text-3xl text-cyan-400 mb-2 block"></i>
+                            <div class="font-bold text-white text-xs">Gold FMC Medal</div>
+                            <span class="text-[10px] text-cyan-300">Fewest Moves (&le; 20)</span>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-purple-500/30">
+                            <i class="fa-solid fa-infinity text-3xl text-purple-400 mb-2 block"></i>
+                            <div class="font-bold text-white text-xs">God's Number 20</div>
+                            <span class="text-[10px] text-purple-300">Phase 2 Solver</span>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-emerald-500/30">
+                            <i class="fa-solid fa-bolt text-3xl text-emerald-400 mb-2 block"></i>
+                            <div class="font-bold text-white text-xs">Sub-15 Speed Demon</div>
+                            <span class="text-[10px] text-emerald-400">Live Duelist</span>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-rose-500/30">
+                            <i class="fa-solid fa-shield-halved text-3xl text-rose-400 mb-2 block"></i>
+                            <div class="font-bold text-white text-xs">Subgroup G₁ Pioneer</div>
+                            <span class="text-[10px] text-rose-300">EO Reduction</span>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800 opacity-60">
+                            <i class="fa-solid fa-lock text-3xl text-slate-500 mb-2 block"></i>
+                            <div class="font-bold text-slate-400 text-xs">World Champion</div>
+                            <span class="text-[10px] text-slate-600">Locked</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Promo Coupon Redemption -->
+                <div class="md:col-span-5 glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/90 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-bold font-outfit text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-ticket text-emerald-400"></i> <span data-i18n="redeem_code_title">{{ t('redeem_code_title') }}</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed" data-i18n="redeem_code_desc">
+                            {{ t('redeem_code_desc') }}
+                        </p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('user.redeem_coupon') }}" class="space-y-3">
+                        <div>
+                            <label class="text-[10px] font-mono text-slate-400 block uppercase mb-1" data-i18n="coupon_code_label">{{ t('coupon_code_label') }}</label>
+                            <input type="text" name="code" required placeholder="e.g. GROUPTHEORY2026"
+                                   class="w-full px-4 py-3 bg-black/80 border border-slate-800 rounded-2xl text-emerald-300 text-xs font-mono uppercase focus:outline-none focus:border-emerald-500 tracking-wider">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-2xl shadow-xl shadow-emerald-600/25 transition-all font-mono">
+                            <i class="fa-solid fa-gift mr-1"></i> <span data-i18n="redeem_button">{{ t('redeem_button') }}</span>
+                        </button>
+                    </form>
+
+                    <div class="mt-4 p-3 rounded-xl bg-black/60 border border-slate-800/80 text-[10px] font-mono text-slate-500 text-center" data-i18n="demo_coupon_hint">
+                        {{ t('demo_coupon_hint') }}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

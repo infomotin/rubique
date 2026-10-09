@@ -1,0 +1,81 @@
+<!-- Shared Developer Sidebar Navigation Component -->
+<div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/85 backdrop-blur-xl sticky top-20 z-20 shadow-2xl font-mono text-xs">
+    <div class="flex items-center justify-between px-3 py-1 mb-3 border-b border-slate-900 pb-2">
+        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Dev Workspaces</span>
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+    </div>
+
+    <nav class="flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-1.5 lg:gap-1 scrollbar-none" id="dev-sidebar-nav">
+        
+        <!-- 1. Telemetry HUD -->
+        <a href="{{ url_for('developer.dashboard') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'telemetry' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-chart-line text-sm w-5 text-center text-cyan-200"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Telemetry &amp; Gauges</div>
+                <div class="text-[10px] text-slate-500 font-sans">Live System Profiling</div>
+            </div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300">LIVE</span>
+        </a>
+
+        <!-- 2. Two-Phase Solver Bench -->
+        <a href="{{ url_for('developer.solver_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'solver' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-wand-magic-sparkles text-sm w-5 text-center text-indigo-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Kociemba Benchmark</div>
+                <div class="text-[10px] text-slate-500 font-sans">Two-Phase Engine</div>
+            </div>
+            <span class="text-[9px] text-slate-500">Kociemba</span>
+        </a>
+
+        <!-- 3. OpenCV Vision Sandbox -->
+        <a href="{{ url_for('developer.opencv_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'opencv' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-camera text-sm w-5 text-center text-emerald-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">OpenCV Vision</div>
+                <div class="text-[10px] text-slate-500 font-sans">HSV Segmentation</div>
+            </div>
+            <span class="text-[9px] text-slate-500">HSV</span>
+        </a>
+
+        <!-- 4. Database Schema Inspector -->
+        <a href="{{ url_for('developer.database_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'database' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-database text-sm w-5 text-center text-amber-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">DB Schema &amp; SQL</div>
+                <div class="text-[10px] text-slate-500 font-sans">Table Row Counts</div>
+            </div>
+            <span class="text-[9px] text-slate-500">SQL</span>
+        </a>
+
+        <!-- 5. API Endpoints Sandbox -->
+        <a href="{{ url_for('developer.api_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'api' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-network-wired text-sm w-5 text-center text-purple-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">API Documentation</div>
+                <div class="text-[10px] text-slate-500 font-sans">REST &amp; JSON Endpoints</div>
+            </div>
+            <span class="text-[9px] text-slate-500">REST</span>
+        </a>
+
+        <!-- 6. System Logs & Traces -->
+        <a href="{{ url_for('developer.logs_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'logs' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-terminal text-sm w-5 text-center text-rose-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">System Logs</div>
+                <div class="text-[10px] text-slate-500 font-sans">Exception Tracing</div>
+            </div>
+            <span class="text-[9px] text-slate-500">Logs</span>
+        </a>
+
+        <!-- 7. Custom Cube Shapes Engine Debugger -->
+        <a href="{{ url_for('developer.shapes_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'shapes' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-shapes text-sm w-5 text-center text-cyan-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Shape Geometries</div>
+                <div class="text-[10px] text-slate-500 font-sans">10 Particula Models</div>
+            </div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300">10 DDL</span>
+        </a>
+
+    </nav>
+</div>

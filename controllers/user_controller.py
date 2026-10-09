@@ -60,8 +60,127 @@ def dashboard():
         user_cubes=user_cubes,
         public_cubes=public_cubes,
         group_challenges=group_challenges,
-        supported_shapes=SUPPORTED_SHAPES
+        supported_shapes=SUPPORTED_SHAPES,
+        active_page='overview'
     )
+
+# =============================================================================
+# DEDICATED SEPARATE MENU PAGES (MODULAR MVC ARCHITECTURE)
+# =============================================================================
+
+@user_bp.route('/overview')
+@login_required
+def overview_page():
+    """Dedicated Overview & Speedcubing Analytics Page"""
+    return redirect(url_for('user.dashboard'))
+
+@user_bp.route('/battle')
+@login_required
+def battle_page():
+    """Dedicated 1v1 Human vs AI Battle Arena Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = SolveModel.get_user_stats(user_id)
+    return render_template('user/battle.html', user=user, stats=stats, active_page='battle')
+
+@user_bp.route('/learning')
+@login_required
+def learning_page():
+    """Dedicated Visual Learning Hub & Group Theory Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    return render_template('user/learning.html', user=user, active_page='learning')
+
+@user_bp.route('/guide')
+@login_required
+def guide_page():
+    """Dedicated Beginner to Pro CFOP Step-by-Step Guide Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    return render_template('user/guide.html', user=user, active_page='guide')
+
+@user_bp.route('/videos')
+@login_required
+def videos_page():
+    """Dedicated Speedcubing Video Showcase & Tutorials Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    videos = CommunityModel.get_all_videos(limit=50)
+    return render_template('user/videos.html', user=user, videos=videos, active_page='videos')
+
+@user_bp.route('/chat')
+@login_required
+def chat_page():
+    """Dedicated Speedcuber Live Chat & Clans Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    groups = CommunityModel.get_all_groups()
+    return render_template('user/chat.html', user=user, groups=groups, active_page='chat')
+
+@user_bp.route('/friends')
+@login_required
+def friends_page():
+    """Dedicated Friends & Buddies Network Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    friends = CommunityModel.get_user_friends(user_id)
+    return render_template('user/friends.html', user=user, friends=friends, active_page='friends')
+
+@user_bp.route('/blog')
+@login_required
+def blog_page():
+    """Dedicated Speedcubing Blog & Community Insights Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    posts = CommunityModel.get_all_posts(limit=40)
+    return render_template('user/blog.html', user=user, posts=posts, active_page='blog')
+
+@user_bp.route('/competitions')
+@login_required
+def competitions_page():
+    """Dedicated WCA Tournaments & Competitions Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    competitions = AdminModel.get_all_competitions()
+    user_entries = query_all(
+        "SELECT * FROM competition_entries WHERE user_id = %s",
+        "SELECT * FROM competition_entries WHERE user_id = ?",
+        (user_id,)
+    )
+    return render_template(
+        'user/competitions.html',
+        user=user,
+        competitions=competitions,
+        user_entries=user_entries,
+        active_page='competitions'
+    )
+
+@user_bp.route('/courses')
+@login_required
+def courses_page():
+    """Dedicated Pro Masterclasses & Certifications Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    courses = AdminModel.get_all_courses()
+    return render_template('user/courses.html', user=user, courses=courses, active_page='courses')
+
+@user_bp.route('/scan')
+@login_required
+def scan_page():
+    """Dedicated OpenCV Cube Scanner & 2D/3D Color Net Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    return render_template('user/scan.html', user=user, active_page='scan')
+
+@user_bp.route('/trophies')
+@login_required
+def trophies_page():
+    """Dedicated Trophy Cabinet & Coupon Rewards Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = SolveModel.get_user_stats(user_id)
+    history = SolveModel.get_user_history(user_id, limit=20)
+    return render_template('user/trophies.html', user=user, stats=stats, history=history, active_page='trophies')
 
 # -------------------------------------------------------------
 # VIDEO SHOWCASE ACTIONS

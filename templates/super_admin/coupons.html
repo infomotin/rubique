@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Promo Coupons & Rewards - Super Admin - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Executive Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-600 p-0.5 shadow-2xl shadow-amber-500/30">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-amber-400 text-2xl">
+                        <i class="fa-solid fa-ticket"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>SUPER ADMIN &bull; REWARDS DISPATCH</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">Promo Coupons &amp; Trophy Rewards</h1>
+                    <p class="text-xs text-slate-400 font-mono">Create reward unlock codes for tournament champions and subscribers</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400">
+                    <i class="fa-solid fa-ticket mr-1.5"></i> {{ coupons|length }} Active Coupons
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "super_admin/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Coupons Management -->
+        <div class="lg:col-span-9 space-y-6">
+            
+            <!-- Create Coupon Form -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <div class="flex items-center gap-2 pb-4 border-b border-slate-800 mb-6">
+                    <i class="fa-solid fa-plus text-emerald-400 text-lg"></i>
+                    <h2 class="text-base font-bold font-outfit text-white">Generate New Promo Reward Code</h2>
+                </div>
+
+                <form method="POST" action="{{ url_for('super_admin.create_coupon') }}" class="space-y-4 font-mono text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Coupon Code (Uppercase):</label>
+                            <input type="text" name="code" required placeholder="e.g. SUB10CHAMPION"
+                                   class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-emerald-300 font-bold uppercase focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Reward Description / Trophy Item:</label>
+                            <input type="text" name="reward_text" required placeholder="e.g. Platinum Polyhedron Badge + 500 Pts"
+                                   class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-gift"></i>
+                        <span>Activate Reward Code in System</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Existing Coupons List -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <h3 class="text-base font-bold font-outfit text-white mb-4">Active System Promo Codes</h3>
+                <div class="space-y-3 font-mono text-xs">
+                    {% for cpn in coupons %}
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-emerald-300 text-sm tracking-wider">{{ cpn.code }}</span>
+                                <span class="text-slate-300 text-xs block mt-0.5">{{ cpn.reward_text }}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 font-bold text-[10px]">Active</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

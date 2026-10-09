@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}WCA Tournaments & Competitions - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-amber-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-amber-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-600/30 border border-amber-500/40 p-0.5 shadow-2xl flex items-center justify-center text-amber-400 text-2xl font-bold">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span data-i18n="competitions_badge">{{ t('competitions_badge') }}</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight" data-i18n="competitions_title">{{ t('competitions_title') }}</h1>
+                    <p class="text-xs text-slate-400 font-mono" data-i18n="competitions_desc">{{ t('competitions_desc') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Competitions -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/90">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold font-outfit text-white">Active Speedcubing Tournaments</h2>
+                        <p class="text-xs text-slate-400 font-mono">Solve the official scramble sequence in fewest moves or fastest recorded time</p>
+                    </div>
+                </div>
+
+                {% if competitions %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for c in competitions %}
+                            <div class="glass-card p-6 rounded-3xl border border-slate-800 hover:border-amber-500/40 transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-bold text-white text-base font-outfit">{{ c.title }}</span>
+                                        <span class="px-2.5 py-1 rounded-full bg-amber-950 text-amber-300 text-[10px] font-mono font-bold flex items-center gap-1">
+                                            <i class="fa-solid fa-trophy text-amber-400"></i> {{ c.prize_trophy }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed">{{ c.description }}</p>
+                                    
+                                    <div class="p-3.5 rounded-2xl bg-black/80 border border-slate-800 font-mono text-xs text-indigo-300 mb-4 break-all">
+                                        <span class="text-[10px] text-slate-500 block uppercase mb-1" data-i18n="official_scramble">{{ t('official_scramble') }}</span>
+                                        {{ c.scramble }}
+                                    </div>
+                                </div>
+
+                                <form method="POST" action="{{ url_for('user.submit_competition') }}" class="pt-4 border-t border-slate-800/80 space-y-3">
+                                    <input type="hidden" name="competition_id" value="{{ c.id }}">
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 font-mono text-xs">
+                                        <div class="sm:col-span-8">
+                                            <input type="text" name="solution" required placeholder="Enter solution moves (e.g. U R U' R')..."
+                                                   data-i18n-placeholder="enter_solution"
+                                                   class="w-full px-3.5 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-emerald-300 focus:outline-none focus:border-amber-500">
+                                        </div>
+                                        <div class="sm:col-span-4">
+                                            <input type="number" step="0.01" name="time_seconds" placeholder="Time (s)"
+                                                   data-i18n-placeholder="time_seconds"
+                                                   class="w-full px-3.5 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-cyan-300 focus:outline-none focus:border-amber-500">
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-black font-bold text-xs font-mono rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-600/25">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                        <span data-i18n="submit_solution">{{ t('submit_solution') }}</span>
+                                    </button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12 text-slate-500 font-mono text-xs">
+                        <i class="fa-solid fa-trophy text-4xl text-slate-700 mb-2 block"></i>
+                        <span data-i18n="no_competitions">{{ t('no_competitions') }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

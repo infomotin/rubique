@@ -9,6 +9,8 @@ from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from models.admin_model import AdminModel
 from models.user_model import UserModel
+from models.custom_cube_model import CustomCubeModel, SUPPORTED_SHAPES
+from models.dev_model import DevModel
 
 super_admin_bp = Blueprint('super_admin', __name__, url_prefix='/admin')
 
@@ -44,7 +46,117 @@ def dashboard():
         users_list=users_list,
         competitions=competitions,
         courses=courses,
-        coupons=coupons
+        coupons=coupons,
+        active_page='overview'
+    )
+
+# =============================================================================
+# DEDICATED SEPARATE SUPER ADMIN MENU PAGES (MODULAR MVC ARCHITECTURE)
+# =============================================================================
+
+@super_admin_bp.route('/overview')
+@super_admin_required
+def overview_page():
+    """Dedicated Super Admin Executive Overview Page"""
+    return redirect(url_for('super_admin.dashboard'))
+
+@super_admin_bp.route('/users')
+@super_admin_required
+def users_page():
+    """Dedicated User Directory & RBAC Roles Management Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = AdminModel.get_system_stats()
+    users_list = AdminModel.get_all_users()
+    return render_template(
+        'super_admin/users.html',
+        user=user,
+        stats=stats,
+        users_list=users_list,
+        active_page='users'
+    )
+
+@super_admin_bp.route('/competitions')
+@super_admin_required
+def competitions_page():
+    """Dedicated Tournament & Competition Declaration Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = AdminModel.get_system_stats()
+    competitions = AdminModel.get_all_competitions()
+    return render_template(
+        'super_admin/competitions.html',
+        user=user,
+        stats=stats,
+        competitions=competitions,
+        active_page='competitions'
+    )
+
+@super_admin_bp.route('/courses')
+@super_admin_required
+def courses_page():
+    """Dedicated Courses & Curriculum Management Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = AdminModel.get_system_stats()
+    courses = AdminModel.get_all_courses()
+    return render_template(
+        'super_admin/courses.html',
+        user=user,
+        stats=stats,
+        courses=courses,
+        active_page='courses'
+    )
+
+@super_admin_bp.route('/coupons')
+@super_admin_required
+def coupons_page():
+    """Dedicated Promo Coupons & Rewards Management Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = AdminModel.get_system_stats()
+    coupons = AdminModel.get_all_coupons()
+    return render_template(
+        'super_admin/coupons.html',
+        user=user,
+        stats=stats,
+        coupons=coupons,
+        active_page='coupons'
+    )
+
+@super_admin_bp.route('/custom-cubes')
+@super_admin_required
+def custom_cubes_page():
+    """Dedicated Custom Cubes & Clans Moderation Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = AdminModel.get_system_stats()
+    cubes = CustomCubeModel.get_public_cubes(limit=50)
+    challenges = CustomCubeModel.get_group_challenges(limit=50)
+    return render_template(
+        'super_admin/custom_cubes.html',
+        user=user,
+        stats=stats,
+        cubes=cubes,
+        challenges=challenges,
+        supported_shapes=SUPPORTED_SHAPES,
+        active_page='custom_cubes'
+    )
+
+@super_admin_bp.route('/logs')
+@super_admin_required
+def logs_page():
+    """Dedicated System Audit & Security Trail Page"""
+    user_id = session.get('user_id')
+    user = UserModel.find_by_id(user_id)
+    stats = AdminModel.get_system_stats()
+    logs = DevModel.get_logs(limit=50)
+    return render_template(
+        'super_admin/logs.html',
+        user=user,
+        stats=stats,
+        logs=logs,
+        active_page='logs'
     )
 
 @super_admin_bp.route('/users/role', methods=['POST'])

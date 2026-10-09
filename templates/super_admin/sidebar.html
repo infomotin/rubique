@@ -1,0 +1,74 @@
+<!-- Shared Super Admin Sidebar Navigation Component -->
+<div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/85 backdrop-blur-xl sticky top-20 z-20 shadow-2xl font-mono text-xs">
+    <div class="flex items-center justify-between px-3 py-1 mb-3 border-b border-slate-900 pb-2">
+        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">Admin Modules</span>
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+    </div>
+
+    <nav class="flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-1.5 lg:gap-1 scrollbar-none" id="admin-sidebar-nav">
+        
+        <!-- 1. Executive Overview -->
+        <a href="{{ url_for('super_admin.dashboard') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'overview' %}bg-amber-600/90 text-white font-bold border border-amber-400/40 shadow-lg shadow-amber-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-crown text-sm w-5 text-center text-amber-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Executive Overview</div>
+                <div class="text-[10px] text-slate-500 font-sans">Command Center</div>
+            </div>
+        </a>
+
+        <!-- 2. User Directory & RBAC -->
+        <a href="{{ url_for('super_admin.users_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'users' %}bg-amber-600/90 text-white font-bold border border-amber-400/40 shadow-lg shadow-amber-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-users-viewfinder text-sm w-5 text-center text-amber-300"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Users &amp; Roles</div>
+                <div class="text-[10px] text-slate-500 font-sans">RBAC Accounts</div>
+            </div>
+        </a>
+
+        <!-- 3. Tournament & Competitions -->
+        <a href="{{ url_for('super_admin.competitions_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'competitions' %}bg-amber-600/90 text-white font-bold border border-amber-400/40 shadow-lg shadow-amber-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-trophy text-sm w-5 text-center text-yellow-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Tournaments</div>
+                <div class="text-[10px] text-slate-500 font-sans">Declare Contests</div>
+            </div>
+        </a>
+
+        <!-- 4. Courses & Curriculum -->
+        <a href="{{ url_for('super_admin.courses_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'courses' %}bg-amber-600/90 text-white font-bold border border-amber-400/40 shadow-lg shadow-amber-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-graduation-cap text-sm w-5 text-center text-indigo-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Masterclasses</div>
+                <div class="text-[10px] text-slate-500 font-sans">Curate Courses</div>
+            </div>
+        </a>
+
+        <!-- 5. Coupons & Promo Rewards -->
+        <a href="{{ url_for('super_admin.coupons_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'coupons' %}bg-amber-600/90 text-white font-bold border border-amber-400/40 shadow-lg shadow-amber-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-ticket text-sm w-5 text-center text-emerald-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Coupons &amp; Codes</div>
+                <div class="text-[10px] text-slate-500 font-sans">Trophy Promos</div>
+            </div>
+        </a>
+
+        <!-- 6. Custom Cubes & Clans Moderation -->
+        <a href="{{ url_for('super_admin.custom_cubes_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'custom_cubes' %}bg-amber-600/90 text-white font-bold border border-amber-400/40 shadow-lg shadow-amber-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-shapes text-sm w-5 text-center text-cyan-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Custom Puzzles</div>
+                <div class="text-[10px] text-slate-500 font-sans">10 Shapes &amp; Clans</div>
+            </div>
+        </a>
+
+        <!-- 7. System Audit Logs -->
+        <a href="{{ url_for('super_admin.logs_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'logs' %}bg-amber-600/90 text-white font-bold border border-amber-400/40 shadow-lg shadow-amber-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-shield-halved text-sm w-5 text-center text-slate-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Audit Logs</div>
+                <div class="text-[10px] text-slate-500 font-sans">Security Trails</div>
+            </div>
+        </a>
+
+    </nav>
+</div>

@@ -125,6 +125,25 @@
                     </div>
                 </button>
 
+                <!-- Build Custom Rubik's Cubes (NEW - Particula 10 Shapes) -->
+                <a href="{{ url_for('custom_cubes.builder') }}" class="flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                    <i class="tab-icon fa-solid fa-shapes text-sm w-5 text-center text-cyan-400"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200" data-i18n="stage_custom_builder">{{ t('stage_custom_builder') }}</div>
+                        <div class="text-[10px] text-cyan-400/80 font-sans" data-i18n="stage_custom_builder_sub">{{ t('stage_custom_builder_sub') }}</div>
+                    </div>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-500/40 text-cyan-300">10 SHAPES</span>
+                </a>
+
+                <!-- Custom Cubes Workshop Gallery -->
+                <a href="{{ url_for('custom_cubes.index') }}" class="flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent">
+                    <i class="tab-icon fa-solid fa-cubes text-sm w-5 text-center text-indigo-300"></i>
+                    <div class="flex-grow">
+                        <div class="font-bold text-slate-200">Cube Workshop</div>
+                        <div class="text-[10px] text-slate-500 font-sans">Gallery &amp; Clans</div>
+                    </div>
+                </a>
+
                 <!-- 2. Human vs AI Battle -->
                 <button class="nav-stage-btn flex-shrink-0 min-w-[155px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent" data-target="stage-battle">
                     <i class="tab-icon fa-solid fa-swords text-sm w-5 text-center text-rose-400"></i>

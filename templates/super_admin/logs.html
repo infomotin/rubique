@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}System Audit Logs - Super Admin - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Executive Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-600 p-0.5 shadow-2xl shadow-amber-500/30">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-amber-400 text-2xl">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>SUPER ADMIN &bull; SECURITY AUDIT TRAIL</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">System Audit &amp; Event Logs</h1>
+                    <p class="text-xs text-slate-400 font-mono">Observe platform-wide operations, security events, and user logins</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+                    <i class="fa-solid fa-list mr-1.5"></i> {{ logs|length }} Audit Records
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "super_admin/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Logs Table -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <h3 class="text-base font-bold font-outfit text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-amber-400"></i>
+                    <span>Real-Time Audit Trail</span>
+                </h3>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                                <th class="py-2.5 px-3">Level</th>
+                                <th class="py-2.5 px-3">Module</th>
+                                <th class="py-2.5 px-3">Message</th>
+                                <th class="py-2.5 px-3">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-900">
+                            {% for l in logs %}
+                                <tr class="hover:bg-slate-900/50">
+                                    <td class="py-2.5 px-3">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {% if l.level == 'ERROR' %}bg-rose-950 text-rose-300 border border-rose-500/40{% elif l.level == 'WARNING' %}bg-amber-950 text-amber-300 border border-amber-500/40{% else %}bg-slate-800 text-cyan-300{% endif %}">
+                                            {{ l.level }}
+                                        </span>
+                                    </td>
+                                    <td class="py-2.5 px-3 text-slate-300">{{ l.module }}</td>
+                                    <td class="py-2.5 px-3 text-slate-400">{{ l.message }}</td>
+                                    <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">{{ (l.created_at|string)[:19] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

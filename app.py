@@ -11,7 +11,7 @@ from config import Config
 from models import init_database
 from controllers import (
     home_bp, auth_bp, super_admin_bp, developer_bp,
-    user_bp, visualizer_bp, profile_bp, api_bp
+    user_bp, visualizer_bp, profile_bp, api_bp, custom_cube_bp
 )
 
 import json
@@ -42,6 +42,7 @@ def create_app():
     app.register_blueprint(visualizer_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(custom_cube_bp)
 
     # Multi-Language (i18n) Context Processor
     @app.context_processor

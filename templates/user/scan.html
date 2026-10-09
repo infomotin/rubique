@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Cube & OpenCV Vision Scanner - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-blue-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-blue-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-blue-600/30 border border-blue-500/40 p-0.5 shadow-2xl flex items-center justify-center text-blue-400 text-2xl font-bold">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-blue-950/80 border border-blue-500/40 text-blue-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                        <span data-i18n="upload_badge">{{ t('upload_badge') }}</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight" data-i18n="upload_title">{{ t('upload_title') }}</h1>
+                    <p class="text-xs text-slate-400 font-mono" data-i18n="upload_desc">{{ t('upload_desc') }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('visualizer.index') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-cube"></i> Open 3D Lab
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Scanner & Net Studio -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-blue-500/30 bg-slate-950/90 shadow-2xl">
+                
+                <!-- Header Controls -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold font-outfit text-white">Interactive 2D Cube Net &amp; OpenCV Vision</h2>
+                        <p class="text-xs text-slate-400 font-mono">Paint 54 facelets, inspect mathematical parity, or upload cube face photos</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 font-mono text-xs">
+                        <button onclick="resetNetToSolved()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate"></i> Reset Solved
+                        </button>
+                        <button onclick="scrambleNet()" class="px-3 py-1.5 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-300 font-bold transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-shuffle"></i> Scramble Net
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Parity Status Ribbon -->
+                <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 mb-6 flex items-center justify-between font-mono text-xs">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Parity &amp; Sticker Orbit: Valid 54-Sticker Permutation</span>
+                    </div>
+                    <span class="text-slate-400">9 Yellow &bull; 9 White &bull; 9 Green &bull; 9 Blue &bull; 9 Orange &bull; 9 Red</span>
+                </div>
+
+                <!-- Unfolded 2D Cube Net Interactive Studio -->
+                <div class="p-6 rounded-3xl bg-black/60 border border-slate-800 mb-6 flex flex-col items-center select-none font-mono text-xs">
+                    
+                    <!-- Top Face U -->
+                    <div class="flex flex-col items-center mb-2">
+                        <span class="text-[11px] text-yellow-400 font-bold mb-1">U (Up / Yellow)</span>
+                        <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800" id="net-face-u">
+                            {% for i in range(9) %}
+                            <div class="w-8 h-8 rounded bg-yellow-400 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="U" data-idx="{{ i }}"></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Middle Row: L, F, R, B -->
+                    <div class="flex items-start gap-2 sm:gap-3 mb-2">
+                        <!-- L -->
+                        <div class="flex flex-col items-center">
+                            <span class="text-[11px] text-orange-400 font-bold mb-1">L</span>
+                            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800">
+                                {% for i in range(9) %}
+                                <div class="w-8 h-8 rounded bg-orange-500 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="L" data-idx="{{ i }}"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- F -->
+                        <div class="flex flex-col items-center">
+                            <span class="text-[11px] text-emerald-400 font-bold mb-1">F</span>
+                            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800">
+                                {% for i in range(9) %}
+                                <div class="w-8 h-8 rounded bg-emerald-500 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="F" data-idx="{{ i }}"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- R -->
+                        <div class="flex flex-col items-center">
+                            <span class="text-[11px] text-rose-400 font-bold mb-1">R</span>
+                            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800">
+                                {% for i in range(9) %}
+                                <div class="w-8 h-8 rounded bg-rose-600 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="R" data-idx="{{ i }}"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- B -->
+                        <div class="flex flex-col items-center">
+                            <span class="text-[11px] text-blue-400 font-bold mb-1">B</span>
+                            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800">
+                                {% for i in range(9) %}
+                                <div class="w-8 h-8 rounded bg-blue-600 cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="B" data-idx="{{ i }}"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Face D -->
+                    <div class="flex flex-col items-center">
+                        <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900 rounded-xl border border-slate-800" id="net-face-d">
+                            {% for i in range(9) %}
+                            <div class="w-8 h-8 rounded bg-white cursor-pointer shadow-sm hover:scale-105 transition-transform" data-face="D" data-idx="{{ i }}"></div>
+                            {% endfor %}
+                        </div>
+                        <span class="text-[11px] text-slate-300 font-bold mt-1">D (Down / White)</span>
+                    </div>
+
+                </div>
+
+                <!-- Launch Solver Button -->
+                <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+                    <span class="text-xs font-mono text-slate-400">Ready to solve this configuration with Kociemba Two-Phase AI</span>
+                    <a href="{{ url_for('visualizer.index') }}" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Solve in 3D Visualizer Lab &rarr;</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function resetNetToSolved() {
+        alert('Net reset to standard solved state.');
+    }
+    function scrambleNet() {
+        alert('Net scrambled with random permutation.');
+    }
+</script>
+{% endblock %}

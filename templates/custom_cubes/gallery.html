@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Custom Rubik's Cubes Workshop & Clan Challenges - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+    <!-- Top Master Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-indigo-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 p-0.5 shadow-2xl shadow-indigo-500/30 shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-indigo-400 text-2xl font-mono">
+                        <i class="fa-solid fa-cubes animate-pulse"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 text-xs font-mono mb-2 shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="font-bold">SUBSCRIBER WORKSHOP &bull; 10 PARTICULA SHAPES &bull; CLAN CHALLENGES</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black font-outfit text-white tracking-tight flex items-center gap-2">
+                        <span>Custom Rubik's Cubes Workshop</span>
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-400 font-mono mt-1">
+                        Build custom shapes, define color schemes, verify parity solvability, and challenge public or private clans.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center gap-3 flex-wrap">
+                <a href="{{ url_for('custom_cubes.builder') }}" class="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-mono font-bold text-xs shadow-xl shadow-cyan-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                    <span>Launch Cube Builder Studio</span>
+                </a>
+                <a href="{{ url_for('user.dashboard') }}" class="px-4 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 font-mono text-xs flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>User Hub</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Metric Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 font-mono">
+        <div class="glass-card p-5 rounded-2xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
+            <div>
+                <span class="text-xs text-slate-400 uppercase">My Custom Puzzles</span>
+                <div class="text-2xl font-bold font-outfit text-white mt-1">{{ user_cubes|length }}</div>
+            </div>
+            <i class="fa-solid fa-cube text-cyan-400 text-2xl"></i>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
+            <div>
+                <span class="text-xs text-slate-400 uppercase">Community Blueprints</span>
+                <div class="text-2xl font-bold font-outfit text-indigo-400 mt-1">{{ public_cubes|length }}</div>
+            </div>
+            <i class="fa-solid fa-globe text-indigo-400 text-2xl"></i>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
+            <div>
+                <span class="text-xs text-slate-400 uppercase">Active Clan Challenges</span>
+                <div class="text-2xl font-bold font-outfit text-amber-400 mt-1">{{ challenges|length }}</div>
+            </div>
+            <i class="fa-solid fa-swords text-amber-400 text-2xl"></i>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 1: MY SAVED CUSTOM PUZZLES
+         ========================================================================= -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl mb-8">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+            <div>
+                <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                    <i class="fa-solid fa-boxes-stacked text-cyan-400"></i>
+                    <span>My Custom Puzzle Blueprints</span>
+                </h2>
+                <p class="text-xs text-slate-400 font-mono">Puzzles authored by you with custom shape kinematics and color rules</p>
+            </div>
+            <a href="{{ url_for('custom_cubes.builder') }}" class="text-xs font-mono text-cyan-400 hover:underline">
+                + Build New Puzzle
+            </a>
+        </div>
+
+        {% if user_cubes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for cube in user_cubes %}
+            <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-cyan-500/40 transition-all flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300">
+                            {{ supported_shapes[cube.shape_type].name if cube.shape_type in supported_shapes else cube.shape_type }}
+                        </span>
+                        <span class="text-[10px] font-mono text-slate-500">{{ cube.created_at }}</span>
+                    </div>
+
+                    <h3 class="font-bold text-white font-outfit text-base mb-1">{{ cube.name }}</h3>
+                    <p class="text-xs text-slate-400 font-mono line-clamp-2 mb-3">{{ cube.description or 'Custom puzzle built with Rubique Studio.' }}</p>
+
+                    <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 font-mono text-[11px] space-y-1 mb-4">
+                        <div class="flex justify-between text-slate-400">
+                            <span>Palette Theme:</span>
+                            <span class="text-slate-200 capitalize">{{ cube.color_scheme }}</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400">
+                            <span>Scramble:</span>
+                            <span class="text-amber-300 font-bold truncate max-w-[150px]">{{ cube.scramble or 'Solved' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cube Actions -->
+                <div class="flex items-center gap-2 pt-3 border-t border-slate-800 font-mono text-xs">
+                    <a href="{{ url_for('custom_cubes.builder', shape=cube.shape_type) }}" class="flex-1 py-2 text-center rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-200 font-bold transition-all">
+                        Open in Studio
+                    </a>
+                    <button onclick="openChallengeModal({{ cube.id }}, '{{ cube.name|escape }}')" class="px-3 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 transition-all" title="Challenge Clan">
+                        <i class="fa-solid fa-swords"></i>
+                    </button>
+                    <form action="{{ url_for('custom_cubes.delete_cube', cube_id=cube.id) }}" method="POST" onsubmit="return confirm('Delete this custom cube?');">
+                        <button type="submit" class="px-3 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 transition-all" title="Delete Cube">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 font-mono">
+            <i class="fa-solid fa-cube text-4xl text-slate-600 mb-3 block"></i>
+            <h4 class="text-white font-bold text-sm">No Custom Puzzles Authored Yet</h4>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Start crafting your own unique Rubik's geometries and custom color palettes.</p>
+            <a href="{{ url_for('custom_cubes.builder') }}" class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs inline-flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Build First Custom Cube
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- =========================================================================
+         SECTION 2: COMMUNITY PUBLIC CUBES SHOWCASE
+         ========================================================================= -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl mb-8">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+            <div>
+                <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-indigo-400"></i>
+                    <span>Community Workshop Showcase</span>
+                </h2>
+                <p class="text-xs text-slate-400 font-mono">Explore custom puzzles crafted by global speedcubers and math theorists</p>
+            </div>
+        </div>
+
+        {% if public_cubes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for cube in public_cubes %}
+            <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/40 text-indigo-300">
+                            {{ supported_shapes[cube.shape_type].name if cube.shape_type in supported_shapes else cube.shape_type }}
+                        </span>
+                        <span class="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
+                            <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] text-white font-bold" style="background: {{ cube.author_avatar or '#818cf8' }};">
+                                {{ cube.author_name[0] | upper }}
+                            </span>
+                            <span>{{ cube.author_name }}</span>
+                        </span>
+                    </div>
+
+                    <h3 class="font-bold text-white font-outfit text-base mb-1">{{ cube.name }}</h3>
+                    <p class="text-xs text-slate-400 font-mono line-clamp-2 mb-3">{{ cube.description }}</p>
+                </div>
+
+                <div class="pt-3 border-t border-slate-800 font-mono text-xs">
+                    <a href="{{ url_for('custom_cubes.builder', shape=cube.shape_type) }}" class="w-full block text-center py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all font-bold">
+                        Inspect Geometry &amp; Palette &rarr;
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- =========================================================================
+         SECTION 3: ACTIVE CLAN / STUDY GROUP CHALLENGES
+         ========================================================================= -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/80 backdrop-blur-xl mb-8">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+            <div>
+                <h2 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                    <i class="fa-solid fa-swords text-amber-400"></i>
+                    <span>Clan &amp; Group Solving Challenges</span>
+                </h2>
+                <p class="text-xs text-slate-400 font-mono">Solve custom scrambles dispatched to your clans and submit winning solutions</p>
+            </div>
+        </div>
+
+        {% if challenges %}
+        <div class="space-y-4">
+            {% for chal in challenges %}
+            <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 font-mono">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full bg-amber-950 border border-amber-500/40 text-amber-300 text-[10px] font-bold">
+                            @{{ chal.group_name }}
+                        </span>
+                        <span class="text-white font-bold text-sm">{{ chal.cube_name }}</span>
+                        <span class="text-xs text-slate-500">by {{ chal.challenger_name }}</span>
+                    </div>
+                    <div class="text-xs text-slate-400">{{ chal.challenge_note or 'Can your clan find the optimal move count for this puzzle configuration?' }}</div>
+                    <div class="text-[11px] text-amber-300 font-bold">Scramble: {{ chal.scramble }}</div>
+                </div>
+
+                <div class="shrink-0 flex items-center gap-2">
+                    {% if chal.is_solved %}
+                    <span class="px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> Solved by {{ chal.solver_name }}
+                    </span>
+                    {% else %}
+                    <button onclick="openSolveModal({{ chal.id }}, '{{ chal.cube_name|escape }}', '{{ chal.scramble|escape }}')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-code"></i> Submit Solution
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 font-mono text-xs text-slate-400">
+            No active clan challenges yet. Build a custom cube and challenge your study clan!
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Modal: Challenge Clan -->
+<div id="challenge-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card p-6 rounded-3xl border border-amber-500/40 bg-slate-950 max-w-md w-full font-mono text-xs shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+            <h3 class="text-white font-bold text-sm flex items-center gap-2">
+                <i class="fa-solid fa-swords text-amber-400"></i> Dispatch Clan Challenge
+            </h3>
+            <button onclick="closeChallengeModal()" class="text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form action="{{ url_for('custom_cubes.challenge_group') }}" method="POST">
+            <input type="hidden" name="cube_id" id="modal-cube-id">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-slate-400 mb-1">Target Puzzle:</label>
+                    <input type="text" id="modal-cube-name" readonly class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Select Study Clan / Group:</label>
+                    <select name="group_id" required class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-amber-400 focus:outline-none">
+                        {% for g in groups %}
+                        <option value="{{ g.id }}">Clan: {{ g.name }} ({{ 'Private' if g.is_private else 'Public' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Challenge Message / Mention Note:</label>
+                    <textarea name="challenge_note" rows="2" placeholder="@clan Solve this state under 25 moves!" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-amber-400 focus:outline-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition-all">
+                    Send Clan Challenge
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Solve Challenge -->
+<div id="solve-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card p-6 rounded-3xl border border-emerald-500/40 bg-slate-950 max-w-md w-full font-mono text-xs shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+            <h3 class="text-white font-bold text-sm flex items-center gap-2">
+                <i class="fa-solid fa-code text-emerald-400"></i> Submit Solution Move Sequence
+            </h3>
+            <button onclick="closeSolveModal()" class="text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="solve-challenge-form" method="POST">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-slate-400 mb-1">Puzzle:</label>
+                    <input type="text" id="solve-modal-cube-name" readonly class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Scramble:</label>
+                    <input type="text" id="solve-modal-scramble" readonly class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-amber-300 font-bold">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Solution Moves (Singmaster / WCA Notation):</label>
+                    <textarea name="solution" rows="3" placeholder="e.g. U R U' R' F R U R' U' F'" required class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-emerald-400 focus:outline-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
+                    Verify &amp; Register Solution
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openChallengeModal(cubeId, cubeName) {
+        document.getElementById('modal-cube-id').value = cubeId;
+        document.getElementById('modal-cube-name').value = cubeName;
+        document.getElementById('challenge-modal').classList.remove('hidden');
+    }
+    function closeChallengeModal() {
+        document.getElementById('challenge-modal').classList.add('hidden');
+    }
+
+    function openSolveModal(challengeId, cubeName, scramble) {
+        document.getElementById('solve-challenge-form').action = "/custom-cubes/solve-challenge/" + challengeId;
+        document.getElementById('solve-modal-cube-name').value = cubeName;
+        document.getElementById('solve-modal-scramble').value = scramble;
+        document.getElementById('solve-modal-dialog') || document.getElementById('solve-modal').classList.remove('hidden');
+    }
+    function closeSolveModal() {
+        document.getElementById('solve-modal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

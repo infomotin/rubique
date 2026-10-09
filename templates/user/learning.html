@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Learning Hub & Group Theory - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-cyan-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-cyan-600/30 border border-cyan-500/40 p-0.5 shadow-2xl flex items-center justify-center text-cyan-400 text-2xl font-bold">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span data-i18n="learning_title">{{ t('learning_title') }}</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight" data-i18n="learning_sub">{{ t('learning_sub') }}</h1>
+                    <p class="text-xs text-slate-400 font-mono" data-i18n="learning_desc">{{ t('learning_desc') }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('visualizer.index') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-cube"></i> Open 3D Lab
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Visual Learning Hub -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/90 relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                    <div>
+                        <span class="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">Speedcubing Algorithmic Database</span>
+                        <h2 class="text-xl font-bold font-outfit text-white">Interactive Algorithmic Repertoire</h2>
+                        <p class="text-xs text-slate-400 font-mono">CFOP, OLL, PLL, and Group Theory Commutators with 3D playback</p>
+                    </div>
+                    <!-- Algo Category Switcher -->
+                    <div class="flex items-center gap-1.5 flex-wrap font-mono text-[11px]">
+                        <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold" data-cat="all">All</button>
+                        <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="cfop">CFOP</button>
+                        <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="oll">OLL</button>
+                        <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="pll">PLL</button>
+                        <button class="algo-filter-btn px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white" data-cat="math">Group Theory</button>
+                    </div>
+                </div>
+
+                <!-- Mathematical Context & Finger Tricks Panel -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="p-5 rounded-2xl bg-black/60 border border-slate-800 font-mono text-xs space-y-3">
+                        <span class="text-[10px] text-slate-500 uppercase block font-bold">Selected Algorithm Formula</span>
+                        <div id="active-algo-formula" class="text-cyan-300 font-bold text-lg break-all bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                            R U R' U'
+                        </div>
+                        <div class="text-slate-400 text-xs">
+                            <span class="text-indigo-400 font-bold">Name:</span> <span id="active-algo-name" class="text-white">Sexy Move</span> &bull; 
+                            <span class="text-indigo-400 font-bold">Order:</span> <span id="active-algo-order" class="text-white">6</span>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-black/60 border border-slate-800 font-mono text-xs space-y-3">
+                        <span class="text-[10px] text-slate-500 uppercase block font-bold">Group Theory &amp; Finger Trick</span>
+                        <p id="active-algo-math" class="text-slate-300 leading-relaxed">
+                            Standard group commutator $[R, U] = R U R^{-1} U^{-1}$. Generates subgroup of order 6.
+                        </p>
+                        <p id="active-algo-tip" class="text-emerald-400 font-bold">
+                            Right hand flick: Push R with right thumb, index flick U, pull back R' with thumb, index flick U'.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Algorithm Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-mono text-xs" id="algo-cards-grid">
+                    
+                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-indigo-500/40 algo-card cursor-pointer" 
+                         onclick="selectAlgo('Sexy Move', 'R U R\' U\'', '6', 'Commutator [R, U] = R U R⁻¹ U⁻¹. Order 6 generator.', 'Right thumb up, index flick U, right thumb down, index flick U\'.')">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white font-sans text-sm">Sexy Move</span>
+                            <span class="text-indigo-400 text-[10px] font-bold">CFOP &bull; Order 6</span>
+                        </div>
+                        <div class="text-indigo-300 font-bold text-xs mt-1">R U R' U'</div>
+                        <p class="text-slate-400 text-[11px] mt-2 font-sans">Core building block of CFOP and group commutators.</p>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 algo-card cursor-pointer" 
+                         onclick="selectAlgo('T-Permutation', 'R U R\' U\' R\' F R2 U\' R\' U\' R U R\' F\'', '2', 'Adjacent 2-corner and 2-edge transposition permutation. Order 2 involution.', 'Combine Sexy Move + Sledgehammer transition with right index F\'.')">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white font-sans text-sm">T-Permutation</span>
+                            <span class="text-cyan-400 text-[10px] font-bold">PLL &bull; Order 2</span>
+                        </div>
+                        <div class="text-cyan-300 font-bold text-xs mt-1 truncate">R U R' U' R' F R2 U' R' U' R U R' F'</div>
+                        <p class="text-slate-400 text-[11px] mt-2 font-sans">Swaps two adjacent corners and two adjacent edges in the top tier.</p>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 algo-card cursor-pointer" 
+                         onclick="selectAlgo('Sune (OLL 27)', 'R U R\' U R U2 R\'', '6', '3-corner orientation twist while preserving edge orientation. Order 6.', 'Smooth single-hand right grip with U2 double flick.')">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white font-sans text-sm">Sune (OLL 27)</span>
+                            <span class="text-emerald-400 text-[10px] font-bold">OLL &bull; Order 6</span>
+                        </div>
+                        <div class="text-emerald-400 font-bold text-xs mt-1">R U R' U R U2 R'</div>
+                        <p class="text-slate-400 text-[11px] mt-2 font-sans">Twists 3 corners clockwise while preserving edge orientation.</p>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 algo-card cursor-pointer" 
+                         onclick="selectAlgo('Y-Permutation', 'F R U\' R\' U\' R U R\' F\' R U R\' U\' R\' F R F\'', '2', 'Diagonal corner swap + top edge swap. Order 2 involution.', 'Front face trigger followed by standard T-perm insertion.')">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white font-sans text-sm">Y-Permutation</span>
+                            <span class="text-purple-400 text-[10px] font-bold">PLL &bull; Order 2</span>
+                        </div>
+                        <div class="text-purple-300 font-bold text-xs mt-1 truncate">F R U' R' U' R U R' F' R U R' U' R' F R F'</div>
+                        <p class="text-slate-400 text-[11px] mt-2 font-sans">Swaps two opposite corners diagonally across the face.</p>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 algo-card cursor-pointer" 
+                         onclick="selectAlgo('Corner 3-Cycle', 'R U R\' D R U\' R\' D\'', '3', 'Pure corner 3-cycle (c₁ c₂ c₃) preserving all 12 edge positions.', 'Conjugate insertion using bottom layer D and D\' transfers.')">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white font-sans text-sm">Corner 3-Cycle</span>
+                            <span class="text-amber-400 text-[10px] font-bold">Group Commutator</span>
+                        </div>
+                        <div class="text-amber-300 font-bold text-xs mt-1">R U R' D R U' R' D'</div>
+                        <p class="text-slate-400 text-[11px] mt-2 font-sans">Permutes 3 corner pieces leaving remaining 51 facelets invariant.</p>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 algo-card cursor-pointer" 
+                         onclick="selectAlgo('F2L Basic Insert', 'U R U\' R\'', '4', 'Standard corner-edge pair insertion into front-right slot.', 'Insert paired slot into lower layer with index pull.')">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white font-sans text-sm">F2L Basic Insert</span>
+                            <span class="text-rose-400 text-[10px] font-bold">F2L &bull; Pair Slot</span>
+                        </div>
+                        <div class="text-rose-300 font-bold text-xs mt-1">U R U' R'</div>
+                        <p class="text-slate-400 text-[11px] mt-2 font-sans">Seamlessly drops a paired corner-edge slot into bottom tier.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function selectAlgo(name, formula, order, math, tip) {
+        document.getElementById('active-algo-name').innerText = name;
+        document.getElementById('active-algo-formula').innerText = formula;
+        document.getElementById('active-algo-order').innerText = order;
+        document.getElementById('active-algo-math').innerText = math;
+        document.getElementById('active-algo-tip').innerText = tip;
+    }
+</script>
+{% endblock %}

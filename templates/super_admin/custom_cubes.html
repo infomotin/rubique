@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Custom Cubes & Clans Moderation - Super Admin - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Executive Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-600 p-0.5 shadow-2xl shadow-amber-500/30">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-amber-400 text-2xl">
+                        <i class="fa-solid fa-shapes"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span>SUPER ADMIN &bull; 10 PARTICULA SHAPES MODERATION</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">Custom Puzzles &amp; Clan Challenges</h1>
+                    <p class="text-xs text-slate-400 font-mono">Inspect subscriber authored cube geometries, color schemes, and clan challenge activity</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400">
+                    <i class="fa-solid fa-shapes mr-1.5"></i> {{ cubes|length }} Public Puzzles
+                </span>
+                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-amber-400">
+                    <i class="fa-solid fa-swords mr-1.5"></i> {{ challenges|length }} Clan Challenges
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "super_admin/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Custom Cubes Moderation -->
+        <div class="lg:col-span-9 space-y-6">
+            
+            <!-- Public Puzzles Moderation Grid -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <h3 class="text-base font-bold font-outfit text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-cubes text-cyan-400"></i>
+                    <span>Published Community Puzzles</span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                    {% for c in cubes %}
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 text-[10px] border border-cyan-500/40">
+                                        {{ supported_shapes[c.shape_type].name if c.shape_type in supported_shapes else c.shape_type }}
+                                    </span>
+                                    <span class="text-slate-500 text-[10px]">by {{ c.author_name }}</span>
+                                </div>
+                                <div class="font-bold text-white text-sm font-sans mb-1">{{ c.name }}</div>
+                                <p class="text-slate-400 text-xs line-clamp-2">{{ c.description or 'Custom puzzle.' }}</p>
+                            </div>
+                            <div class="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+                                <span>Theme: <strong class="text-slate-300 capitalize">{{ c.color_scheme }}</strong></span>
+                                <a href="{{ url_for('custom_cubes.builder', shape=c.shape_type) }}" class="text-cyan-400 hover:underline">Inspect Studio &rarr;</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Clan Challenges Stream -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <h3 class="text-base font-bold font-outfit text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-swords text-amber-400"></i>
+                    <span>Clan Challenge Activity Stream</span>
+                </h3>
+
+                <div class="space-y-3 font-mono text-xs">
+                    {% for chal in challenges %}
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 text-[10px] font-bold">@{{ chal.group_name }}</span>
+                                    <span class="text-white font-bold">{{ chal.cube_name }}</span>
+                                </div>
+                                <div class="text-slate-400 text-[11px]">Challenger: {{ chal.challenger_name }} &bull; Scramble: <span class="text-amber-300">{{ chal.scramble }}</span></div>
+                            </div>
+                            <div>
+                                {% if chal.is_solved %}
+                                    <span class="px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 text-[10px] font-bold">Solved by {{ chal.solver_name }}</span>
+                                {% else %}
+                                    <span class="px-2.5 py-1 rounded-full bg-amber-950 text-amber-400 text-[10px] font-bold">Open Challenge</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

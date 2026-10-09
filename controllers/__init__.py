@@ -9,3 +9,4 @@ from .user_controller import user_bp
 from .profile_controller import profile_bp
 from .visualizer_controller import visualizer_bp
 from .api_controller import api_bp
+from .custom_cube_controller import custom_cube_bp

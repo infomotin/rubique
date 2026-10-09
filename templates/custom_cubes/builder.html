@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}Build Custom Rubik's Cubes - CubePermutation AI Studio{% endblock %}
+
+{% block extra_head %}
+<style>
+    .palette-btn.active {
+        ring: 3px solid #6366f1;
+        transform: scale(1.15);
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+    }
+    .shape-card.active {
+        border-color: #06b6d4;
+        background: rgba(6, 182, 212, 0.12);
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+    }
+    .turn-btn {
+        transition: all 0.15s ease;
+    }
+    .turn-btn:hover {
+        transform: translateY(-2px);
+    }
+    .turn-btn:active {
+        transform: scale(0.92);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+    <!-- Top Studio Header -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 via-indigo-600 to-pink-500 p-0.5 shadow-2xl shadow-cyan-500/30 shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-cyan-400 text-2xl">
+                        <i class="fa-solid fa-shapes animate-pulse"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono mb-2 shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="font-bold">PARTICULA DEEP KNOWLEDGE ENGINE &bull; 10 SHAPES &bull; 5 ANALYTIC LABELS</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-black font-outfit text-white tracking-tight flex items-center gap-2">
+                        <span>Build Custom Rubik's Cubes Studio</span>
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-400 font-mono mt-1">
+                        Select shape geometry, customize color palettes, scramble kinematics, verify mathematical parity, and challenge clans.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Studio Navigation Actions -->
+            <div class="flex items-center gap-3 flex-wrap font-mono text-xs">
+                <a href="{{ url_for('custom_cubes.index') }}" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-200 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-cubes text-cyan-400"></i>
+                    <span>Workshop Gallery ({{ user_cubes|length }})</span>
+                </a>
+                <a href="{{ url_for('user.dashboard') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 font-bold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>User Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 1: 10 SHAPE ARCHETYPES SELECTION CAROUSEL / GRID
+         ========================================================================= -->
+    <div class="glass-card p-6 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl mb-8">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+            <div>
+                <h2 class="text-sm font-bold font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                    <i class="fa-solid fa-cube"></i> Step 1: Select Rubik's Puzzle Shape Archetype
+                </h2>
+                <p class="text-xs text-slate-400 font-mono">Curated from Particula-tech mechanical and mathematical puzzle encyclopedias</p>
+            </div>
+            <span class="text-xs font-mono text-slate-500 hidden sm:inline">10 Geometries Supported</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="shape-selection-grid">
+            {% for shape_id, shape in supported_shapes.items() %}
+            <button class="shape-card p-3 rounded-2xl border text-left transition-all flex flex-col justify-between h-28 {% if shape_id == initial_shape %}active border-cyan-400 bg-cyan-950/30{% else %}border-slate-800 bg-slate-900/60 hover:border-slate-700{% endif %}"
+                    data-shape-id="{{ shape_id }}"
+                    onclick="selectBuilderShape('{{ shape_id }}')">
+                <div class="flex items-center justify-between w-full">
+                    <i class="{{ shape.icon }} text-lg {% if shape_id == initial_shape %}text-cyan-400{% else %}text-slate-400{% endif %}"></i>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">{{ shape.faces }}F</span>
+                </div>
+                <div>
+                    <div class="font-bold text-white text-xs leading-tight font-outfit">{{ shape.name }}</div>
+                    <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ shape.pieces }}</div>
+                </div>
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 2: 5-LABEL DEEP TECHNICAL DOSSIER FOR SELECTED SHAPE
+         ========================================================================= -->
+    <div class="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-slate-950/80 backdrop-blur-xl mb-8">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800 mb-4">
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></span>
+                <h3 class="text-base font-bold font-outfit text-white" id="dossier-shape-title">Classic 3x3 Rubik's Cube — 5-Label Deep Technical Analysis</h3>
+            </div>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-indigo-950 border border-indigo-500/40 text-indigo-300">
+                Particula Deep Knowledge Protocol
+            </span>
+        </div>
+
+        <!-- 5 Tabs Bar -->
+        <div class="flex overflow-x-auto gap-2 pb-2 mb-4 font-mono text-xs scrollbar-none border-b border-slate-800/60" id="dossier-tabs">
+            <button class="dossier-tab-btn active px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-bold transition-all flex items-center gap-2 shrink-0" data-label="1" onclick="switchDossierLabel(1)">
+                <i class="fa-solid fa-gears text-cyan-300"></i>
+                <span>1. Mechanical Architecture &amp; Geometry</span>
+            </button>
+            <button class="dossier-tab-btn px-3.5 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white transition-all flex items-center gap-2 shrink-0" data-label="2" onclick="switchDossierLabel(2)">
+                <i class="fa-solid fa-calculator text-amber-300"></i>
+                <span>2. Mathematical Group Theory &amp; State Space</span>
+            </button>
+            <button class="dossier-tab-btn px-3.5 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white transition-all flex items-center gap-2 shrink-0" data-label="3" onclick="switchDossierLabel(3)">
+                <i class="fa-solid fa-palette text-pink-300"></i>
+                <span>3. Color &amp; Aesthetic Surface Customization</span>
+            </button>
+            <button class="dossier-tab-btn px-3.5 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white transition-all flex items-center gap-2 shrink-0" data-label="4" onclick="switchDossierLabel(4)">
+                <i class="fa-solid fa-code-compare text-emerald-300"></i>
+                <span>4. Kinematics, Rearrangement &amp; Parity</span>
+            </button>
+            <button class="dossier-tab-btn px-3.5 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white transition-all flex items-center gap-2 shrink-0" data-label="5" onclick="switchDossierLabel(5)">
+                <i class="fa-solid fa-users-rays text-indigo-300"></i>
+                <span>5. Clan/Group Challenge &amp; Collaborative Solving</span>
+            </button>
+        </div>
+
+        <!-- Dynamic Content Box -->
+        <div id="dossier-content-display" class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 font-mono text-xs text-slate-300 leading-relaxed min-h-[90px]">
+            <!-- Injected by custom_cube_builder.js -->
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         SECTION 3: INTERACTIVE STUDIO CANVAS, PALETTES & KINEMATICS
+         ========================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-8">
+        
+        <!-- LEFT STUDIO: SVG NET CANVAS & MOVE DISPATCHER (Col 7) -->
+        <div class="lg:col-span-7 glass-card p-6 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-draw-polygon text-cyan-400"></i>
+                    <h3 class="text-sm font-bold font-mono text-white uppercase">Interactive SVG Net &amp; Kinematic Facelets</h3>
+                </div>
+                <span class="text-[11px] font-mono text-slate-500">Click any sticker to apply active paint</span>
+            </div>
+
+            <!-- SVG Net Container -->
+            <div id="builder-svg-canvas" class="w-full flex items-center justify-center p-4 rounded-2xl bg-slate-900/70 border border-slate-800/90 min-h-[360px] overflow-auto shadow-inner">
+                <!-- SVG dynamically rendered by JS -->
+            </div>
+
+            <!-- Kinematic Layer Turn Controls -->
+            <div class="mt-4 pt-4 border-t border-slate-800">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-mono text-slate-400 font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-rotate text-indigo-400 mr-1"></i> Kinematic Layer Rotations
+                    </span>
+                    <span class="text-[10px] font-mono text-slate-500">Simulates real internal axle turning</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 font-mono text-xs">
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-white font-bold" onclick="simulateTurn('U')">U</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-cyan-300 font-bold" onclick="simulateTurn('U\'')">U'</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-white font-bold" onclick="simulateTurn('R')">R</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-cyan-300 font-bold" onclick="simulateTurn('R\'')">R'</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-white font-bold" onclick="simulateTurn('F')">F</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-cyan-300 font-bold" onclick="simulateTurn('F\'')">F'</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-white font-bold" onclick="simulateTurn('D')">D</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-cyan-300 font-bold" onclick="simulateTurn('D\'')">D'</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-white font-bold" onclick="simulateTurn('L')">L</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-cyan-300 font-bold" onclick="simulateTurn('L\'')">L'</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-white font-bold" onclick="simulateTurn('B')">B</button>
+                    <button class="turn-btn px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-cyan-300 font-bold" onclick="simulateTurn('B\'')">B'</button>
+                </div>
+            </div>
+
+            <!-- Scramble String & History Box -->
+            <div class="mt-4 p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs font-mono">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span>Applied Scramble Sequence:</span>
+                    <button class="text-cyan-400 hover:underline" onclick="copyScramble()">Copy</button>
+                </div>
+                <div id="current-scramble-display" class="text-amber-300 font-bold truncate">SOLVED_INITIAL_STATE</div>
+            </div>
+        </div>
+
+        <!-- RIGHT STUDIO: COLOR PALETTE, PARITY CHECK & ACTIONS (Col 5) -->
+        <div class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- Palette Selector Card -->
+            <div class="glass-card p-6 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-swatchbook text-pink-400"></i>
+                        <h3 class="text-sm font-bold font-mono text-white uppercase">Theme Swatches &amp; Custom Hex</h3>
+                    </div>
+                </div>
+
+                <!-- Theme Preset Dropdown -->
+                <div class="mb-4">
+                    <label class="block text-xs font-mono text-slate-400 mb-1">Color Scheme Theme Preset:</label>
+                    <select id="theme-preset-select" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs focus:border-cyan-400 focus:outline-none" onchange="applyColorThemePreset(this.value)">
+                        <option value="classic">Classic WCA Tournament Palette</option>
+                        <option value="gocube">GoCube Cyber Neon Palette</option>
+                        <option value="mirror">Mirror Metallic Brushed Steel Palette</option>
+                        <option value="pastel">Pastel Dream Frosted Palette</option>
+                        <option value="ghost">Ghost Monochrome Carbon Palette</option>
+                        <option value="cosmic">12-Color Cosmic Spectrum (Megaminx)</option>
+                    </select>
+                </div>
+
+                <!-- Active Swatches Bar -->
+                <div class="mb-4">
+                    <span class="block text-xs font-mono text-slate-400 mb-2">Active Brush Color:</span>
+                    <div class="flex flex-wrap items-center gap-2" id="palette-swatches-box">
+                        <!-- Swatches rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Custom Hex Picker -->
+                <div class="flex items-center gap-3 pt-3 border-t border-slate-800">
+                    <input type="color" id="custom-hex-input" value="#06b6d4" class="w-9 h-9 rounded-lg border border-slate-700 bg-transparent cursor-pointer" onchange="setCustomPaintColor(this.value)">
+                    <div class="font-mono text-xs">
+                        <span class="text-slate-400">Custom Hex:</span>
+                        <span id="custom-hex-label" class="text-white font-bold ml-1">#06b6d4</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kinematics & Parity Engine Card -->
+            <div class="glass-card p-6 rounded-3xl border border-emerald-500/30 bg-slate-950/80 backdrop-blur-xl">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-atom text-emerald-400"></i>
+                        <h3 class="text-sm font-bold font-mono text-white uppercase">Solvability &amp; Parity Engine</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-4 font-mono text-xs">
+                    <button class="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold transition-all flex items-center justify-center gap-2" onclick="triggerScramble()">
+                        <i class="fa-solid fa-shuffle text-cyan-400"></i>
+                        <span>Scramble</span>
+                    </button>
+                    <button class="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold transition-all flex items-center justify-center gap-2" onclick="resetToSolved()">
+                        <i class="fa-solid fa-arrows-rotate text-emerald-400"></i>
+                        <span>Reset Solved</span>
+                    </button>
+                    <button class="px-3 py-2.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 font-bold transition-all flex items-center justify-center gap-2 col-span-2" onclick="verifyCubeParity()">
+                        <i class="fa-solid fa-microscope text-indigo-400"></i>
+                        <span>Verify Parity &amp; Solvability</span>
+                    </button>
+                </div>
+
+                <!-- Parity Output Box -->
+                <div id="parity-results-box" class="p-3 rounded-xl bg-slate-900/70 border border-slate-800 font-mono text-xs text-slate-300">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold">
+                        <i class="fa-solid fa-circle-check"></i> State Status: Ready &amp; Solvable
+                    </div>
+                    <div class="text-[11px] text-slate-400 mt-1">All faces contain balanced sticker counts under the permutation group.</div>
+                </div>
+
+                <!-- AI Solver Playback -->
+                <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+                    <button class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-mono font-bold text-xs shadow-lg shadow-emerald-600/20 hover:scale-[1.02] transition-all flex items-center gap-2 w-full justify-center" onclick="playAiSolution()">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Play AI Step-by-Step Solution</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Save & Challenge Dispatcher Card -->
+            <div class="glass-card p-6 rounded-3xl border border-cyan-500/30 bg-slate-950/80 backdrop-blur-xl">
+                <h3 class="text-sm font-bold font-mono text-white uppercase mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk text-cyan-400"></i>
+                    <span>Save &amp; Challenge Clan</span>
+                </h3>
+                
+                <form action="{{ url_for('custom_cubes.save_cube') }}" method="POST" id="save-custom-cube-form">
+                    <input type="hidden" name="shape_type" id="form-shape-type" value="{{ initial_shape }}">
+                    <input type="hidden" name="color_scheme" id="form-color-scheme" value="classic">
+                    <input type="hidden" name="cube_state" id="form-cube-state" value="">
+                    <input type="hidden" name="scramble" id="form-scramble" value="">
+                    <input type="hidden" name="status" id="form-status" value="unsolved">
+
+                    <div class="space-y-3 font-mono text-xs">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Custom Puzzle Name:</label>
+                            <input type="text" name="name" id="cube-name-input" placeholder="e.g. Cyber GoCube 3x3 Edition" required class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-cyan-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Description / Custom Rule Notes:</label>
+                            <textarea name="description" rows="2" placeholder="Describe unique shape adjustments or custom sticker rules..." class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:border-cyan-400 focus:outline-none"></textarea>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" name="is_public" id="is_public" value="1" checked class="rounded border-slate-700 text-cyan-500 focus:ring-0">
+                            <label for="is_public" class="text-slate-300">Publish to Community Workshop Gallery</label>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold shadow-xl shadow-cyan-600/30 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span>Save to My Puzzle Workshop</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Embed Supported Shapes JSON for Client Studio JS -->
+<script>
+    window.RUBIQUE_SUPPORTED_SHAPES = {{ supported_shapes|tojson|safe }};
+    window.INITIAL_BUILDER_SHAPE = "{{ initial_shape }}";
+</script>
+<script src="{{ url_for('static', filename='js/custom_cube_builder.js') }}"></script>
+{% endblock %}

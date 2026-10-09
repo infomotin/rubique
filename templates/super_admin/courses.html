@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Masterclasses & Curriculum - Super Admin - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Executive Banner -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-amber-600 p-0.5 shadow-2xl shadow-amber-500/30">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-amber-400 text-2xl">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>SUPER ADMIN &bull; CURRICULUM MANAGEMENT</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight">Masterclasses &amp; Video Curriculum</h1>
+                    <p class="text-xs text-slate-400 font-mono">Curate 3D interactive tutorials and publish pro speedcubing certifications</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-indigo-300">
+                    <i class="fa-solid fa-graduation-cap mr-1.5"></i> {{ courses|length }} Courses Active
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "super_admin/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Courses Management -->
+        <div class="lg:col-span-9 space-y-6">
+            
+            <!-- Create Course Form -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <div class="flex items-center gap-2 pb-4 border-b border-slate-800 mb-6">
+                    <i class="fa-solid fa-plus text-indigo-400 text-lg"></i>
+                    <h2 class="text-base font-bold font-outfit text-white">Publish New Speedcubing Masterclass</h2>
+                </div>
+
+                <form method="POST" action="{{ url_for('super_admin.create_course') }}" class="space-y-4 font-mono text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Course Title:</label>
+                            <input type="text" name="title" required placeholder="e.g. Sub-10 Advanced F2L Finger Tricks"
+                                   class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Difficulty Level:</label>
+                            <select name="difficulty" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500">
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced" selected>Advanced</option>
+                                <option value="Grandmaster">Grandmaster</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Curriculum Description &amp; Modules:</label>
+                        <textarea name="description" rows="3" required placeholder="Outline key topics: cross planning, lookahead, commutators..."
+                                  class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <span>Publish Masterclass to Global Library</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Existing Courses List -->
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <h3 class="text-base font-bold font-outfit text-white mb-4">Live Courses Library</h3>
+                <div class="space-y-3 font-mono text-xs">
+                    {% for crs in courses %}
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-white text-sm block font-sans">{{ crs.title }}</span>
+                                <span class="text-slate-400 text-xs block mt-0.5">{{ crs.description }}</span>
+                                <span class="text-indigo-400 text-[10px] mt-1 block font-bold">Tier: {{ crs.difficulty }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

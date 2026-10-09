@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Pro Speedcubing Masterclasses & Certifications - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-purple-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-purple-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-purple-600/30 border border-purple-500/40 p-0.5 shadow-2xl flex items-center justify-center text-purple-400 text-2xl font-bold">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                        <span data-i18n="courses_badge">{{ t('courses_badge') }}</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight" data-i18n="courses_title">{{ t('courses_title') }}</h1>
+                    <p class="text-xs text-slate-400 font-mono" data-i18n="courses_desc">{{ t('courses_desc') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Courses -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-purple-500/30 bg-slate-950/90">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold font-outfit text-white">Curated Masterclasses &amp; Video Modules</h2>
+                        <p class="text-xs text-slate-400 font-mono">Advance through structured curriculum from Sub-30 down to Sub-10 speeds</p>
+                    </div>
+                </div>
+
+                {% if courses %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for crs in courses %}
+                            <div class="glass-card p-6 rounded-3xl border border-slate-800 hover:border-purple-500/40 transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-bold text-white text-base font-outfit">{{ crs.title }}</span>
+                                        <span class="px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 text-[10px] font-mono font-bold">
+                                            {{ crs.difficulty or 'Advanced' }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mb-4 font-sans leading-relaxed">{{ crs.description }}</p>
+                                    
+                                    <div class="p-3 rounded-2xl bg-black/60 border border-slate-800 text-[11px] font-mono text-slate-300 mb-4 flex items-center justify-between">
+                                        <span>Curriculum: <strong class="text-white">8 Interactive Lessons</strong></span>
+                                        <span class="text-purple-400">3D Simulation</span>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-800 flex items-center gap-3 font-mono text-xs">
+                                    <button onclick="alert('Course modules unlocked! Open 3D Lab to view algorithm simulations.');" class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg shadow-purple-600/25 transition-all">
+                                        <i class="fa-solid fa-play mr-1"></i> <span data-i18n="start_course">{{ t('start_course') }}</span>
+                                    </button>
+                                    <form method="POST" action="{{ url_for('user.complete_course') }}" class="inline">
+                                        <input type="hidden" name="course_id" value="{{ crs.id }}">
+                                        <button type="submit" class="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-emerald-400 font-mono text-xs transition-colors" title="Mark Complete">
+                                            <i class="fa-solid fa-circle-check"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12 text-slate-500 font-mono text-xs">
+                        <i class="fa-solid fa-graduation-cap text-4xl text-slate-700 mb-2 block"></i>
+                        <span data-i18n="no_courses">{{ t('no_courses') }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

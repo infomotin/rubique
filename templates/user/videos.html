@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Speedcubing Solve Videos & Masterclasses - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-pink-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-pink-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-pink-600/30 border border-pink-500/40 p-0.5 shadow-2xl flex items-center justify-center text-pink-400 text-2xl font-bold">
+                    <i class="fa-solid fa-video"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-pink-950/80 border border-pink-500/40 text-pink-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+                        <span data-i18n="stage_videos">{{ t('stage_videos') }}</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight" data-i18n="upload_video_title">{{ t('upload_video_title') }}</h1>
+                    <p class="text-xs text-slate-400 font-mono">Watch community speedcubing solves, finger trick masterclasses, and submit your personal bests</p>
+                </div>
+            </div>
+
+            <button onclick="document.getElementById('upload-video-form-box').classList.toggle('hidden')" class="px-5 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-mono text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-pink-600/30">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span data-i18n="publish_video_btn">{{ t('publish_video_btn') }}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: Videos Showcase -->
+        <div class="lg:col-span-9 space-y-6">
+            
+            <!-- Upload Form Box (Collapsible) -->
+            <div id="upload-video-form-box" class="glass-card p-6 rounded-3xl bg-slate-950/90 border border-pink-500/40 hidden">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <h3 class="text-sm font-bold font-mono text-white uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-video text-pink-400"></i> Publish Speedcubing Solve Video
+                    </h3>
+                    <button onclick="document.getElementById('upload-video-form-box').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <form method="POST" action="{{ url_for('user.upload_video') }}" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                        <div>
+                            <label class="block text-slate-300 mb-1" data-i18n="video_title_label">{{ t('video_title_label') }}</label>
+                            <input type="text" name="title" required placeholder="e.g. 7.92s Personal Best with CFOP on Gan 12"
+                                   class="w-full px-3.5 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-pink-500">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 mb-1" data-i18n="video_url_label">{{ t('video_url_label') }}</label>
+                            <input type="url" name="video_url" required placeholder="https://www.w3schools.com/html/mov_bbb.mp4"
+                                   class="w-full px-3.5 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-pink-500">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 mb-1" data-i18n="solve_time_label">{{ t('solve_time_label') }}</label>
+                            <input type="number" step="0.01" name="solve_time" placeholder="7.92"
+                                   class="w-full px-3.5 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-cyan-300 focus:outline-none focus:border-pink-500">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 mb-1" data-i18n="method_label">{{ t('method_label') }}</label>
+                            <select name="method" class="w-full px-3.5 py-2.5 bg-black/80 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-pink-500">
+                                <option value="CFOP">CFOP (Fridrich)</option>
+                                <option value="Roux">Roux Method</option>
+                                <option value="ZZ">ZZ Method</option>
+                                <option value="Kociemba Two-Phase">Kociemba Two-Phase</option>
+                                <option value="Blindfolded 3-Style">Blindfolded 3-Style</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <textarea name="description" rows="2" placeholder="Tell other speedcubers about inspection, cross planning, or finger tricks used..."
+                                  class="w-full px-3.5 py-2 bg-black/80 border border-slate-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-pink-500"></textarea>
+                    </div>
+                    <button type="submit" class="px-6 py-2.5 bg-pink-600 hover:bg-pink-500 text-white font-mono font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> <span data-i18n="publish_video_btn">{{ t('publish_video_btn') }}</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Video Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% if videos %}
+                    {% for v in videos %}
+                        <div class="glass-card p-5 rounded-3xl border border-slate-800 hover:border-pink-500/40 transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs" style="background: {{ v.avatar_color or '#818cf8' }};">
+                                            {{ v.username[0] | upper }}
+                                        </div>
+                                        <div>
+                                            <span class="font-bold text-white text-xs block font-sans">{{ v.username }}</span>
+                                            <span class="text-[10px] text-slate-500 font-mono">{{ (v.created_at|string)[:16] if v.created_at else 'Recent' }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-0.5 rounded-full bg-pink-950 text-pink-300 text-[10px] font-mono font-bold border border-pink-500/40">
+                                        {{ v.solve_time }}s &bull; {{ v.method }}
+                                    </span>
+                                </div>
+
+                                <h3 class="font-bold text-white font-outfit text-base mb-2">{{ v.title }}</h3>
+                                <p class="text-xs text-slate-400 font-sans mb-3 line-clamp-2">{{ v.description or 'Speedcubing solve demonstration.' }}</p>
+
+                                <div class="rounded-2xl overflow-hidden bg-black aspect-video mb-3 relative border border-slate-800">
+                                    <video controls preload="metadata" class="w-full h-full object-cover">
+                                        <source src="{{ v.video_url }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-slate-800 font-mono text-xs">
+                                <span class="text-slate-400"><i class="fa-solid fa-heart text-pink-400 mr-1"></i> {{ v.likes }} speedcuber likes</span>
+                                <span class="text-slate-500 text-[11px]">{{ v.method }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-span-2 text-center py-12 rounded-3xl bg-slate-900/40 border border-dashed border-slate-800 font-mono">
+                        <i class="fa-solid fa-video text-4xl text-slate-600 mb-3 block"></i>
+                        <h4 class="text-white font-bold text-sm">No Videos Published Yet</h4>
+                        <p class="text-xs text-slate-400 mt-1">Be the first to upload and share your speedcubing solve recording!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

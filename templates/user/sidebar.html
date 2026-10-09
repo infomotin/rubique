@@ -1,0 +1,147 @@
+<!-- Shared Registered User Sidebar Navigation Component -->
+<div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/85 backdrop-blur-xl sticky top-20 z-20 shadow-2xl font-mono text-xs">
+    <div class="flex items-center justify-between px-3 py-1 mb-3 border-b border-slate-900 pb-2">
+        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold" data-i18n="working_stages">{{ t('working_stages') }}</span>
+        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+    </div>
+    
+    <nav class="flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-1.5 lg:gap-1 scrollbar-none" id="user-sidebar-nav">
+        
+        <!-- 1. Overview & Analytics -->
+        <a href="{{ url_for('user.dashboard') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'overview' %}bg-indigo-600/90 text-white font-bold border border-indigo-400/40 shadow-lg shadow-indigo-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-chart-line text-sm w-5 text-center text-indigo-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_overview">{{ t('stage_overview') }}</div>
+                <div class="text-[10px] text-slate-500 font-sans" data-i18n="stage_overview_sub">{{ t('stage_overview_sub') }}</div>
+            </div>
+        </a>
+
+        <!-- 2. Build Custom Rubik's Cubes (NEW - Particula 10 Shapes) -->
+        <a href="{{ url_for('custom_cubes.builder') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'custom_builder' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-shapes text-sm w-5 text-center text-cyan-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_custom_builder">{{ t('stage_custom_builder') }}</div>
+                <div class="text-[10px] text-cyan-400/80 font-sans" data-i18n="stage_custom_builder_sub">{{ t('stage_custom_builder_sub') }}</div>
+            </div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-500/40 text-cyan-300">10 SHAPES</span>
+        </a>
+
+        <!-- 3. Custom Cubes Workshop Gallery -->
+        <a href="{{ url_for('custom_cubes.index') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'custom_gallery' %}bg-indigo-600/90 text-white font-bold border border-indigo-400/40 shadow-lg shadow-indigo-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-cubes text-sm w-5 text-center text-indigo-300"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200">Cube Workshop</div>
+                <div class="text-[10px] text-slate-500 font-sans">Gallery &amp; Clans</div>
+            </div>
+        </a>
+
+        <!-- 4. Human vs AI Battle -->
+        <a href="{{ url_for('user.battle_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'battle' %}bg-rose-600/90 text-white font-bold border border-rose-400/40 shadow-lg shadow-rose-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-swords text-sm w-5 text-center text-rose-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_battle">{{ t('stage_battle') }}</div>
+                <div class="text-[10px] text-rose-400/80 font-sans" data-i18n="stage_battle_sub">{{ t('stage_battle_sub') }}</div>
+            </div>
+        </a>
+
+        <!-- 5. Visual Learning Hub -->
+        <a href="{{ url_for('user.learning_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'learning' %}bg-cyan-600/90 text-white font-bold border border-cyan-400/40 shadow-lg shadow-cyan-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-graduation-cap text-sm w-5 text-center text-cyan-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_learning">{{ t('stage_learning') }}</div>
+                <div class="text-[10px] text-cyan-400/80 font-sans" data-i18n="stage_learning_sub">{{ t('stage_learning_sub') }}</div>
+            </div>
+        </a>
+
+        <!-- 6. Solving Guide (CFOP) -->
+        <a href="{{ url_for('user.guide_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'guide' %}bg-emerald-600/90 text-white font-bold border border-emerald-400/40 shadow-lg shadow-emerald-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-book-open text-sm w-5 text-center text-emerald-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_guide">{{ t('stage_guide') }}</div>
+                <div class="text-[10px] text-emerald-400/80 font-sans" data-i18n="stage_guide_sub">{{ t('stage_guide_sub') }}</div>
+            </div>
+        </a>
+
+        <!-- 7. Video Showcase -->
+        <a href="{{ url_for('user.videos_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'videos' %}bg-pink-600/90 text-white font-bold border border-pink-400/40 shadow-lg shadow-pink-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-video text-sm w-5 text-center text-pink-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_videos">{{ t('stage_videos') }}</div>
+                <div class="text-[10px] text-pink-400/80 font-sans" data-i18n="stage_videos_sub">{{ t('stage_videos_sub') }}</div>
+            </div>
+        </a>
+
+        <!-- 8. Speedcuber Chat & Groups -->
+        <a href="{{ url_for('user.chat_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'chat' %}bg-teal-600/90 text-white font-bold border border-teal-400/40 shadow-lg shadow-teal-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-comments text-sm w-5 text-center text-teal-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_chat">{{ t('stage_chat') }}</div>
+                <div class="text-[10px] text-teal-400/80 font-sans" data-i18n="stage_chat_sub">{{ t('stage_chat_sub') }}</div>
+            </div>
+        </a>
+
+        <!-- 9. Friends & Buddies -->
+        <a href="{{ url_for('user.friends_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'friends' %}bg-indigo-600/90 text-white font-bold border border-indigo-400/40 shadow-lg shadow-indigo-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-user-group text-sm w-5 text-center text-indigo-300"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_friends">{{ t('stage_friends') }}</div>
+                <div class="text-[10px] text-indigo-400/80 font-sans" data-i18n="stage_friends_sub">{{ t('stage_friends_sub') }}</div>
+            </div>
+        </a>
+
+        <!-- 10. Community Blog & Feed -->
+        <a href="{{ url_for('user.blog_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'blog' %}bg-orange-600/90 text-white font-bold border border-orange-400/40 shadow-lg shadow-orange-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-newspaper text-sm w-5 text-center text-orange-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_blog">{{ t('stage_blog') }}</div>
+                <div class="text-[10px] text-orange-400/80 font-sans" data-i18n="stage_blog_sub">{{ t('stage_blog_sub') }}</div>
+            </div>
+        </a>
+
+        <!-- 11. Competitions Arena -->
+        <a href="{{ url_for('user.competitions_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'competitions' %}bg-amber-600/90 text-white font-bold border border-amber-400/40 shadow-lg shadow-amber-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-trophy text-sm w-5 text-center text-amber-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_competitions">{{ t('stage_competitions') }}</div>
+                <div class="text-[10px] text-amber-400/80 font-sans">Tournaments</div>
+            </div>
+        </a>
+
+        <!-- 12. Masterclasses & Courses -->
+        <a href="{{ url_for('user.courses_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'courses' %}bg-purple-600/90 text-white font-bold border border-purple-400/40 shadow-lg shadow-purple-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-chalkboard-user text-sm w-5 text-center text-purple-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_courses">{{ t('stage_courses') }}</div>
+                <div class="text-[10px] text-purple-400/80 font-sans">Pro Masterclasses</div>
+            </div>
+        </a>
+
+        <!-- 13. Upload Cube / Vision Studio -->
+        <a href="{{ url_for('user.scan_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'scan' %}bg-blue-600/90 text-white font-bold border border-blue-400/40 shadow-lg shadow-blue-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-camera text-sm w-5 text-center text-blue-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_scan">{{ t('stage_scan') }}</div>
+                <div class="text-[10px] text-blue-400/80 font-sans">OpenCV &amp; 2D Net</div>
+            </div>
+        </a>
+
+        <!-- 14. Trophies & Rewards -->
+        <a href="{{ url_for('user.trophies_page') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'trophies' %}bg-yellow-600/90 text-white font-bold border border-yellow-400/40 shadow-lg shadow-yellow-600/20{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-award text-sm w-5 text-center text-yellow-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_trophies">{{ t('stage_trophies') }}</div>
+                <div class="text-[10px] text-yellow-400/80 font-sans">Cabinet &amp; Coupons</div>
+            </div>
+        </a>
+
+        <!-- 15. Profile Settings -->
+        <a href="{{ url_for('profile.index') }}" class="flex-shrink-0 min-w-[160px] lg:min-w-0 w-auto lg:w-full px-3 py-2.5 rounded-2xl flex items-center gap-3 transition-all text-left {% if active_page == 'profile' %}bg-slate-700 text-white font-bold border border-slate-500/40{% else %}text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent{% endif %}">
+            <i class="fa-solid fa-user-gear text-sm w-5 text-center text-slate-400"></i>
+            <div class="flex-grow">
+                <div class="font-bold text-slate-200" data-i18n="stage_profile">{{ t('stage_profile') }}</div>
+                <div class="text-[10px] text-slate-500 font-sans" data-i18n="stage_profile_sub">{{ t('stage_profile_sub') }}</div>
+            </div>
+        </a>
+
+    </nav>
+</div>

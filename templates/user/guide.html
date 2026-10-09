@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Beginner CFOP Step-by-Step Solving Guide - CubePermutation AI{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    
+    <!-- Top Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-emerald-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-600/30 border border-emerald-500/40 p-0.5 shadow-2xl flex items-center justify-center text-emerald-400 text-2xl font-bold">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span data-i18n="guide_badge">{{ t('guide_badge') }}</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight" data-i18n="guide_title">{{ t('guide_title') }}</h1>
+                    <p class="text-xs text-slate-400 font-mono" data-i18n="guide_desc">{{ t('guide_desc') }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('visualizer.index') }}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-cube"></i> Open 3D Lab
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid: Sidebar + Working Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Right Workspace: CFOP Guide -->
+        <div class="lg:col-span-9 space-y-6">
+            <div class="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/90 relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 mb-6 gap-3">
+                    <div>
+                        <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">4-Phase CFOP Mastery</span>
+                        <h2 class="text-xl font-bold font-outfit text-white">Interactive Step-by-Step Solving Manual</h2>
+                        <p class="text-xs text-slate-400 font-mono">Master white cross, intuitive F2L, yellow OLL cross, and final PLL perms</p>
+                    </div>
+                </div>
+
+                <!-- 4 Step Roadmaps -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    
+                    <!-- Phase 1: White Cross -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-emerald-500/30 space-y-3 font-mono text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white text-sm font-sans">Phase 1: White Cross</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-bold">Foundation</span>
+                        </div>
+                        <div class="text-emerald-300 font-bold text-sm bg-black/60 p-3 rounded-xl border border-slate-800">
+                            F R' D' R F2
+                        </div>
+                        <p class="text-slate-300 font-sans leading-relaxed">
+                            Form the white daisy petals around the yellow core, then rotate aligned outer edges 180° into the bottom white face.
+                        </p>
+                    </div>
+
+                    <!-- Phase 2: First 2 Layers (F2L) -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 font-mono text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white text-sm font-sans">Phase 2: First Two Layers (F2L)</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 font-bold">Speed Cubing</span>
+                        </div>
+                        <div class="text-indigo-300 font-bold text-sm bg-black/60 p-3 rounded-xl border border-slate-800">
+                            U R U' R'  /  U' L' U L
+                        </div>
+                        <p class="text-slate-300 font-sans leading-relaxed">
+                            Pair corner cubies with matching middle-layer edge cubies simultaneously to build vertical slots in single triggers.
+                        </p>
+                    </div>
+
+                    <!-- Phase 3: Orientation of Last Layer (OLL) -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 font-mono text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white text-sm font-sans">Phase 3: Yellow Orientation (OLL)</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 font-bold">Top Face</span>
+                        </div>
+                        <div class="text-amber-300 font-bold text-sm bg-black/60 p-3 rounded-xl border border-slate-800">
+                            F (R U R' U') F'  /  R U R' U R U2 R'
+                        </div>
+                        <p class="text-slate-300 font-sans leading-relaxed">
+                            Orient all 8 upper facelets so the entire top layer becomes solid yellow, regardless of side positions.
+                        </p>
+                    </div>
+
+                    <!-- Phase 4: Permutation of Last Layer (PLL) -->
+                    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 font-mono text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white text-sm font-sans">Phase 4: Final Permutation (PLL)</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 font-bold">Complete Solve</span>
+                        </div>
+                        <div class="text-purple-300 font-bold text-sm bg-black/60 p-3 rounded-xl border border-slate-800">
+                            R U R' U' R' F R2 U' R' U' R U R' F'
+                        </div>
+                        <p class="text-slate-300 font-sans leading-relaxed">
+                            Permute last layer corners and edges to match side colors, completing the full 3x3 Rubik's cube restoration!
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
