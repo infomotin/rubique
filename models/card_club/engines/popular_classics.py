@@ -555,6 +555,16 @@ class TeenPatti(BaseCardGame):
             self._say(s, winner, f"won showdown with best hand! Pot: {s['pot']}")
             return
 
+        # Betting round cap: force a showdown so a table can never stall
+        # in an endless call/raise loop (auto-play and idle tables).
+        s["actions"] = s.get("actions", 0) + 1
+        if s["actions"] >= len(s["players"]) * 15:
+            winner = max(active, key=lambda p: self.eval_3card(s["hands"][str(p)]))
+            s["over"] = True
+            s["finish"] = [winner] + [p for p in active if p != winner] + list(s["folded"])
+            self._say(s, winner, f"round limit reached - showdown won with best hand! Pot: {s['pot']}")
+            return
+
         # Advance turn to next active player
         n = len(s["players"])
         nxt = (seat + 1) % n

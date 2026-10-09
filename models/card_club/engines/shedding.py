@@ -224,11 +224,14 @@ class Cheat(BaseCardGame):
                 loser = seat
             s["pile"] = []
             s["declared"] = None
+            for p in range(len(s["players"])):
+                if p != loser and not s["hands"][str(p)]:
+                    self._finish(s, p)
             if not s["hands"][str(loser)] and s["empty_pending"] == loser:
                 self._finish(s, loser)
             s["empty_pending"] = None
             s["turn"] = self._next(s, loser)
-            if len(s["finish"]) == len(s["players"]) - 1:
+            if len(s["finish"]) >= len(s["players"]) - 1:
                 self._close(s)
             return
         if act == "declare":

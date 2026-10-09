@@ -326,7 +326,11 @@ class Spoons(BaseCardGame):
                 acts.append({"action": "react"})
             return acts
         if seat == s["turn"]:
-            acts.append({"action": "draw_pass"} if s["stock"] else {"action": "stalemate"})
+            if s["stock"]:
+                for c in s["hands"][str(seat)]:
+                    acts.append({"action": "draw_pass", "card": c})
+            else:
+                acts.append({"action": "stalemate"})
         return acts
 
     def apply(self, seat, action):
@@ -373,7 +377,7 @@ class Spoons(BaseCardGame):
                 return
             s["hands"][str(seat)].append(s["stock"].pop())
             hand = s["hands"][str(seat)]
-            card = action.get("card")
+            card = action.get("card") or (hand[0] if hand else None)
             if card not in hand:
                 raise IllegalMove("Pass one card you hold")
             hand.remove(card)

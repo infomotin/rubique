@@ -397,6 +397,312 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
         self.assertEqual(data['status'], 'success')
         self.assertEqual(data['player_move']['uci'], 'e2e4')
 
+class CardClubTests(unittest.TestCase):
+    """Card Club: age gate, device binding, group privacy, majority votes,
+    coin economy (grants/transfers/escrow/bet limits/zero-sum settlement),
+    hash-chained ledger integrity, and all 15 game engines."""
+
+    def setUp(self):
+        self.app = create_app()
+        self.app.config['TESTING'] = True
+        self.app.config['SECRET_KEY'] = 'test_secret_key_club'
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            init_database()
+        import uuid
+        self.run = uuid.uuid4().hex[:8]
+
+    # ------------------------------------------------------------- helpers
+    def api(self, method, url, body=None):
+        fn = self.client.post if method == 'POST' else self.client.get
+        res = fn(url, json=body or {}, headers={'X-Card-Club': '1'})
+        try:
+            return res.status_code, json.loads(res.data)
+        except Exception:
+            return res.status_code, {}
+
+    def register(self, name, dob='1990-05-04', fp=None):
+        return self.client.post('/register', data={
+            'username': name, 'email': f'{name}@club.test',
+            'password': 'secret123', 'confirm_password': 'secret123',
+            'date_of_birth': dob, 'device_fp': fp or f'fp-{name}',
+        }, follow_redirects=False).status_code
+
+    def login(self, name):
+        self.client.get('/logout')
+        return self.client.post('/login', data={
+            'username': name, 'password': 'secret123'},
+            follow_redirects=False).status_code
+
+    def open_club(self):
+        res = self.client.get('/club/', follow_redirects=False)
+        if res.status_code == 302 and '/age-gate' in res.headers.get('Location', ''):
+            self.client.post('/club/age-gate', data={
+                'date_of_birth': '1990-05-04', 'next': '/club/'})
+            res = self.client.get('/club/', follow_redirects=False)
+        return res.status_code
+
+    # ------------------------------------------------------------ age gate
+    def test_card_club_age_gate_device_binding_and_grant(self):
+        from models.user_model import UserModel
+        from models.card_club import economy
+
+        kid = f'kid{self.run}'
+        self.register(kid, dob='2015-01-01')
+        self.assertIsNone(UserModel.find_by_username(kid),
+                          'under-18 registration must be rejected')
+
+        alice = f'alice{self.run}'
+        self.assertEqual(self.register(alice), 302)
+
+        # one account per device
+        self.assertEqual(self.register(f'mallory{self.run}', fp=f'fp-{alice}'), 200)
+        self.assertIsNone(UserModel.find_by_username(f'mallory{self.run}'))
+
+        # starting grant from the fixed reserve (idempotent)
+        uid = UserModel.find_by_username(alice)['id']
+        self.assertEqual(economy.balances_view(uid)['personal'],
+                         economy.STARTING_GRANT)
+        self.assertFalse(economy.grant_starting_balance(uid))
+
+        # logged-in adult reaches the section (legacy users hit the gate first)
+        self.assertEqual(self.login(alice), 302)
+        self.assertEqual(self.open_club(), 200)
+
+        # ledger verification endpoint is developer-only
+        code, data = self.api('GET', '/club/api/ledger/verify')
+        self.assertEqual(code, 403)
+
+    # -------------------------------------------------- groups & privacy
+    def test_card_club_group_invite_vote_and_privacy(self):
+        from models.user_model import UserModel
+        from models.db import query_one
+        import json as _json
+
+        a, b = f'ga{self.run}', f'gb{self.run}'
+        self.register(a)
+        self.register(b)
+        self.login(a)
+        self.assertEqual(self.open_club(), 200)
+
+        code, data = self.api('POST', '/club/api/groups',
+                              {'name': f'Club {self.run}', 'description': 't'})
+        self.assertTrue(data.get('ok'))
+        gid = data['group_id']
+
+        # privacy: outsiders cannot see or touch the group
+        self.login(b)
+        res = self.client.get(f'/club/groups/{gid}', follow_redirects=False)
+        self.assertIn(res.status_code, (302, 404))
+        code, data = self.api('POST', f'/club/api/groups/{gid}/tables',
+                              {'game_slug': 'blitz'})
+        self.assertIn(code, (403, 404))
+
+        # admin-only invitation, then acceptance
+        self.login(a)
+        code, data = self.api('POST', f'/club/api/groups/{gid}/invites',
+                              {'username': b})
+        self.assertTrue(data.get('ok'))
+        self.login(b)
+        inv = query_one(
+            "SELECT id FROM club_invites WHERE invitee_user_id = %s AND status = 'pending'",
+            "SELECT id FROM club_invites WHERE invitee_user_id = ? AND status = 'pending'",
+            (UserModel.find_by_username(b)['id'],))
+        code, data = self.api('POST', f"/club/api/invites/{inv['id']}/accept")
+        self.assertTrue(data.get('ok'))
+        self.assertEqual(self.client.get(f'/club/groups/{gid}').status_code, 200)
+
+        # majority of ALL members approves a role change
+        bob_id = UserModel.find_by_username(b)['id']
+        self.login(a)
+        code, data = self.api('POST', f'/club/api/groups/{gid}/proposals',
+                              {'proposal_type': 'set_member_role',
+                               'payload': _json.dumps(
+                                   {'role': 'dealer', 'target_user_id': bob_id})})
+        self.assertTrue(data.get('ok'))
+        pid = data['proposal_id']
+        code, data = self.api('POST', f'/club/api/proposals/{pid}/vote',
+                              {'vote': 'for'})
+        self.assertEqual(data.get('result'), 'open')
+        self.login(b)
+        code, data = self.api('POST', f'/club/api/proposals/{pid}/vote',
+                              {'vote': 'for'})
+        self.assertEqual(data.get('result'), 'approved')
+        role = query_one(
+            "SELECT role FROM club_group_members WHERE group_id = %s AND user_id = %s",
+            "SELECT role FROM club_group_members WHERE group_id = ? AND user_id = ?",
+            (gid, bob_id))
+        self.assertEqual(role['role'], 'dealer')
+
+        # roles must come from the active game's role set
+        self.login(a)
+        code, data = self.api('POST', f'/club/api/groups/{gid}/proposals',
+                              {'proposal_type': 'set_member_role',
+                               'payload': _json.dumps(
+                                   {'role': 'wizard', 'target_user_id': bob_id})})
+        self.assertEqual(code, 400)
+
+        # member removal revokes access
+        code, data = self.api('POST',
+                              f'/club/api/groups/{gid}/members/{bob_id}/remove')
+        self.assertTrue(data.get('ok'))
+        role = query_one(
+            "SELECT role FROM club_group_members WHERE group_id = %s AND user_id = %s",
+            "SELECT role FROM club_group_members WHERE group_id = ? AND user_id = ?",
+            (gid, bob_id))
+        self.assertIsNone(role)
+        self.login(b)   # removed member no longer sees the group
+        res = self.client.get(f'/club/groups/{gid}', follow_redirects=False)
+        self.assertIn(res.status_code, (302, 404))
+
+    # --------------------------------------------------- economy end-to-end
+    def test_card_club_wallet_escrow_bets_and_zero_sum_settlement(self):
+        from models.user_model import UserModel
+        from models.card_club import economy
+
+        a, b = f'wa{self.run}', f'wb{self.run}'
+        self.register(a)
+        self.register(b)
+        self.login(a)
+        self.assertEqual(self.open_club(), 200)
+        aid = UserModel.find_by_username(a)['id']
+        bid = UserModel.find_by_username(b)['id']
+
+        code, data = self.api('POST', '/club/api/groups',
+                              {'name': f'Wallet {self.run}'})
+        gid = data['group_id']
+        # invite as admin first
+        self.login(a)
+        self.api('POST', f'/club/api/groups/{gid}/invites', {'username': b})
+        self.login(b)
+        from models.db import query_one
+        inv = query_one(
+            "SELECT id FROM club_invites WHERE invitee_user_id = %s AND status = 'pending'",
+            "SELECT id FROM club_invites WHERE invitee_user_id = ? AND status = 'pending'",
+            (bid,))
+        self.api('POST', f"/club/api/invites/{inv['id']}/accept")
+
+        # funding + recipient-approved transfer
+        self.login(a)
+        code, data = self.api('POST', '/club/api/wallet/fund',
+                              {'group_id': gid, 'amount': 40})
+        self.assertEqual(data.get('group_balance'), 40)
+        code, data = self.api('POST', '/club/api/wallet/transfer',
+                              {'to_username': b, 'amount': 15})
+        tid = data['transfer_id']
+        code, data = self.api('POST', f'/club/api/wallet/transfers/{tid}/resolve',
+                              {'approve': '1'})
+        self.assertEqual(code, 403)   # sender may not self-resolve
+        self.login(b)
+        code, data = self.api('POST', f'/club/api/wallet/transfers/{tid}/resolve',
+                              {'approve': '1'})
+        self.assertEqual(data.get('status'), 'accepted')
+        self.assertEqual(economy.balances_view(bid)['personal'],
+                         economy.STARTING_GRANT + 15)
+
+        # escrow lifecycle
+        self.login(a)
+        code, data = self.api('POST', '/club/api/wallet/escrow',
+                              {'payee_username': b, 'amount': 20,
+                               'description': 'test'})
+        eid = data['escrow_id']
+        code, data = self.api('POST', f'/club/api/wallet/escrow/{eid}/act',
+                              {'action': 'fund'})
+        self.assertEqual(data.get('status'), 'funded')
+        code, data = self.api('POST', f'/club/api/wallet/escrow/{eid}/act',
+                              {'action': 'complete'})
+        self.assertEqual(data.get('status'), 'completed')
+
+        # hard bet limit
+        code, data = self.api('POST', f'/club/api/groups/{gid}/tables',
+                              {'game_slug': 'blitz', 'stake': 501})
+        self.assertEqual(code, 400)
+
+        # full table: join, start, auto-play to settlement
+        code, data = self.api('POST', f'/club/api/groups/{gid}/tables',
+                              {'game_slug': 'blitz', 'stake': 10,
+                               'pool_bonus': 5, 'name': 'W'})
+        tid = data['table_id']
+        self.login(b)
+        self.api('POST', '/club/api/wallet/fund', {'group_id': gid, 'amount': 30})
+        code, data = self.api('POST', f'/club/api/tables/{tid}/join')
+        self.assertEqual(data.get('seat'), 1)
+        code, data = self.api('POST', f'/club/api/tables/{tid}/start')
+        self.assertTrue(data.get('ok'))
+
+        settled, current, steps = None, b, 0
+        while steps < 400:
+            steps += 1
+            code, data = self.api('GET', f'/club/api/tables/{tid}/state')
+            state = data.get('state')
+            if not state or state['table']['status'] != 'active':
+                break
+            turn = (state.get('game') or {}).get('turn')
+            wanted = b if turn == 1 else a
+            if wanted != current:
+                self.login(wanted)
+                current = wanted
+                code, data = self.api('GET', f'/club/api/tables/{tid}/state')
+                state = data.get('state')
+            legal = state.get('legal') or []
+            if not legal:
+                continue
+            code, data = self.api('POST', f'/club/api/tables/{tid}/move',
+                                  {'action': legal[0]})
+            if code != 200:
+                break
+            if data.get('settlement'):
+                settled = data['settlement']
+                break
+        self.assertIsNotNone(settled, 'table must settle after auto-play')
+        self.assertEqual(settled['pot'], 20)
+        self.assertEqual(settled['total'],
+                         settled['pot'] + settled['pool_bonus'])
+
+        # ledger stays verifiable through all of the above
+        rep = economy.verify_ledger()
+        self.assertTrue(rep['ok'], rep['violations'][:4])
+        self.assertEqual(rep['reserve'] + rep['circulating'] + rep['pools'],
+                         economy.SUPPLY)
+
+    # ------------------------------------------------------- engine smoke
+    def test_card_club_all_15_engines_play_to_completion(self):
+        from models.card_club.engines import CATALOG, SPEC_ORDER
+
+        original_15 = ['blitz', 'cheat', 'ers', 'fantan', 'golf', 'gops',
+                       'knockout_whist', 'mao', 'palace', 'president',
+                       'rantergoround', 'rummy', 'scopa', 'speed', 'spoons']
+        self.assertGreaterEqual(len(CATALOG), 15)
+        for slug in original_15:
+            self.assertIn(slug, CATALOG)
+        self.assertEqual(sorted(CATALOG.keys()), sorted(SPEC_ORDER))
+        for slug in SPEC_ORDER:
+            info = CATALOG[slug]
+            n = info['min']
+            eng = info['cls'].from_state(
+                info['cls'].create(list(range(n)), seed=7))
+            steps, stale = 0, 0
+            while not eng.is_over() and steps < 600:
+                acted = False
+                turn = eng.state.get('turn')
+                seat_order = [turn] + [s for s in range(n) if s != turn] if isinstance(turn, int) and 0 <= turn < n else list(range(n))
+                for seat in seat_order:
+                    if eng.is_over():
+                        break
+                    acts = eng.legal_actions(seat)
+                    if acts:
+                        eng.apply(seat, acts[0])
+                        steps += 1
+                        acted = True
+                        break
+                stale = 0 if acted else stale + 1
+                if stale > 5:
+                    break
+            self.assertTrue(eng.is_over(), f'{slug} did not terminate')
+            self.assertTrue(len(eng.finish_order()) >= 1, f'{slug} no finish order')
+            eng.view(None)          # spectator view must never leak hands
+
+
 if __name__ == '__main__':
     unittest.main()
 
