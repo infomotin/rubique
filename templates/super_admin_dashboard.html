@@ -144,7 +144,7 @@
                                     {{ u.solve_count }}
                                 </span>
                             </td>
-                            <td class="py-3.5 px-3 text-slate-500 whitespace-nowrap">{{ u.created_at[:10] if u.created_at else '' }}</td>
+                            <td class="py-3.5 px-3 text-slate-500 whitespace-nowrap">{{ (u.created_at|string)[:10] if u.created_at else '' }}</td>
                             <td class="py-3.5 px-3 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <!-- Role Selector Form -->

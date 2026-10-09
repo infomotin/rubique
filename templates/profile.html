@@ -25,7 +25,7 @@
                     <h1 class="text-2xl font-bold font-outfit text-white">{{ user.username }}</h1>
                     <p class="text-xs font-mono text-slate-400 mt-0.5">{{ user.email or 'No email provided' }}</p>
                     <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 text-[11px] font-mono">
-                        Member since {{ user.created_at[:10] if user.created_at else '2026' }}
+                        Member since {{ (user.created_at|string)[:10] if user.created_at else '2026' }}
                     </span>
                 </div>
             </div>
@@ -138,7 +138,7 @@
                         {% for row in history %}
                             <tr class="hover:bg-slate-900/40 transition-colors">
                                 <td class="py-3 px-3 text-slate-500">{{ loop.index }}</td>
-                                <td class="py-3 px-3 text-slate-400 whitespace-nowrap">{{ row.created_at[:16] if row.created_at else '' }}</td>
+                                <td class="py-3 px-3 text-slate-400 whitespace-nowrap">{{ (row.created_at|string)[:16] if row.created_at else '' }}</td>
                                 <td class="py-3 px-3 text-indigo-300 font-semibold max-w-xs truncate" title="{{ row.scramble }}">
                                     {{ row.scramble | safe }}
                                 </td>

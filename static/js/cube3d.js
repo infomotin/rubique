@@ -47,10 +47,48 @@ class Interactive3DCube {
             ...Array(9).fill('B')
         ];
 
+        this.isSupported = false;
         this.init();
     }
 
+    static isWebGLAvailable() {
+        try {
+            const canvas = document.createElement('canvas');
+            return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        } catch (e) {
+            return false;
+        }
+    }
+
+    showFallback(reason = '') {
+        this.isSupported = false;
+        if (!this.container) return;
+        this.container.innerHTML = `
+            <div class="w-full h-full min-h-[220px] flex flex-col items-center justify-center p-6 text-center select-none bg-slate-950/70 rounded-2xl border border-slate-800/80 backdrop-blur-md">
+                <div class="relative mb-3 flex items-center justify-center">
+                    <svg viewBox="-50 -50 100 100" class="w-20 h-20 animate-pulse">
+                        <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="#0f172a" stroke="#818cf8" stroke-width="2"/>
+                        <line x1="0" y1="0" x2="0" y2="30" stroke="#38bdf8" stroke-width="1.5"/>
+                        <line x1="0" y1="0" x2="26" y2="-15" stroke="#38bdf8" stroke-width="1.5"/>
+                        <line x1="0" y1="0" x2="-26" y2="-15" stroke="#38bdf8" stroke-width="1.5"/>
+                        <circle cx="0" cy="0" r="3" fill="#818cf8"/>
+                    </svg>
+                </div>
+                <h4 class="text-xs font-bold font-outfit text-white tracking-wide uppercase">Rubik's Cube 3D Simulation</h4>
+                <p class="text-[10px] font-mono text-slate-400 mt-1 max-w-[220px] leading-relaxed">
+                    WebGL hardware acceleration unavailable in current browser mode. 2D Interactive Matrix & Solver Engine active.
+                </p>
+            </div>
+        `;
+    }
+
     init() {
+        if (!Interactive3DCube.isWebGLAvailable()) {
+            console.warn('[Interactive3DCube] WebGL is not supported or disabled in this browser.');
+            this.showFallback();
+            return;
+        }
+
         const width = this.container.clientWidth || 320;
         const height = this.container.clientHeight || 320;
 
@@ -62,26 +100,37 @@ class Interactive3DCube {
         this.camera.position.set(4.5, 4.2, 5.5);
 
         // 3. WebGL Renderer with High-Gloss Antialiasing & Shadow Support
-        this.renderer = new THREE.WebGLRenderer({
-            alpha: true,
-            antialias: true,
-            powerPreference: 'high-performance'
-        });
-        this.renderer.setSize(width, height);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.container.appendChild(this.renderer.domElement);
+        try {
+            this.renderer = new THREE.WebGLRenderer({
+                alpha: true,
+                antialias: true,
+                powerPreference: 'default'
+            });
+            this.renderer.setSize(width, height);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.container.appendChild(this.renderer.domElement);
+            this.isSupported = true;
+        } catch (err) {
+            console.warn('[Interactive3DCube] WebGL context creation failed:', err);
+            this.showFallback();
+            return;
+        }
 
         // 4. Orbit Controls (Mouse Drag Interactive 3D Rotation)
         if (typeof THREE.OrbitControls !== 'undefined') {
-            this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-            this.controls.enableDamping = true;
-            this.controls.dampingFactor = 0.05;
-            this.controls.rotateSpeed = 0.8;
-            this.controls.enableZoom = false; // Keep UI stable
-            this.controls.autoRotate = this.options.autoRotate;
-            this.controls.autoRotateSpeed = 1.2;
+            try {
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.05;
+                this.controls.rotateSpeed = 0.8;
+                this.controls.enableZoom = false; // Keep UI stable
+                this.controls.autoRotate = this.options.autoRotate;
+                this.controls.autoRotateSpeed = 1.2;
+            } catch (e) {
+                console.warn('[Interactive3DCube] OrbitControls failed to attach:', e);
+            }
         }
 
         // 5. Cinematic Glossy Lighting & Specular Highlights
@@ -279,7 +328,7 @@ class Interactive3DCube {
     }
 
     onResize() {
-        if (!this.container || !this.renderer || !this.camera) return;
+        if (!this.isSupported || !this.container || !this.renderer || !this.camera) return;
         const width = this.container.clientWidth || 360;
         const height = this.container.clientHeight || 280;
         if (width <= 0 || height <= 0) return;
@@ -289,21 +338,24 @@ class Interactive3DCube {
     }
 
     animate() {
+        if (!this.isSupported || !this.renderer || !this.scene || !this.camera) return;
         requestAnimationFrame(() => this.animate());
 
         if (this.controls) {
             this.controls.update();
         }
 
-        if (this.renderer && this.scene && this.camera) {
-            this.renderer.render(this.scene, this.camera);
-        }
+        this.renderer.render(this.scene, this.camera);
     }
 
     /**
      * Queued Layer Turn Animation for robust, non-blocking 3D moves
      */
     animateLayerTurn(move, onComplete) {
+        if (!this.isSupported || !this.cubeGroup) {
+            if (onComplete) onComplete();
+            return;
+        }
         if (!this.turnQueue) this.turnQueue = [];
         this.turnQueue.push({ move, onComplete });
         if (!this.isAnimatingTurn) {
