@@ -113,18 +113,23 @@ FAMOUS_GAMES = {
 
 class ChessModel:
     @staticmethod
-    def create_game(user_id, title="GoChess Smart Session", game_mode="ai", ai_level=2, board_theme="obsidian"):
+    def create_game(user_id, title="GoChess Smart Session", game_mode="ai", ai_level=2, board_theme="obsidian", match_type=None, white_user_id=None, black_user_id=None, white_group_id=None, black_group_id=None):
+        if not match_type:
+            match_type = game_mode
+        if not white_user_id:
+            white_user_id = user_id
+
         sql_mysql = """
-            INSERT INTO chess_games (user_id, title, game_mode, ai_level, board_theme, fen, pgn, moves_count, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO chess_games (user_id, white_user_id, black_user_id, white_group_id, black_group_id, title, game_mode, match_type, ai_level, board_theme, fen, pgn, moves_count, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'active')
         """
         sql_sqlite = """
-            INSERT INTO chess_games (user_id, title, game_mode, ai_level, board_theme, fen, pgn, moves_count, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO chess_games (user_id, white_user_id, black_user_id, white_group_id, black_group_id, title, game_mode, match_type, ai_level, board_theme, fen, pgn, moves_count, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
         """
         initial_fen = chess.STARTING_FEN
         initial_pgn = ""
-        params = (user_id, title, game_mode, ai_level, board_theme, initial_fen, initial_pgn, 0, 'active')
+        params = (user_id, white_user_id, black_user_id, white_group_id, black_group_id, title, game_mode, match_type, ai_level, board_theme, initial_fen, initial_pgn, 0)
         return execute_insert(sql_mysql, sql_sqlite, params)
 
     @staticmethod
@@ -157,6 +162,109 @@ class ChessModel:
         """
         params = (fen, pgn, moves_count, status, winner, game_id)
         return execute_update(sql_mysql, sql_sqlite, params)
+
+    @staticmethod
+    def pause_game(game_id, user_id=None, fen=None, moves_count=None):
+        """Stop / Pause play stage: saves current position and marks as paused"""
+        set_clauses_mysql = ["status = 'paused'"]
+        set_clauses_sqlite = ["status = 'paused'"]
+        params = []
+        if fen:
+            set_clauses_mysql.append("fen = %s")
+            set_clauses_sqlite.append("fen = ?")
+            params.append(fen)
+        if moves_count is not None:
+            set_clauses_mysql.append("moves_count = %s")
+            set_clauses_sqlite.append("moves_count = ?")
+            params.append(moves_count)
+
+        where_mysql = "id = %s" if not user_id else "id = %s AND (user_id = %s OR white_user_id = %s OR black_user_id = %s)"
+        where_sqlite = "id = ?" if not user_id else "id = ? AND (user_id = ? OR white_user_id = ? OR black_user_id = ?)"
+
+        set_str_mysql = ", ".join(set_clauses_mysql)
+        set_str_sqlite = ", ".join(set_clauses_sqlite)
+
+        sql_mysql = f"UPDATE chess_games SET {set_str_mysql} WHERE {where_mysql}"
+        sql_sqlite = f"UPDATE chess_games SET {set_str_sqlite} WHERE {where_sqlite}"
+
+        all_params = list(params)
+        all_params.append(game_id)
+        if user_id:
+            all_params.extend([user_id, user_id, user_id])
+
+        return execute_update(sql_mysql, sql_sqlite, tuple(all_params))
+
+    @staticmethod
+    def resume_game(game_id, user_id=None):
+        """Resume saved play stage: updates status to active and fetches full state"""
+        where_clause = "id = %s" if not user_id else "id = %s AND (user_id = %s OR white_user_id = %s OR black_user_id = %s)"
+        where_sqlite = "id = ?" if not user_id else "id = ? AND (user_id = ? OR white_user_id = ? OR black_user_id = ?)"
+        params = (game_id,) if not user_id else (game_id, user_id, user_id, user_id)
+        sql_mysql = f"UPDATE chess_games SET status = 'active' WHERE {where_clause}"
+        sql_sqlite = f"UPDATE chess_games SET status = 'active' WHERE {where_sqlite}"
+        execute_update(sql_mysql, sql_sqlite, params)
+        return ChessModel.get_game(game_id)
+
+    @staticmethod
+    def destroy_game(game_id, user_id=None):
+        """Destroy / Delete saved play stage permanently with related moves cleaned"""
+        where_clause = "id = %s" if not user_id else "id = %s AND (user_id = %s OR white_user_id = %s)"
+        where_sqlite = "id = ?" if not user_id else "id = ? AND (user_id = ? OR white_user_id = ?)"
+        params = (game_id,) if not user_id else (game_id, user_id, user_id)
+        
+        # Clean dependent records safely
+        try:
+            execute_update("DELETE FROM chess_team_moves WHERE game_id = %s", "DELETE FROM chess_team_moves WHERE game_id = ?", (game_id,))
+            execute_update("DELETE FROM chess_clan_challenges WHERE game_id = %s", "DELETE FROM chess_clan_challenges WHERE game_id = ?", (game_id,))
+        except Exception:
+            pass
+
+        sql_mysql = f"DELETE FROM chess_games WHERE {where_clause}"
+        sql_sqlite = f"DELETE FROM chess_games WHERE {where_sqlite}"
+        return execute_update(sql_mysql, sql_sqlite, params)
+
+    @staticmethod
+    def save_stage_snapshot(game_id, user_id, title=None):
+        """Update stage title or label for easy identification"""
+        if title:
+            sql_mysql = "UPDATE chess_games SET title = %s WHERE id = %s AND (user_id = %s OR white_user_id = %s)"
+            sql_sqlite = "UPDATE chess_games SET title = ? WHERE id = ? AND (user_id = ? OR white_user_id = ?)"
+            execute_update(sql_mysql, sql_sqlite, (title, game_id, user_id, user_id))
+        return ChessModel.get_game(game_id)
+
+    @staticmethod
+    def get_user_saved_stages(user_id, match_type=None, limit=50):
+        """Retrieve all play stages stored for player across each game style"""
+        where_extra_mysql = ""
+        where_extra_sqlite = ""
+        params = [user_id, user_id, user_id]
+        if match_type and match_type != 'all':
+            where_extra_mysql = " AND cg.match_type = %s"
+            where_extra_sqlite = " AND cg.match_type = ?"
+            params.append(match_type)
+        params.append(limit)
+
+        sql_mysql = f"""
+            SELECT cg.*, 
+                   wg.name as white_group_name, bg.name as black_group_name,
+                   (SELECT COUNT(*) FROM chess_team_moves tm WHERE tm.game_id = cg.id) as team_moves_count
+            FROM chess_games cg
+            LEFT JOIN chat_groups wg ON cg.white_group_id = wg.id
+            LEFT JOIN chat_groups bg ON cg.black_group_id = bg.id
+            WHERE (cg.user_id = %s OR cg.white_user_id = %s OR cg.black_user_id = %s){where_extra_mysql}
+            ORDER BY cg.created_at DESC LIMIT %s
+        """
+        sql_sqlite = f"""
+            SELECT cg.*, 
+                   wg.name as white_group_name, bg.name as black_group_name,
+                   (SELECT COUNT(*) FROM chess_team_moves tm WHERE tm.game_id = cg.id) as team_moves_count
+            FROM chess_games cg
+            LEFT JOIN chat_groups wg ON cg.white_group_id = wg.id
+            LEFT JOIN chat_groups bg ON cg.black_group_id = bg.id
+            WHERE (cg.user_id = ? OR cg.white_user_id = ? OR cg.black_user_id = ?){where_extra_sqlite}
+            ORDER BY cg.created_at DESC LIMIT ?
+        """
+        return query_all(sql_mysql, sql_sqlite, tuple(params))
 
     @staticmethod
     def evaluate_board(board):

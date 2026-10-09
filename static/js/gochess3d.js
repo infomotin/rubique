@@ -141,14 +141,18 @@ class GoChess3D {
         const width = this.container.clientWidth || 800;
         const height = this.container.clientHeight || 600;
 
-        this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-        this.camera.position.set(0, 18, 18);
+        this.camera = new THREE.PerspectiveCamera(52, width / height, 0.1, 1000);
+        this.camera.position.set(0, 20.5, 19);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
         this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // Bright, correctly-gammaized output (r128 defaults to linear = too dark)
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.05;
 
         // Clear container
         this.container.innerHTML = '';
@@ -161,7 +165,7 @@ class GoChess3D {
         this.controls.maxPolarAngle = Math.PI / 2.05; // Don't flip under the table
         this.controls.minDistance = 8;
         this.controls.maxDistance = 35;
-        this.controls.target.set(0, 0.5, 0);
+        this.controls.target.set(0, 0.2, 1.1);
 
         // Lighting
         this.setupLighting();
@@ -179,25 +183,69 @@ class GoChess3D {
     }
 
     setupLighting() {
-        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-        this.scene.add(ambient);
+        // Universal High-Luminance Studio Ambient
+        this.ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+        this.scene.add(this.ambientLight);
 
-        const keyLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
-        keyLight.position.set(10, 20, 15);
-        keyLight.castShadow = true;
-        keyLight.shadow.mapSize.width = 2048;
-        keyLight.shadow.mapSize.height = 2048;
-        keyLight.shadow.bias = -0.001;
-        this.scene.add(keyLight);
+        // Sky / Ground Hemisphere Light for rich natural 3D depth
+        this.hemiLight = new THREE.HemisphereLight(0xffffff, 0x475569, 0.16);
+        this.scene.add(this.hemiLight);
 
-        const fillLight = new THREE.DirectionalLight(0x88bbff, 0.6);
-        fillLight.position.set(-15, 12, -10);
-        this.scene.add(fillLight);
+        // Direct Overhead Floodlight directly over the board
+        this.overheadLight = new THREE.DirectionalLight(0xffffff, 0.32);
+        this.overheadLight.position.set(0, 35, 0);
+        this.overheadLight.castShadow = true;
+        this.overheadLight.shadow.mapSize.width = 2048;
+        this.overheadLight.shadow.mapSize.height = 2048;
+        this.overheadLight.shadow.bias = -0.0005;
+        this.scene.add(this.overheadLight);
 
-        // Rim Light from bottom
-        const rimLight = new THREE.PointLight(0x6366f1, 0.8, 30);
-        rimLight.position.set(0, -2, 0);
-        this.scene.add(rimLight);
+        // Key Directional Studio Light
+        this.keyLight = new THREE.DirectionalLight(0xfffaed, 0.45);
+        this.keyLight.position.set(16, 26, 18);
+        this.keyLight.castShadow = true;
+        this.scene.add(this.keyLight);
+
+        // Cool Fill Light to illuminate shadow sides
+        this.fillLight = new THREE.DirectionalLight(0xcffafe, 0.18);
+        this.fillLight.position.set(-18, 20, -16);
+        this.scene.add(this.fillLight);
+
+        // 4 Corner Stadium Accent Lights for 360-degree piece silhouette illumination
+        this.cornerLights = [];
+        const corners = [
+            [-10, 8, -10],
+            [10, 8, -10],
+            [-10, 8, 10],
+            [10, 8, 10]
+        ];
+        corners.forEach(([x, y, z]) => {
+            const pLight = new THREE.PointLight(0xf8fafc, 0.14, 35);
+            pLight.position.set(x, y, z);
+            this.scene.add(pLight);
+            this.cornerLights.push(pLight);
+        });
+
+        // Soft Base Rim Light
+        this.rimLight = new THREE.PointLight(0x06b6d4, 0.5, 25);
+        this.rimLight.position.set(0, -1, 0);
+        this.scene.add(this.rimLight);
+    }
+
+    setLightingIntensity(mode = 'ultra') {
+        let mult = 1.0;
+        if (mode === 'ultra') mult = 1.0;
+        else if (mode === 'high') mult = 0.75;
+        else if (mode === 'cinematic') mult = 0.5;
+
+        if (this.ambientLight) this.ambientLight.intensity = 0.25 * mult;
+        if (this.hemiLight) this.hemiLight.intensity = 0.16 * mult;
+        if (this.overheadLight) this.overheadLight.intensity = 0.32 * mult;
+        if (this.keyLight) this.keyLight.intensity = 0.45 * mult;
+        if (this.fillLight) this.fillLight.intensity = 0.18 * mult;
+        if (this.cornerLights) {
+            this.cornerLights.forEach(cl => cl.intensity = 0.14 * mult);
+        }
     }
 
     // =========================================================================
@@ -218,10 +266,10 @@ class GoChess3D {
         if (this.options.theme === 'walnut') {
             baseMat = new THREE.MeshStandardMaterial({ color: 0x3d2314, roughness: 0.4, metalness: 0.1 });
         } else if (this.options.theme === 'cyber') {
-            baseMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.2, metalness: 0.8 });
+            baseMat = new THREE.MeshStandardMaterial({ color: 0x1b2438, roughness: 0.3, metalness: 0.5 });
         } else {
-            // Obsidian Acrylic
-            baseMat = new THREE.MeshStandardMaterial({ color: 0x0a0c10, roughness: 0.1, metalness: 0.9 });
+            // Obsidian Acrylic (brightened chassis edge)
+            baseMat = new THREE.MeshStandardMaterial({ color: 0x2a3348, roughness: 0.25, metalness: 0.55 });
         }
 
         const baseMesh = new THREE.Mesh(baseGeo, baseMat);
@@ -254,22 +302,24 @@ class GoChess3D {
 
                 if (this.options.theme === 'walnut') {
                     tileMat = new THREE.MeshStandardMaterial({
-                        color: isLight ? 0xf0d9b5 : 0xb58863,
-                        roughness: 0.5,
+                        color: isLight ? 0xfef3c7 : 0x78350f,
+                        roughness: 0.35,
                         metalness: 0.05
                     });
                 } else if (this.options.theme === 'cyber') {
                     tileMat = new THREE.MeshStandardMaterial({
-                        color: isLight ? 0x1e293b : 0x0f172a,
-                        roughness: 0.2,
-                        metalness: 0.7
+                        color: isLight ? 0x0284c7 : 0x0f172a,
+                        roughness: 0.25,
+                        metalness: 0.6,
+                        emissive: isLight ? 0x0369a1 : 0x000000,
+                        emissiveIntensity: isLight ? 0.2 : 0
                     });
                 } else {
-                    // Obsidian
+                    // Obsidian: High contrast porcelain white vs rich graphite slate
                     tileMat = new THREE.MeshStandardMaterial({
-                        color: isLight ? 0x222734 : 0x0d0f15,
-                        roughness: 0.2,
-                        metalness: 0.6
+                        color: isLight ? 0xaeb8cc : 0x2b3549,
+                        roughness: 0.35,
+                        metalness: isLight ? 0.05 : 0.3
                     });
                 }
 
@@ -281,7 +331,7 @@ class GoChess3D {
                 this.boardSquares[sqName] = tileMesh;
 
                 // GoChess RGB Smart LED Indicator on each square (Center circular glow diode)
-                const ledGeo = new THREE.RingGeometry(0.18, 0.35, 24);
+                const ledGeo = new THREE.RingGeometry(0.22, 0.42, 24);
                 ledGeo.rotateX(-Math.PI / 2);
                 const ledMat = new THREE.MeshBasicMaterial({
                     color: 0x000000,
@@ -295,45 +345,117 @@ class GoChess3D {
                 this.ledIndicators[sqName] = ledMesh;
             }
         }
+
+        // Add Visible Board Coordinates (A-H and 1-8) along the border
+        this.addBoardCoordinates(tileSize, boardWidth);
+    }
+
+    addBoardCoordinates(tileSize, boardWidth) {
+        const files = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+        const createLabelMesh = (text) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(0,0,0,0)';
+            ctx.fillRect(0, 0, 64, 64);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = 'bold 40px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 32, 32);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.85 });
+            const geo = new THREE.PlaneGeometry(0.7, 0.7);
+            geo.rotateX(-Math.PI / 2);
+            return new THREE.Mesh(geo, mat);
+        };
+
+        // Files along bottom and top borders
+        for (let f = 0; f < 8; f++) {
+            const x = (f - 3.5) * tileSize;
+            const bottomMesh = createLabelMesh(files[f]);
+            bottomMesh.position.set(x, 0.08, (3.5 * tileSize) + 0.95);
+            this.boardGroup.add(bottomMesh);
+
+            const topMesh = createLabelMesh(files[f]);
+            topMesh.position.set(x, 0.08, (-3.5 * tileSize) - 0.95);
+            topMesh.rotation.y = Math.PI;
+            this.boardGroup.add(topMesh);
+        }
+
+        // Ranks along left and right borders
+        for (let r = 0; r < 8; r++) {
+            const z = (3.5 - r) * tileSize;
+            const leftMesh = createLabelMesh(ranks[r]);
+            leftMesh.position.set((-3.5 * tileSize) - 0.95, 0.08, z);
+            leftMesh.rotation.y = Math.PI / 2;
+            this.boardGroup.add(leftMesh);
+
+            const rightMesh = createLabelMesh(ranks[r]);
+            rightMesh.position.set((3.5 * tileSize) + 0.95, 0.08, z);
+            rightMesh.rotation.y = -Math.PI / 2;
+            this.boardGroup.add(rightMesh);
+        }
     }
 
     // =========================================================================
-    // 3D PROCEDURAL CHESS PIECES (Statuesque Tournament Design)
+    // 3D PROCEDURAL CHESS PIECES (Statuesque Tournament Design & High Visibility)
     // =========================================================================
     createPieceMesh(pieceType, color) {
         const pieceGroup = new THREE.Group();
         const isWhite = (color === 'w' || color === 'white');
 
-        // Material Presets
+        // Material Presets - High Contrast & Specular Definition
         let mat;
         if (this.options.theme === 'cyber') {
             mat = new THREE.MeshStandardMaterial({
                 color: isWhite ? 0x38bdf8 : 0xf43f5e,
-                roughness: 0.2,
-                metalness: 0.8,
-                emissive: isWhite ? 0x075985 : 0x881337,
-                emissiveIntensity: 0.2
+                roughness: 0.15,
+                metalness: 0.7,
+                emissive: isWhite ? 0x0284c7 : 0xe11d48,
+                emissiveIntensity: 0.35
             });
         } else if (this.options.theme === 'walnut') {
             mat = new THREE.MeshStandardMaterial({
-                color: isWhite ? 0xfff8ee : 0x2e180d,
-                roughness: 0.35,
-                metalness: 0.05
+                color: isWhite ? 0xfffbeb : 0x3d1d0c,
+                roughness: 0.25,
+                metalness: 0.1,
+                emissive: isWhite ? 0x451a03 : 0x1a0a04,
+                emissiveIntensity: isWhite ? 0.05 : 0.05
             });
         } else {
-            // Obsidian Luxury Acrylic & Brushed Platinum
+            // Obsidian Luxury: Brilliant Pearl Alabaster vs Jet Metallic Onyx with subtle Rim Halo
             mat = new THREE.MeshStandardMaterial({
-                color: isWhite ? 0xf8fafc : 0x1e2029,
-                roughness: 0.15,
-                metalness: 0.85
+                color: isWhite ? 0xfaf7f0 : 0x1b1f27,
+                roughness: isWhite ? 0.32 : 0.45,
+                metalness: isWhite ? 0.12 : 0.18,
+                emissive: isWhite ? 0x0f172a : 0x38bdf8,
+                emissiveIntensity: isWhite ? 0.04 : 0.05
             });
         }
 
         // Shared Base Pedestal
-        const baseGeo = new THREE.CylinderGeometry(0.5, 0.6, 0.25, 24);
+        const baseGeo = new THREE.CylinderGeometry(0.52, 0.62, 0.25, 24);
         const baseMesh = new THREE.Mesh(baseGeo, mat);
         baseMesh.castShadow = true;
         pieceGroup.add(baseMesh);
+
+        // Regal Accent Ring around the base collar (Gold for White, Platinum for Black)
+        const ringGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.07, 24);
+        const ringMat = new THREE.MeshStandardMaterial({
+            color: isWhite ? 0xf59e0b : 0xe2e8f0,
+            metalness: 0.9,
+            roughness: 0.1,
+            emissive: isWhite ? 0x78350f : 0x334155,
+            emissiveIntensity: 0.1
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.position.y = 0.14;
+        pieceGroup.add(ringMesh);
 
         const typeLower = pieceType.toLowerCase();
 
@@ -687,13 +809,13 @@ class GoChess3D {
 
     setCameraView(view = 'white') {
         if (view === 'white') {
-            this.camera.position.set(0, 18, 18);
+            this.camera.position.set(0, 20.5, 19);
         } else if (view === 'black') {
-            this.camera.position.set(0, 18, -18);
+            this.camera.position.set(0, 20.5, -19);
         } else if (view === 'top') {
-            this.camera.position.set(0, 24, 0.1);
+            this.camera.position.set(0, 27, 0.1);
         }
-        this.controls.target.set(0, 0.5, 0);
+        this.controls.target.set(0, 0.2, 1.1);
         this.controls.update();
     }
 

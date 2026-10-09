@@ -322,6 +322,81 @@ class MultiRoleRBACApplicationTests(unittest.TestCase):
         self.assertIn(b'id="pattern-list"', res.data)
         self.assertIn(b'href="/dashboard/patterns"', res.data)
 
+    def test_chess_3d_board_and_puzzle_flow(self):
+        """3D Chess menu page + Super Admin hard problems + subscriber submissions"""
+        # 1. Subscriber opens the GoChess 3D board page from the sidebar menu
+        self.login('speedcuber', 'user123')
+        res = self.client.get('/chess/')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'id="gochess-canvas"', res.data)
+        self.assertIn(b'Grandmaster Problems', res.data)
+        self.assertIn(b'href="/chess/"', res.data)  # sidebar menu entry present
+
+        # 2. Super Admin authors a very hard problem (back-rank mate in 1)
+        self.client.get('/logout', follow_redirects=True)
+        self.login('admin', 'admin123')
+        res = self.client.post('/chess/problems/create', json={
+            'title': 'Unit Test Twin Mate',
+            'difficulty': 'Grandmaster (2400 ELO)',
+            'fen': '6k1/5ppp/8/8/8/8/5PPP/RR4K1 w - - 0 1',
+            'solution_moves': 'a1a8',
+            'hint': 'Either rook ends it on the back rank.',
+            'xp_reward': 250
+        })
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertEqual(data['status'], 'success')
+        problem_id = data['problem_id']
+
+        # Invalid FEN and illegal solution lines are rejected
+        res = self.client.post('/chess/problems/create', json={
+            'title': 'Bad FEN', 'fen': 'not-a-fen', 'solution_moves': 'e2e4'})
+        self.assertEqual(res.status_code, 400)
+        res = self.client.post('/chess/problems/create', json={
+            'title': 'Bad Line',
+            'fen': '6k1/5ppp/8/8/8/8/5PPP/RR4K1 w - - 0 1',
+            'solution_moves': 'a1h8'})
+        self.assertEqual(res.status_code, 400)
+
+        # 3. Anonymous users cannot author problems
+        self.client.get('/logout', follow_redirects=True)
+        res = self.client.post('/chess/problems/create', json={
+            'title': 'Guest', 'fen': '6k1/5ppp/8/8/8/8/5PPP/RR4K1 w - - 0 1',
+            'solution_moves': 'a1a8'})
+        self.assertIn(res.status_code, (302, 401, 403))
+
+        # 4. Subscriber solves it their own way: wrong move, then key move in SAN
+        self.login('speedcuber', 'user123')
+        res = self.client.post(f'/chess/problems/{problem_id}/submit', json={'moves': 'g1f1'})
+        data = json.loads(res.data)
+        self.assertEqual(data['status'], 'success')
+        self.assertFalse(data['is_solved'])
+        self.assertEqual(data['xp_earned'], 0)
+
+        res = self.client.post(f'/chess/problems/{problem_id}/submit', json={'moves': 'Ra8#'})
+        data = json.loads(res.data)
+        self.assertTrue(data['is_solved'])
+        self.assertEqual(data['xp_earned'], 250)
+
+        # Alternative legal mating move (b1b8) also accepted
+        res = self.client.post(f'/chess/problems/{problem_id}/submit', json={'moves': 'b1b8'})
+        data = json.loads(res.data)
+        self.assertTrue(data['is_solved'])
+
+        # 5. Problem appears in the public list for subscribers
+        res = self.client.get('/chess/problems')
+        data = json.loads(res.data)
+        titles = [p['title'] for p in data['problems']]
+        self.assertIn('Unit Test Twin Mate', titles)
+
+        # 6. Valid piece move endpoint works on the studio board (e2e4 legal)
+        res = self.client.post('/chess/move', json={
+            'fen': 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+            'from': 'e2', 'to': 'e4', 'game_mode': 'puzzle'})
+        data = json.loads(res.data)
+        self.assertEqual(data['status'], 'success')
+        self.assertEqual(data['player_move']['uci'], 'e2e4')
+
 if __name__ == '__main__':
     unittest.main()
 

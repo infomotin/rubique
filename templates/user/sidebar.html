@@ -2,7 +2,12 @@
 <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/85 backdrop-blur-xl sticky top-20 z-20 shadow-2xl font-mono text-xs">
     <div class="flex items-center justify-between px-3 py-1 mb-3 border-b border-slate-900 pb-2">
         <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold" data-i18n="working_stages">{{ t('working_stages') }}</span>
-        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+            <button id="sidebar-inner-close-btn" class="p-1 px-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-xs" title="Close Sidebar (Expand Content Space)">
+                <i class="fa-solid fa-angles-left"></i>
+            </button>
+        </div>
     </div>
     
     <nav class="flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-1.5 lg:gap-1 scrollbar-none" id="user-sidebar-nav">

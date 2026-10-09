@@ -36,6 +36,10 @@ def index():
 
     # Active Multiplayer Matches (1v1, Clan vs Clan, Clan vs Public)
     multiplayer_matches = ChessModel.get_multiplayer_matches(limit=20)
+
+    # User's Saved Play Stages across all styles (AI, 1v1, Clan vs Clan, Clan vs Public)
+    effective_user_id = user_id or 1
+    saved_stages = ChessModel.get_user_saved_stages(effective_user_id, limit=50)
     
     return render_template(
         'chess/board.html',
@@ -45,6 +49,7 @@ def index():
         famous_games=list(FAMOUS_GAMES.values()),
         problems=problems,
         multiplayer_matches=multiplayer_matches,
+        saved_stages=saved_stages,
         groups=groups
     )
 
@@ -266,9 +271,22 @@ def create_problem():
 
     # Validate FEN
     try:
-        chess.Board(fen)
+        _vboard = chess.Board(fen)
     except Exception:
         return jsonify({"status": "error", "message": "Invalid FEN board position"}), 400
+
+    # Validate the official solution line is legal from the FEN (prevents unsolvable problems)
+    sol_tokens = [m.strip() for m in solution_moves.replace(';', ',').split(',') if m.strip()]
+    if not sol_tokens:
+        return jsonify({"status": "error", "message": "FEN and Solution moves are required"}), 400
+    for tok in sol_tokens:
+        _mv = ChessModel._parse_move_token(_vboard, tok)
+        if _mv is None:
+            return jsonify({
+                "status": "error",
+                "message": f"Solution move '{tok}' is not legal from the FEN (use UCI like d3h7 or SAN like Bxh7+)"
+            }), 400
+        _vboard.push(_mv)
 
     problem_id = ChessModel.create_problem(
         author_id=user_id,
@@ -405,4 +423,61 @@ def make_multiplayer_move():
         "is_game_over": board.is_game_over(),
         "winner": winner
     })
+
+# =============================================================================
+# PLAY STAGE LIFECYCLE: STORE, PAUSE / STOP, RESUME, DESTROY, STYLE FILTERING
+# =============================================================================
+@chess_bp.route('/saved-stages')
+def get_saved_stages():
+    """Retrieve all play stages stored for the player across each style"""
+    user_id = session.get('user_id') or 1
+    style = request.args.get('style') or request.args.get('match_type')
+    stages = ChessModel.get_user_saved_stages(user_id, match_type=style, limit=50)
+    return jsonify({"status": "success", "stages": stages})
+
+@chess_bp.route('/game/<int:game_id>/pause', methods=['POST'])
+def pause_game_stage(game_id):
+    """Stop / Pause play stage: preserves exact board state and frozen clock"""
+    user_id = session.get('user_id') or 1
+    data = request.get_json() or {}
+    fen = data.get('fen')
+    moves_count = data.get('moves_count')
+    ChessModel.pause_game(game_id, user_id, fen=fen, moves_count=moves_count)
+    return jsonify({"status": "success", "message": "Play stage paused and safely stored!"})
+
+@chess_bp.route('/game/<int:game_id>/resume', methods=['POST'])
+def resume_game_stage(game_id):
+    """Resume stored play stage from exact position and move count"""
+    user_id = session.get('user_id') or 1
+    game = ChessModel.resume_game(game_id, user_id)
+    if not game:
+        return jsonify({"status": "error", "message": "Game stage not found"}), 404
+    board = chess.Board(game['fen'])
+    hints = ChessModel.get_coach_hints(board)
+    return jsonify({
+        "status": "success",
+        "game": game,
+        "fen": game['fen'],
+        "moves_count": game['moves_count'],
+        "hints": hints,
+        "message": f"Resumed stage: {game['title']}"
+    })
+
+@chess_bp.route('/game/<int:game_id>/destroy', methods=['POST', 'DELETE'])
+def destroy_game_stage(game_id):
+    """Permanently destroy / discard saved play stage"""
+    user_id = session.get('user_id') or 1
+    ChessModel.destroy_game(game_id, user_id)
+    return jsonify({"status": "success", "message": "Play stage permanently destroyed."})
+
+@chess_bp.route('/game/<int:game_id>/save-title', methods=['POST'])
+def save_stage_title(game_id):
+    """Update title / custom label for a stored play stage"""
+    user_id = session.get('user_id') or 1
+    data = request.get_json() or {}
+    title = data.get('title')
+    if not title:
+        return jsonify({"status": "error", "message": "Title required"}), 400
+    game = ChessModel.save_stage_snapshot(game_id, user_id, title=title)
+    return jsonify({"status": "success", "game": game, "message": "Stage title updated!"})
 
