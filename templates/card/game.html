@@ -58,8 +58,16 @@
             <p class="text-sm text-slate-400 font-mono mt-1">Match God's Number Rubik phases and Grandmaster tactical chess pieces in high-speed cognitive memory trials.</p>
         </div>
 
-        <!-- Top Action Buttons -->
+        <!-- Top Action Buttons & Mode Switcher -->
         <div class="flex flex-wrap items-center gap-2.5 font-mono text-xs">
+            <a href="{{ url_for('card.classic_arena') }}" class="px-3.5 py-2 rounded-xl bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 font-bold transition-all shadow-md flex items-center gap-1.5">
+                <i class="fa-solid fa-diamond text-emerald-400"></i>
+                <span>Classic Playing Cards (29, Bridge...)</span>
+            </a>
+            <a href="{{ url_for('card_club.section') }}" class="px-3.5 py-2 rounded-xl bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-300 font-bold transition-all shadow-md flex items-center gap-1.5">
+                <i class="fa-solid fa-users-rectangle text-indigo-400"></i>
+                <span>Private Card Club (18+)</span>
+            </a>
             <button id="card-new-game-btn" class="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-lg shadow-cyan-600/30 flex items-center gap-2">
                 <i class="fa-solid fa-rotate"></i>
                 <span>New Match</span>

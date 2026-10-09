@@ -352,8 +352,9 @@
         })();
     </script>
     <!-- Global i18n Translation Dictionary & Engine -->
+    <script id="translations-data" type="application/json">{{ (translations_json or '{}') | safe }}</script>
     <script>
-        window.TRANSLATIONS = {{ translations_json | safe }};
+        window.TRANSLATIONS = JSON.parse(document.getElementById('translations-data').textContent || '{}');
     </script>
     <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>

@@ -267,6 +267,31 @@ def api_create_group():
         return _deny(e)
 
 
+@card_club_bp.route('/api/groups', methods=['GET'])
+@api_required
+def api_list_groups():
+    uid = _user_id()
+    rows = query_all(
+        """SELECT g.id, g.name, g.description, g.invite_code, g.default_role,
+                  m.role, m.joined_at,
+                  (SELECT COUNT(*) FROM club_group_members mm
+                    WHERE mm.group_id = g.id) AS member_count
+             FROM club_groups g
+             JOIN club_group_members m ON m.group_id = g.id
+            WHERE m.user_id = %s
+            ORDER BY m.joined_at DESC""",
+        """SELECT g.id, g.name, g.description, g.invite_code, g.default_role,
+                  m.role, m.joined_at,
+                  (SELECT COUNT(*) FROM club_group_members mm
+                    WHERE mm.group_id = g.id) AS member_count
+             FROM club_groups g
+             JOIN club_group_members m ON m.group_id = g.id
+            WHERE m.user_id = ?
+            ORDER BY m.joined_at DESC""",
+        (uid,))
+    return jsonify({"ok": True, "groups": rows or []})
+
+
 @card_club_bp.route('/api/groups/<int:gid>/invites', methods=['POST'])
 @api_required
 def api_invite(gid):
