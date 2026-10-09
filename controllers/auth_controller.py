@@ -121,7 +121,7 @@ def login():
         user = UserModel.find_by_username(username)
         if user and UserModel.verify_password(user['password_hash'], password):
             # Device binding check (bound accounts may not sign in elsewhere)
-            _strength, device_key = club_devices.compose_device_key(request)
+            device_key = club_devices.compose_device_key(request)
             device_ok, device_msg = club_devices.check_login(user, device_key)
             if not device_ok:
                 flash(device_msg, 'error')
