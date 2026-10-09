@@ -12,3 +12,4 @@ from .api_controller import api_bp
 from .custom_cube_controller import custom_cube_bp
 from .chess_controller import chess_bp
 from .card_controller import card_bp
+from .card_club_controller import card_club_bp

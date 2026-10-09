@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}{{ table.name or ('Table #' ~ table.id) }} - Card Club{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+    <!-- Table Header -->
+    <div class="glass-card p-5 rounded-3xl border border-rose-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-5">
+        <div class="absolute -top-20 -right-20 w-64 h-64 bg-rose-600/15 rounded-full blur-[90px] pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-rose-600/30 border border-rose-500/40 flex items-center justify-center text-rose-400 text-xl">
+                    <i class="fa-solid fa-diamond"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-lg font-extrabold font-outfit text-white">{{ table.name or ('Table #' ~ table.id) }}</h1>
+                        <span class="px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 text-[10px] font-mono font-bold">{{ info.name or table.game_slug }}</span>
+                        <span id="club-status-chip" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase
+                            {% if table.status == 'active' %}bg-emerald-950 border border-emerald-500/40 text-emerald-300
+                            {% elif table.status == 'waiting' %}bg-amber-950 border border-amber-500/40 text-amber-300
+                            {% else %}bg-slate-800 border border-slate-600 text-slate-400{% endif %}">{{ table.status }}</span>
+                        <span id="club-conn" class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-400 text-[10px] font-mono">connecting&hellip;</span>
+                    </div>
+                    <p class="text-xs text-slate-400 font-mono">
+                        stake <strong class="text-amber-300">{{ table.stake }}</strong> &bull;
+                        pool bonus <strong class="text-emerald-300">{{ table.pool_bonus }}</strong> &bull;
+                        group <a class="text-emerald-400 hover:underline" href="{{ url_for('card_club.group_page', gid=group_id) }}">{{ group.name }}</a>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 font-mono text-xs">
+                <div class="px-3 py-2 rounded-xl bg-slate-900/80 border border-amber-500/40 text-amber-300">
+                    Pot <strong id="club-pot">0</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <div class="lg:col-span-9 space-y-5">
+            <!-- Seats -->
+            <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <div id="club-seats" class="flex flex-wrap items-center gap-2 font-mono text-xs"></div>
+            </div>
+
+            <!-- Controls -->
+            <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <div id="club-controls" class="flex flex-wrap items-center gap-2"></div>
+            </div>
+
+            <!-- Settlement Banner -->
+            <div id="club-settlement" class="hidden glass-card p-4 rounded-3xl border border-emerald-500/40 bg-emerald-950/40 font-mono text-sm text-emerald-200"></div>
+
+            <!-- Game Surface -->
+            <div class="glass-card p-5 rounded-3xl border border-indigo-500/30 bg-slate-950/80 min-h-[280px]">
+                <div id="club-game" class="space-y-4"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="glass-card p-5 rounded-3xl border border-amber-500/30 bg-slate-950/70">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold font-outfit text-white flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-amber-400"></i> Your Move
+                    </h3>
+                    <span id="club-turn-hint" class="text-[10px] font-mono text-slate-500"></span>
+                </div>
+                <div id="club-legal" class="flex flex-wrap gap-2 mb-3"></div>
+                <details class="mt-2">
+                    <summary class="text-[11px] text-slate-500 font-mono cursor-pointer hover:text-slate-300">Advanced: raw action JSON</summary>
+                    <div class="flex gap-2 mt-2">
+                        <textarea id="club-custom-action" rows="2"
+                                  class="flex-1 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs font-mono focus:outline-none focus:border-amber-500"
+                                  placeholder='{"action": "play", "card": "H7"}'></textarea>
+                        <button id="club-custom-send" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold whitespace-nowrap">Send</button>
+                    </div>
+                </details>
+                <div id="club-error" class="hidden mt-3 px-3 py-2 rounded-lg bg-rose-950/70 border border-rose-500/40 text-rose-300 text-xs font-mono"></div>
+            </div>
+
+            <!-- Rules -->
+            {% if info.rules %}
+            <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/60 text-xs text-slate-400 font-sans leading-relaxed">
+                <strong class="text-slate-300 font-mono text-[11px] uppercase mr-2">House rules:</strong>{{ info.rules }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="club-toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl font-mono text-xs font-bold shadow-2xl border"></div>
+
+<script type="application/json" id="club-view-json">{{ view_json | replace('</', '<\\/') | safe }}</script>
+<script>
+    window.CLUB = {
+        tableId: {{ table.id }},
+        groupId: {{ group_id }},
+        seat: {{ seat if seat is not none else 'null' }},
+        status: {{ table.status | tojson }},
+        moveUrl: {{ url_for('card_club.api_move', tid=table.id) | tojson }},
+        stateUrl: {{ url_for('card_club.api_table_state', tid=table.id) | tojson }},
+        joinUrl: {{ url_for('card_club.api_join_table', tid=table.id) | tojson }},
+        leaveUrl: {{ url_for('card_club.api_leave_table', tid=table.id) | tojson }},
+        startUrl: {{ url_for('card_club.api_start_table', tid=table.id) | tojson }},
+        abandonUrl: {{ url_for('card_club.api_abandon_table', tid=table.id) | tojson }}
+    };
+</script>
+<script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', () => ClubTable.init());</script>
+{% endblock %}

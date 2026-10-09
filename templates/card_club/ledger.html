@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Ledger - Card Club{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-emerald-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl">
+                    <i class="fa-solid fa-link"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold font-outfit text-white">Coin Ledger</h1>
+                    <p class="text-xs text-slate-400 font-mono">
+                        SHA-256 hash chain &bull; fixed supply 1,000,000,000 &bull;
+                        {% if full %}full chain view (developer){% else %}your entries only{% endif %}
+                    </p>
+                </div>
+            </div>
+            <a href="{{ url_for('card_club.section') }}"
+               class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-mono font-bold transition-all">
+                <i class="fa-solid fa-arrow-left mr-1.5"></i> Club
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <div class="lg:col-span-9 space-y-6">
+            <!-- Integrity Report -->
+            <div id="club-ledger-report" class="glass-card p-5 rounded-3xl border bg-slate-950/70
+                 {% if report.ok %}border-emerald-500/40{% else %}border-rose-500/50{% endif %}">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold font-outfit text-white flex items-center gap-2">
+                        {% if report.ok %}
+                        <i class="fa-solid fa-circle-check text-emerald-400"></i> Chain Verified
+                        {% else %}
+                        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Integrity Violations
+                        {% endif %}
+                    </h3>
+                    {% if full %}
+                    <button id="club-verify-btn"
+                            class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold transition-all">
+                        <i class="fa-solid fa-rotate mr-1.5"></i> Re-run Check
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+                    <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">RESERVE</div>
+                        <div class="text-white font-bold text-base mt-0.5">{{ report.reserve }}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">CIRCULATING</div>
+                        <div class="text-cyan-300 font-bold text-base mt-0.5">{{ report.circulating }}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">GROUP POOLS</div>
+                        <div class="text-emerald-300 font-bold text-base mt-0.5">{{ report.pools }}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">ENTRIES / HEAD</div>
+                        <div class="text-white font-bold text-base mt-0.5">{{ report.entries }} / #{{ report.head_seq }}</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 mt-3 font-mono text-[11px]">
+                    <div class="px-3 py-1.5 rounded-lg text-center {% if report.chain_ok %}bg-emerald-950 text-emerald-300{% else %}bg-rose-950 text-rose-300{% endif %}">
+                        chain {% if report.chain_ok %}OK{% else %}BROKEN{% endif %}
+                    </div>
+                    <div class="px-3 py-1.5 rounded-lg text-center {% if report.balances_ok %}bg-emerald-950 text-emerald-300{% else %}bg-rose-950 text-rose-300{% endif %}">
+                        balances {% if report.balances_ok %}OK{% else %}MISMATCH{% endif %}
+                    </div>
+                    <div class="px-3 py-1.5 rounded-lg text-center {% if report.supply_ok %}bg-emerald-950 text-emerald-300{% else %}bg-rose-950 text-rose-300{% endif %}">
+                        supply {% if report.supply_ok %}1e9 OK{% else %}BROKEN{% endif %}
+                    </div>
+                </div>
+
+                {% if report.violations %}
+                <ul id="club-violations" class="mt-3 space-y-1 text-[11px] font-mono text-rose-300">
+                    {% for v in report.violations %}<li class="px-3 py-1.5 rounded bg-rose-950/60 border border-rose-500/30">{{ v }}</li>{% endfor %}
+                </ul>
+                {% else %}
+                <ul id="club-violations" class="mt-3 space-y-1 text-[11px] font-mono text-emerald-300 hidden"></ul>
+                {% endif %}
+            </div>
+
+            <!-- Entries -->
+            <div class="glass-card p-5 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+                <h3 class="text-sm font-bold font-outfit text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list-ol text-indigo-400"></i> Entries
+                    {% if not full %}<span class="text-[10px] text-slate-500 font-normal">most recent 50 of yours</span>{% endif %}
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-[11px] font-mono">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+                                <th class="py-2 px-2">Seq</th>
+                                <th class="py-2 px-2">Owner</th>
+                                {% if full %}<th class="py-2 px-2">User</th>{% endif %}
+                                <th class="py-2 px-2 text-right">Amount</th>
+                                <th class="py-2 px-2 text-right">Balance</th>
+                                <th class="py-2 px-2">Type</th>
+                                <th class="py-2 px-2">Ref</th>
+                                <th class="py-2 px-2">Hash</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-900">
+                            {% for e in entries %}
+                            <tr class="hover:bg-slate-900/50 transition-colors">
+                                <td class="py-2 px-2 text-slate-500">#{{ e.seq }}</td>
+                                <td class="py-2 px-2 text-slate-300">{{ e.owner_key }}</td>
+                                {% if full %}<td class="py-2 px-2 text-slate-400">{{ e.username or '—' }}</td>{% endif %}
+                                <td class="py-2 px-2 text-right font-bold {% if e.amount < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">
+                                    {{ e.amount }}
+                                </td>
+                                <td class="py-2 px-2 text-right text-white">{{ e.balance_after }}</td>
+                                <td class="py-2 px-2 text-indigo-300">{{ e.entry_type }}</td>
+                                <td class="py-2 px-2 text-slate-500">{{ e.ref_type or '' }}{{ ':' ~ e.ref_id if e.ref_id else '' }}</td>
+                                <td class="py-2 px-2 text-slate-600" title="{{ e.entry_hash }}">{{ (e.entry_hash ~ '')[:10] }}&hellip;</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not entries %}
+                            <tr><td colspan="8" class="py-6 text-center text-slate-600">No entries.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="club-toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl font-mono text-xs font-bold shadow-2xl border"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', () => ClubSection.init({{ 'true' if full else 'false' }}));</script>
+{% endblock %}

@@ -7,6 +7,10 @@ Handles user registration, login, session security, and logout.
 from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from models.user_model import UserModel
+from models.db import execute_update
+from models.card_club import groups as club_groups
+from models.card_club import economy as club_economy
+from models.card_club import devices as club_devices
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -31,6 +35,7 @@ def register():
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
+        date_of_birth = request.form.get('date_of_birth', '').strip()
 
         # Validation
         if not username or not password:
@@ -43,6 +48,25 @@ def register():
 
         if password != confirm_password:
             flash('Passwords do not match. Please try again.', 'error')
+            return render_template('register.html')
+
+        # Age gate (Card Club is 18+): date of birth is mandatory
+        if not date_of_birth:
+            flash('Date of birth is required (18+ services on this site).', 'error')
+            return render_template('register.html')
+        dob = club_groups.parse_dob(date_of_birth)
+        if dob is None:
+            flash('Date of birth must be in YYYY-MM-DD format.', 'error')
+            return render_template('register.html')
+        if not club_groups.is_adult(dob):
+            flash('You must be at least 18 years old to register.', 'error')
+            return render_template('register.html')
+
+        # Device binding (one account per device - multi-account guard)
+        _strength, device_key = club_devices.compose_device_key(request)
+        ok, device_msg = club_devices.check_registration(0, device_key)
+        if not ok:
+            flash(device_msg, 'error')
             return render_template('register.html')
 
         # Check unique username
@@ -61,6 +85,17 @@ def register():
             user_id = None
 
         if user_id:
+            # Card Club: store verified DOB, bind device, seed starting coins
+            execute_update(
+                "UPDATE users SET date_of_birth = %s WHERE id = %s",
+                "UPDATE users SET date_of_birth = ? WHERE id = ?",
+                (dob.isoformat(), user_id))
+            club_devices.bind_device(user_id, device_key)
+            try:
+                club_economy.grant_starting_balance(user_id)
+            except Exception:
+                flash('Account created, but your starting coin grant failed. '
+                      'Please contact support.', 'warning')
             flash('Registration successful! Please sign in to continue.', 'success')
             return redirect(url_for('auth.login'))
         else:
@@ -85,6 +120,13 @@ def login():
 
         user = UserModel.find_by_username(username)
         if user and UserModel.verify_password(user['password_hash'], password):
+            # Device binding check (bound accounts may not sign in elsewhere)
+            _strength, device_key = club_devices.compose_device_key(request)
+            device_ok, device_msg = club_devices.check_login(user, device_key)
+            if not device_ok:
+                flash(device_msg, 'error')
+                return render_template('login.html')
+
             session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']

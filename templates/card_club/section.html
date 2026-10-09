@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Card Club - Private Card Rooms{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+    <!-- Header Banner -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-emerald-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-80 h-80 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-2xl font-bold">
+                    <i class="fa-solid fa-diamond"></i>
+                </div>
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono mb-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        18+ PRIVATE CARD ROOMS
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight">Card Club</h1>
+                    <p class="text-xs text-slate-400 font-mono">15 games &bull; private groups &bull; fixed-supply coin tables</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 font-mono text-xs">
+                <div class="px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-300">
+                    <i class="fa-solid fa-wallet text-emerald-400 mr-1.5"></i>
+                    Personal <strong class="text-white ml-1">{{ wallet.personal }}</strong>
+                </div>
+                <a href="{{ url_for('card_club.ledger_page') }}"
+                   class="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 font-bold transition-all">
+                    <i class="fa-solid fa-link mr-1.5"></i> Ledger
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <!-- Workspace -->
+        <div class="lg:col-span-9 space-y-6">
+
+            <!-- Invites -->
+            {% if invites %}
+            <div class="glass-card p-5 rounded-3xl border border-amber-500/30 bg-slate-950/70">
+                <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-envelope-open-text text-amber-400"></i> Pending Invitations
+                </h3>
+                <div class="space-y-2">
+                    {% for inv in invites %}
+                    <div class="flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-900/70 border border-slate-800 font-mono text-xs">
+                        <span class="text-slate-300"><strong class="text-amber-300">{{ inv.name }}</strong> invited you</span>
+                        <button data-club-post="/club/api/invites/{{ inv.id }}/accept" class="club-post-btn px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all">
+                            Accept
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Groups + Create -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="glass-card p-5 rounded-3xl border border-emerald-500/30 bg-slate-950/70">
+                    <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-user-group text-emerald-400"></i> My Groups
+                    </h3>
+                    {% if my_groups %}
+                    <div class="space-y-2">
+                        {% for g in my_groups %}
+                        <a href="{{ url_for('card_club.group_page', gid=g.id) }}"
+                           class="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/50 transition-all group">
+                            <div>
+                                <div class="text-xs font-bold text-white group-hover:text-emerald-300">{{ g.name }}</div>
+                                <div class="text-[10px] text-slate-500 font-mono">{{ g.description or 'No description' }}</div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-600/40 text-emerald-300 text-[10px] font-mono uppercase">{{ g.role }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-slate-500 font-mono">No groups yet - create one below.</p>
+                    {% endif %}
+
+                    <form id="club-create-group-form" data-club-action="/club/api/groups" class="mt-4 pt-4 border-t border-slate-800 space-y-2">
+                        <input type="text" name="name" required placeholder="Group name"
+                               class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500">
+                        <input type="text" name="description" placeholder="Description (optional)"
+                               class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500">
+                        <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-all">
+                            <i class="fa-solid fa-plus mr-1.5"></i> Create Group ({{ pool_seed }} coin pool seeded)
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Transfers -->
+                <div class="glass-card p-5 rounded-3xl border border-cyan-500/30 bg-slate-950/70">
+                    <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-money-bill-transfer text-cyan-400"></i> Transfers
+                        <span class="text-[10px] text-slate-500 font-normal">recipient must approve</span>
+                    </h3>
+                    {% if transfers %}
+                    <div class="space-y-2 mb-3">
+                        {% for tr in transfers %}
+                        <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-900/80 border border-slate-800 font-mono text-[11px]">
+                            <span class="text-slate-300">
+                                {% if tr.to_user_id == user.id %}Incoming{% else %}To #{{ tr.to_user_id }}{% endif %}
+                                <strong class="text-cyan-300 ml-1">{{ tr.amount }}</strong>
+                            </span>
+                            {% if tr.to_user_id == user.id %}
+                            <span class="flex gap-1.5">
+                                <button data-club-post="/club/api/wallet/transfers/{{ tr.id }}/resolve"
+                                        data-club-body='{"approve":"1"}'
+                                        class="club-post-btn px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px]">Accept</button>
+                                <button data-club-post="/club/api/wallet/transfers/{{ tr.id }}/resolve"
+                                        data-club-body='{"approve":"0"}'
+                                        class="club-post-btn px-2 py-1 rounded bg-rose-700 hover:bg-rose-600 text-white font-bold text-[10px]">Decline</button>
+                            </span>
+                            {% else %}
+                            <span class="text-amber-400 text-[10px]">awaiting recipient</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <form id="club-transfer-form" data-club-action="/club/api/wallet/transfer" class="space-y-2">
+                        <input type="text" name="to_username" required placeholder="Recipient username"
+                               class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="number" name="amount" required min="1" placeholder="Coins"
+                               class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500">
+                        <button type="submit" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all">
+                            Propose Transfer
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Escrow -->
+            <div class="glass-card p-5 rounded-3xl border border-fuchsia-500/30 bg-slate-950/70">
+                <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-vault text-fuchsia-400"></i> Coin Escrow
+                    <span class="text-[10px] text-slate-500 font-normal">offer &rarr; fund &rarr; complete / refund</span>
+                </h3>
+                {% if escrows %}
+                <div class="space-y-2 mb-3">
+                    {% for e in escrows %}
+                    <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-900/80 border border-slate-800 font-mono text-[11px]">
+                        <span class="text-slate-300">
+                            {{ e.payer_name }} &rarr; {{ e.payee_name }}
+                            <strong class="text-fuchsia-300 ml-1">{{ e.amount }}</strong>
+                            <span class="text-slate-500 ml-1">({{ e.status }}{% if e.description %}: {{ e.description }}{% endif %})</span>
+                        </span>
+                        <span class="flex gap-1.5">
+                            {% if e.payer_id == user.id and e.status == 'offered' %}
+                            <button data-club-post="/club/api/wallet/escrow/{{ e.id }}/act" data-club-body='{"action":"fund"}'
+                                    class="club-post-btn px-2 py-1 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[10px]">Fund</button>
+                            {% elif e.payer_id == user.id and e.status == 'funded' %}
+                            <button data-club-post="/club/api/wallet/escrow/{{ e.id }}/act" data-club-body='{"action":"complete"}'
+                                    class="club-post-btn px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px]">Complete</button>
+                            {% endif %}
+                            {% if e.status == 'funded' and (e.payer_id == user.id or e.payee_id == user.id) %}
+                            <button data-club-post="/club/api/wallet/escrow/{{ e.id }}/act" data-club-body='{"action":"cancel"}'
+                                    class="club-post-btn px-2 py-1 rounded bg-rose-700 hover:bg-rose-600 text-white font-bold text-[10px]">Refund</button>
+                            {% endif %}
+                            {% if e.status == 'offered' and e.payer_id == user.id %}
+                            <button data-club-post="/club/api/wallet/escrow/{{ e.id }}/act" data-club-body='{"action":"cancel"}'
+                                    class="club-post-btn px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-white font-bold text-[10px]">Cancel</button>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <form id="club-escrow-form" data-club-action="/club/api/wallet/escrow" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <input type="text" name="payee_username" required placeholder="Payee username"
+                           class="sm:col-span-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-fuchsia-500">
+                    <input type="number" name="amount" required min="1" placeholder="Coins"
+                           class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-fuchsia-500">
+                    <input type="text" name="description" placeholder="For what"
+                           class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-fuchsia-500">
+                    <button type="submit" class="sm:col-span-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-xs font-bold rounded-lg transition-all">
+                        Offer Escrow
+                    </button>
+                </form>
+            </div>
+
+            <!-- Game Catalog -->
+            <div class="glass-card p-5 rounded-3xl border border-indigo-500/30 bg-slate-950/70">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold font-outfit text-white flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-indigo-400"></i> Game Catalog
+                        <span class="text-[10px] text-slate-500 font-normal">pick any when creating a table</span>
+                    </h3>
+                    <span class="text-[10px] font-mono text-indigo-300">{{ catalog|length }} GAMES</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {% for game in catalog %}
+                    <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-indigo-500/50 transition-all">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-white">{{ game.name }}</span>
+                            {% if game.real_time %}
+                            <span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 text-[9px] font-mono font-bold">LIVE</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-[10px] text-slate-500 font-mono mb-1.5">{{ game.min }}-{{ game.max }} players</div>
+                        <div class="text-[10px] text-slate-400 font-sans leading-snug line-clamp-3">{{ game.rules }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="club-toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl font-mono text-xs font-bold shadow-2xl border"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', () => ClubSection.init());</script>
+{% endblock %}

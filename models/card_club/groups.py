@@ -333,6 +333,8 @@ def list_proposals(group_id):
     out = []
     for r in rows or []:
         d = dict(r) if isinstance(r, dict) else {}
+        payload = _loads(d.get("payload"))
+        d["role"] = payload.get("role", "")
         out.append(d)
     return out
 

@@ -11,7 +11,8 @@ from config import Config
 from models import init_database
 from controllers import (
     home_bp, auth_bp, super_admin_bp, developer_bp,
-    user_bp, visualizer_bp, profile_bp, api_bp, custom_cube_bp, chess_bp, card_bp
+    user_bp, visualizer_bp, profile_bp, api_bp, custom_cube_bp, chess_bp,
+    card_bp, card_club_bp
 )
 
 import json
@@ -46,6 +47,11 @@ def create_app():
     app.register_blueprint(custom_cube_bp)
     app.register_blueprint(chess_bp)
     app.register_blueprint(card_bp)
+    app.register_blueprint(card_club_bp)
+
+    # Card Club live tables (Socket.IO - websocket push + HTTP polling fallback)
+    from controllers.card_club_controller import init_socketio
+    socketio = init_socketio(app)
 
     # Multi-Language (i18n) Context Processor
     @app.context_processor
@@ -72,9 +78,12 @@ def create_app():
     return app
 
 app = create_app()
+socketio = app.extensions.get('socketio') or None
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5050))
     print(f"CubePermutation AI MVC Server shuru hocche port {port} e...")
     print(f"Browser e open korun: http://127.0.0.1:{port}")
-    app.run(host='127.0.0.1', port=port, debug=True)
+    from engineio.async_drivers import threading  # noqa: F401 (threading driver)
+    socketio.run(app, host='127.0.0.1', port=port, debug=True,
+                 allow_unsafe_werkzeug=True)

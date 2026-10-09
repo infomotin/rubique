@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} - Card Club{% endblock %}
+
+{% block content %}
+<div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+    <!-- Group Header -->
+    <div class="glass-card p-5 sm:p-6 rounded-3xl border border-emerald-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-6">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl">
+                    <i class="fa-solid fa-users-rectangle"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-xl font-extrabold font-outfit text-white">{{ group.name }}</h1>
+                        <span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 text-[10px] font-mono uppercase font-bold">{{ role }}</span>
+                        {% if active_game %}
+                        <span class="px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 text-[10px] font-mono font-bold">TABLE LIVE: {{ active_game }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-slate-400 font-mono">{{ group.description or 'No description' }}</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                {% if is_admin %}
+                <span class="px-3 py-2 rounded-xl bg-slate-900/80 border border-amber-500/40 text-amber-300">
+                    <i class="fa-solid fa-key mr-1.5"></i> Code <strong>{{ group.invite_code }}</strong>
+                </span>
+                {% endif %}
+                <a href="{{ url_for('card_club.ledger_page') }}"
+                   class="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 font-bold transition-all">
+                    <i class="fa-solid fa-link mr-1.5"></i> Ledger
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="lg:col-span-3">
+            {% include "user/sidebar.html" %}
+        </div>
+
+        <div class="lg:col-span-9 space-y-6">
+
+            <!-- Group Wallet -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="glass-card p-4 rounded-2xl border border-cyan-500/30 bg-slate-950/70 font-mono">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span>My group balance</span><i class="fa-solid fa-wallet text-cyan-400"></i>
+                    </div>
+                    <div class="text-2xl font-extrabold text-white mt-1">{{ wallet.group_balance }}</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-emerald-500/30 bg-slate-950/70 font-mono">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span>Group pool</span><i class="fa-solid fa-coins text-emerald-400"></i>
+                    </div>
+                    <div class="text-2xl font-extrabold text-emerald-300 mt-1">{{ wallet.pool }}</div>
+                    <div class="text-[10px] text-slate-500 mt-1">funds table bonuses</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border border-amber-500/30 bg-slate-950/70 font-mono">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span>Personal wallet</span><i class="fa-solid fa-vault text-amber-400"></i>
+                    </div>
+                    <div class="text-2xl font-extrabold text-amber-300 mt-1">{{ wallet.personal }}</div>
+                    <form id="club-fund-form" data-club-action="/club/api/wallet/fund" class="flex gap-1.5 mt-2">
+                        <input type="hidden" name="group_id" value="{{ group_id }}">
+                        <input type="number" name="amount" required min="1" placeholder="Move in"
+                               class="w-full px-2 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-[11px] focus:outline-none focus:border-amber-500">
+                        <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold whitespace-nowrap">Fund</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tables -->
+            <div class="glass-card p-5 rounded-3xl border border-rose-500/30 bg-slate-950/70">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold font-outfit text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table-cells-large text-rose-400"></i> Tables
+                        <span class="text-[10px] text-slate-500 font-normal">stake limit {{ max_bet }}/seat, pool bonus from group pool</span>
+                    </h3>
+                </div>
+
+                <form id="club-create-table-form" data-club-action="/club/api/groups/{{ group_id }}/tables"
+                      class="grid grid-cols-2 sm:grid-cols-6 gap-2 mb-4 p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
+                    <select name="game_slug" required
+                            class="sm:col-span-2 px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-rose-500">
+                        {% for game in catalog %}
+                        <option value="{{ game.slug }}">{{ game.name }} ({{ game.min }}-{{ game.max }})</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="stake" value="10" min="0" max="{{ max_bet }}" placeholder="Stake"
+                           class="px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-rose-500">
+                    <input type="number" name="pool_bonus" value="0" min="0" placeholder="Pool bonus"
+                           class="px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-rose-500">
+                    <input type="text" name="name" placeholder="Table name"
+                           class="px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-rose-500">
+                    <button type="submit" class="py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition-all">
+                        Open Table
+                    </button>
+                </form>
+
+                {% if tables %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+                                <th class="py-2 px-3">Table</th>
+                                <th class="py-2 px-3">Game</th>
+                                <th class="py-2 px-3">Stake</th>
+                                <th class="py-2 px-3">Bonus</th>
+                                <th class="py-2 px-3">Status</th>
+                                <th class="py-2 px-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-900">
+                            {% for t in tables %}
+                            <tr class="hover:bg-slate-900/50 transition-colors">
+                                <td class="py-2.5 px-3 text-white font-bold">{{ t.name or ('#' ~ t.id) }}</td>
+                                <td class="py-2.5 px-3 text-slate-300">{{ t.game_slug }}</td>
+                                <td class="py-2.5 px-3 text-amber-300">{{ t.stake }}</td>
+                                <td class="py-2.5 px-3 text-emerald-300">{{ t.pool_bonus }}</td>
+                                <td class="py-2.5 px-3">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold
+                                        {% if t.status == 'active' %}bg-rose-950 border border-rose-500/40 text-rose-300
+                                        {% elif t.status == 'waiting' %}bg-amber-950 border border-amber-500/40 text-amber-300
+                                        {% elif t.status == 'finished' %}bg-emerald-950 border border-emerald-500/40 text-emerald-300
+                                        {% else %}bg-slate-800 border border-slate-600 text-slate-300{% endif %}">
+                                        {{ t.status | upper }}
+                                    </span>
+                                </td>
+                                <td class="py-2.5 px-3 text-right">
+                                    <a href="{{ url_for('card_club.table_page', tid=t.id) }}"
+                                       class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold transition-all inline-block">
+                                        Open
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-500 font-mono text-center py-4">No tables yet - open the first one above.</p>
+                {% endif %}
+            </div>
+
+            <!-- Members -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="glass-card p-5 rounded-3xl border border-indigo-500/30 bg-slate-950/70">
+                    <h3 class="text-sm font-bold font-outfit text-white mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-users text-indigo-400"></i> Members ({{ members|length }})
+                    </h3>
+                    <div class="space-y-2">
+                        {% for m in members %}
+                        <div class="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800 font-mono text-[11px]">
+                            <span class="text-slate-300">
+                                <strong class="text-white">{{ m.username }}</strong>
+                                <span class="px-1.5 py-0.5 rounded bg-slate-800 text-[9px] uppercase ml-1.5
+                                    {% if m.role == 'admin' %}text-amber-300{% else %}text-slate-400{% endif %}">{{ m.role }}</span>
+                            </span>
+                            {% if is_admin and m.user_id != user.id %}
+                            <button data-club-post="/club/api/groups/{{ group_id }}/members/{{ m.user_id }}/remove"
+                                    class="club-post-btn px-2 py-1 rounded bg-rose-800 hover:bg-rose-700 text-white font-bold text-[10px]"
+                                    data-confirm="Remove {{ m.username }}? Their balance returns to the pool and seats are vacated.">
+                                Remove
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if is_admin %}
+                    <form id="club-invite-form" data-club-action="/club/api/groups/{{ group_id }}/invites" class="flex gap-1.5 mt-4 pt-4 border-t border-slate-800">
+                        <input type="text" name="username" required placeholder="Invite by username"
+                               class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-indigo-500">
+                        <button type="submit" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold whitespace-nowrap">Invite</button>
+                    </form>
+
+                    {% if invites %}
+                    <div class="mt-3 space-y-1.5">
+                        {% for i in invites %}
+                        <div class="flex items-center justify-between px-3 py-1.5 rounded bg-slate-900/50 border border-slate-800 font-mono text-[10px] text-slate-400">
+                            <span>{{ i.username }} <span class="text-amber-400">(pending)</span></span>
+                            <span class="font-mono text-slate-600">{{ (i.token ~ '')[:12] }}&hellip;</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- Role Proposals -->
+                <div class="glass-card p-5 rounded-3xl border border-violet-500/30 bg-slate-950/70">
+                    <h3 class="text-sm font-bold font-outfit text-white mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-people-group text-violet-400"></i> Role Proposals
+                    </h3>
+                    <p class="text-[10px] text-slate-500 font-mono mb-3">
+                        Role set: {{ role_set|join(', ') }} &bull; simple majority of {{ members|length }} members approves instantly.
+                        {% if active_game %}Using active game: {{ active_game }}.{% endif %}
+                    </p>
+
+                    {% if is_admin %}
+                    <form id="club-proposal-form" data-club-action="/club/api/groups/{{ group_id }}/proposals"
+                          class="space-y-2 mb-4 p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
+                        <select name="proposal_type" id="proposal-type" required
+                                class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-violet-500">
+                            <option value="set_member_role">Set a member's role</option>
+                            <option value="set_default_role">Set the default role for new members</option>
+                        </select>
+                        <select name="target_user_id" id="proposal-target" required
+                                class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-violet-500">
+                            {% for m in members %}
+                            <option value="{{ m.user_id }}">{{ m.username }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="role" required
+                                class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-violet-500">
+                            {% for r in role_set %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+                        </select>
+                        <button type="submit" class="w-full py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-lg transition-all">
+                            Propose Role Change
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <div class="space-y-2">
+                        {% for p in proposals %}
+                        <div class="px-3 py-2.5 rounded-xl bg-slate-900/70 border border-slate-800 font-mono text-[11px]">
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-300">
+                                    {% if p.proposal_type == 'set_member_role' %}
+                                    <strong class="text-white">{{ p.target or ('#' ~ p.target_user_id) }}</strong> &rarr; <strong class="text-violet-300">{{ p.payload if p.payload is string else p.payload }}</strong>
+                                    {% else %}
+                                    default role &rarr; <strong class="text-violet-300">{{ p.payload }}</strong>
+                                    {% endif %}
+                                </span>
+                                <span class="text-[9px] px-1.5 py-0.5 rounded
+                                    {% if p.status == 'approved' %}bg-emerald-950 text-emerald-300
+                                    {% elif p.status == 'rejected' %}bg-rose-950 text-rose-300
+                                    {% else %}bg-amber-950 text-amber-300{% endif %}">{{ p.status | upper }}</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-2">
+                                <span class="text-slate-500 text-[10px]">
+                                    by {{ p.proposer }} &bull; for <strong class="text-emerald-300">{{ p.votes_for }}</strong>
+                                    against <strong class="text-rose-300">{{ p.votes_against }}</strong>
+                                </span>
+                                {% if p.status == 'open' %}
+                                <span class="flex gap-1.5">
+                                    <button data-club-post="/club/api/proposals/{{ p.id }}/vote" data-club-body='{"vote":"for"}'
+                                            class="club-post-btn px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px]">+ For</button>
+                                    <button data-club-post="/club/api/proposals/{{ p.id }}/vote" data-club-body='{"vote":"against"}'
+                                            class="club-post-btn px-2 py-1 rounded bg-rose-800 hover:bg-rose-700 text-white font-bold text-[10px]">- Against</button>
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not proposals %}
+                        <p class="text-[11px] text-slate-600 font-mono text-center py-2">No proposals yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="club-toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl font-mono text-xs font-bold shadow-2xl border"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', () => ClubSection.init());</script>
+{% endblock %}

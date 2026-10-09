@@ -118,6 +118,18 @@
                            class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all text-sm font-sans">
                 </div>
 
+                <!-- Date of Birth (18+ gate for the Card Club) -->
+                <div>
+                    <label for="date_of_birth" class="block text-xs font-medium text-slate-300 mb-1 uppercase tracking-wider font-mono">
+                        <i class="fa-solid fa-cake-candles text-purple-400 mr-1.5"></i> Date of Birth
+                    </label>
+                    <input type="date" id="date_of_birth" name="date_of_birth" required
+                           class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all text-sm font-sans [color-scheme:dark]">
+                    <p class="text-[10px] text-slate-500 font-mono mt-1">
+                        Required for age verification. The Card Club (18+) opens with this date.
+                    </p>
+                </div>
+
                 <!-- Password -->
                 <div>
                     <label for="password" class="block text-xs font-medium text-slate-300 mb-1 uppercase tracking-wider font-mono flex items-center justify-between">
@@ -149,6 +161,9 @@
                            class="w-full px-4 py-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all text-sm font-sans">
                 </div>
 
+                <!-- Device fingerprint (one registration per device) -->
+                <input type="hidden" id="device_fp" name="device_fp" value="">
+
                 <!-- Submit Button -->
                 <button type="submit"
                         class="w-full mt-2 py-3.5 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow-xl shadow-indigo-600/30 hover:scale-[1.01] transition-all duration-300 flex items-center justify-center gap-2 group">
@@ -177,6 +192,22 @@
 {% block extra_scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Device fingerprint for Card Club one-account-per-device binding
+        try {
+            const fpSrc = [
+                navigator.userAgent,
+                (screen.width * screen.height) + 'x' + (screen.colorDepth || 0),
+                navigator.language,
+                Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+            ].join('|');
+            let h = 2166136261;
+            for (let i = 0; i < fpSrc.length; i++) {
+                h ^= fpSrc.charCodeAt(i);
+                h = Math.imul(h, 16777619);
+            }
+            document.getElementById('device_fp').value =
+                'v1-' + (h >>> 0).toString(16) + '-' + fpSrc.length;
+        } catch (e) {}
         // Password toggle
         const toggleBtn = document.getElementById('toggle-reg-pw');
         const pwInput = document.getElementById('password');
