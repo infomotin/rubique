@@ -3,38 +3,87 @@
 {% block title %}{{ table.name or ('Table #' ~ table.id) }} - Card Club{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/card_club.css') }}">
+<script src="{{ url_for('static', filename='js/card_sound_engine.js') }}"></script>
+
 <div class="cyber-grid-bg min-h-screen py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
 
     <!-- Table Header -->
-    <div class="glass-card p-5 rounded-3xl border border-rose-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-5">
+    <div class="glass-card p-5 rounded-3xl border border-rose-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-4">
         <div class="absolute -top-20 -right-20 w-64 h-64 bg-rose-600/15 rounded-full blur-[90px] pointer-events-none"></div>
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
             <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-rose-600/30 border border-rose-500/40 flex items-center justify-center text-rose-400 text-xl">
-                    <i class="fa-solid fa-diamond"></i>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-600/30 to-rose-600/30 border border-amber-500/40 flex items-center justify-center text-amber-400 text-2xl shadow-lg">
+                    <i class="fa-solid fa-diamond animate-pulse"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <h1 class="text-lg font-extrabold font-outfit text-white">{{ table.name or ('Table #' ~ table.id) }}</h1>
-                        <span class="px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 text-[10px] font-mono font-bold">{{ info.name or table.game_slug }}</span>
+                        <h1 class="text-xl font-extrabold font-outfit text-white tracking-tight">{{ table.name or ('Table #' ~ table.id) }}</h1>
+                        <span class="px-2.5 py-0.5 rounded-full bg-rose-950 border border-rose-500/40 text-rose-300 text-[10px] font-mono font-bold">{{ info.name or table.game_slug }}</span>
                         <span id="club-status-chip" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase
                             {% if table.status == 'active' %}bg-emerald-950 border border-emerald-500/40 text-emerald-300
                             {% elif table.status == 'waiting' %}bg-amber-950 border border-amber-500/40 text-amber-300
                             {% else %}bg-slate-800 border border-slate-600 text-slate-400{% endif %}">{{ table.status }}</span>
                         <span id="club-conn" class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-400 text-[10px] font-mono">connecting&hellip;</span>
                     </div>
-                    <p class="text-xs text-slate-400 font-mono">
+                    <p class="text-xs text-slate-400 font-mono mt-0.5">
                         stake <strong class="text-amber-300">{{ table.stake }}</strong> &bull;
                         pool bonus <strong class="text-emerald-300">{{ table.pool_bonus }}</strong> &bull;
-                        group <a class="text-emerald-400 hover:underline" href="{{ url_for('card_club.group_page', gid=group_id) }}">{{ group.name }}</a>
+                        room <a class="text-emerald-400 hover:underline font-bold" href="{{ url_for('card_club.group_page', gid=group_id) }}">{{ group.name }}</a>
                     </p>
                 </div>
             </div>
             <div class="flex items-center gap-2 font-mono text-xs">
-                <div class="px-3 py-2 rounded-xl bg-slate-900/80 border border-amber-500/40 text-amber-300">
-                    Pot <strong id="club-pot">0</strong>
+                <div class="px-4 py-2.5 rounded-2xl bg-slate-900/90 border border-amber-500/50 text-amber-300 shadow-xl flex items-center gap-2">
+                    <i class="fa-solid fa-coins text-amber-400 text-sm"></i>
+                    <span>POT:</span> <strong id="club-pot" class="text-white text-base">0</strong>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Audio FX Engine & Table Customizer Bar -->
+    <div class="glass-card p-3 rounded-2xl border border-slate-800 bg-slate-950/80 mb-5 flex flex-wrap items-center justify-between gap-4 font-mono text-xs shadow-xl">
+        <!-- Audio Controls -->
+        <div class="flex items-center gap-3 flex-wrap">
+            <button id="club-sound-toggle-btn" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 font-bold transition-all flex items-center gap-1.5 shadow-md">
+                <i id="club-sound-icon" class="fa-solid fa-volume-high text-amber-400"></i>
+                <span id="club-sound-label">Audio ON</span>
+            </button>
+            <div class="flex items-center gap-1.5 text-slate-400">
+                <span class="text-[10px]">VOL</span>
+                <input type="range" id="club-volume-slider" min="0" max="1" step="0.05" value="0.85" class="w-16 accent-amber-500 h-1 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+            <!-- Sound FX Test Preview Buttons -->
+            <div class="hidden sm:flex items-center gap-1.5 pl-3 border-l border-slate-800 text-[10px]">
+                <span class="text-slate-500 uppercase font-bold mr-1">TEST FX:</span>
+                <button onclick="window.ClubAudio && window.ClubAudio.shuffle()" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all" title="Card Mixing / Shuffling Riffle">
+                    <i class="fa-solid fa-shuffle text-amber-400 mr-1"></i>Mix / Shuffle
+                </button>
+                <button onclick="window.ClubAudio && window.ClubAudio.slap(); const felt = document.querySelector('.casino-table-felt'); if(felt){ felt.classList.remove('table-slap-impact'); void felt.offsetWidth; felt.classList.add('table-slap-impact'); }" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all" title="Card Table Slap">
+                    <i class="fa-solid fa-hand-sparkles text-rose-400 mr-1"></i>Slap
+                </button>
+                <button onclick="window.ClubAudio && window.ClubAudio.throw()" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all" title="Card Throw / Glide">
+                    <i class="fa-solid fa-wind text-cyan-400 mr-1"></i>Throw
+                </button>
+                <button onclick="window.ClubAudio && window.ClubAudio.chips()" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all" title="Casino Chip Clinks">
+                    <i class="fa-solid fa-coins text-amber-300 mr-1"></i>Chips
+                </button>
+            </div>
+        </div>
+
+        <!-- Felt Color Theme Switcher -->
+        <div class="flex items-center gap-1.5 text-[10px]">
+            <span class="text-slate-500 uppercase font-bold mr-1">FELT:</span>
+            <button class="felt-theme-btn px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-bold" data-theme="felt-emerald">
+                🟢 Emerald
+            </button>
+            <button class="felt-theme-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold" data-theme="felt-midnight">
+                🔵 Midnight
+            </button>
+            <button class="felt-theme-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold" data-theme="felt-crimson">
+                🔴 Crimson
+            </button>
         </div>
     </div>
 
@@ -44,33 +93,34 @@
         </div>
 
         <div class="lg:col-span-9 space-y-5">
-            <!-- Seats -->
-            <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+            <!-- Seats (with Active Turn Halo) -->
+            <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/70 shadow-lg">
                 <div id="club-seats" class="flex flex-wrap items-center gap-2 font-mono text-xs"></div>
             </div>
 
-            <!-- Controls -->
-            <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/70">
+            <!-- Controls (Join, Leave, Start Deal) -->
+            <div class="glass-card p-4 rounded-3xl border border-slate-800/80 bg-slate-950/70 shadow-lg">
                 <div id="club-controls" class="flex flex-wrap items-center gap-2"></div>
             </div>
 
             <!-- Settlement Banner -->
             <div id="club-settlement" class="hidden glass-card p-4 rounded-3xl border border-emerald-500/40 bg-emerald-950/40 font-mono text-sm text-emerald-200"></div>
 
-            <!-- Game Surface -->
-            <div class="glass-card p-5 rounded-3xl border border-indigo-500/30 bg-slate-950/80 min-h-[280px]">
-                <div id="club-game" class="space-y-4"></div>
+            <!-- Casino Velvet Felt Table Container -->
+            <div id="club-table-container" class="casino-table-felt felt-emerald p-6 sm:p-8 min-h-[460px] relative">
+                <div class="felt-inner-ring"></div>
+                <div id="club-game" class="relative z-10 space-y-4"></div>
             </div>
 
-            <!-- Actions -->
-            <div class="glass-card p-5 rounded-3xl border border-amber-500/30 bg-slate-950/70">
+            <!-- Actions Drawer -->
+            <div class="glass-card p-5 rounded-3xl border border-amber-500/30 bg-slate-950/70 shadow-xl">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-bold font-outfit text-white flex items-center gap-2">
-                        <i class="fa-solid fa-bolt text-amber-400"></i> Your Move
+                        <i class="fa-solid fa-bolt text-amber-400"></i> Legal Moves
                     </h3>
-                    <span id="club-turn-hint" class="text-[10px] font-mono text-slate-500"></span>
+                    <span id="club-turn-hint" class="text-xs font-mono font-bold text-slate-400"></span>
                 </div>
-                <div id="club-legal" class="flex flex-wrap gap-2 mb-3"></div>
+                <div id="club-legal" class="flex flex-wrap gap-2.5 mb-3"></div>
                 <details class="mt-2">
                     <summary class="text-[11px] text-slate-500 font-mono cursor-pointer hover:text-slate-300">Advanced: raw action JSON</summary>
                     <div class="flex gap-2 mt-2">
@@ -96,21 +146,69 @@
 <div id="club-toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl font-mono text-xs font-bold shadow-2xl border"></div>
 
 <script type="application/json" id="club-view-json">{{ view_json | replace('</', '<\\/') | safe }}</script>
+<script type="application/json" id="club-config-json">
+{
+    "tableId": {{ table.id }},
+    "groupId": {{ group_id }},
+    "seat": {{ seat if seat is not none else 'null' }},
+    "status": {{ table.status | tojson }},
+    "moveUrl": {{ url_for('card_club.api_move', tid=table.id) | tojson }},
+    "stateUrl": {{ url_for('card_club.api_table_state', tid=table.id) | tojson }},
+    "joinUrl": {{ url_for('card_club.api_join_table', tid=table.id) | tojson }},
+    "leaveUrl": {{ url_for('card_club.api_leave_table', tid=table.id) | tojson }},
+    "startUrl": {{ url_for('card_club.api_start_table', tid=table.id) | tojson }},
+    "abandonUrl": {{ url_for('card_club.api_abandon_table', tid=table.id) | tojson }}
+}
+</script>
 <script>
-    window.CLUB = {
-        tableId: {{ table.id }},
-        groupId: {{ group_id }},
-        seat: {{ seat if seat is not none else 'null' }},
-        status: {{ table.status | tojson }},
-        moveUrl: {{ url_for('card_club.api_move', tid=table.id) | tojson }},
-        stateUrl: {{ url_for('card_club.api_table_state', tid=table.id) | tojson }},
-        joinUrl: {{ url_for('card_club.api_join_table', tid=table.id) | tojson }},
-        leaveUrl: {{ url_for('card_club.api_leave_table', tid=table.id) | tojson }},
-        startUrl: {{ url_for('card_club.api_start_table', tid=table.id) | tojson }},
-        abandonUrl: {{ url_for('card_club.api_abandon_table', tid=table.id) | tojson }}
-    };
+    window.CLUB = JSON.parse(document.getElementById('club-config-json').textContent);
 </script>
 <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
-<script>document.addEventListener('DOMContentLoaded', () => ClubTable.init());</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    ClubTable.init();
+
+    // Wire up sound toggle and volume slider
+    const soundToggleBtn = document.getElementById('club-sound-toggle-btn');
+    const soundIcon = document.getElementById('club-sound-icon');
+    const soundLabel = document.getElementById('club-sound-label');
+    const volSlider = document.getElementById('club-volume-slider');
+
+    if (soundToggleBtn && window.ClubAudio) {
+        soundToggleBtn.addEventListener('click', () => {
+            const isMuted = window.ClubAudio.toggleMute();
+            if (isMuted) {
+                soundIcon.className = 'fa-solid fa-volume-xmark text-slate-500';
+                soundLabel.textContent = 'Audio Muted';
+                soundToggleBtn.className = 'px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 font-bold transition-all flex items-center gap-1.5 shadow-md';
+            } else {
+                soundIcon.className = 'fa-solid fa-volume-high text-amber-400';
+                soundLabel.textContent = 'Audio ON';
+                soundToggleBtn.className = 'px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 font-bold transition-all flex items-center gap-1.5 shadow-md';
+            }
+        });
+    }
+
+    if (volSlider && window.ClubAudio) {
+        volSlider.value = window.ClubAudio.getVolume();
+        volSlider.addEventListener('input', (e) => {
+            window.ClubAudio.setVolume(parseFloat(e.target.value));
+        });
+    }
+
+    // Wire up Felt Theme Switchers
+    document.querySelectorAll('.felt-theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.dataset.theme;
+            const container = document.getElementById('club-table-container');
+            if (container) {
+                container.classList.remove('felt-emerald', 'felt-midnight', 'felt-crimson');
+                container.classList.add(theme);
+                if (window.ClubAudio) window.ClubAudio.hover();
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

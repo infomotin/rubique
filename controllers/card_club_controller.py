@@ -627,9 +627,10 @@ def init_socketio(app):
     @_socketio.on('connect')
     def _on_connect():
         from flask import session as flask_session
+        from flask_socketio import join_room
         uid = flask_session.get('user_id')
         if uid:
-            _socketio.enter_room(f'user:{uid}')
+            join_room(f'user:{uid}')
 
     @_socketio.on('watch_table')
     def _on_watch(data):
@@ -645,13 +646,15 @@ def init_socketio(app):
             groups.require_member(int(t['group_id']), uid)
         except CardClubError as e:
             return {"ok": False, "error": str(e)}
-        _socketio.enter_room(f'table:{tid}')
+        from flask_socketio import join_room
+        join_room(f'table:{tid}')
         return {"ok": True, "state": gameplay.get_view(tid, uid)}
 
     @_socketio.on('unwatch_table')
     def _on_unwatch(data):
+        from flask_socketio import leave_room
         tid = int((data or {}).get('table_id', 0))
-        _socketio.leave_room(f'table:{tid}')
+        leave_room(f'table:{tid}')
         return {"ok": True}
 
     @_socketio.on('table_move')

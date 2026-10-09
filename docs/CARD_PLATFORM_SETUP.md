@@ -100,14 +100,16 @@ entry_hash = sha256(prev_hash + "|" + seq + "|" + owner_key + "|" + amount + "|"
 
 ## 6. Real-Time WebSockets Architecture
 
-- **Backend:** `Flask-SocketIO` registered in `app.py`.
-- **Rooms:** Each table session has a dedicated room `table_<id>`.
-- **Events:**
-  - `join_table`: Client joins table room.
-  - `leave_table`: Client leaves table room.
-  - `table_move`: Real-time or turn-based action dispatch.
-  - `table_update`: Broadcasts updated game view and legal moves to seated players and spectators.
-- **Automatic Fallback:** Client script `static/js/card_club.js` automatically falls back to HTTP REST endpoints (`/club/api/tables/<id>/state` and `/club/api/tables/<id>/move`) if WebSocket connectivity is interrupted.
+- **Backend:** `Flask-SocketIO` registered in `app.py` (`init_socketio()` in `controllers/card_club_controller.py`).
+- **Rooms:** `user:{uid}` (auto-joined on connect for authenticated sessions) and `table:{tid}` (joined via `watch_table`, membership-checked).
+- **Client events:**
+  - `watch_table` / `unwatch_table`: Enter/leave a table's live room (server returns the current private view on watch).
+  - `table_move`: Real-time or turn-based action dispatch (same service path as HTTP `POST /club/api/tables/<id>/move`).
+- **Server pushes:**
+  - `table_state`: Private view, emitted per seated user to their `user:{uid}` room after every move.
+  - `table_spectate`: Public/spectator view, emitted to the `table:{tid}` room.
+  - `table_settlement`: Final zero-sum settlement payload to players and spectators when a table finishes.
+- **Automatic Fallback:** Client script `static/js/card_club.js` automatically falls back to HTTP REST endpoints (`/club/api/tables/<id>/state` and `/club/api/tables/<id>/move`, polling every 2.5s) if WebSocket connectivity is interrupted.
 
 ---
 

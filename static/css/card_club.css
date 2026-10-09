@@ -1,0 +1,462 @@
+/* =====================================================================
+   Rubique Card Club - Ultra High-Quality Graphics & Animation Suite
+   ===================================================================== */
+
+:root {
+    --card-w: 78px;
+    --card-h: 114px;
+    --felt-color: #064024;
+    --felt-rim: #85581A;
+    --gold-glow: rgba(251, 191, 36, 0.4);
+    --gold-accent: #f59e0b;
+}
+
+@media (min-width: 640px) {
+    :root {
+        --card-w: 88px;
+        --card-h: 128px;
+    }
+}
+
+@media (min-width: 1024px) {
+    :root {
+        --card-w: 96px;
+        --card-h: 140px;
+    }
+}
+
+/* ---------------------------------------------------------------------
+   1. Casino Felt Table Arenas
+   --------------------------------------------------------------------- */
+.casino-table-felt {
+    position: relative;
+    border-radius: 2.75rem;
+    box-shadow: 
+        0 0 0 10px #1a120b,
+        0 0 0 14px #b45309,
+        0 25px 60px -15px rgba(0, 0, 0, 0.9),
+        inset 0 0 80px rgba(0, 0, 0, 0.85);
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.felt-emerald {
+    background: radial-gradient(circle at 50% 45%, #0d5f36 0%, #084024 45%, #032112 85%, #011109 100%);
+    border: 4px solid #d97706;
+}
+
+.felt-midnight {
+    background: radial-gradient(circle at 50% 45%, #1e295d 0%, #111a42 45%, #090e24 85%, #030510 100%);
+    border: 4px solid #6366f1;
+}
+
+.felt-crimson {
+    background: radial-gradient(circle at 50% 45%, #66101f 0%, #440b15 45%, #24050a 85%, #100204 100%);
+    border: 4px solid #e11d48;
+}
+
+/* Felt Texture overlay */
+.casino-table-felt::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        radial-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px);
+    background-size: 8px 8px;
+    background-position: 0 0, 4px 4px;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* Golden Inner Ring on Table */
+.felt-inner-ring {
+    position: absolute;
+    inset: 22px;
+    border-radius: 2rem;
+    border: 2px dashed rgba(245, 158, 11, 0.25);
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------
+   2. High-Fidelity 3D Playing Cards
+   --------------------------------------------------------------------- */
+.playing-card-3d {
+    width: var(--card-w);
+    height: var(--card-h);
+    position: relative;
+    user-select: none;
+    cursor: pointer;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+/* Card Face Styling */
+.card-face {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #fbfbfc 60%, #f1f2f6 100%);
+    border-radius: 10px;
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.35),
+        0 1px 3px rgba(0, 0, 0, 0.2),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 6px 7px;
+    box-sizing: border-box;
+    backface-visibility: hidden;
+    overflow: hidden;
+}
+
+/* Gloss reflection on card surface */
+.card-face::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(75deg, transparent 40%, rgba(255, 255, 255, 0.45) 50%, transparent 60%);
+    pointer-events: none;
+    transition: transform 0.5s ease;
+}
+
+.playing-card-3d:hover .card-face::after {
+    transform: translateX(60%);
+}
+
+/* Corner Index */
+.card-corner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    font-family: 'Outfit', -apple-system, sans-serif;
+    font-weight: 800;
+}
+
+.card-corner-top {
+    align-self: flex-start;
+}
+
+.card-corner-bottom {
+    align-self: flex-end;
+    transform: rotate(180deg);
+}
+
+.card-val {
+    font-size: 1.15rem;
+    letter-spacing: -0.5px;
+}
+
+.card-suit-sm {
+    font-size: 0.85rem;
+    margin-top: 1px;
+}
+
+/* Center Emblem / Watermark */
+.card-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    pointer-events: none;
+    opacity: 0.95;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+.card-center.court-card {
+    font-size: 1.8rem;
+    font-weight: 900;
+    font-family: 'Outfit', serif;
+    letter-spacing: -1px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.6));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Suit Colorations */
+.suit-red {
+    color: #dc2626;
+}
+
+.suit-red .card-center.court-card {
+    background: linear-gradient(180deg, #dc2626, #991b1b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.suit-black {
+    color: #111827;
+}
+
+/* Card Back (Guilloché Royal Pattern) */
+.card-back {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: 
+        radial-gradient(circle at center, #1e3a8a 0%, #0f172a 100%);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        inset 0 0 0 2px #d97706;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    box-sizing: border-box;
+    backface-visibility: hidden;
+    overflow: hidden;
+}
+
+.card-back-pattern {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    background: 
+        repeating-linear-gradient(45deg, rgba(245, 158, 11, 0.15) 0px, rgba(245, 158, 11, 0.15) 2px, transparent 2px, transparent 6px),
+        repeating-linear-gradient(-45deg, rgba(245, 158, 11, 0.15) 0px, rgba(245, 158, 11, 0.15) 2px, transparent 2px, transparent 6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fbbf24;
+    font-size: 1.25rem;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+/* ---------------------------------------------------------------------
+   3. Interactive Hand Fanning & Hover Physics
+   --------------------------------------------------------------------- */
+.player-hand-fanned {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-top: 36px;
+    padding-bottom: 8px;
+    position: relative;
+    overflow: visible;
+}
+
+.player-hand-fanned .playing-card-3d {
+    margin-left: -28px;
+    transform-origin: bottom center;
+}
+
+.player-hand-fanned .playing-card-3d:first-child {
+    margin-left: 0;
+}
+
+/* Hover state: lift, straighten, and glow */
+.player-hand-fanned .playing-card-3d:hover {
+    transform: translateY(-34px) scale(1.12) rotate(0deg) !important;
+    z-index: 40 !important;
+    box-shadow: 
+        0 20px 30px -10px rgba(0, 0, 0, 0.7),
+        0 0 20px 2px var(--gold-glow);
+}
+
+/* Playable Card Glow Pulse */
+.playing-card-3d.is-playable {
+    animation: playablePulse 2s infinite ease-in-out;
+}
+
+@keyframes playablePulse {
+    0%, 100% {
+        filter: drop-shadow(0 0 2px rgba(52, 211, 153, 0.6));
+    }
+    50% {
+        filter: drop-shadow(0 0 10px rgba(52, 211, 153, 0.95)) drop-shadow(0 -4px 6px rgba(16, 185, 129, 0.5));
+    }
+}
+
+/* ---------------------------------------------------------------------
+   4. High-End Keyframe Animations
+   --------------------------------------------------------------------- */
+
+/* Card Throw / Toss Animation */
+@keyframes cardThrowAnim {
+    0% {
+        transform: translateY(80px) scale(0.6) rotate(-15deg);
+        opacity: 0.2;
+    }
+    60% {
+        transform: translateY(-10px) scale(1.08) rotate(4deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) scale(1) rotate(var(--rest-rot, 0deg));
+        opacity: 1;
+    }
+}
+
+.anim-card-throw {
+    animation: cardThrowAnim 0.38s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+/* Card Slap Animation (Aggressive, Slamming) */
+@keyframes cardSlapAnim {
+    0% {
+        transform: scale(2.2) translateY(-60px) rotate(-10deg);
+        opacity: 0.3;
+    }
+    70% {
+        transform: scale(0.92) translateY(4px) rotate(3deg);
+        opacity: 1;
+    }
+    85% {
+        transform: scale(1.04) translateY(-2px) rotate(-1deg);
+    }
+    100% {
+        transform: scale(1) translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.anim-card-slap {
+    animation: cardSlapAnim 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+/* Table Shake on Slam */
+@keyframes tableImpactShake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-3px, 3px); }
+    40% { transform: translate(3px, -2px); }
+    60% { transform: translate(-2px, -1px); }
+    80% { transform: translate(1px, 2px); }
+}
+
+.table-slap-impact {
+    animation: tableImpactShake 0.26s ease-out;
+}
+
+/* Deal Animation from Shoe */
+@keyframes cardDealAnim {
+    0% {
+        transform: translate(-120px, -140px) scale(0.2) rotate(45deg);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.anim-card-deal {
+    animation: cardDealAnim 0.32s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Trick Sweep to Winner */
+@keyframes trickSweepAnim {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.15) translateY(-20px);
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate(var(--sweep-x, 0px), var(--sweep-y, 200px)) scale(0.3);
+        opacity: 0;
+    }
+}
+
+.anim-trick-sweep {
+    animation: trickSweepAnim 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Chip Clink Pulse */
+@keyframes chipPopAnim {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.anim-chip-pop {
+    animation: chipPopAnim 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ---------------------------------------------------------------------
+   5. Active Turn Spotlight & Seat Badges
+   --------------------------------------------------------------------- */
+.seat-pod {
+    transition: all 0.3s ease;
+    border-radius: 1.25rem;
+}
+
+.seat-pod.is-active-turn {
+    box-shadow: 
+        0 0 0 3px #f59e0b,
+        0 0 25px 5px rgba(245, 158, 11, 0.45);
+    animation: turnPodPulse 2s infinite ease-in-out;
+}
+
+@keyframes turnPodPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 3px #f59e0b, 0 0 20px 4px rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 4px #fbbf24, 0 0 32px 8px rgba(251, 191, 36, 0.65);
+    }
+}
+
+/* ---------------------------------------------------------------------
+   6. Center Trick Surface
+   --------------------------------------------------------------------- */
+.center-trick-surface {
+    min-height: 180px;
+    border-radius: 1.75rem;
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.65) 100%);
+    border: 2px dashed rgba(245, 158, 11, 0.25);
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 16px;
+}
+
+/* Floating suits backdrop particles */
+.floating-suits-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.floating-suit {
+    position: absolute;
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.05);
+    animation: suitFloat 12s infinite linear;
+    pointer-events: none;
+    user-select: none;
+}
+
+@keyframes suitFloat {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% { opacity: 0.15; }
+    90% { opacity: 0.15; }
+    100% {
+        transform: translateY(-50px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* High Roller Badge */
+.vip-gold-glow {
+    text-shadow: 0 0 15px rgba(245, 158, 11, 0.6), 0 0 30px rgba(245, 158, 11, 0.3);
+}
