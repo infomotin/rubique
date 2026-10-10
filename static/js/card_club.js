@@ -3,6 +3,526 @@
  * fallback to 2.5s state polling - the game stays fully playable either way
  * because every move also has an HTTP endpoint. */
 
+// ============================================================================
+// ClubCards: High-Fidelity Classical Graphical Casino Card Art & Engine
+// Authentic two-way reversible royal portraits (King, Queen, Jack),
+// grand baroque engraved master Aces, and Bicycle-standard pip geometry.
+// ============================================================================
+const ClubCards = (() => {
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    const SUITS = {
+        'S': { sym: '♠', red: false, name: 'Spades' },
+        'H': { sym: '♥', red: true,  name: 'Hearts' },
+        'D': { sym: '♦', red: true,  name: 'Diamonds' },
+        'C': { sym: '♣', red: false, name: 'Clubs' }
+    };
+
+    function parseCard(c) {
+        if (!c || typeof c !== 'string') return null;
+        c = c.trim().toUpperCase();
+        let s = c.charAt(0);
+        let r = c.slice(1);
+        if (!SUITS[s]) {
+            s = c.slice(-1);
+            r = c.slice(0, -1);
+        }
+        if (!SUITS[s]) return null;
+        if (r === 'T') r = '10';
+        return {
+            suit: s,
+            symbol: SUITS[s].sym,
+            rank: r,
+            isRed: SUITS[s].red,
+            name: SUITS[s].name
+        };
+    }
+
+    const PIP_LAYOUTS = {
+        '2': [
+            { x: 50, y: 22, flip: false },
+            { x: 50, y: 78, flip: true }
+        ],
+        '3': [
+            { x: 50, y: 22, flip: false },
+            { x: 50, y: 50, flip: false },
+            { x: 50, y: 78, flip: true }
+        ],
+        '4': [
+            { x: 28, y: 22, flip: false },
+            { x: 72, y: 22, flip: false },
+            { x: 28, y: 78, flip: true },
+            { x: 72, y: 78, flip: true }
+        ],
+        '5': [
+            { x: 28, y: 22, flip: false },
+            { x: 72, y: 22, flip: false },
+            { x: 50, y: 50, flip: false },
+            { x: 28, y: 78, flip: true },
+            { x: 72, y: 78, flip: true }
+        ],
+        '6': [
+            { x: 28, y: 22, flip: false },
+            { x: 72, y: 22, flip: false },
+            { x: 28, y: 50, flip: false },
+            { x: 72, y: 50, flip: false },
+            { x: 28, y: 78, flip: true },
+            { x: 72, y: 78, flip: true }
+        ],
+        '7': [
+            { x: 28, y: 22, flip: false },
+            { x: 72, y: 22, flip: false },
+            { x: 50, y: 36, flip: false },
+            { x: 28, y: 50, flip: false },
+            { x: 72, y: 50, flip: false },
+            { x: 28, y: 78, flip: true },
+            { x: 72, y: 78, flip: true }
+        ],
+        '8': [
+            { x: 28, y: 22, flip: false },
+            { x: 72, y: 22, flip: false },
+            { x: 50, y: 36, flip: false },
+            { x: 28, y: 50, flip: false },
+            { x: 72, y: 50, flip: false },
+            { x: 50, y: 64, flip: true },
+            { x: 28, y: 78, flip: true },
+            { x: 72, y: 78, flip: true }
+        ],
+        '9': [
+            { x: 28, y: 20, flip: false },
+            { x: 72, y: 20, flip: false },
+            { x: 28, y: 39, flip: false },
+            { x: 72, y: 39, flip: false },
+            { x: 50, y: 50, flip: false },
+            { x: 28, y: 61, flip: true },
+            { x: 72, y: 61, flip: true },
+            { x: 28, y: 80, flip: true },
+            { x: 72, y: 80, flip: true }
+        ],
+        '10': [
+            { x: 28, y: 19, flip: false },
+            { x: 72, y: 19, flip: false },
+            { x: 50, y: 30, flip: false },
+            { x: 28, y: 40, flip: false },
+            { x: 72, y: 40, flip: false },
+            { x: 28, y: 60, flip: true },
+            { x: 72, y: 60, flip: true },
+            { x: 50, y: 70, flip: true },
+            { x: 28, y: 81, flip: true },
+            { x: 72, y: 81, flip: true }
+        ]
+    };
+
+    function getPipsHtml(rank, symbol, isRed) {
+        const layout = PIP_LAYOUTS[rank];
+        if (!layout) return '';
+        return layout.map(p => {
+            const flipClass = p.flip ? ' pip-flipped' : '';
+            return `<span class="card-pip-item${flipClass}" style="left:${p.x}%; top:${p.y}%;">${symbol}</span>`;
+        }).join('');
+    }
+
+    function getAceSpadesSvg() {
+        return `<svg class="card-ace-svg" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <radialGradient id="spade-glow" cx="50%" cy="45%" r="60%">
+                    <stop offset="0%" stop-color="#334155" />
+                    <stop offset="100%" stop-color="#090d16" />
+                </radialGradient>
+                <linearGradient id="gold-foil" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#fef08a" />
+                    <stop offset="50%" stop-color="#d97706" />
+                    <stop offset="100%" stop-color="#78350f" />
+                </linearGradient>
+            </defs>
+            <g stroke="url(#gold-foil)" fill="none" stroke-width="1.2" stroke-linecap="round" opacity="0.85">
+                <path d="M 50,8 C 42,4 32,8 35,16 C 37,21 44,20 48,16" />
+                <path d="M 50,8 C 58,4 68,8 65,16 C 63,21 56,20 52,16" />
+                <circle cx="50" cy="7" r="1.5" fill="#f59e0b" stroke="none" />
+                <path d="M 24,35 C 15,40 12,56 20,66 C 26,74 34,70 32,62 C 30,56 22,57 20,63" />
+                <path d="M 76,35 C 85,40 88,56 80,66 C 74,74 66,70 68,62 C 70,56 78,57 80,63" />
+                <path d="M 28,82 C 18,88 20,104 32,106 C 40,108 44,98 38,94" />
+                <path d="M 72,82 C 82,88 80,104 68,106 C 60,108 56,98 62,94" />
+            </g>
+            <g filter="drop-shadow(0 3px 5px rgba(0,0,0,0.45))">
+                <path d="M 50,18 C 48,27 22,54 22,72 C 22,86 34,92 44,86 C 47,84 48,81 50,77 C 52,81 53,84 56,86 C 66,92 78,86 78,72 C 78,54 52,27 50,18 Z" fill="url(#spade-glow)" stroke="#020617" stroke-width="1.5" />
+                <path d="M 47,75 L 43,98 C 40,100 36,101 34,102 L 66,102 C 64,101 60,100 57,98 L 53,75 Z" fill="url(#spade-glow)" stroke="#020617" stroke-width="1.2" />
+            </g>
+            <g stroke="#94a3b8" fill="none" stroke-width="0.6" opacity="0.45">
+                <ellipse cx="50" cy="58" rx="14" ry="16" />
+                <ellipse cx="50" cy="58" rx="9" ry="11" />
+                <path d="M 50,42 L 50,74 M 36,58 L 64,58 M 40,47 L 60,69 M 40,69 L 60,47" />
+                <circle cx="50" cy="58" r="3" fill="#f59e0b" stroke="#78350f" stroke-width="0.5" />
+            </g>
+            <g>
+                <path d="M 22,112 Q 50,107 78,112 L 75,121 Q 50,116 25,121 Z" fill="#fef3c7" stroke="#b45309" stroke-width="0.75" />
+                <text x="50" y="118.5" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="5.2" font-weight="900" fill="#78350f" text-anchor="middle" letter-spacing="1.8">RUBIQUE CLUB</text>
+            </g>
+        </svg>`;
+    }
+
+    function getAceHeartsSvg() {
+        return `<svg class="card-ace-svg" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <radialGradient id="heart-glow" cx="45%" cy="40%" r="65%">
+                    <stop offset="0%" stop-color="#ef4444" />
+                    <stop offset="70%" stop-color="#b91c1c" />
+                    <stop offset="100%" stop-color="#7f1d1d" />
+                </radialGradient>
+                <linearGradient id="gold-heart-foil" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#fef08a" />
+                    <stop offset="50%" stop-color="#d97706" />
+                    <stop offset="100%" stop-color="#92400e" />
+                </linearGradient>
+            </defs>
+            <g stroke="url(#gold-heart-foil)" fill="none" stroke-width="1.2" stroke-linecap="round" opacity="0.85">
+                <path d="M 50,14 C 42,7 30,12 34,22 C 37,28 44,26 48,20" />
+                <path d="M 50,14 C 58,7 70,12 66,22 C 63,28 56,26 52,20" />
+                <path d="M 22,46 C 14,54 14,72 24,80 C 32,86 38,78 34,70" />
+                <path d="M 78,46 C 86,54 86,72 76,80 C 68,86 62,78 66,70" />
+                <path d="M 44,17 L 46,12 L 50,15 L 54,12 L 56,17 Z" fill="#f59e0b" stroke="#78350f" stroke-width="0.5" />
+            </g>
+            <g filter="drop-shadow(0 3px 6px rgba(185,28,28,0.4))">
+                <path d="M 50,96 C 32,78 18,63 18,44 C 18,29 30,18 45,18 C 47,18 49,19 50,21 C 51,19 53,18 55,18 C 70,18 82,29 82,44 C 82,63 68,78 50,96 Z" fill="url(#heart-glow)" stroke="#991b1b" stroke-width="1.2" />
+            </g>
+            <g stroke="#fecaca" fill="none" stroke-width="0.6" opacity="0.45">
+                <ellipse cx="50" cy="48" rx="14" ry="12" />
+                <ellipse cx="50" cy="48" rx="8" ry="7" />
+                <path d="M 50,34 L 50,62 M 36,48 L 64,48 M 41,39 L 59,57 M 41,57 L 59,39" />
+                <circle cx="50" cy="48" r="2.5" fill="#fef08a" stroke="#b45309" stroke-width="0.5" />
+            </g>
+            <g>
+                <path d="M 24,108 Q 50,103 76,108 L 73,117 Q 50,112 27,117 Z" fill="#fef3c7" stroke="#b45309" stroke-width="0.75" />
+                <text x="50" y="114.5" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="5" font-weight="900" fill="#78350f" text-anchor="middle" letter-spacing="1.5">ROYAL HEARTS</text>
+            </g>
+        </svg>`;
+    }
+
+    function getAceDiamondsSvg() {
+        return `<svg class="card-ace-svg" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <radialGradient id="diam-glow" cx="50%" cy="50%" r="65%">
+                    <stop offset="0%" stop-color="#f87171" />
+                    <stop offset="60%" stop-color="#dc2626" />
+                    <stop offset="100%" stop-color="#991b1b" />
+                </radialGradient>
+                <linearGradient id="gold-diam-foil" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#fef08a" />
+                    <stop offset="50%" stop-color="#d97706" />
+                    <stop offset="100%" stop-color="#78350f" />
+                </linearGradient>
+            </defs>
+            <g stroke="url(#gold-diam-foil)" fill="none" stroke-width="1.2" stroke-linecap="round" opacity="0.85">
+                <path d="M 50,12 C 40,6 28,14 34,26 C 38,32 46,28 48,22" />
+                <path d="M 50,12 C 60,6 72,14 66,26 C 62,32 54,28 52,22" />
+                <path d="M 20,46 C 10,54 10,72 20,80 C 28,86 34,78 30,72" />
+                <path d="M 80,46 C 90,54 90,72 80,80 C 72,86 66,78 70,72" />
+            </g>
+            <g filter="drop-shadow(0 3px 6px rgba(220,38,38,0.4))">
+                <polygon points="50,18 84,58 50,98 16,58" fill="url(#diam-glow)" stroke="#7f1d1d" stroke-width="1.2" />
+                <polygon points="50,18 50,98 32,58" fill="#fca5a5" opacity="0.3" />
+                <polygon points="50,18 84,58 50,58" fill="#fee2e2" opacity="0.25" />
+                <polygon points="16,58 50,58 50,98" fill="#7f1d1d" opacity="0.35" />
+                <polygon points="50,34 68,58 50,82 32,58" fill="#ef4444" stroke="#fecaca" stroke-width="0.8" opacity="0.6" />
+                <circle cx="50" cy="58" r="3.5" fill="#ffffff" opacity="0.8" />
+            </g>
+            <g>
+                <path d="M 22,110 Q 50,105 78,110 L 75,119 Q 50,114 25,119 Z" fill="#fef3c7" stroke="#b45309" stroke-width="0.75" />
+                <text x="50" y="116.5" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="5" font-weight="900" fill="#78350f" text-anchor="middle" letter-spacing="1.5">ROYAL DIAMOND</text>
+            </g>
+        </svg>`;
+    }
+
+    function getAceClubsSvg() {
+        return `<svg class="card-ace-svg" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <radialGradient id="club-glow" cx="48%" cy="42%" r="65%">
+                    <stop offset="0%" stop-color="#334155" />
+                    <stop offset="70%" stop-color="#0f172a" />
+                    <stop offset="100%" stop-color="#020617" />
+                </radialGradient>
+                <linearGradient id="gold-club-foil" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#fef08a" />
+                    <stop offset="50%" stop-color="#d97706" />
+                    <stop offset="100%" stop-color="#78350f" />
+                </linearGradient>
+            </defs>
+            <g stroke="url(#gold-club-foil)" fill="none" stroke-width="1.2" stroke-linecap="round" opacity="0.85">
+                <path d="M 50,10 C 40,5 28,12 34,22 C 38,28 46,26 48,20" />
+                <path d="M 50,10 C 60,5 72,12 66,22 C 62,28 54,26 52,20" />
+                <path d="M 20,44 C 10,52 10,70 20,78 C 28,84 34,76 30,70" />
+                <path d="M 80,44 C 90,52 90,70 80,78 C 72,84 66,76 70,70" />
+            </g>
+            <g filter="drop-shadow(0 3px 5px rgba(0,0,0,0.45))">
+                <circle cx="50" cy="40" r="19" fill="url(#club-glow)" stroke="#020617" stroke-width="1.2" />
+                <circle cx="34" cy="62" r="19" fill="url(#club-glow)" stroke="#020617" stroke-width="1.2" />
+                <circle cx="66" cy="62" r="19" fill="url(#club-glow)" stroke="#020617" stroke-width="1.2" />
+                <circle cx="50" cy="54" r="14" fill="url(#club-glow)" />
+                <path d="M 47,66 L 43,96 C 40,98 35,99 33,100 L 67,100 C 65,99 60,98 57,96 L 53,66 Z" fill="url(#club-glow)" stroke="#020617" stroke-width="1.2" />
+            </g>
+            <g stroke="#94a3b8" fill="none" stroke-width="0.6" opacity="0.45">
+                <circle cx="50" cy="40" r="8" />
+                <circle cx="34" cy="62" r="8" />
+                <circle cx="66" cy="62" r="8" />
+                <circle cx="50" cy="54" r="4" fill="#f59e0b" stroke="#78350f" stroke-width="0.5" />
+            </g>
+            <g>
+                <path d="M 22,110 Q 50,105 78,110 L 75,119 Q 50,114 25,119 Z" fill="#fef3c7" stroke="#b45309" stroke-width="0.75" />
+                <text x="50" y="116.5" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="5" font-weight="900" fill="#78350f" text-anchor="middle" letter-spacing="1.5">ROYAL CLUB</text>
+            </g>
+        </svg>`;
+    }
+
+    function getAceSvg(suit, symbol, isRed) {
+        if (suit === 'S') return getAceSpadesSvg();
+        if (suit === 'H') return getAceHeartsSvg();
+        if (suit === 'D') return getAceDiamondsSvg();
+        return getAceClubsSvg();
+    }
+
+    function getKingSvg(suit, symbol, isRed) {
+        const crownFill = !isRed ? '#f43f5e' : '#f59e0b';
+        const tunicPrimary = !isRed ? '#0d9488' : '#dc2626';
+        const tunicSecondary = !isRed ? '#f43f5e' : '#ea580c';
+        const tabletBg = !isRed ? '#0d9488' : '#fef08a';
+        const suitColor = !isRed ? '#111827' : '#dc2626';
+        const clipId = `k-split-${suit}-${Math.random().toString(36).substr(2, 6)}`;
+        const halfId = `k-half-${suit}-${Math.random().toString(36).substr(2, 6)}`;
+        
+        const half = `
+            <rect x="22" y="24" width="56" height="60" fill="${tunicSecondary}" rx="1" />
+            <rect x="42" y="32" width="36" height="52" fill="${tunicPrimary}" rx="1" />
+            <rect x="70" y="8" width="6" height="68" fill="#e2e8f0" stroke="#111827" stroke-width="1.1" />
+            <rect x="67" y="22" width="12" height="4" fill="#f59e0b" stroke="#111827" stroke-width="1" rx="1" />
+            <circle cx="73" cy="7" r="2.2" fill="#f59e0b" stroke="#111827" stroke-width="1" />
+            <line x1="73" y1="26" x2="73" y2="76" stroke="#94a3b8" stroke-width="1" />
+            <polygon points="48,8 45,20 66,20 63,12 56,18 53,8" fill="${crownFill}" stroke="#111827" stroke-width="1.2" stroke-linejoin="round" />
+            <circle cx="48" cy="7" r="1.8" fill="#f59e0b" stroke="#111827" stroke-width="1" />
+            <circle cx="53" cy="7" r="1.8" fill="#f59e0b" stroke="#111827" stroke-width="1" />
+            <circle cx="63" cy="11" r="1.8" fill="#f59e0b" stroke="#111827" stroke-width="1" />
+            <path d="M 45,20 C 47,30 50,42 58,46 C 68,50 74,40 76,46 C 78,52 74,62 70,68 C 65,72 58,68 54,62" fill="#f59e0b" stroke="#111827" stroke-width="1.2" stroke-linecap="round" />
+            <path d="M 48,22 C 50,32 54,42 62,44 C 70,46 74,42 76,48" fill="none" stroke="#111827" stroke-width="1" stroke-linecap="round" />
+            <path d="M 45,20 L 35,20 L 35,32 L 38,32 C 40,34 40,38 37,39 L 37,42 C 41,45 44,48 44,56 L 54,56 C 54,46 48,40 48,38 L 47,20 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" stroke-linejoin="round" />
+            <line x1="39" y1="24" x2="45" y2="24" stroke="#111827" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M 39,27 Q 42,30 45,27" fill="none" stroke="#111827" stroke-width="1.3" stroke-linecap="round" />
+            <path d="M 33,35 C 36,33 42,33 46,36 C 42,42 34,42 33,35 Z" fill="#f59e0b" stroke="#111827" stroke-width="1" stroke-linejoin="round" />
+            <path d="M 36,40 C 33,48 37,56 46,54 C 44,49 42,44 42,40 Z" fill="#f59e0b" stroke="#111827" stroke-width="1.1" stroke-linejoin="round" />
+            <path d="M 18,66 C 18,52 24,46 38,46 L 42,56 C 40,62 34,68 22,70 Z" fill="${tunicPrimary}" stroke="#111827" stroke-width="1.2" />
+            <path d="M 48,46 C 56,46 64,50 64,66 L 48,66 Z" fill="${tunicPrimary}" stroke="#111827" stroke-width="1.2" />
+            <path d="M 42,46 L 42,78 L 48,78 L 48,46 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" />
+            <polygon points="42,48 48,51 42,54" fill="#111827" />
+            <polygon points="48,54 42,57 48,60" fill="#111827" />
+            <polygon points="42,60 48,63 42,66" fill="#111827" />
+            <polygon points="48,66 42,69 48,72" fill="#111827" />
+            <polygon points="42,72 48,75 42,78" fill="#111827" />
+            <g transform="translate(23, 27)">
+                <polygon points="0,-13 13,0 0,13 -13,0" fill="${tabletBg}" stroke="#111827" stroke-width="1.3" />
+                <polygon points="0,-9 9,0 0,9 -9,0" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.6" />
+                <text x="0" y="4.5" text-anchor="middle" font-size="12" font-weight="900" fill="${suitColor}">${symbol}</text>
+            </g>
+            <path d="M 17,39 C 17,34 21,30 26,31 C 25,35 23,37 24,40 C 22,39 21,42 22,45 L 19,45 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M 68,64 C 70,68 72,74 72,78 C 70,77 69,74 68,75 C 67,74 66,76 65,74 L 64,68 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+        `;
+
+        return `<svg class="card-court-svg" viewBox="0 0 100 146" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <clipPath id="${clipId}">
+                    <polygon points="0,0 100,0 100,60 0,86" />
+                </clipPath>
+            </defs>
+            <g clip-path="url(#${clipId})">
+                ${half}
+            </g>
+            <g transform="rotate(180, 50, 73)" clip-path="url(#${clipId})">
+                ${half}
+            </g>
+            <line x1="0" y1="86" x2="100" y2="60" stroke="#111827" stroke-width="1.3" stroke-linecap="round" />
+        </svg>`;
+    }
+
+    function getQueenSvg(suit, symbol, isRed) {
+        const crownFill = isRed ? '#0d9488' : '#f59e0b';
+        const tunicPrimary = isRed ? '#0d9488' : '#1e293b';
+        const tunicSecondary = isRed ? '#f43f5e' : '#0284c7';
+        const blockAccent = isRed ? '#fb923c' : '#f59e0b';
+        const suitColor = isRed ? '#e11d48' : '#111827';
+        const clipId = `q-split-${suit}-${Math.random().toString(36).substr(2, 6)}`;
+        
+        const half = `
+            <rect x="22" y="24" width="56" height="60" fill="${tunicSecondary}" rx="1" />
+            <rect x="22" y="52" width="28" height="32" fill="${blockAccent}" rx="1" />
+            <polygon points="46,14 43,26 62,26 60,18 53,24 51,14" fill="${crownFill}" stroke="#111827" stroke-width="1.2" stroke-linejoin="round" />
+            <circle cx="46" cy="13" r="1.8" fill="#f59e0b" stroke="#111827" stroke-width="1" />
+            <circle cx="51" cy="13" r="1.8" fill="#f59e0b" stroke="#111827" stroke-width="1" />
+            <circle cx="60" cy="17" r="1.8" fill="#f59e0b" stroke="#111827" stroke-width="1" />
+            <path d="M 43,26 C 45,35 48,46 56,48 C 65,50 72,44 76,48 C 80,52 74,62 70,68 C 65,74 58,70 54,64" fill="#f59e0b" stroke="#111827" stroke-width="1.2" stroke-linecap="round" />
+            <path d="M 46,28 C 48,36 52,44 60,46 C 68,48 74,44 76,50" fill="none" stroke="#111827" stroke-width="1" stroke-linecap="round" />
+            <path d="M 50,30 C 53,38 56,44 64,46" fill="none" stroke="#111827" stroke-width="1" stroke-linecap="round" />
+            <path d="M 43,26 L 33,26 L 33,39 L 36,39 C 39,41 39,45 36,46 L 36,49 C 41,52 44,56 44,64 L 54,64 C 54,52 48,46 47,44 L 46,26 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" stroke-linejoin="round" />
+            <line x1="38" y1="31" x2="44" y2="31" stroke="#111827" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M 38,34 Q 41,37 44,34" fill="none" stroke="#111827" stroke-width="1.3" stroke-linecap="round" />
+            <line x1="39" y1="35" x2="38" y2="38" stroke="#111827" stroke-width="0.8" />
+            <line x1="41" y1="36" x2="41" y2="39" stroke="#111827" stroke-width="0.8" />
+            <line x1="43" y1="35" x2="44" y2="38" stroke="#111827" stroke-width="0.8" />
+            <path d="M 36,42 L 39,42" stroke="#e11d48" stroke-width="2" stroke-linecap="round" />
+            <path d="M 22,70 C 22,54 28,48 44,48 L 47,60 C 44,66 38,72 26,74 Z" fill="${tunicPrimary}" stroke="#111827" stroke-width="1.2" stroke-linejoin="round" />
+            <path d="M 54,48 C 62,48 70,52 70,68 L 52,68 C 50,60 52,54 54,48 Z" fill="${tunicPrimary}" stroke="#111827" stroke-width="1.2" stroke-linejoin="round" />
+            <path d="M 34,54 Q 44,60 48,54" fill="#111827" />
+            <path d="M 46,46 L 46,80 L 52,80 L 52,46 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" />
+            <polygon points="46,48 52,51 46,54" fill="#111827" />
+            <polygon points="52,54 46,57 52,60" fill="#111827" />
+            <polygon points="46,60 52,63 46,66" fill="#111827" />
+            <polygon points="52,66 46,69 52,72" fill="#111827" />
+            <polygon points="46,72 52,75 46,78" fill="#111827" />
+            <g stroke="#111827" stroke-width="1" stroke-linecap="round">
+                <line x1="25" y1="21" x2="25" y2="18" />
+                <line x1="25" y1="35" x2="25" y2="38" />
+                <line x1="18" y1="28" x2="15" y2="28" />
+                <line x1="32" y1="28" x2="35" y2="28" />
+                <line x1="20" y1="23" x2="18" y2="21" />
+                <line x1="30" y1="23" x2="32" y2="21" />
+                <line x1="20" y1="33" x2="18" y2="35" />
+                <line x1="30" y1="33" x2="32" y2="35" />
+            </g>
+            <text x="25" y="32" text-anchor="middle" font-size="13" font-weight="900" fill="${suitColor}">${symbol}</text>
+            <path d="M 20,44 C 20,40 24,36 30,37 C 29,40 26,42 27,45 C 25,44 24,47 25,50 L 22,50 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M 72,66 C 74,70 76,75 76,80 C 74,79 73,76 72,77 C 71,76 70,78 69,76 L 68,70 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+        `;
+
+        return `<svg class="card-court-svg" viewBox="0 0 100 146" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <clipPath id="${clipId}">
+                    <polygon points="0,0 100,0 100,60 0,86" />
+                </clipPath>
+            </defs>
+            <g clip-path="url(#${clipId})">
+                ${half}
+            </g>
+            <g transform="rotate(180, 50, 73)" clip-path="url(#${clipId})">
+                ${half}
+            </g>
+            <line x1="0" y1="86" x2="100" y2="60" stroke="#111827" stroke-width="1.3" stroke-linecap="round" />
+        </svg>`;
+    }
+
+    function getJackSvg(suit, symbol, isRed) {
+        const capFill = !isRed ? '#f43f5e' : '#0284c7';
+        const tunicPrimary = !isRed ? '#2563eb' : '#ea580c';
+        const tunicSecondary = !isRed ? '#0d9488' : '#f59e0b';
+        const suitColor = !isRed ? '#111827' : '#dc2626';
+        const tabletBg = !isRed ? '#fef08a' : '#ffffff';
+        const clipId = `j-split-${suit}-${Math.random().toString(36).substr(2, 6)}`;
+
+        const half = `
+            <rect x="22" y="24" width="56" height="60" fill="${tunicSecondary}" rx="1" />
+            <rect x="38" y="32" width="38" height="52" fill="${tunicPrimary}" rx="1" />
+            <line x1="72" y1="4" x2="72" y2="76" stroke="#78350f" stroke-width="2" stroke-linecap="round" />
+            <polygon points="72,3 69,12 72,10 75,12" fill="#cbd5e1" stroke="#111827" stroke-width="1" />
+            <polygon points="72,10 77,14 72,17" fill="#cbd5e1" stroke="#111827" stroke-width="1" />
+            <path d="M 40,20 C 40,12 56,8 66,14 C 64,22 56,22 40,20 Z" fill="${capFill}" stroke="#111827" stroke-width="1.2" />
+            <path d="M 64,12 C 70,6 74,4 78,8 C 76,12 70,14 65,14" fill="#ffffff" stroke="#111827" stroke-width="1" />
+            <circle cx="56" cy="18" r="2" fill="#f59e0b" stroke="#111827" stroke-width="1" />
+            <path d="M 40,20 C 42,28 46,38 52,42 C 60,44 64,36 68,42 C 70,48 68,56 64,62" fill="#b45309" stroke="#111827" stroke-width="1.2" stroke-linecap="round" />
+            <path d="M 40,20 L 32,20 L 32,32 L 35,32 C 37,34 37,38 34,39 L 34,42 C 38,45 42,48 42,56 L 52,56 C 52,46 46,40 45,38 L 44,20 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" stroke-linejoin="round" />
+            <line x1="36" y1="24" x2="42" y2="24" stroke="#111827" stroke-width="1.5" stroke-linecap="round" />
+            <circle cx="39" cy="28" r="1.5" fill="#111827" />
+            <path d="M 34,36 L 37,36" stroke="#e11d48" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M 18,66 C 18,52 24,46 38,46 L 42,56 C 40,62 34,68 22,70 Z" fill="${tunicPrimary}" stroke="#111827" stroke-width="1.2" />
+            <path d="M 48,46 C 56,46 64,50 64,66 L 48,66 Z" fill="${tunicPrimary}" stroke="#111827" stroke-width="1.2" />
+            <path d="M 40,46 L 40,78 L 46,78 L 46,46 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" />
+            <polygon points="40,48 46,51 40,54" fill="#111827" />
+            <polygon points="46,54 40,57 46,60" fill="#111827" />
+            <polygon points="40,60 46,63 40,66" fill="#111827" />
+            <polygon points="46,66 40,69 46,72" fill="#111827" />
+            <polygon points="40,72 46,75 40,78" fill="#111827" />
+            <g transform="translate(24, 28)">
+                <circle cx="0" cy="0" r="11" fill="${tabletBg}" stroke="#111827" stroke-width="1.2" />
+                <circle cx="0" cy="0" r="8" fill="none" stroke="#f59e0b" stroke-width="0.8" />
+                <text x="0" y="4" text-anchor="middle" font-size="11" font-weight="900" fill="${suitColor}">${symbol}</text>
+            </g>
+            <path d="M 18,39 C 18,34 22,30 27,31 C 26,35 24,37 25,40 C 23,39 22,42 23,45 L 20,45 Z" fill="#ffffff" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="72" cy="42" r="3.5" fill="#ffffff" stroke="#111827" stroke-width="1.1" />
+        `;
+
+        return `<svg class="card-court-svg" viewBox="0 0 100 146" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <clipPath id="${clipId}">
+                    <polygon points="0,0 100,0 100,60 0,86" />
+                </clipPath>
+            </defs>
+            <g clip-path="url(#${clipId})">
+                ${half}
+            </g>
+            <g transform="rotate(180, 50, 73)" clip-path="url(#${clipId})">
+                ${half}
+            </g>
+            <line x1="0" y1="86" x2="100" y2="60" stroke="#111827" stroke-width="1.3" stroke-linecap="round" />
+        </svg>`;
+    }
+
+    function render3DCard(c, opts = {}) {
+        const info = parseCard(c);
+        if (!info) {
+            return `<div class="playing-card-3d"><div class="card-back"><div class="card-back-pattern">🂠</div></div></div>`;
+        }
+        const suitSymbol = info.symbol;
+        const isRed = info.isRed;
+        const suitClass = isRed ? 'suit-red' : 'suit-black';
+        const isPlayable = opts.playable ? 'is-playable' : '';
+        const animClass = opts.anim || '';
+        const styleAttr = opts.style ? `style="${opts.style}"` : '';
+        const actIndex = opts.actionIndex !== undefined ? `data-action-index="${opts.actionIndex}"` : '';
+
+        let centerHtml = '';
+        if (info.rank === 'K') {
+            centerHtml = `<div class="card-center court-graphic-container">${getKingSvg(info.suit, suitSymbol, isRed)}</div>`;
+        } else if (info.rank === 'Q') {
+            centerHtml = `<div class="card-center court-graphic-container">${getQueenSvg(info.suit, suitSymbol, isRed)}</div>`;
+        } else if (info.rank === 'J') {
+            centerHtml = `<div class="card-center court-graphic-container">${getJackSvg(info.suit, suitSymbol, isRed)}</div>`;
+        } else if (info.rank === 'A') {
+            centerHtml = `<div class="card-center ace-graphic-container">${getAceSvg(info.suit, suitSymbol, isRed)}</div>`;
+        } else if (PIP_LAYOUTS[info.rank]) {
+            centerHtml = `<div class="card-pips-matrix">${getPipsHtml(info.rank, suitSymbol, isRed)}</div>`;
+        } else {
+            centerHtml = `<div class="card-center"><span style="font-size:1.6rem">${suitSymbol}</span></div>`;
+        }
+
+        return `
+        <div class="playing-card-3d ${isPlayable} ${animClass} group" data-card="${esc(c)}" ${actIndex} ${styleAttr} onmouseenter="window.ClubAudio && window.ClubAudio.hover()">
+            <div class="card-face ${suitClass}">
+                <div class="card-inner-frame"></div>
+                <div class="card-corner card-corner-top">
+                    <span class="card-val">${esc(info.rank)}</span>
+                    <span class="card-suit-sm">${suitSymbol}</span>
+                </div>
+                ${centerHtml}
+                <div class="card-corner card-corner-bottom">
+                    <span class="card-val">${esc(info.rank)}</span>
+                    <span class="card-suit-sm">${suitSymbol}</span>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    return {
+        parseCard,
+        render3DCard,
+        getKingSvg,
+        getQueenSvg,
+        getJackSvg,
+        getAceSvg,
+        getPipsHtml,
+        SUITS
+    };
+})();
+
+window.ClubCards = ClubCards;
+window.render3DCard = ClubCards.render3DCard;
+
 const ClubSection = (() => {
 
     function toast(msg, ok = true) {
@@ -472,30 +992,9 @@ const ClubSection = (() => {
                     setTimeout(() => wave.remove(), 500);
 
                     // Slap card
-                    const card = document.createElement('div');
-                    card.className = 'playing-card-3d anim-card-slap relative';
-                    const sampleCards = [
-                        { r: 'A', s: '♠', red: false },
-                        { r: 'K', s: '♥', red: true },
-                        { r: 'J', s: '♠', red: false },
-                        { r: 'Q', s: '♦', red: true }
-                    ];
+                    const sampleCards = ['AS', 'KH', 'JS', 'QD', 'KC', 'AH'];
                     const pick = sampleCards[Math.floor(Math.random() * sampleCards.length)];
-                    card.innerHTML = `
-                        <div class="card-face ${pick.red ? 'suit-red' : 'suit-black'}">
-                            <div class="card-corner card-corner-top">
-                                <span class="card-val">${pick.r}</span>
-                                <span class="card-suit-sm">${pick.s}</span>
-                            </div>
-                            <div class="card-center court-card">${pick.s}</div>
-                            <div class="card-corner card-corner-bottom">
-                                <span class="card-val">${pick.r}</span>
-                                <span class="card-suit-sm">${pick.s}</span>
-                            </div>
-                        </div>
-                    `;
-                    slapTarget.innerHTML = '';
-                    slapTarget.appendChild(card);
+                    slapTarget.innerHTML = ClubCards.render3DCard(pick, { anim: 'anim-card-slap relative' });
                 });
             }
 
@@ -506,37 +1005,14 @@ const ClubSection = (() => {
                 throwBtn.addEventListener('click', () => {
                     if (window.ClubAudio) window.ClubAudio.throw();
 
-                    const card = document.createElement('div');
-                    card.className = 'playing-card-3d anim-card-flight relative';
                     const rot = (Math.random() * 24 - 12).toFixed(1);
-                    card.style.setProperty('--throw-rot', `${rot}deg`);
-                    card.style.setProperty('--throw-from-x', `${(Math.random() * 80 - 40).toFixed(0)}px`);
-                    card.style.setProperty('--throw-from-y', '150px');
-                    card.style.setProperty('--throw-to-x', '0px');
-                    card.style.setProperty('--throw-to-y', '0px');
-
-                    const sampleCards = [
-                        { r: '10', s: '♦', red: true },
-                        { r: 'A', s: '♣', red: false },
-                        { r: '9', s: '♥', red: true },
-                        { r: 'J', s: '♣', red: false }
-                    ];
+                    const sampleCards = ['10D', 'AC', '9H', 'JC', 'QS', 'KD'];
                     const pick = sampleCards[Math.floor(Math.random() * sampleCards.length)];
-                    card.innerHTML = `
-                        <div class="card-face ${pick.red ? 'suit-red' : 'suit-black'}">
-                            <div class="card-corner card-corner-top">
-                                <span class="card-val">${pick.r}</span>
-                                <span class="card-suit-sm">${pick.s}</span>
-                            </div>
-                            <div class="card-center court-card">${pick.s}</div>
-                            <div class="card-corner card-corner-bottom">
-                                <span class="card-val">${pick.r}</span>
-                                <span class="card-suit-sm">${pick.s}</span>
-                            </div>
-                        </div>
-                    `;
-                    throwTarget.innerHTML = '';
-                    throwTarget.appendChild(card);
+                    const cardHtml = ClubCards.render3DCard(pick, {
+                        anim: 'anim-card-flight relative',
+                        style: `--throw-rot:${rot}deg; --throw-from-x:${(Math.random() * 80 - 40).toFixed(0)}px; --throw-from-y:150px; --throw-to-x:0px; --throw-to-y:0px;`
+                    });
+                    throwTarget.innerHTML = cardHtml;
                 });
             }
 
@@ -546,34 +1022,20 @@ const ClubSection = (() => {
             if (dealBtn && dealTarget) {
                 dealBtn.addEventListener('click', () => {
                     dealTarget.innerHTML = '';
-                    const sampleCards = [
-                        { r: 'A', s: '♠', red: false },
-                        { r: 'K', s: '♥', red: true },
-                        { r: 'Q', s: '♦', red: true },
-                        { r: 'J', s: '♣', red: false },
-                        { r: '10', s: '♠', red: false }
-                    ];
+                    const sampleCards = ['AS', 'KH', 'QD', 'JC', '10S'];
                     sampleCards.forEach((c, idx) => {
                         setTimeout(() => {
                             if (window.ClubAudio) window.ClubAudio.deal();
-                            const card = document.createElement('div');
-                            card.className = 'playing-card-3d anim-card-deal';
-                            card.style.marginLeft = idx === 0 ? '0px' : '-24px';
-                            card.innerHTML = `
-                                <div class="card-face ${c.red ? 'suit-red' : 'suit-black'}">
-                                    <div class="card-corner card-corner-top">
-                                        <span class="card-val">${c.r}</span>
-                                        <span class="card-suit-sm">${c.s}</span>
-                                    </div>
-                                    <div class="card-center court-card">${c.s}</div>
-                                    <div class="card-corner card-corner-bottom">
-                                        <span class="card-val">${c.r}</span>
-                                        <span class="card-suit-sm">${c.s}</span>
-                                    </div>
-                                </div>
-                            `;
-                            card.addEventListener('mouseenter', () => window.ClubAudio && window.ClubAudio.hover());
-                            dealTarget.appendChild(card);
+                            const wrap = document.createElement('div');
+                            wrap.innerHTML = ClubCards.render3DCard(c, {
+                                anim: 'anim-card-deal',
+                                style: idx === 0 ? '' : 'margin-left: -24px;'
+                            });
+                            const el = wrap.firstElementChild;
+                            if (el) {
+                                el.addEventListener('mouseenter', () => window.ClubAudio && window.ClubAudio.hover());
+                                dealTarget.appendChild(el);
+                            }
                         }, idx * 110);
                     });
                 });
@@ -1361,35 +1823,7 @@ const ClubTable = (() => {
     }
 
     function render3DCard(c, opts = {}) {
-        const info = parseCard(c);
-        if (!info) {
-            return `<div class="playing-card-3d"><div class="card-back"><div class="card-back-pattern">🂠</div></div></div>`;
-        }
-        const suitSymbol = info.symbol;
-        const isRed = info.isRed;
-        const suitClass = isRed ? 'suit-red' : 'suit-black';
-        const court = (info.rank === 'J' || info.rank === 'Q' || info.rank === 'K' || info.rank === 'A');
-        const isPlayable = opts.playable ? 'is-playable' : '';
-        const animClass = opts.anim || '';
-        const styleAttr = opts.style ? `style="${opts.style}"` : '';
-        const actIndex = opts.actionIndex !== undefined ? `data-action-index="${opts.actionIndex}"` : '';
-
-        return `
-        <div class="playing-card-3d ${isPlayable} ${animClass} group" data-card="${esc(c)}" ${actIndex} ${styleAttr} onmouseenter="window.ClubAudio && window.ClubAudio.hover()">
-            <div class="card-face ${suitClass}">
-                <div class="card-corner card-corner-top">
-                    <span class="card-val">${esc(info.rank)}</span>
-                    <span class="card-suit-sm">${suitSymbol}</span>
-                </div>
-                <div class="card-center ${court ? 'court-card' : ''}">
-                    ${court ? esc(info.rank) : suitSymbol}
-                </div>
-                <div class="card-corner card-corner-bottom">
-                    <span class="card-val">${esc(info.rank)}</span>
-                    <span class="card-suit-sm">${suitSymbol}</span>
-                </div>
-            </div>
-        </div>`;
+        return ClubCards.render3DCard(c, opts);
     }
 
     function cardChip(c) {

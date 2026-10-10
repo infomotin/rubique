@@ -3,6 +3,10 @@
 {% block title %}Classic Playing Card Arena - 29, Bridge, Spades, Hearts & More - Rubique{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/card_club.css') }}">
+<script src="{{ url_for('static', filename='js/card_sound_engine.js') }}"></script>
+<script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
+
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- Top Card Mode Navigation Tabs -->
@@ -150,70 +154,92 @@
         <!-- Right 3 Columns: 4-Player Velvet Felt Table Arena -->
         <div class="lg:col-span-3 space-y-6">
 
-            <!-- Green Velvet Felt Table Container -->
-            <div class="relative rounded-[2.5rem] border-4 border-amber-900/40 bg-gradient-to-b from-emerald-950 via-[#07301c] to-emerald-950 shadow-2xl p-6 sm:p-10 min-h-[560px] flex flex-col justify-between overflow-hidden">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.15),transparent_70%)] pointer-events-none"></div>
+            <!-- Ultra-Realistic Monte Carlo Casino Felt Table Arena -->
+            <div class="real-casino-table p-4 sm:p-8 pb-12 sm:pb-16 min-h-[760px] sm:min-h-[840px] flex flex-col justify-between relative select-none overflow-visible">
+                <!-- Brass Inlaid Racetrack -->
+                <div class="table-brass-track"></div>
+
+                <!-- Subtle Center Table Watermark Emblem -->
+                <div class="real-casino-watermark">
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="100" cy="100" r="88" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="6,4"/>
+                        <circle cx="100" cy="100" r="76" stroke="#f59e0b" stroke-width="1"/>
+                        <path d="M 100,55 C 95,72 70,88 70,105 C 70,118 80,126 90,121 C 94,119 98,114 100,108 C 102,114 106,119 110,121 C 120,126 130,118 130,105 C 130,88 105,72 100,55 Z" fill="#f59e0b"/>
+                        <path d="M 97,108 L 94,130 C 90,132 85,133 83,134 L 117,134 C 115,133 110,132 106,130 L 103,108 Z" fill="#f59e0b"/>
+                        <text x="100" y="160" text-anchor="middle" font-family="'Cinzel', Georgia, serif" font-size="10.5" font-weight="900" fill="#f59e0b" letter-spacing="3">RUBIQUE ARENA</text>
+                    </svg>
+                </div>
 
                 <!-- North Seat (Partner AI) -->
-                <div class="flex flex-col items-center space-y-2 relative z-10">
-                    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/80 border border-emerald-500/30 text-emerald-300 font-mono text-xs shadow-lg">
+                <div class="flex flex-col items-center space-y-2 relative z-20">
+                    <div class="flex items-center gap-2.5 px-3.5 py-1 rounded-full bg-slate-950/90 border border-emerald-500/40 text-emerald-300 font-mono text-xs shadow-xl backdrop-blur-md">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         <i class="fa-solid fa-robot text-emerald-400"></i>
-                        <span>North (Partner Bot)</span>
-                        <span id="north-card-count" class="px-1.5 py-0.2 rounded bg-emerald-900 text-[10px] text-white">0 cards</span>
+                        <span class="font-bold">North (Partner Bot)</span>
+                        <span id="north-card-count" class="px-2 py-0.5 rounded-full bg-emerald-900/90 border border-emerald-500/40 text-[10px] text-emerald-200 font-bold">0 cards</span>
                     </div>
                     <!-- North Card Backs or Dummy Hands -->
-                    <div id="north-hand-cards" class="flex justify-center -space-x-3 sm:-space-x-4 max-w-full overflow-hidden">
-                        <!-- Populated by JS -->
+                    <div id="north-hand-cards" class="flex justify-center -space-x-4 sm:-space-x-5 max-w-full overflow-hidden p-1">
+                        <!-- Populated by JS with luxury 3D card backs or dummy hand -->
                     </div>
                 </div>
 
                 <!-- Middle Zone: West Seat + Center Trick Table + East Seat -->
-                <div class="grid grid-cols-12 items-center gap-2 sm:gap-4 my-auto relative z-10">
+                <div class="grid grid-cols-12 items-center gap-2 sm:gap-4 my-auto relative z-20">
                     
                     <!-- West Seat (Opponent AI) -->
                     <div class="col-span-3 flex flex-col items-center space-y-2">
-                        <div class="flex flex-col items-center px-2 sm:px-3 py-1.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-slate-300 font-mono text-[11px] text-center shadow-lg">
-                            <i class="fa-solid fa-robot text-amber-400 mb-1"></i>
-                            <span>West (Bot)</span>
-                            <span id="west-card-count" class="text-[10px] text-slate-500">0 cards</span>
+                        <div class="flex flex-col items-center px-3 py-2 rounded-2xl bg-slate-950/90 border border-slate-700/80 text-slate-300 font-mono text-xs text-center shadow-xl backdrop-blur-md">
+                            <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mb-1">
+                                <i class="fa-solid fa-robot"></i>
+                            </div>
+                            <span class="font-bold text-[11px]">West (Bot)</span>
+                            <span id="west-card-count" class="text-[10px] text-slate-400 font-semibold">0 cards</span>
                         </div>
+                        <!-- West Bot Visual Card Fan -->
+                        <div id="west-hand-fan" class="mini-card-fan"></div>
                     </div>
 
                     <!-- Center Trick Surface -->
-                    <div class="col-span-6 flex flex-col items-center justify-center p-4 rounded-3xl bg-emerald-950/60 border border-emerald-500/20 backdrop-blur-sm min-h-[180px] shadow-inner relative">
-                        <div class="text-[9px] font-mono text-emerald-400/80 uppercase tracking-widest mb-2 font-bold flex items-center gap-1.5">
-                            <i class="fa-solid fa-arrows-to-circle text-emerald-400"></i>
+                    <div class="col-span-6 flex flex-col items-center justify-center p-4 rounded-3xl bg-slate-950/50 border-2 border-amber-500/30 backdrop-blur-md min-h-[200px] shadow-2xl relative">
+                        <div class="text-[10px] font-mono text-amber-300 uppercase tracking-widest mb-3 font-extrabold flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-to-circle text-amber-400"></i>
                             <span>CENTER TRICK</span>
                         </div>
 
                         <!-- 4 Played Cards on Table -->
-                        <div id="center-trick-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 items-center justify-center min-h-[90px]">
+                        <div id="center-trick-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 items-center justify-center min-h-[100px] w-full">
                             <!-- Cards played during the trick -->
                         </div>
 
                         <!-- Round / Trick Winner Announcement -->
-                        <div id="trick-banner" class="hidden mt-2 px-3 py-1 rounded-full bg-emerald-900/90 border border-emerald-400 text-white font-mono text-[10px] font-bold animate-bounce">
+                        <div id="trick-banner" class="hidden mt-3 px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 border border-emerald-400 text-white font-mono text-xs font-bold animate-bounce shadow-xl">
                             Winner takes trick!
                         </div>
                     </div>
 
                     <!-- East Seat (Opponent AI) -->
                     <div class="col-span-3 flex flex-col items-center space-y-2">
-                        <div class="flex flex-col items-center px-2 sm:px-3 py-1.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-slate-300 font-mono text-[11px] text-center shadow-lg">
-                            <i class="fa-solid fa-robot text-amber-400 mb-1"></i>
-                            <span>East (Bot)</span>
-                            <span id="east-card-count" class="text-[10px] text-slate-500">0 cards</span>
+                        <div class="flex flex-col items-center px-3 py-2 rounded-2xl bg-slate-950/90 border border-slate-700/80 text-slate-300 font-mono text-xs text-center shadow-xl backdrop-blur-md">
+                            <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mb-1">
+                                <i class="fa-solid fa-robot"></i>
+                            </div>
+                            <span class="font-bold text-[11px]">East (Bot)</span>
+                            <span id="east-card-count" class="text-[10px] text-slate-400 font-semibold">0 cards</span>
                         </div>
+                        <!-- East Bot Visual Card Fan -->
+                        <div id="east-hand-fan" class="mini-card-fan"></div>
                     </div>
                 </div>
 
                 <!-- South Seat (You / Player 0) -->
-                <div class="flex flex-col items-center space-y-3 relative z-10 pt-4">
+                <div class="flex flex-col items-center space-y-2 relative z-20 pt-2">
                     <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/90 border border-cyan-500/40 text-cyan-300 font-mono text-xs shadow-lg">
+                        <div class="flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-950/95 border border-cyan-500/50 text-cyan-300 font-mono text-xs shadow-2xl backdrop-blur-md">
+                            <div class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></div>
                             <i class="fa-solid fa-user text-cyan-400"></i>
-                            <span class="font-bold">You (South)</span>
-                            <span id="south-turn-indicator" class="hidden px-1.5 py-0.2 rounded bg-emerald-500 text-slate-950 text-[10px] font-bold animate-pulse">YOUR TURN</span>
+                            <span class="font-bold tracking-wide">You (South)</span>
+                            <span id="south-turn-indicator" class="hidden px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-lg animate-pulse">YOUR TURN</span>
                         </div>
 
                         <!-- Action Toolbar (Reveal Trump in 29, etc.) -->
@@ -221,16 +247,19 @@
                     </div>
 
                     <!-- Bidding Overlay / Drawer (When Phase is Bidding) -->
-                    <div id="bidding-drawer" class="hidden glass-card p-4 rounded-2xl border border-amber-500/40 bg-slate-950/95 font-mono text-xs flex flex-wrap items-center justify-center gap-2 shadow-2xl">
-                        <span class="text-amber-300 font-bold uppercase text-[11px] mr-2">Your Bid:</span>
-                        <div id="bid-buttons-container" class="flex flex-wrap items-center gap-1.5">
+                    <div id="bidding-drawer" class="hidden glass-card p-4 rounded-2xl border-2 border-amber-500/50 bg-slate-950/95 font-mono text-xs flex flex-wrap items-center justify-center gap-2.5 shadow-2xl backdrop-blur-lg">
+                        <span class="text-amber-300 font-black uppercase text-xs tracking-wider flex items-center gap-1.5 mr-2">
+                            <i class="fa-solid fa-coins text-amber-400"></i>
+                            Your Bid:
+                        </span>
+                        <div id="bid-buttons-container" class="flex flex-wrap items-center gap-2">
                             <!-- Populated with legal bids -->
                         </div>
                     </div>
 
-                    <!-- Human Hand (Cards with Real Faces, Click to Play) -->
-                    <div id="human-hand-container" class="flex justify-center -space-x-4 sm:-space-x-5 max-w-full overflow-x-auto p-2 scrollbar-none transition-all">
-                        <!-- Populated with actual cards -->
+                    <!-- Human Hand (Cards with Real Faces & Vector Court Illustrations, Click to Play) -->
+                    <div id="human-hand-container" class="hand-fan-container max-w-full overflow-x-visible min-h-[140px] sm:min-h-[160px] pb-2">
+                        <!-- Populated with real cards -->
                     </div>
                 </div>
 
@@ -281,47 +310,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const SUIT_NAMES = { 'S': 'Spades', 'H': 'Hearts', 'D': 'Diamonds', 'C': 'Clubs' };
     const SUIT_COLORS = { 'S': '#cbd5e1', 'H': '#ef4444', 'D': '#f97316', 'C': '#38bdf8' };
 
-    function createCardHTML(card, isPlayable = false, isSmall = false) {
+    function createCardHTML(card, isPlayable = false, isSmall = false, customStyle = '') {
         if (!card) return '';
+        if (window.ClubCards && window.ClubCards.render3DCard) {
+            let style = customStyle || '';
+            if (isSmall) {
+                style = 'transform: scale(0.72); transform-origin: center; ' + style;
+            }
+            return window.ClubCards.render3DCard(card, {
+                playable: isPlayable,
+                style: style
+            });
+        }
         const s = card[0];
         const r = card.slice(1);
         const r_disp = r === 'T' ? '10' : r;
         const sym = SUIT_SYMBOLS[s] || s;
         const col = SUIT_COLORS[s] || '#fff';
-        const isRed = s === 'H' || s === 'D';
-
-        const sizeClasses = isSmall 
-            ? 'w-10 h-14 sm:w-12 sm:h-16 text-[10px] rounded-lg'
-            : 'w-14 h-20 sm:w-16 sm:h-24 text-xs rounded-xl';
-
-        const borderClasses = isPlayable
-            ? 'cursor-pointer hover:-translate-y-3 hover:scale-110 hover:shadow-cyan-500/40 border-2 border-cyan-400 bg-slate-900 ring-2 ring-cyan-400/50'
-            : 'border border-slate-700 bg-slate-900/90';
-
-        return `
-            <div class="card-obj relative ${sizeClasses} ${borderClasses} shadow-xl flex flex-col justify-between p-1.5 transition-all duration-200 select-none" data-card="${card}">
-                <div class="flex items-center justify-between leading-none font-bold font-mono" style="color: ${col}">
-                    <span>${r_disp}</span>
-                    <span class="text-[10px]">${sym}</span>
-                </div>
-                <div class="flex items-center justify-center text-lg sm:text-xl font-bold" style="color: ${col}">
-                    ${sym}
-                </div>
-                <div class="flex items-center justify-between leading-none font-bold font-mono rotate-180" style="color: ${col}">
-                    <span>${r_disp}</span>
-                    <span class="text-[10px]">${sym}</span>
-                </div>
-            </div>
-        `;
+        return `<div class="card-obj" data-card="${card}">${r_disp}${sym}</div>`;
     }
 
-    function createCardBackHTML(isSmall = false) {
-        const sizeClasses = isSmall 
-            ? 'w-8 h-12 sm:w-10 sm:h-14 rounded-lg'
-            : 'w-12 h-18 sm:w-14 sm:h-20 rounded-xl';
+    function createCardBackHTML(isSmall = false, customStyle = '') {
+        const w = isSmall ? '34px' : '62px';
+        const h = isSmall ? '48px' : '90px';
+        const iconSize = isSmall ? '8px' : '12px';
+        const emblemSize = isSmall ? '18px' : '26px';
         return `
-            <div class="${sizeClasses} border border-amber-500/40 bg-gradient-to-tr from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-diamond text-emerald-400/40 text-xs"></i>
+            <div class="playing-card-3d flex-shrink-0" style="width: ${w}; height: ${h}; ${customStyle}">
+                <div class="card-back">
+                    <div class="card-back-pattern">
+                        <div class="card-back-emblem" style="width: ${emblemSize}; height: ${emblemSize}; font-size: ${iconSize};">
+                            <i class="fa-solid fa-crown"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -400,12 +422,32 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('hud-team1-score').innerText = `Bots: ${gameState.penalty_points['1'] + gameState.penalty_points['2'] + gameState.penalty_points['3']} pts`;
         }
 
-        // Other players' card counts
+        // Other players' card counts & visual mini fans
         document.getElementById('west-card-count').innerText = `${gameState.counts['1'] || 0} cards`;
         document.getElementById('north-card-count').innerText = `${gameState.counts['2'] || 0} cards`;
         document.getElementById('east-card-count').innerText = `${gameState.counts['3'] || 0} cards`;
 
-        // North Hand cards (dummy if Bridge revealed, else card backs)
+        const westCount = Math.min(8, gameState.counts['1'] || 0);
+        const westFanEl = document.getElementById('west-hand-fan');
+        if (westFanEl) {
+            westFanEl.innerHTML = '';
+            for (let i = 0; i < westCount; i++) {
+                const rot = (i - westCount / 2) * 5;
+                westFanEl.innerHTML += createCardBackHTML(true, `transform: rotate(${rot}deg);`);
+            }
+        }
+
+        const eastCount = Math.min(8, gameState.counts['3'] || 0);
+        const eastFanEl = document.getElementById('east-hand-fan');
+        if (eastFanEl) {
+            eastFanEl.innerHTML = '';
+            for (let i = 0; i < eastCount; i++) {
+                const rot = (i - eastCount / 2) * 5;
+                eastFanEl.innerHTML += createCardBackHTML(true, `transform: rotate(${rot}deg);`);
+            }
+        }
+
+        // North Hand cards (dummy if Bridge revealed, else fanned card backs)
         const northCardsEl = document.getElementById('north-hand-cards');
         northCardsEl.innerHTML = '';
         if (gameState.dummy_hand && gameState.dummy_hand.length > 0) {
@@ -415,7 +457,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             const n_count = Math.min(13, gameState.counts['2'] || 0);
             for (let i = 0; i < n_count; i++) {
-                northCardsEl.innerHTML += createCardBackHTML(true);
+                const rot = (i - n_count / 2) * 3;
+                northCardsEl.innerHTML += createCardBackHTML(true, `transform: rotate(${rot}deg); margin-left: -14px;`);
             }
         }
 
@@ -423,37 +466,52 @@ document.addEventListener('DOMContentLoaded', function() {
         const trickZone = document.getElementById('center-trick-cards');
         trickZone.innerHTML = '';
         if (gameState.trick && gameState.trick.length > 0) {
+            const seatNames = ['South (You)', 'West', 'North', 'East'];
+            const trickRotations = [-2.5, -6, 3, 5.5];
             gameState.trick.forEach(e => {
-                const seatNames = ['South (You)', 'West', 'North', 'East'];
+                const rot = trickRotations[e.seat] || 0;
                 trickZone.innerHTML += `
-                    <div class="flex flex-col items-center gap-1">
-                        <span class="text-[9px] font-mono text-slate-400 font-bold">${seatNames[e.seat]}</span>
-                        ${createCardHTML(e.card, false, false)}
+                    <div class="flex flex-col items-center gap-1.5 transition-all">
+                        <span class="text-[10px] font-mono text-amber-200/90 font-bold px-2 py-0.5 rounded-full bg-slate-950/80 border border-amber-500/30">${seatNames[e.seat]}</span>
+                        ${createCardHTML(e.card, false, false, `transform: rotate(${rot}deg); filter: drop-shadow(0 10px 18px rgba(0,0,0,0.55));`)}
                     </div>
                 `;
             });
         } else {
-            trickZone.innerHTML = `<span class="col-span-full text-xs font-mono text-emerald-400/50 italic text-center">Lead a card to start trick</span>`;
+            trickZone.innerHTML = `<span class="col-span-full text-xs font-mono text-emerald-300/60 italic text-center font-semibold">Lead a card to start trick</span>`;
         }
 
-        // Human Hand (South)
+        // Human Hand (South) - Realistic Ergonomic Fan
         const humanHandEl = document.getElementById('human-hand-container');
         humanHandEl.innerHTML = '';
         const legalPlays = (gameState.legal_actions || []).filter(a => a.action === 'play').map(a => a.card);
 
         if (gameState.hand && gameState.hand.length > 0) {
-            gameState.hand.forEach(card => {
+            const count = gameState.hand.length;
+            gameState.hand.forEach((card, idx) => {
                 const isPlayable = isMyTurn && legalPlays.includes(card) && gameState.phase === 'playing';
-                const el = document.createElement('div');
-                el.innerHTML = createCardHTML(card, isPlayable, false);
-                const cardDiv = el.firstElementChild;
-                if (isPlayable) {
+                const mid = (count - 1) / 2;
+                const offset = mid === 0 ? 0 : (idx - mid);
+                const rotDeg = offset * (count > 8 ? 2.6 : 3.8);
+                const transY = Math.abs(offset) * (count > 8 ? 2 : 2.6);
+                const zIndex = 10 + idx;
+
+                const cardHtml = createCardHTML(card, isPlayable, false, `transform: rotate(${rotDeg.toFixed(1)}deg) translateY(${transY.toFixed(1)}px); z-index: ${zIndex};`);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'hand-fan-card';
+                wrapper.style.zIndex = zIndex;
+                wrapper.innerHTML = cardHtml;
+
+                const cardDiv = wrapper.firstElementChild;
+                if (isPlayable && cardDiv) {
+                    cardDiv.classList.add('cursor-pointer');
                     cardDiv.addEventListener('click', () => {
                         sendAction({ action: 'play', card: card });
-                        playTone(600, 'triangle', 0.08);
+                        if (window.ClubAudio) window.ClubAudio.deal();
+                        else playTone(600, 'triangle', 0.08);
                     });
                 }
-                humanHandEl.appendChild(cardDiv);
+                humanHandEl.appendChild(wrapper);
             });
         }
 
@@ -467,9 +525,9 @@ document.addEventListener('DOMContentLoaded', function() {
             biddingDrawer.classList.remove('hidden');
             legalBids.forEach(a => {
                 const btn = document.createElement('button');
-                btn.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md';
+                btn.className = 'px-3.5 py-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 border border-emerald-300/50 text-white font-extrabold text-xs shadow-lg active:scale-95 transition-all';
                 if (a.action === 'pass') {
-                    btn.className = 'px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all';
+                    btn.className = 'px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-extrabold text-xs shadow-md active:scale-95 transition-all';
                     btn.innerText = 'Pass';
                 } else if (a.value !== undefined) {
                     btn.innerText = `Bid ${a.value}`;
@@ -480,7 +538,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 btn.addEventListener('click', () => {
                     sendAction(a);
-                    playTone(500, 'sine', 0.1);
+                    if (window.ClubAudio) window.ClubAudio.deal();
+                    else playTone(500, 'sine', 0.1);
                 });
                 bidButtonsContainer.appendChild(btn);
             });
