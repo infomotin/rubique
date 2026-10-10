@@ -720,6 +720,280 @@ class CardClubTests(unittest.TestCase):
             eng.view(None)          # spectator view must never leak hands
 
 
+class ChessArenaTests(unittest.TestCase):
+    """Chess arena matchmaking: invitations, open lobby (all subscribers),
+    Group vs Group roster seats, and Public vs Public quick pairing."""
+
+    def setUp(self):
+        self.app = create_app()
+        self.app.config['TESTING'] = True
+        self.app.config['SECRET_KEY'] = 'test_secret_key_chess'
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            init_database()
+            # deterministic matchmaking slate: drop leftovers from earlier runs
+            from models.db import execute_update
+            mp_filter = "match_type IS NOT NULL AND match_type != 'ai'"
+            for dep in ("chess_team_moves", "chess_clan_challenges", "chess_invitations"):
+                execute_update(
+                    f"DELETE FROM {dep} WHERE game_id IN (SELECT id FROM chess_games WHERE {mp_filter})",
+                    f"DELETE FROM {dep} WHERE game_id IN (SELECT id FROM chess_games WHERE {mp_filter})",
+                    ())
+            execute_update(
+                "DELETE FROM chess_invitations", "DELETE FROM chess_invitations", ())
+            execute_update(
+                f"DELETE FROM chess_games WHERE {mp_filter}",
+                f"DELETE FROM chess_games WHERE {mp_filter}", ())
+
+    def login(self, username, password):
+        self.client.get('/logout', follow_redirects=True)
+        return self.client.post('/login', data={
+            'username': username, 'password': password}, follow_redirects=True)
+
+    def logout(self):
+        self.client.get('/logout', follow_redirects=True)
+
+    def api(self, method, url, body=None):
+        res = self.client.post(url, json=body or {}) if method == 'POST' else self.client.get(url)
+        try:
+            return res.status_code, json.loads(res.data)
+        except Exception:
+            return res.status_code, {}
+
+    # ---------------------------------------------------------------- panels
+    def test_chess_arena_renders_all_four_panels(self):
+        self.login('speedcuber', 'user123')
+        res = self.client.get('/chess/')
+        self.assertEqual(res.status_code, 200)
+        for marker in [b'id="tab-multiplayer"', b'INVITATIONS', b'OPEN TO ALL SUBSCRIBERS',
+                       b'GROUP VS GROUP', b'PUBLIC VS PUBLIC', b'id="invite-modal"',
+                       b'id="quick-pair-btn"', b'id="create-match-modal"']:
+            self.assertIn(marker, res.data)
+
+        # guests are pointed at the login instead of the arena actions
+        self.logout()
+        res = self.client.get('/chess/')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Log in to play', res.data)
+        self.assertNotIn(b'id="open-invite-modal-btn"', res.data)
+
+    # ------------------------------------------------------------ invitations
+    def test_direct_subscriber_invitation_flow(self):
+        self.login('speedcuber', 'user123')
+        code, data = self.api('POST', '/chess/invitations/send', {
+            'to_username': 'developer', 'title': 'Night Owl Duel', 'message': 'Two moves in?'})
+        self.assertEqual(code, 200)
+        self.assertEqual(data['status'], 'success')
+        game_id = data['game_id']
+        invitation_id = data['invitation_id']
+
+        # invitation-only battle stays out of the public arena listing
+        code, data = self.api('GET', '/chess/multiplayer')
+        self.assertEqual(code, 200)
+        self.assertNotIn(game_id, [m['id'] for m in data['matches']])
+
+        # nobody else may seat themselves in it, nor touch its invitation
+        self.logout()
+        self.login('admin', 'admin123')
+        code, data = self.api('POST', f'/chess/multiplayer/{game_id}/join')
+        self.assertEqual(code, 403)
+        code, data = self.api('GET', '/chess/invitations')
+        self.assertNotIn(game_id, [i['game_id'] for i in data['received']])
+        code, data = self.api('POST', f'/chess/invitations/{invitation_id}/decline')
+        self.assertEqual(code, 403)
+
+        # the invitee receives it, accepts, and takes the Black seat
+        self.login('developer', 'dev123')
+        code, data = self.api('GET', '/chess/invitations')
+        inv = next(i for i in data['received'] if i['game_id'] == game_id)
+        self.assertEqual(inv['from_username'], 'speedcuber')
+        res = self.client.get('/chess/')
+        self.assertIn(b'accept-invite-btn', res.data)
+
+        code, data = self.api('POST', f"/chess/invitations/{inv['id']}/accept")
+        self.assertEqual(code, 200)
+        self.assertEqual(data['seat'], 'black')
+        code, data = self.api('POST', f"/chess/invitations/{inv['id']}/accept")
+        self.assertEqual(code, 409)
+
+        # a third subscriber still cannot decline an already-used invitation
+        self.logout()
+        self.login('admin', 'admin123')
+        code, data = self.api('POST', f"/chess/invitations/{inv['id']}/decline")
+        self.assertEqual(code, 409)
+
+    def test_arena_json_endpoints_require_login(self):
+        self.logout()
+        code, _ = self.api('POST', '/chess/invitations/send', {'to_username': 'admin'})
+        self.assertEqual(code, 401)
+        code, _ = self.api('GET', '/chess/invitations')
+        self.assertEqual(code, 401)
+        code, _ = self.api('POST', '/chess/multiplayer/quick-pair')
+        self.assertEqual(code, 401)
+        code, _ = self.api('POST', '/chess/multiplayer/1/join')
+        self.assertEqual(code, 401)
+        code, _ = self.api('GET', '/chess/invitations/search?q=dev')
+        self.assertEqual(code, 401)
+
+    # ------------------------------------------------------ open + public
+    def test_open_lobby_and_public_quick_pairing(self):
+        self.login('speedcuber', 'user123')
+        code, data = self.api('POST', '/chess/multiplayer/create', {
+            'title': 'Open Lobby Table', 'match_type': 'open'})
+        self.assertEqual(code, 200)
+        open_id = data['game_id']
+
+        # is_public is forced on for Open / Public tables
+        code, data = self.api('POST', '/chess/multiplayer/create', {
+            'title': 'Public Blitz', 'match_type': 'public', 'is_public': 0})
+        self.assertEqual(code, 200)
+        public_id = data['game_id']
+
+        code, data = self.api('POST', '/chess/multiplayer/create', {'match_type': 'chessboxing'})
+        self.assertEqual(code, 400)
+
+        code, data = self.api('GET', '/chess/multiplayer?type=open')
+        self.assertIn(open_id, [m['id'] for m in data['matches']])
+        code, data = self.api('GET', '/chess/multiplayer?type=public')
+        self.assertIn(public_id, [m['id'] for m in data['matches']])
+
+        # any subscriber can take the free seat in the open lobby
+        self.logout()
+        self.login('developer', 'dev123')
+        code, data = self.api('POST', f'/chess/multiplayer/{open_id}/join')
+        self.assertEqual(code, 200)
+        self.assertEqual(data['seat'], 'black')
+
+        # a third subscriber finds both seats taken
+        self.logout()
+        self.login('admin', 'admin123')
+        code, data = self.api('POST', f'/chess/multiplayer/{open_id}/join')
+        self.assertEqual(code, 409)
+
+        # Quick pair seats the challenger into the waiting public table
+        self.logout()
+        self.login('developer', 'dev123')
+        code, data = self.api('POST', '/chess/multiplayer/quick-pair')
+        self.assertEqual(code, 200)
+        self.assertTrue(data['joined'])
+        self.assertEqual(data['game_id'], public_id)
+        self.assertEqual(data['seat'], 'black')
+
+        # with no free public table left, quick pair hosts a fresh one
+        self.logout()
+        self.login('admin', 'admin123')
+        code, data = self.api('POST', '/chess/multiplayer/quick-pair')
+        self.assertEqual(code, 200)
+        self.assertFalse(data['joined'])
+        self.assertEqual(data['seat'], 'white')
+        self.assertNotEqual(data['game_id'], public_id)
+
+    # ----------------------------------------------------- group vs group
+    def test_group_vs_group_roster_and_seat_turn_enforcement(self):
+        from models.community_model import CommunityModel
+
+        with self.app.app_context():
+            rival_group_id = CommunityModel.create_group(
+                'Dev War Clan', 'Group vs Group roster', created_by=2)
+
+        self.login('speedcuber', 'user123')
+        code, data = self.api('POST', '/chess/multiplayer/create', {
+            'title': 'Clans At War', 'match_type': 'group_vs_group',
+            'white_group_id': 1, 'black_group_id': rival_group_id})
+        self.assertEqual(code, 200)
+        war_id = data['game_id']
+
+        # you can only field a clan you lead / are rostered in
+        code, data = self.api('POST', '/chess/multiplayer/create', {
+            'title': 'Not My Clan', 'match_type': 'group_vs_group',
+            'white_group_id': 999999, 'black_group_id': rival_group_id})
+        self.assertEqual(code, 403)
+
+        # an outsider can neither seat themselves nor move pieces
+        self.logout()
+        self.login('admin', 'admin123')
+        code, data = self.api('POST', f'/chess/multiplayer/{war_id}/join')
+        self.assertEqual(code, 403)
+        code, data = self.api('POST', f'/chess/multiplayer/{war_id}/move',
+                              {'from': 'e2', 'to': 'e4', 'team': 'white'})
+        self.assertEqual(code, 403)
+
+        # the rival clan's founder takes the Black seat
+        self.logout()
+        self.login('developer', 'dev123')
+        code, data = self.api('POST', f'/chess/multiplayer/{war_id}/join')
+        self.assertEqual(code, 200)
+        self.assertEqual(data['seat'], 'black')
+
+        # seat colour is enforced, then the turn order
+        code, data = self.api('POST', f'/chess/multiplayer/{war_id}/move',
+                              {'from': 'e2', 'to': 'e4', 'team': 'white'})
+        self.assertEqual(code, 403)
+        code, data = self.api('POST', f'/chess/multiplayer/{war_id}/move',
+                              {'from': 'd7', 'to': 'd5', 'team': 'black'})
+        self.assertEqual(code, 409)
+
+        # White opens the battle, Black answers on the next turn
+        self.logout()
+        self.login('speedcuber', 'user123')
+        code, data = self.api('POST', f'/chess/multiplayer/{war_id}/move',
+                              {'from': 'e2', 'to': 'e4', 'team': 'white'})
+        self.assertEqual(code, 200)
+        self.assertEqual(data['status'], 'success')
+
+        self.logout()
+        self.login('developer', 'dev123')
+        code, data = self.api('POST', f'/chess/multiplayer/{war_id}/move',
+                              {'from': 'd7', 'to': 'd5', 'team': 'black'})
+        self.assertEqual(code, 200)
+        self.assertEqual(data['move']['uci'], 'd7d5')
+
+    def test_clan_invitation_flow(self):
+        from models.community_model import CommunityModel
+        from models.chess_model import ChessModel
+
+        with self.app.app_context():
+            rival_group_id = CommunityModel.create_group(
+                'Dev Invite Clan', 'Clan invitation roster', created_by=2)
+
+        self.login('speedcuber', 'user123')
+        code, data = self.api('POST', '/chess/invitations/send', {
+            'to_group_id': rival_group_id, 'my_group_id': 1,
+            'title': 'Clan Summon', 'message': 'Bring your best line.'})
+        self.assertEqual(code, 200)
+        self.assertEqual(data['match_type'], 'group_vs_group')
+        game_id = data['game_id']
+
+        # subscribers outside the rival clan never see the invitation
+        self.logout()
+        self.login('admin', 'admin123')
+        code, data = self.api('GET', '/chess/invitations')
+        self.assertNotIn(game_id, [i['game_id'] for i in data['received']])
+
+        # the rival clan's founder sees it and accepts into the Black seat
+        self.logout()
+        self.login('developer', 'dev123')
+        code, data = self.api('GET', '/chess/invitations')
+        inv = next(i for i in data['received'] if i['game_id'] == game_id)
+        self.assertEqual(inv['group_name'], 'Dev Invite Clan')
+        self.assertEqual(inv['game_match_type'], 'group_vs_group')
+
+        code, data = self.api('POST', f"/chess/invitations/{inv['id']}/accept")
+        self.assertEqual(code, 200)
+        self.assertEqual(data['seat'], 'black')
+
+        # accepting registers the player on the clan roster
+        with self.app.app_context():
+            self.assertTrue(ChessModel.is_clan_member(rival_group_id, 2))
+
+        # and the battle shows up on the Invitation Desk as sent
+        self.logout()
+        self.login('speedcuber', 'user123')
+        code, data = self.api('GET', '/chess/invitations')
+        sent = next(i for i in data['sent'] if i['game_id'] == game_id)
+        self.assertEqual(sent['status'], 'accepted')
+
+
 if __name__ == '__main__':
     unittest.main()
 

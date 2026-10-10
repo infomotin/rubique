@@ -507,63 +507,333 @@
             <!-- TAB 3: MULTIPLAYER ARENA (1v1, CLAN VS CLAN, CLAN VS PUBLIC) -->
             <!-- ============================================================= -->
             <div id="tab-multiplayer" class="tab-pane hidden space-y-6">
-                
+                {% set uid = user.id if user else None %}
+
                 <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-[11px] font-mono mb-1">
                                 <i class="fa-solid fa-users text-cyan-400"></i>
-                                <span>MULTIPLAYER &bull; CLAN TO CLAN &bull; CLAN TO PUBLIC</span>
+                                <span>INVITES &bull; OPEN LOBBY &bull; CLAN VS CLAN &bull; PUBLIC VS PUBLIC</span>
                             </div>
                             <h2 class="text-xl sm:text-2xl font-bold font-outfit text-white">Cyber Chess Matchmaking Arena</h2>
-                            <p class="text-xs text-slate-400 font-mono">Play peer-to-peer 1v1, rally your clan against rival clans, or battle Clan vs The World!</p>
+                            <p class="text-xs text-slate-400 font-mono">Invite subscribers, rally your clan against a rival clan, or pair into a public table — every seat is open to all subscribers.</p>
                         </div>
-                        <button id="create-match-modal-btn" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-md text-xs font-mono">
-                            <i class="fa-solid fa-plus-circle mr-1"></i> Create Match
-                        </button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            {% if user %}
+                            <button id="create-match-modal-btn" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-md text-xs font-mono">
+                                <i class="fa-solid fa-plus-circle mr-1"></i> Create Match
+                            </button>
+                            <button id="open-invite-modal-btn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-md text-xs font-mono">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Send Invite
+                            </button>
+                            {% else %}
+                            <a href="{{ url_for('auth.login', next='/chess/') }}" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-md text-xs font-mono">
+                                <i class="fa-solid fa-right-to-bracket mr-1"></i> Log in to play
+                            </a>
+                            {% endif %}
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Multiplayer Matches Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {% for match in multiplayer_matches %}
-                        <div class="glass-card p-5 rounded-2xl border border-slate-800/80 bg-slate-900/60 hover:border-cyan-500/50 transition-all flex flex-col justify-between">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+                    <!-- ===================================================== -->
+                    <!-- PANEL 1: INVITATIONS (DIRECT SUBSCRIBER + CLAN)        -->
+                    <!-- ===================================================== -->
+                    <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
                             <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full 
-                                        {% if match.match_type == 'group_vs_group' %}bg-purple-950 text-purple-300 border border-purple-500/40
-                                        {% elif match.match_type == 'group_vs_public' %}bg-rose-950 text-rose-300 border border-rose-500/40
-                                        {% else %}bg-cyan-950 text-cyan-300 border border-cyan-500/40{% endif %} font-bold uppercase">
-                                        {% if match.match_type == 'group_vs_group' %}Clan vs Clan
-                                        {% elif match.match_type == 'group_vs_public' %}Clan vs Public
-                                        {% else %}1v1 Peer{% endif %}
-                                    </span>
-                                    <span class="text-[10px] font-mono text-slate-400">
-                                        {{ match.status|capitalize }}
-                                    </span>
+                                <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 text-[10px] font-mono mb-1">
+                                    <i class="fa-solid fa-envelope-open-text text-indigo-400"></i> INVITATIONS
                                 </div>
-                                <h3 class="text-base font-bold text-white mb-1.5">{{ match.title }}</h3>
-                                <p class="text-xs text-slate-400 font-mono mb-3">
-                                    Creator: <span class="text-cyan-300">{{ match.creator_name or 'Speedcuber' }}</span> &bull; Moves: {{ match.moves_count }}
-                                </p>
+                                <h3 class="text-lg font-bold font-outfit text-white">Your Invitation Desk</h3>
                             </div>
-                            <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
-                                <span class="text-slate-500">
-                                    <i class="fa-solid fa-gamepad text-cyan-400 mr-1"></i> {{ match.team_moves_count }} actions
-                                </span>
-                                <button class="join-match-btn px-3 py-1.5 rounded-xl bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-600 hover:text-white transition-all font-bold"
-                                        data-id="{{ match.id }}"
-                                        data-fen="{{ match.fen }}"
-                                        data-title="{{ match.title }}">
-                                    Enter Battle &rarr;
-                                </button>
-                            </div>
+                            {% if user %}
+                            <button class="open-invite-modal-btn px-3 py-1.5 rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all text-xs font-mono font-bold">
+                                <i class="fa-solid fa-plus mr-1"></i> Invite
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        {% if not user %}
+                        <div class="p-6 text-center rounded-2xl bg-slate-900/40 border border-slate-800 font-mono text-xs text-slate-400">
+                            Log in to send and receive battle invitations.
                         </div>
                         {% else %}
-                        <div class="col-span-full p-8 text-center rounded-2xl bg-slate-900/40 border border-slate-800 font-mono text-xs text-slate-400">
-                            No active multiplayer battles right now. Click "Create Match" to challenge a clan or host a Clan vs Public game!
+                        <div class="space-y-3">
+                            {% for inv in received_invitations %}
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-xs font-bold text-white">
+                                            <i class="fa-solid fa-user text-indigo-400 mr-1"></i>
+                                            {{ inv.from_username or 'A subscriber' }}
+                                        </span>
+                                        {% if inv.group_name %}
+                                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-950 border border-purple-500/40 text-purple-300">via {{ inv.group_name }}</span>
+                                        {% endif %}
+                                        <span class="text-[10px] font-mono uppercase text-slate-500">{{ inv.game_match_type or 'pvp' }}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-mono mt-1 truncate">Battle: <span class="text-cyan-300">{{ inv.game_title or 'Invitation Battle' }}</span></p>
+                                    {% if inv.message %}<p class="text-[11px] text-slate-400 mt-1">"{{ inv.message }}"</p>{% endif %}
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button class="accept-invite-btn px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all text-xs font-mono font-bold" data-id="{{ inv.id }}">
+                                        <i class="fa-solid fa-check mr-1"></i> Accept
+                                    </button>
+                                    <button class="decline-invite-btn px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs font-mono" data-id="{{ inv.id }}">
+                                        Decline
+                                    </button>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="p-5 text-center rounded-2xl bg-slate-900/40 border border-dashed border-slate-700 font-mono text-xs text-slate-500">
+                                No pending invitations. Send one to a subscriber or a rival clan.
+                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+
+                        {% if sent_invitations %}
+                        <div class="mt-5 pt-4 border-t border-slate-800">
+                            <p class="text-[10px] font-mono uppercase text-slate-500 mb-2">Sent by you</p>
+                            <div class="space-y-2">
+                                {% for inv in sent_invitations %}
+                                <div class="flex items-center justify-between gap-3 text-xs font-mono">
+                                    <span class="text-slate-400 truncate">
+                                        &rarr; {{ inv.to_username or inv.group_name or 'Unknown' }}
+                                        <span class="text-slate-600">({{ inv.game_match_type or 'pvp' }})</span>
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold
+                                        {% if inv.status == 'accepted' %}bg-emerald-950 text-emerald-300
+                                        {% elif inv.status == 'declined' %}bg-rose-950 text-rose-300
+                                        {% else %}bg-amber-950 text-amber-300{% endif %}">{{ inv.status }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
                     </div>
+
+                    <!-- ===================================================== -->
+                    <!-- PANEL 2: OPEN TO ALL SUBSCRIBERS (OPEN LOBBY)           -->
+                    <!-- ===================================================== -->
+                    <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                            <div>
+                                <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[10px] font-mono mb-1">
+                                    <i class="fa-solid fa-door-open text-emerald-400"></i> OPEN TO ALL SUBSCRIBERS
+                                </div>
+                                <h3 class="text-lg font-bold font-outfit text-white">Open Lobby</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">Any subscriber can take the free seat — no invite required.</p>
+                            </div>
+                            {% if user %}
+                            <button class="open-match-type-btn px-3 py-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all text-xs font-mono font-bold" data-match-type="open">
+                                <i class="fa-solid fa-plus mr-1"></i> Host Table
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {% set open_matches = multiplayer_matches | selectattr('match_type', 'in', ['open', 'pvp']) | list %}
+                            {% for match in open_matches %}
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-emerald-500/50 transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/40 font-bold uppercase">
+                                            {{ 'Open Lobby' if match.match_type == 'open' else '1v1 Peer' }}
+                                        </span>
+                                        <span class="text-[10px] font-mono text-slate-400">{{ match.status|capitalize }}</span>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-white mb-1 truncate">{{ match.title }}</h3>
+                                    <p class="text-[11px] font-mono text-slate-400">
+                                        Host: <span class="text-emerald-300">{{ match.white_player_name or match.creator_name or 'Speedcuber' }}</span>
+                                        vs <span class="text-slate-300">{{ match.black_player_name or 'open seat' }}</span>
+                                    </p>
+                                    <p class="text-[10px] font-mono text-slate-600 mt-1">{{ match.team_moves_count }} actions</p>
+                                </div>
+                                <div class="pt-3 mt-3 border-t border-slate-800/80 flex items-center gap-2">
+                                    {% if uid and (match.white_user_id == uid or match.black_user_id == uid) %}
+                                    <button class="resume-match-btn flex-1 px-3 py-1.5 rounded-xl bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-600 hover:text-white transition-all text-xs font-mono font-bold" data-id="{{ match.id }}" data-seat="{{ 'white' if match.white_user_id == uid else 'black' }}" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        Resume Battle &rarr;
+                                    </button>
+                                    {% elif uid and (not match.black_user_id or not match.white_user_id) %}
+                                    <button class="seat-match-btn flex-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all text-xs font-mono font-bold" data-id="{{ match.id }}" data-seat="{{ 'white' if match.white_user_id == uid else 'black' }}" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        Take Seat &rarr;
+                                    </button>
+                                    <button class="spectate-match-btn px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs font-mono" data-fen="{{ match.fen }}" data-title="{{ match.title }}" title="Load position without joining">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    {% elif match.black_user_id and match.white_user_id %}
+                                    <span class="flex-1 text-center text-[10px] font-mono uppercase font-bold text-rose-400/80">Seats full</span>
+                                    <button class="spectate-match-btn px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs font-mono" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    {% else %}
+                                    <span class="flex-1 text-center text-[10px] font-mono uppercase text-slate-500">Log in to take a seat</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-span-full p-6 text-center rounded-2xl bg-slate-900/40 border border-dashed border-slate-700 font-mono text-xs text-slate-500">
+                                The lobby is quiet. Host a table and it opens to every subscriber.
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- ===================================================== -->
+                    <!-- PANEL 3: GROUP VS GROUP (CLAN BATTLES)                  -->
+                    <!-- ===================================================== -->
+                    <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                            <div>
+                                <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 text-[10px] font-mono mb-1">
+                                    <i class="fa-solid fa-shield-halved text-purple-400"></i> GROUP VS GROUP
+                                </div>
+                                <h3 class="text-lg font-bold font-outfit text-white">Clan War Arena</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">Field your roster against a rival clan's roster, seat by seat.</p>
+                            </div>
+                            {% if user %}
+                            <button class="open-match-type-btn px-3 py-1.5 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600 hover:text-white transition-all text-xs font-mono font-bold" data-match-type="group_vs_group">
+                                <i class="fa-solid fa-flag mr-1"></i> Declare War
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        {% if user %}
+                        <div class="mb-4 p-3 rounded-2xl bg-purple-950/30 border border-purple-500/20 text-[11px] font-mono text-purple-200/80">
+                            <i class="fa-solid fa-circle-info text-purple-400 mr-1"></i>
+                            {% if my_groups %}
+                            Your clans: {% for g in my_groups %}<span class="text-purple-300 font-bold">{{ g.name }}</span>{% if not loop.last %}, {% endif %}{% endfor %}
+                            {% else %}
+                            You are not in a clan yet — found one in the Community tab to field a team.
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {% set clan_matches = multiplayer_matches | selectattr('match_type', 'in', ['group_vs_group', 'group_vs_public']) | list %}
+                            {% for match in clan_matches %}
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-purple-500/50 transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 font-bold uppercase">
+                                            {{ 'Clan vs Clan' if match.match_type == 'group_vs_group' else 'Clan vs Public' }}
+                                        </span>
+                                        <span class="text-[10px] font-mono text-slate-400">{{ match.status|capitalize }}</span>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-white mb-1 truncate">{{ match.title }}</h3>
+                                    <p class="text-[11px] font-mono">
+                                        <span class="text-purple-300">{{ match.white_group_name or match.white_player_name or 'Challengers' }}</span>
+                                        <span class="text-slate-600">vs</span>
+                                        <span class="text-rose-300">{{ match.black_group_name or match.black_player_name or 'Rivals' }}</span>
+                                    </p>
+                                    <p class="text-[10px] font-mono text-slate-500 mt-1">
+                                        White: {{ match.white_player_name or 'open seat' }} &bull; Black: {{ match.black_player_name or 'open seat' }}
+                                    </p>
+                                </div>
+                                <div class="pt-3 mt-3 border-t border-slate-800/80 flex items-center gap-2">
+                                    {% if uid and (match.white_user_id == uid or match.black_user_id == uid) %}
+                                    <button class="resume-match-btn flex-1 px-3 py-1.5 rounded-xl bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-600 hover:text-white transition-all text-xs font-mono font-bold" data-id="{{ match.id }}" data-seat="{{ 'white' if match.white_user_id == uid else 'black' }}" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        Resume Battle &rarr;
+                                    </button>
+                                    {% elif uid and (not match.black_user_id or not match.white_user_id) %}
+                                    <button class="seat-match-btn flex-1 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all text-xs font-mono font-bold" data-id="{{ match.id }}" data-seat="{{ 'white' if match.white_user_id == uid else 'black' }}" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        Join Clan Seat &rarr;
+                                    </button>
+                                    <button class="spectate-match-btn px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs font-mono" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    {% elif match.black_user_id and match.white_user_id %}
+                                    <span class="flex-1 text-center text-[10px] font-mono uppercase font-bold text-rose-400/80">Seats full</span>
+                                    <button class="spectate-match-btn px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs font-mono" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    {% else %}
+                                    <span class="flex-1 text-center text-[10px] font-mono uppercase text-slate-500">Log in to join the roster</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-span-full p-6 text-center rounded-2xl bg-slate-900/40 border border-dashed border-slate-700 font-mono text-xs text-slate-500">
+                                No clan wars declared yet. Rally your group and challenge a rival clan.
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- ===================================================== -->
+                    <!-- PANEL 4: PUBLIC VS PUBLIC (OPEN TO EVERYONE)            -->
+                    <!-- ===================================================== -->
+                    <div class="glass-card p-6 rounded-3xl border border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                            <div>
+                                <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300 text-[10px] font-mono mb-1">
+                                    <i class="fa-solid fa-globe text-rose-400"></i> PUBLIC VS PUBLIC
+                                </div>
+                                <h3 class="text-lg font-bold font-outfit text-white">Public Arena</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">Host a table for the whole community, or quick-pair into the next open one.</p>
+                            </div>
+                            {% if user %}
+                            <div class="flex items-center gap-2">
+                                <button id="quick-pair-btn" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-all text-xs font-mono font-bold shadow-md">
+                                    <i class="fa-solid fa-bolt mr-1"></i> Quick Pair
+                                </button>
+                                <button class="open-match-type-btn px-3 py-1.5 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white transition-all text-xs font-mono font-bold" data-match-type="public">
+                                    <i class="fa-solid fa-plus mr-1"></i> Host
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {% set public_matches = multiplayer_matches | selectattr('match_type', 'equalto', 'public') | list %}
+                            {% for match in public_matches %}
+                            <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-rose-500/50 transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-500/40 font-bold uppercase">Public Table</span>
+                                        <span class="text-[10px] font-mono text-slate-400">{{ match.status|capitalize }}</span>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-white mb-1 truncate">{{ match.title }}</h3>
+                                    <p class="text-[11px] font-mono text-slate-400">
+                                        <span class="text-rose-300">{{ match.white_player_name or match.creator_name or 'host' }}</span>
+                                        vs <span class="text-slate-300">{{ match.black_player_name or 'open seat' }}</span>
+                                    </p>
+                                    <p class="text-[10px] font-mono text-slate-600 mt-1">{{ match.team_moves_count }} actions</p>
+                                </div>
+                                <div class="pt-3 mt-3 border-t border-slate-800/80 flex items-center gap-2">
+                                    {% if uid and (match.white_user_id == uid or match.black_user_id == uid) %}
+                                    <button class="resume-match-btn flex-1 px-3 py-1.5 rounded-xl bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-600 hover:text-white transition-all text-xs font-mono font-bold" data-id="{{ match.id }}" data-seat="{{ 'white' if match.white_user_id == uid else 'black' }}" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        Resume Battle &rarr;
+                                    </button>
+                                    {% elif uid and (not match.black_user_id or not match.white_user_id) %}
+                                    <button class="seat-match-btn flex-1 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-all text-xs font-mono font-bold" data-id="{{ match.id }}" data-seat="{{ 'white' if match.white_user_id == uid else 'black' }}" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        Take Seat &rarr;
+                                    </button>
+                                    <button class="spectate-match-btn px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs font-mono" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    {% elif match.black_user_id and match.white_user_id %}
+                                    <span class="flex-1 text-center text-[10px] font-mono uppercase font-bold text-rose-400/80">Seats full</span>
+                                    <button class="spectate-match-btn px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs font-mono" data-fen="{{ match.fen }}" data-title="{{ match.title }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    {% else %}
+                                    <span class="flex-1 text-center text-[10px] font-mono uppercase text-slate-500">Log in to take a seat</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-span-full p-6 text-center rounded-2xl bg-slate-900/40 border border-dashed border-slate-700 font-mono text-xs text-slate-500">
+                                No public tables open. Hit Quick Pair and one is created instantly.
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -696,23 +966,25 @@
             <div>
                 <label class="block text-slate-300 mb-1">Match Type</label>
                 <select id="match-type-select" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 focus:outline-none">
-                    <option value="pvp">1v1 Direct Peer Battle</option>
+                    <option value="pvp">1v1 Direct Peer Battle (invite only)</option>
+                    <option value="open">Open Lobby — open to all subscribers</option>
+                    <option value="public">Public vs Public — host a public table</option>
                     <option value="group_vs_group">Group vs Group (Clan vs Clan Multi-Player)</option>
-                    <option value="group_vs_public">Group vs Public (Clan vs The World - Any Public Player Can Attack)</option>
+                    <option value="group_vs_public">Group vs Public (Clan vs The World)</option>
                 </select>
             </div>
 
-            <div id="white-clan-picker" class="space-y-1">
+            <div id="white-clan-picker" class="space-y-1 hidden">
                 <label class="block text-slate-300">Your Clan (White Team)</label>
                 <select id="match-white-group" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">
                     <option value="">None (Personal)</option>
-                    {% for g in groups %}
+                    {% for g in my_groups %}
                     <option value="{{ g.id }}">{{ g.name }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <div id="black-clan-picker" class="space-y-1">
+            <div id="black-clan-picker" class="space-y-1 hidden">
                 <label class="block text-slate-300">Target Clan (Black Team)</label>
                 <select id="match-black-group" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">
                     <option value="">Any Rival Clan</option>
@@ -725,6 +997,76 @@
             <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button type="button" class="close-match-modal-btn px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700">Cancel</button>
                 <button type="submit" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-all shadow-lg shadow-cyan-600/30">Start Battle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: SEND BATTLE INVITATION (SUBSCRIBER OR CLAN)                        -->
+<!-- ========================================================================= -->
+<div id="invite-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-indigo-500/40 bg-slate-950 shadow-2xl relative font-mono text-xs">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane text-indigo-400"></i>
+                <span>Send Battle Invitation</span>
+            </h3>
+            <button class="close-invite-modal-btn text-slate-400 hover:text-white text-lg">&times;</button>
+        </div>
+
+        <form id="invite-form" class="space-y-4">
+            <div>
+                <label class="block text-slate-300 mb-1">Invite Target</label>
+                <select id="invite-target-type" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-indigo-300 focus:outline-none">
+                    <option value="subscriber">A Subscriber (1v1 battle)</option>
+                    <option value="group">A Clan / Group (Group vs Group)</option>
+                </select>
+            </div>
+
+            <div id="invite-subscriber-pane" class="space-y-2">
+                <label class="block text-slate-300">Subscriber Username</label>
+                <input id="invite-username-input" type="text" autocomplete="off" placeholder="e.g. speedcuber" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
+                <div id="invite-user-results" class="space-y-1 hidden max-h-36 overflow-y-auto"></div>
+                <p class="text-[10px] text-slate-500">They receive your invite on their Invitation Desk and take the Black seat on accept.</p>
+            </div>
+
+            <div id="invite-group-pane" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-slate-300 mb-1">Your Clan (White Team, optional)</label>
+                    <select id="invite-my-group" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">
+                        <option value="">Just me vs their clan</option>
+                        {% for g in my_groups %}
+                        <option value="{{ g.id }}">{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Rival Clan (Black Team)</label>
+                    <select id="invite-target-group" required class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200">
+                        <option value="">Select a clan...</option>
+                        {% for g in groups %}
+                        <option value="{{ g.id }}">{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-slate-300 mb-1">Battle Title</label>
+                <input id="invite-title-input" type="text" value="Invitation Battle" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-slate-300 mb-1">Message</label>
+                <textarea id="invite-message-input" rows="2" placeholder="Think you can hold the black pieces?" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button type="button" class="close-invite-modal-btn px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-paper-plane mr-1"></i> Send Invite
+                </button>
             </div>
         </form>
     </div>
@@ -779,6 +1121,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let moveLog = [];
     let isReplaying = false;
 
+    // Multiplayer (seat + live polling) state
+    let activeMultiplayerSeat = null;   // 'white' | 'black'
+    let multiplayerGameId = null;
+    let mpWaitingForOpponent = false;
+    let mpLastMoveId = 0;
+    let multiplayerPollTimer = null;
+
     // Initialize 3D GoChess Engine
     const chess3d = new GoChess3D('gochess-canvas', {
         theme: 'obsidian',
@@ -826,6 +1175,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handlePlayerMove(fromSq, toSq) {
+        // Live multiplayer seat: post to the clan/public battle endpoint instead of the AI
+        if (activeMultiplayerSeat && String(activeGameId) === String(multiplayerGameId)) {
+            handleMultiplayerMove(fromSq, toSq);
+            return;
+        }
+
         const aiLevel = parseInt(document.getElementById('ai-level-select').value, 10);
 
         // Animate player move
@@ -1551,11 +1906,169 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // =========================================================================
-    // MULTIPLAYER MATCHMAKING
+    // MULTIPLAYER MATCHMAKING: INVITES, OPEN LOBBY, CLAN WARS, PUBLIC TABLES
     // =========================================================================
+    function chessApi(url, payload) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload || {})
+        })
+        .then(res => res.json().catch(() => ({})).then(data => ({ ok: res.ok, data: data })));
+    }
+
+    function fenTurnIs(fen, seat) {
+        const turn = (fen || '').split(' ')[1];
+        return turn === (seat === 'white' ? 'w' : 'b');
+    }
+
+    function stopMultiplayerPolling() {
+        if (multiplayerPollTimer) {
+            clearInterval(multiplayerPollTimer);
+            multiplayerPollTimer = null;
+        }
+    }
+
+    function loadBattleIntoStudio(gameId, fen, title, seat) {
+        stopMultiplayerPolling();
+        activeMultiplayerSeat = null;
+        multiplayerGameId = null;
+        if (gameId) activeGameId = gameId;
+        else activeGameId = null;
+        if (fen) currentFen = fen;
+        moveLog = [];
+        updateMoveLogUI();
+        chess3d.loadFen(currentFen);
+        document.querySelector('.mode-tab-btn[data-tab="studio"]').click();
+        document.getElementById('game-status-label').innerText = `Multiplayer Arena: ${title || ''}`;
+
+        if (seat && activeGameId) {
+            activeMultiplayerSeat = seat;
+            multiplayerGameId = activeGameId;
+            mpWaitingForOpponent = !fenTurnIs(currentFen, seat);
+            document.getElementById('game-status-label').innerText = mpWaitingForOpponent
+                ? `Waiting for opponent — you play ${seat === 'white' ? 'White' : 'Black'}`
+                : `Your move — you play ${seat === 'white' ? 'White' : 'Black'}`;
+            startMultiplayerPolling(activeGameId);
+        }
+    }
+
+    function handleMultiplayerMove(fromSq, toSq) {
+        const mySeat = activeMultiplayerSeat;
+        if (mpWaitingForOpponent) {
+            chess3d.loadFen(currentFen);
+            document.getElementById('game-status-label').innerText = "Waiting for your opponent's move...";
+            return;
+        }
+
+        chess3d.roboticMovePiece(fromSq, toSq, function() {
+            chessApi(`/chess/multiplayer/${multiplayerGameId}/move`, {
+                from: fromSq,
+                to: toSq,
+                team: mySeat
+            })
+            .then(({ data }) => {
+                if (data.status === 'success') {
+                    currentFen = data.fen;
+                    moveLog.push(`${mySeat === 'white' ? 'W' : 'B'}: ${data.move.san}`);
+                    updateMoveLogUI();
+
+                    if (data.is_check) {
+                        chess3d.playSound('check');
+                        document.getElementById('check-alert-label').classList.remove('hidden');
+                    } else {
+                        document.getElementById('check-alert-label').classList.add('hidden');
+                    }
+
+                    if (data.is_game_over) {
+                        stopMultiplayerPolling();
+                        mpWaitingForOpponent = true;
+                        chess3d.playSound('victory');
+                        document.getElementById('game-status-label').innerText =
+                            data.winner === 'draw' ? 'Draw!'
+                                : (data.winner === mySeat ? 'You win!' : `${data.winner || 'Opponent'} wins!`);
+                        return;
+                    }
+
+                    mpWaitingForOpponent = true;
+                    document.getElementById('game-status-label').innerText = "Waiting for opponent...";
+                } else {
+                    chess3d.loadFen(currentFen);
+                    mpWaitingForOpponent = false;
+                    alert(data.message || 'Move rejected.');
+                }
+            });
+        });
+    }
+
+    function startMultiplayerPolling(gameId) {
+        stopMultiplayerPolling();
+        mpLastMoveId = 0;
+        multiplayerPollTimer = setInterval(function() {
+            if (String(activeGameId) !== String(gameId)) {
+                stopMultiplayerPolling();
+                return;
+            }
+            fetch(`/chess/multiplayer/${gameId}/state`)
+                .then(r => r.json())
+                .then(s => {
+                    if (s.status !== 'success' || !s.game) return;
+                    const g = s.game;
+                    const moves = s.team_moves || [];
+                    const newest = moves[0];
+
+                    if (newest && newest.id > mpLastMoveId) {
+                        const isNewestMine = newest.team === activeMultiplayerSeat;
+                        mpLastMoveId = Math.max(mpLastMoveId, newest.id);
+
+                        if (!isNewestMine && g.fen && g.fen !== currentFen) {
+                            const uci = newest.move_uci || '';
+                            currentFen = g.fen;
+                            moveLog.push(`${newest.team === 'white' ? 'W' : 'B'}: ${newest.move_san || uci}`);
+                            updateMoveLogUI();
+                            mpWaitingForOpponent = false;
+                            chess3d.roboticMovePiece(uci.slice(0, 2), uci.slice(2, 4), function() {
+                                document.getElementById('game-status-label').innerText =
+                                    `Your move — you play ${activeMultiplayerSeat === 'white' ? 'White' : 'Black'}`;
+                            });
+                        }
+                    }
+
+                    if (g.status && g.status !== 'active' && g.status !== 'paused') {
+                        stopMultiplayerPolling();
+                        document.getElementById('game-status-label').innerText = 'Battle closed.';
+                    }
+                })
+                .catch(function() {});
+        }, 3000);
+    }
+
+    // --- Create battle modal -------------------------------------------------
+    const GROUP_MATCH = ['group_vs_group', 'group_vs_public'];
     const matchModal = document.getElementById('create-match-modal');
-    document.getElementById('create-match-modal-btn').addEventListener('click', () => {
+    const matchTypeSelect = document.getElementById('match-type-select');
+    const whiteClanPicker = document.getElementById('white-clan-picker');
+    const blackClanPicker = document.getElementById('black-clan-picker');
+
+    function syncMatchTypePickers() {
+        const isGroup = GROUP_MATCH.includes(matchTypeSelect.value);
+        whiteClanPicker.classList.toggle('hidden', !isGroup);
+        blackClanPicker.classList.toggle('hidden', matchTypeSelect.value !== 'group_vs_group');
+    }
+    matchTypeSelect.addEventListener('change', syncMatchTypePickers);
+    syncMatchTypePickers();
+
+    function openMatchModal(presetType) {
+        if (presetType) {
+            matchTypeSelect.value = presetType;
+            syncMatchTypePickers();
+        }
         matchModal.classList.remove('hidden');
+    }
+
+    document.getElementById('create-match-modal-btn').addEventListener('click', () => openMatchModal());
+    document.querySelectorAll('.open-match-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => openMatchModal(btn.getAttribute('data-match-type')));
     });
     document.querySelectorAll('.close-match-modal-btn').forEach(btn => {
         btn.addEventListener('click', () => matchModal.classList.add('hidden'));
@@ -1564,43 +2077,221 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('create-match-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const title = document.getElementById('match-title-input').value;
-        const matchType = document.getElementById('match-type-select').value;
+        const matchType = matchTypeSelect.value;
         const whiteGroup = document.getElementById('match-white-group').value || null;
         const blackGroup = document.getElementById('match-black-group').value || null;
 
-        fetch('/chess/multiplayer/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title,
-                match_type: matchType,
-                white_group_id: whiteGroup,
-                black_group_id: blackGroup,
-                is_public: 1
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
+        if (GROUP_MATCH.includes(matchType) && !whiteGroup) {
+            alert('Pick your clan first (White team).');
+            return;
+        }
+        if (matchType === 'group_vs_group' && !blackGroup) {
+            alert('Pick the rival clan you want to challenge.');
+            return;
+        }
+
+        chessApi('/chess/multiplayer/create', {
+            title: title,
+            match_type: matchType,
+            white_group_id: whiteGroup,
+            black_group_id: blackGroup,
+            is_public: 1
+        }).then(({ data }) => {
             matchModal.classList.add('hidden');
             if (data.status === 'success') {
-                alert(`Match "${title}" initiated! Loading on 3D board...`);
+                alert(data.message || `Match "${title}" initiated!`);
                 location.reload();
+            } else {
+                alert(data.message || 'Could not create the match.');
             }
         });
     });
 
-    document.querySelectorAll('.join-match-btn').forEach(btn => {
+    // --- Quick pair (Public vs Public) ---------------------------------------
+    const quickPairBtn = document.getElementById('quick-pair-btn');
+    if (quickPairBtn) {
+        quickPairBtn.addEventListener('click', function() {
+            const btn = this;
+            btn.disabled = true;
+            chessApi('/chess/multiplayer/quick-pair').then(({ data }) => {
+                btn.disabled = false;
+                if (data.status !== 'success') {
+                    alert(data.message || 'Pairing failed.');
+                    return;
+                }
+                fetch(`/chess/multiplayer/${data.game_id}/state`)
+                    .then(r => r.json())
+                    .then(s => {
+                        const g = (s && s.game) || {};
+                        loadBattleIntoStudio(data.game_id, g.fen || currentFen, data.message, data.seat || 'white');
+                    })
+                    .catch(() => loadBattleIntoStudio(data.game_id, currentFen, data.message, data.seat || 'white'));
+            });
+        });
+    }
+
+    // --- Invitation modal ----------------------------------------------------
+    const inviteModal = document.getElementById('invite-modal');
+    const inviteTargetType = document.getElementById('invite-target-type');
+    const inviteSubscriberPane = document.getElementById('invite-subscriber-pane');
+    const inviteGroupPane = document.getElementById('invite-group-pane');
+
+    function syncInvitePanes() {
+        const isGroup = inviteTargetType.value === 'group';
+        inviteSubscriberPane.classList.toggle('hidden', isGroup);
+        inviteGroupPane.classList.toggle('hidden', !isGroup);
+    }
+    inviteTargetType.addEventListener('change', syncInvitePanes);
+    syncInvitePanes();
+
+    document.querySelectorAll('#open-invite-modal-btn, .open-invite-modal-btn').forEach(btn => {
+        btn.addEventListener('click', () => inviteModal.classList.remove('hidden'));
+    });
+    document.querySelectorAll('.close-invite-modal-btn').forEach(btn => {
+        btn.addEventListener('click', () => inviteModal.classList.add('hidden'));
+    });
+
+    const inviteUsernameInput = document.getElementById('invite-username-input');
+    const inviteUserResults = document.getElementById('invite-user-results');
+    let inviteTargetUserId = null;
+
+    inviteUsernameInput.addEventListener('input', function() {
+        const q = this.value.trim();
+        inviteTargetUserId = null;
+        if (q.length < 2) {
+            inviteUserResults.classList.add('hidden');
+            inviteUserResults.innerHTML = '';
+            return;
+        }
+        fetch(`/chess/invitations/search?q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(data => {
+                inviteUserResults.innerHTML = '';
+                if (!data.users || !data.users.length) {
+                    inviteUserResults.classList.add('hidden');
+                    return;
+                }
+                data.users.forEach(u => {
+                    const opt = document.createElement('button');
+                    opt.type = 'button';
+                    opt.className = 'w-full text-left px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-200 text-xs';
+                    opt.innerText = u.username;
+                    opt.addEventListener('click', () => {
+                        inviteTargetUserId = u.id;
+                        inviteUsernameInput.value = u.username;
+                        inviteUserResults.innerHTML = '';
+                        inviteUserResults.classList.add('hidden');
+                    });
+                    inviteUserResults.appendChild(opt);
+                });
+                inviteUserResults.classList.remove('hidden');
+            })
+            .catch(() => {});
+    });
+
+    document.getElementById('invite-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const payload = {
+            title: document.getElementById('invite-title-input').value,
+            message: document.getElementById('invite-message-input').value
+        };
+
+        if (inviteTargetType.value === 'group') {
+            payload.to_group_id = document.getElementById('invite-target-group').value || null;
+            payload.my_group_id = document.getElementById('invite-my-group').value || null;
+            if (!payload.to_group_id) {
+                alert('Pick the rival clan you want to invite.');
+                return;
+            }
+        } else {
+            payload.to_user_id = inviteTargetUserId;
+            payload.to_username = inviteUsernameInput.value.trim();
+            if (!payload.to_user_id && !payload.to_username) {
+                alert('Type a subscriber username first.');
+                return;
+            }
+        }
+
+        chessApi('/chess/invitations/send', payload).then(({ data }) => {
+            if (data.status === 'success') {
+                inviteModal.classList.add('hidden');
+                alert(data.message || 'Invitation dispatched!');
+                location.reload();
+            } else {
+                alert(data.message || 'Could not send the invitation.');
+            }
+        });
+    });
+
+    // --- Accept / decline invitations ----------------------------------------
+    document.querySelectorAll('.accept-invite-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const card = this.closest('.p-4');
+            chessApi(`/chess/invitations/${id}/accept`).then(({ data }) => {
+                if (data.status === 'success') {
+                    if (card) card.classList.add('hidden');
+                    alert(data.message || 'Invitation accepted!');
+                    fetch(`/chess/multiplayer/${data.game_id}/state`)
+                        .then(r => r.json())
+                        .then(s => {
+                            const g = (s && s.game) || {};
+                            loadBattleIntoStudio(data.game_id, g.fen || currentFen, 'Invitation battle', data.seat);
+                        })
+                        .catch(() => loadBattleIntoStudio(data.game_id, currentFen, 'Invitation battle', data.seat));
+                } else {
+                    alert(data.message || 'Could not accept the invitation.');
+                }
+            });
+        });
+    });
+
+    document.querySelectorAll('.decline-invite-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const card = this.closest('.p-4');
+            chessApi(`/chess/invitations/${id}/decline`).then(({ data }) => {
+                if (data.status === 'success') {
+                    if (card) card.classList.add('hidden');
+                } else {
+                    alert(data.message || 'Could not decline the invitation.');
+                }
+            });
+        });
+    });
+
+    // --- Take a seat / resume / spectate -------------------------------------
+    document.querySelectorAll('.seat-match-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const mId = this.getAttribute('data-id');
             const mFen = this.getAttribute('data-fen');
             const mTitle = this.getAttribute('data-title');
+            chessApi(`/chess/multiplayer/${mId}/join`).then(({ data }) => {
+                if (data.status === 'success') {
+                    const fen = (data.game && data.game.fen) || mFen;
+                    alert(data.message || 'Seat taken!');
+                    loadBattleIntoStudio(mId, fen, mTitle, data.seat);
+                } else {
+                    alert(data.message || 'Could not take a seat.');
+                }
+            });
+        });
+    });
 
-            activeGameId = mId;
-            currentFen = mFen;
-            chess3d.loadFen(mFen);
+    document.querySelectorAll('.resume-match-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            loadBattleIntoStudio(
+                this.getAttribute('data-id'),
+                this.getAttribute('data-fen'),
+                this.getAttribute('data-title'),
+                this.getAttribute('data-seat')
+            );
+        });
+    });
 
-            document.querySelector('.mode-tab-btn[data-tab="studio"]').click();
-            document.getElementById('game-status-label').innerText = `Multiplayer Arena: ${mTitle}`;
+    document.querySelectorAll('.spectate-match-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            loadBattleIntoStudio(null, this.getAttribute('data-fen'), `${this.getAttribute('data-title')} (spectating)`, null);
         });
     });
 

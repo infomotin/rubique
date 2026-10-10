@@ -665,10 +665,13 @@ class ChessModel:
         return execute_insert(sql_mysql, sql_sqlite, (user_id, user_id, match_type, title, white_group_id, black_group_id, is_public, initial_fen, ""))
 
     @staticmethod
-    def get_multiplayer_matches(match_type=None, limit=20):
+    def get_multiplayer_matches(match_type=None, limit=20, public_only=True):
         where_sql_mysql = "WHERE cg.match_type != 'ai'"
         where_sql_sqlite = "WHERE cg.match_type != 'ai'"
         params = []
+        if public_only:
+            where_sql_mysql += " AND cg.is_public = 1"
+            where_sql_sqlite += " AND cg.is_public = 1"
         if match_type:
             where_sql_mysql += " AND cg.match_type = %s"
             where_sql_sqlite += " AND cg.match_type = ?"
@@ -678,10 +681,13 @@ class ChessModel:
 
         sql_mysql = f"""
             SELECT cg.*, u.username as creator_name,
+                   bwu.username as white_player_name, bcu.username as black_player_name,
                    wg.name as white_group_name, bg.name as black_group_name,
                    (SELECT COUNT(*) FROM chess_team_moves tm WHERE tm.game_id = cg.id) as team_moves_count
             FROM chess_games cg
             LEFT JOIN users u ON cg.user_id = u.id
+            LEFT JOIN users bwu ON cg.white_user_id = bwu.id
+            LEFT JOIN users bcu ON cg.black_user_id = bcu.id
             LEFT JOIN chat_groups wg ON cg.white_group_id = wg.id
             LEFT JOIN chat_groups bg ON cg.black_group_id = bg.id
             {where_sql_mysql}
@@ -689,16 +695,272 @@ class ChessModel:
         """
         sql_sqlite = f"""
             SELECT cg.*, u.username as creator_name,
+                   bwu.username as white_player_name, bcu.username as black_player_name,
                    wg.name as white_group_name, bg.name as black_group_name,
                    (SELECT COUNT(*) FROM chess_team_moves tm WHERE tm.game_id = cg.id) as team_moves_count
             FROM chess_games cg
             LEFT JOIN users u ON cg.user_id = u.id
+            LEFT JOIN users bwu ON cg.white_user_id = bwu.id
+            LEFT JOIN users bcu ON cg.black_user_id = bcu.id
             LEFT JOIN chat_groups wg ON cg.white_group_id = wg.id
             LEFT JOIN chat_groups bg ON cg.black_group_id = bg.id
             {where_sql_sqlite}
             ORDER BY cg.created_at DESC LIMIT ?
         """
         return query_all(sql_mysql, sql_sqlite, tuple(params))
+
+    # =========================================================================
+    # INVITATIONS: DIRECT SUBSCRIBER INVITES & CLAN (GROUP) INVITES
+    # =========================================================================
+    @staticmethod
+    def create_invitation(game_id, from_user_id, to_user_id=None, to_group_id=None, message=""):
+        sql_mysql = """
+            INSERT INTO chess_invitations (game_id, from_user_id, to_user_id, to_group_id, message, status)
+            VALUES (%s, %s, %s, %s, %s, 'pending')
+        """
+        sql_sqlite = """
+            INSERT INTO chess_invitations (game_id, from_user_id, to_user_id, to_group_id, message, status)
+            VALUES (?, ?, ?, ?, ?, 'pending')
+        """
+        return execute_insert(sql_mysql, sql_sqlite, (game_id, from_user_id, to_user_id, to_group_id, message))
+
+    @staticmethod
+    def get_invitation(invitation_id):
+        return query_one(
+            """SELECT ci.*, fu.username as from_username, tu.username as to_username,
+                      cg.name as group_name, chess.title as game_title, chess.match_type as game_match_type,
+                      chess.is_public as game_is_public
+               FROM chess_invitations ci
+               LEFT JOIN users fu ON ci.from_user_id = fu.id
+               LEFT JOIN users tu ON ci.to_user_id = tu.id
+               LEFT JOIN chat_groups cg ON ci.to_group_id = cg.id
+               LEFT JOIN chess_games chess ON ci.game_id = chess.id
+               WHERE ci.id = %s""",
+            """SELECT ci.*, fu.username as from_username, tu.username as to_username,
+                      cg.name as group_name, chess.title as game_title, chess.match_type as game_match_type,
+                      chess.is_public as game_is_public
+               FROM chess_invitations ci
+               LEFT JOIN users fu ON ci.from_user_id = fu.id
+               LEFT JOIN users tu ON ci.to_user_id = tu.id
+               LEFT JOIN chat_groups cg ON ci.to_group_id = cg.id
+               LEFT JOIN chess_games chess ON ci.game_id = chess.id
+               WHERE ci.id = ?""",
+            (invitation_id,)
+        )
+
+    @staticmethod
+    def get_received_invitations(user_id, limit=30):
+        """Pending invites addressed to this subscriber, or to a clan they lead/roster."""
+        sql_mysql = """
+            SELECT ci.*, fu.username as from_username, tu.username as to_username,
+                   cg.name as group_name, chess.title as game_title, chess.match_type as game_match_type
+            FROM chess_invitations ci
+            LEFT JOIN users fu ON ci.from_user_id = fu.id
+            LEFT JOIN users tu ON ci.to_user_id = tu.id
+            LEFT JOIN chat_groups cg ON ci.to_group_id = cg.id
+            LEFT JOIN chess_games chess ON ci.game_id = chess.id
+            WHERE ci.status = 'pending'
+              AND (ci.to_user_id = %s
+                   OR (ci.to_group_id IS NOT NULL AND ci.to_group_id IN (
+                        SELECT id FROM chat_groups WHERE created_by = %s
+                        UNION
+                        SELECT group_id FROM chess_clan_members WHERE user_id = %s)))
+            ORDER BY ci.created_at DESC LIMIT %s
+        """
+        sql_sqlite = """
+            SELECT ci.*, fu.username as from_username, tu.username as to_username,
+                   cg.name as group_name, chess.title as game_title, chess.match_type as game_match_type
+            FROM chess_invitations ci
+            LEFT JOIN users fu ON ci.from_user_id = fu.id
+            LEFT JOIN users tu ON ci.to_user_id = tu.id
+            LEFT JOIN chat_groups cg ON ci.to_group_id = cg.id
+            LEFT JOIN chess_games chess ON ci.game_id = chess.id
+            WHERE ci.status = 'pending'
+              AND (ci.to_user_id = ?
+                   OR (ci.to_group_id IS NOT NULL AND ci.to_group_id IN (
+                        SELECT id FROM chat_groups WHERE created_by = ?
+                        UNION
+                        SELECT group_id FROM chess_clan_members WHERE user_id = ?)))
+            ORDER BY ci.created_at DESC LIMIT ?
+        """
+        return query_all(sql_mysql, sql_sqlite, (user_id, user_id, user_id, limit))
+
+    @staticmethod
+    def get_sent_invitations(user_id, limit=30):
+        sql_mysql = """
+            SELECT ci.*, fu.username as from_username, tu.username as to_username,
+                   cg.name as group_name, chess.title as game_title, chess.match_type as game_match_type
+            FROM chess_invitations ci
+            LEFT JOIN users fu ON ci.from_user_id = fu.id
+            LEFT JOIN users tu ON ci.to_user_id = tu.id
+            LEFT JOIN chat_groups cg ON ci.to_group_id = cg.id
+            LEFT JOIN chess_games chess ON ci.game_id = chess.id
+            WHERE ci.from_user_id = %s
+            ORDER BY ci.created_at DESC LIMIT %s
+        """
+        sql_sqlite = """
+            SELECT ci.*, fu.username as from_username, tu.username as to_username,
+                   cg.name as group_name, chess.title as game_title, chess.match_type as game_match_type
+            FROM chess_invitations ci
+            LEFT JOIN users fu ON ci.from_user_id = fu.id
+            LEFT JOIN users tu ON ci.to_user_id = tu.id
+            LEFT JOIN chat_groups cg ON ci.to_group_id = cg.id
+            LEFT JOIN chess_games chess ON ci.game_id = chess.id
+            WHERE ci.from_user_id = ?
+            ORDER BY ci.created_at DESC LIMIT ?
+        """
+        return query_all(sql_mysql, sql_sqlite, (user_id, limit))
+
+    @staticmethod
+    def set_invitation_status(invitation_id, status):
+        return execute_update(
+            "UPDATE chess_invitations SET status = %s WHERE id = %s",
+            "UPDATE chess_invitations SET status = ? WHERE id = ?",
+            (status, invitation_id)
+        )
+
+    @staticmethod
+    def has_live_invitation(game_id, user_id):
+        """True when an invitation for this match targets the subscriber (directly or via their clan)."""
+        return query_one(
+            """SELECT ci.id FROM chess_invitations ci
+               WHERE ci.game_id = %s AND ci.status IN ('pending','accepted')
+                 AND (ci.to_user_id = %s
+                      OR (ci.to_group_id IS NOT NULL AND ci.to_group_id IN (
+                            SELECT id FROM chat_groups WHERE created_by = %s
+                            UNION
+                            SELECT group_id FROM chess_clan_members WHERE user_id = %s)))
+               LIMIT 1""",
+            """SELECT ci.id FROM chess_invitations ci
+               WHERE ci.game_id = ? AND ci.status IN ('pending','accepted')
+                 AND (ci.to_user_id = ?
+                      OR (ci.to_group_id IS NOT NULL AND ci.to_group_id IN (
+                            SELECT id FROM chat_groups WHERE created_by = ?
+                            UNION
+                            SELECT group_id FROM chess_clan_members WHERE user_id = ?)))
+               LIMIT 1""",
+            (game_id, user_id, user_id, user_id)
+        )
+
+    # =========================================================================
+    # CLAN ROSTER: who may take a clan seat in Group vs Group battles
+    # =========================================================================
+    @staticmethod
+    def is_clan_member(group_id, user_id):
+        if not group_id or not user_id:
+            return False
+        group = query_one(
+            "SELECT created_by FROM chat_groups WHERE id = %s",
+            "SELECT created_by FROM chat_groups WHERE id = ?",
+            (group_id,)
+        )
+        if group and group.get('created_by') == user_id:
+            return True
+        row = query_one(
+            "SELECT 1 as ok FROM chess_clan_members WHERE group_id = %s AND user_id = %s",
+            "SELECT 1 as ok FROM chess_clan_members WHERE group_id = ? AND user_id = ?",
+            (group_id, user_id)
+        )
+        return row is not None
+
+    @staticmethod
+    def add_clan_member(group_id, user_id):
+        if not group_id or not user_id:
+            return None
+        return execute_insert(
+            "INSERT IGNORE INTO chess_clan_members (group_id, user_id) VALUES (%s, %s)",
+            "INSERT OR IGNORE INTO chess_clan_members (group_id, user_id) VALUES (?, ?)",
+            (group_id, user_id)
+        )
+
+    # =========================================================================
+    # SEAT ASSIGNMENT: join open / public / clan battles
+    # =========================================================================
+    @staticmethod
+    def set_game_seat(game_id, seat, user_id):
+        column = 'white_user_id' if seat == 'white' else 'black_user_id'
+        return execute_update(
+            f"UPDATE chess_games SET {column} = %s WHERE id = %s",
+            f"UPDATE chess_games SET {column} = ? WHERE id = ?",
+            (user_id, game_id)
+        )
+
+    @classmethod
+    def join_multiplayer_match(cls, game_id, user_id):
+        """
+        Seat a subscriber into an active multiplayer battle.
+        Returns {'status', 'message', 'seat', 'game'} — status 'error' carries a code hint.
+        """
+        game = cls.get_game(game_id)
+        if not game:
+            return {'status': 'error', 'code': 404, 'message': 'Match not found.'}
+
+        if str(game.get('status')) in ('completed', 'abandoned', 'cancelled'):
+            return {'status': 'error', 'code': 409, 'message': 'This match is already closed.'}
+
+        if game.get('white_user_id') == user_id:
+            return {'status': 'success', 'seat': 'white', 'game': game, 'message': 'You are already seated (White).'}
+        if game.get('black_user_id') == user_id:
+            return {'status': 'success', 'seat': 'black', 'game': game, 'message': 'You are already seated (Black).'}
+
+        match_type = game.get('match_type')
+        clan_battle = match_type in ('group_vs_group', 'group_vs_public')
+
+        # Seat eligibility -------------------------------------------------
+        if game.get('black_group_id'):
+            group_name_row = query_one(
+                "SELECT name FROM chat_groups WHERE id = %s",
+                "SELECT name FROM chat_groups WHERE id = ?",
+                (game['black_group_id'],)
+            )
+            group_name = (group_name_row or {}).get('name', 'the rival clan')
+            if not cls.is_clan_member(game['black_group_id'], user_id):
+                return {
+                    'status': 'error', 'code': 403,
+                    'message': f'Black seat belongs to clan "{group_name}". Ask a clan admin for an invitation.'
+                }
+
+        if not game.get('is_public', 1) and not cls.has_live_invitation(game_id, user_id):
+            return {'status': 'error', 'code': 403, 'message': 'This match is invitation only.'}
+
+        # Seat assignment --------------------------------------------------
+        if not game.get('black_user_id'):
+            seat = 'black'
+        elif not game.get('white_user_id'):
+            seat = 'white'
+        else:
+            return {'status': 'error', 'code': 409, 'message': 'Both seats are taken — match is full.'}
+
+        if seat == 'white' and clan_battle and game.get('white_group_id'):
+            if not cls.is_clan_member(game['white_group_id'], user_id):
+                return {'status': 'error', 'code': 403, 'message': 'White seat belongs to your rival clan.'}
+
+        cls.set_game_seat(game_id, seat, user_id)
+
+        # Register the challenger into the clan roster they just played for
+        if seat == 'black' and game.get('black_group_id'):
+            cls.add_clan_member(game['black_group_id'], user_id)
+        if seat == 'white' and game.get('white_group_id'):
+            cls.add_clan_member(game['white_group_id'], user_id)
+
+        label = 'White' if seat == 'white' else 'Black'
+        return {'status': 'success', 'seat': seat, 'game': cls.get_game(game_id),
+                'message': f'You joined the battle as {label}.'}
+
+    @staticmethod
+    def find_joinable_public_match(user_id):
+        """An open Public vs Public table hosted by another subscriber with a free seat."""
+        return query_one(
+            """SELECT * FROM chess_games
+               WHERE match_type = 'public' AND is_public = 1 AND status = 'active'
+                 AND black_user_id IS NULL AND user_id != ?
+               ORDER BY created_at DESC LIMIT 1""",
+            """SELECT * FROM chess_games
+               WHERE match_type = 'public' AND is_public = 1 AND status = 'active'
+                 AND black_user_id IS NULL AND user_id != ?
+               ORDER BY created_at DESC LIMIT 1""",
+            (user_id,)
+        )
 
     @staticmethod
     def record_team_move(game_id, user_id, team, move_uci, move_san="", comment=""):

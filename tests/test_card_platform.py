@@ -535,6 +535,79 @@ class CardGameEnginesTest(unittest.TestCase):
             self.assertTrue(eng.is_over(), f"{slug} failed to terminate")
             self.assertGreaterEqual(len(eng.finish_order()), 1, f"{slug} must have finish order")
 
+    def test_multiplayer_quota_and_insufficient_coins(self):
+        """Test strict quota limits and coin balance requirements."""
+        with self.app.app_context():
+            u1_name = f'quota1_{self.run}'
+            u2_name = f'quota2_{self.run}'
+            u3_name = f'quota3_{self.run}'
+            self.register_user(u1_name)
+            self.register_user(u2_name)
+            self.register_user(u3_name)
+
+            u1 = UserModel.get_by_username(u1_name)
+            u2 = UserModel.get_by_username(u2_name)
+            u3 = UserModel.get_by_username(u3_name)
+
+            # Create group with max_seats = 2 quota
+            grp = groups.create_group(u1['id'], 'Quota Group', is_private=1)
+            groups.add_member(grp['id'], u2['id'])
+            groups.add_member(grp['id'], u3['id'])
+
+            # Create table with quota = 2 and stake = 50
+            tbl = gameplay.create_table(grp['id'], u1['id'], 'teen_patti',
+                                        stake=50, max_seats=2, is_private=1)
+
+            # Player 2 joins (2/2 seats filled)
+            gameplay.join_table(tbl['id'], u2['id'])
+
+            # Player 3 attempts to join, but table is strictly full (quota = 2)
+            with self.assertRaises(gameplay.CardClubError) as ctx:
+                gameplay.join_table(tbl['id'], u3['id'])
+            self.assertIn("quota is full", str(ctx.exception).lower())
+
+            # Test insufficient coins: deduct all coins from user 3
+            execute_update("UPDATE club_wallets SET balance = 0 WHERE user_id = %s", (u3['id'],))
+            # New table with stake 25
+            tbl2 = gameplay.create_table(grp['id'], u1['id'], 'teen_patti', stake=25, max_seats=4)
+            with self.assertRaises(gameplay.CardClubError) as ctx2:
+                gameplay.join_table(tbl2['id'], u3['id'])
+            self.assertIn("less than required stake", str(ctx2.exception).lower())
+
+    def test_fake_name_anonymity_in_private_group(self):
+        """Ensure real username is masked with fake name in private groups."""
+        with self.app.app_context():
+            uname = f'realuser_{self.run}'
+            self.register_user(uname)
+            u = UserModel.get_by_username(uname)
+
+            # Create private group with fake_name
+            grp = groups.create_group(u['id'], 'Shadow Club', is_private=1, fake_name='GhostRider_99')
+            mems = groups.members(grp['id'])
+            self.assertEqual(len(mems), 1)
+            # Display name must be the fake name
+            self.assertEqual(mems[0]['username'], 'GhostRider_99')
+            self.assertEqual(mems[0]['display_name'], 'GhostRider_99')
+
+            # Create table with fake_name
+            tbl = gameplay.create_table(grp['id'], u['id'], 'call_break',
+                                        max_seats=4, is_private=1, fake_name='GhostRider_99')
+            v = gameplay.get_view(tbl['id'], u['id'])
+            seat_info = v['seats'][0]
+            self.assertEqual(seat_info['username'], 'GhostRider_99')
+
+    def test_faucet_claim_endpoint(self):
+        """Test claiming coins from the reserve faucet via HTTP API."""
+        u_name = f'claim_{self.run}'
+        self.register_user(u_name)
+        self.login_user(u_name)
+
+        status, data = self.api('POST', '/club/api/wallet/claim', {})
+        self.assertEqual(status, 200)
+        self.assertTrue(data.get('ok'))
+        self.assertEqual(data.get('claimed'), 100)
+        self.assertGreaterEqual(data.get('balance'), 200)
+
 
 if __name__ == '__main__':
     unittest.main()

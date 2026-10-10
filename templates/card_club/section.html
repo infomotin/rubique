@@ -74,29 +74,37 @@
             <!-- Right: live stats + actions -->
             <div class="flex flex-col items-start lg:items-end gap-3 font-mono text-xs w-full lg:w-auto">
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <div class="px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-amber-500/40 shadow-xl flex items-center gap-2.5">
+                    <div class="px-4 py-2 rounded-2xl bg-slate-950/80 border border-amber-500/40 shadow-xl flex items-center gap-2.5">
                         <i class="fa-solid fa-coins text-amber-400 text-lg coin-spin"></i>
                         <div class="leading-tight">
                             <div class="text-[9px] uppercase text-slate-500 tracking-widest">Personal</div>
-                            <div class="text-white font-bold text-base" id="club-wallet-count" data-target="{{ wallet.personal }}">0</div>
+                            <div class="text-white font-bold text-base" id="club-wallet-count" data-target="{{ wallet.personal }}">{{ wallet.personal }}</div>
                         </div>
+                        <button id="hero-btn-claim-coins" class="ml-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 font-bold text-[10px] flex items-center gap-1 transition-all" title="Claim 100 free coins if exhausted">
+                            <i class="fa-solid fa-gift text-amber-400"></i>
+                            <span>+100</span>
+                        </button>
                     </div>
-                    <div class="px-3.5 py-2.5 rounded-2xl bg-slate-950/80 border border-emerald-500/40 text-emerald-300 shadow-xl">
+                    <div class="px-3 py-2 rounded-2xl bg-slate-950/80 border border-emerald-500/40 text-emerald-300 shadow-xl">
                         <i class="fa-solid fa-dice text-emerald-400 mr-1.5"></i>
                         {{ catalog|length }} GAMES
                     </div>
-                    <div class="px-3.5 py-2.5 rounded-2xl bg-slate-950/80 border border-indigo-500/40 text-indigo-300 shadow-xl">
+                    <div class="px-3 py-2 rounded-2xl bg-slate-950/80 border border-indigo-500/40 text-indigo-300 shadow-xl">
                         <i class="fa-solid fa-user-group text-indigo-400 mr-1.5"></i>
                         {{ my_groups|length }} GROUPS
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                    <button id="btn-open-multiplayer-wizard" class="btn-shimmer px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-extrabold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-1.5">
+                        <i class="fa-solid fa-gamepad text-amber-300"></i>
+                        <span>Play Multiplayer &rarr;</span>
+                    </button>
                     <a href="{{ url_for('card_club.ledger_page') }}"
-                       class="btn-shimmer px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold transition-all shadow-lg shadow-emerald-950/50">
+                       class="btn-shimmer px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold transition-all shadow-lg shadow-emerald-950/50">
                         <i class="fa-solid fa-link mr-1.5"></i> Ledger
                     </a>
-                    <button id="hero-act-win" class="btn-shimmer px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white font-bold transition-all shadow-lg shadow-amber-950/50">
-                        <i class="fa-solid fa-trophy mr-1.5"></i> Victory Fanfare
+                    <button id="hero-act-win" class="btn-shimmer px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white font-bold transition-all shadow-lg shadow-amber-950/50">
+                        <i class="fa-solid fa-trophy mr-1.5"></i> Victory
                     </button>
                 </div>
             </div>
@@ -530,33 +538,182 @@
                 </form>
             </div>
 
-            <!-- Game Catalog -->
-            <div class="club-panel glass-card p-5 rounded-3xl border border-indigo-500/30 bg-slate-950/70 reveal" style="--reveal-delay:.36s">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold font-outfit text-white flex items-center gap-2">
-                        <i class="fa-solid fa-layer-group text-indigo-400"></i> Game Catalog
-                        <span class="text-[10px] text-slate-500 font-normal">pick any when creating a table</span>
-                    </h3>
-                    <span class="text-[10px] font-mono text-indigo-300">{{ catalog|length }} GAMES</span>
+            <!-- Game Mode Showcase & Multi Player Match Action Banner -->
+            <div class="club-panel glass-card p-5 sm:p-6 rounded-3xl border border-emerald-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/40 shadow-2xl reveal relative overflow-hidden" style="--reveal-delay:.32s">
+                <div class="absolute -top-16 -right-16 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-800 relative z-10">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono mb-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            ২৩ প্রকার কার্ড গেম &bull; একক, কম্পিউটার ও মাল্টিপ্লেয়ার
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-extrabold font-outfit text-white tracking-tight flex items-center gap-2.5">
+                            <i class="fa-solid fa-layer-group text-emerald-400"></i>
+                            23 Card Games Arena &bull; Play Modes
+                        </h2>
+                        <p class="text-xs text-slate-300 font-sans mt-1 max-w-2xl leading-relaxed">
+                            কিছু গেম <strong>নিজে নিজে (Solo)</strong> খেলা যায়, কিছু গেম <strong>কম্পিউটার বনাম প্লেয়ার (COM vs Person)</strong>, এবং কিছু গেমে <strong>মাল্টিপ্লেয়ার (Multi Player)</strong> প্রয়োজন। মাল্টিপ্লেয়ার টেবিলে প্লেয়ার কোটা, প্রাইভেট/পাবলিক মোড, ছদ্মনাম (Fake Name) সুরক্ষা এবং স্বয়ংক্রিয় কয়েন ট্র্যান্সফার অন্তর্ভুক্ত।
+                        </p>
+                    </div>
+
+                    <button type="button" id="btn-banner-open-wizard" class="btn-shimmer px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-extrabold text-xs shadow-xl flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-plus-circle text-amber-300 text-sm"></i>
+                        <span>Create Multiplayer Match / সেটআপ শুরু করুন</span>
+                    </button>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+                <!-- 4 Rule Pillars Summary -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1 text-xs font-mono relative z-10">
+                    <div class="p-3 rounded-2xl bg-slate-900/70 border border-emerald-500/20 flex items-start gap-2.5">
+                        <i class="fa-solid fa-users text-emerald-400 text-base mt-0.5 shrink-0"></i>
+                        <div>
+                            <strong class="text-emerald-300 block text-[11px]">কোটা ও প্রথম গ্রহণ</strong>
+                            <span class="text-slate-400 text-[10px] leading-tight block mt-0.5">যে আগে ইনভাইট গ্রহণ করবে সে আগে যোগ হবে। কোটা পূর্ণ হলে নতুন কেউ যোগ হতে পারবে না।</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-900/70 border border-amber-500/20 flex items-start gap-2.5">
+                        <i class="fa-solid fa-coins text-amber-400 text-base mt-0.5 shrink-0"></i>
+                        <div>
+                            <strong class="text-amber-300 block text-[11px]">স্বয়ংক্রিয় কয়েন স্থানান্তর</strong>
+                            <span class="text-slate-400 text-[10px] leading-tight block mt-0.5">খেলার ফলাফল ও নিয়ম অনুযায়ী কয়েন স্বয়ংক্রিয় ট্রান্সফার হবে। কয়েন শেষ হলে রিফিল ছাড়া খেলা যাবে না।</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-900/70 border border-cyan-500/20 flex items-start gap-2.5">
+                        <i class="fa-solid fa-user-secret text-cyan-400 text-base mt-0.5 shrink-0"></i>
+                        <div>
+                            <strong class="text-cyan-300 block text-[11px]">ছদ্মনাম (Fake Name)</strong>
+                            <span class="text-slate-400 text-[10px] leading-tight block mt-0.5">প্রাইভেট গ্রুপে চাইলে ছদ্মনাম দেখানো যাবে, আসল পরিচয় কখনো অন্যদের কাছে প্রকাশ করা হবে না।</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-900/70 border border-purple-500/20 flex items-start gap-2.5">
+                        <i class="fa-solid fa-shield-halved text-purple-400 text-base mt-0.5 shrink-0"></i>
+                        <div>
+                            <strong class="text-purple-300 block text-[11px]">১০০% এনক্রিপ্টেড চ্যাট</strong>
+                            <span class="text-slate-400 text-[10px] leading-tight block mt-0.5">AES-256-GCM জিরো-নলেজ এনক্রিপশন। গ্রুপের বাইরের কেউ কখনো চ্যাট ডিক্রিপ্ট করতে পারবে না।</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Catalog with Interactive Mode Filter -->
+            <div class="club-panel glass-card p-5 rounded-3xl border border-indigo-500/30 bg-slate-950/70 reveal" style="--reveal-delay:.36s">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5 border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="text-base font-bold font-outfit text-white flex items-center gap-2">
+                            <i class="fa-solid fa-cards text-indigo-400"></i>
+                            Card Games Catalog (২৩টি গেম)
+                        </h3>
+                        <p class="text-xs text-slate-400 font-sans mt-0.5">গেম মোড অনুযায়ী ফিল্টার করুন এবং সরাসরি খেলুন বা মাল্টিপ্লেয়ার সেটআপ করুন</p>
+                    </div>
+
+                    <!-- Search Box -->
+                    <div class="relative w-full md:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="game-catalog-search" placeholder="Search 23 games..."
+                               class="w-full pl-8 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono">
+                    </div>
+                </div>
+
+                <!-- Mode Filter Tabs -->
+                <div class="flex flex-wrap items-center gap-2 mb-4 font-mono text-xs">
+                    <button type="button" class="mode-filter-pill active px-3.5 py-1.5 rounded-xl border border-emerald-500/40 font-bold flex items-center gap-1.5" data-mode="all">
+                        <i class="fa-solid fa-border-all"></i>
+                        <span>All Games ({{ catalog|length }})</span>
+                    </button>
+                    <button type="button" class="mode-filter-pill px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-bold flex items-center gap-1.5" data-mode="solo">
+                        <i class="fa-solid fa-user text-emerald-400"></i>
+                        <span>Solo Play / নিজে নিজে</span>
+                    </button>
+                    <button type="button" class="mode-filter-pill px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-bold flex items-center gap-1.5" data-mode="com">
+                        <i class="fa-solid fa-robot text-cyan-400"></i>
+                        <span>COM vs Person</span>
+                    </button>
+                    <button type="button" class="mode-filter-pill px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-bold flex items-center gap-1.5" data-mode="multiplayer">
+                        <i class="fa-solid fa-users text-amber-400"></i>
+                        <span>Multi Player Rooms</span>
+                    </button>
+                </div>
+
+                <!-- 23 Games Grid -->
+                <div id="catalog-games-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                     {% for game in catalog %}
-                    <div class="game-tile catalog-game-card p-3 rounded-2xl bg-slate-900/70 border border-slate-800 reveal"
+                    <div class="game-tile catalog-game-card p-4 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 transition-all flex flex-col justify-between reveal"
+                         data-slug="{{ game.slug }}"
+                         data-name="{{ game.name }}"
+                         data-min="{{ game.min }}"
+                         data-max="{{ game.max }}"
+                         data-solo="{{ '1' if game.supports_solo else '0' }}"
+                         data-com="{{ '1' if game.supports_com else '0' }}"
+                         data-multi="{{ '1' if game.supports_multiplayer else '0' }}"
                          data-suit="{{ ['♠','♥','♦','♣'][loop.index0 % 4] }}"
-                         style="--reveal-delay:{{ 0.4 + loop.index0 * 0.03 }}s">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-xs font-bold text-white">{{ game.name }}</span>
-                            {% if game.real_time %}
-                            <span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 text-[9px] font-mono font-bold">LIVE</span>
+                         style="--reveal-delay:{{ 0.35 + loop.index0 * 0.02 }}s">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-white group-hover:text-emerald-300">{{ game.name }}</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[9px] font-mono font-bold">{{ game.badge }}</span>
+                                    {% if game.real_time %}
+                                    <span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 text-[9px] font-mono font-bold">LIVE</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Mini Card Visuals -->
+                            <div class="flex items-center gap-1.5 mb-2.5">
+                                <span class="catalog-mini-card {{ 'is-red' if loop.index0 % 2 else '' }}"><b>{{ ['A','K','Q','J','10'][loop.index0 % 5] }}</b><i>{{ ['♠','♥','♦','♣'][loop.index0 % 4] }}</i></span>
+                                <span class="catalog-mini-card {{ 'is-red' if loop.index0 % 3 == 0 else '' }}"><b>{{ ['Q','10','A','K','J'][loop.index0 % 5] }}</b><i>{{ ['♦','♣','♥','♠','♦'][loop.index0 % 5] }}</i></span>
+                                <span class="catalog-mini-card"><b>{{ ['J','9','8','7','6'][loop.index0 % 5] }}</b><i>{{ ['♣','♠','♥','♦','♣'][loop.index0 % 5] }}</i></span>
+                                <span class="text-[10px] text-slate-500 font-mono ml-auto">{{ game.min }}-{{ game.max }} Players</span>
+                            </div>
+
+                            <!-- Supported Mode Badges -->
+                            <div class="flex flex-wrap items-center gap-1.5 mb-2.5">
+                                {% if game.supports_solo %}
+                                <span class="px-2 py-0.5 rounded-md bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-[9px] font-mono font-bold">
+                                    <i class="fa-solid fa-user mr-1 text-[8px]"></i>Solo
+                                </span>
+                                {% endif %}
+                                {% if game.supports_com %}
+                                <span class="px-2 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 text-[9px] font-mono font-bold">
+                                    <i class="fa-solid fa-robot mr-1 text-[8px]"></i>vs COM
+                                </span>
+                                {% endif %}
+                                {% if game.supports_multiplayer %}
+                                <span class="px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-500/30 text-purple-300 text-[9px] font-mono font-bold">
+                                    <i class="fa-solid fa-users mr-1 text-[8px]"></i>Multiplayer
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <p class="text-[11px] text-slate-400 font-sans leading-relaxed line-clamp-3 mb-3">{{ game.rules }}</p>
+                        </div>
+
+                        <!-- Action Controls -->
+                        <div class="flex items-center gap-2 pt-2.5 border-t border-slate-800/80">
+                            {% if game.supports_solo %}
+                            <button type="button" class="btn-card-solo px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold font-mono transition-all flex items-center gap-1"
+                                    data-game-slug="{{ game.slug }}" data-game-name="{{ game.name }}" title="Play Solo / Nije Nije Khela">
+                                <i class="fa-solid fa-user text-emerald-400"></i> Solo
+                            </button>
                             {% endif %}
+                            {% if game.supports_com %}
+                            <button type="button" class="btn-card-com px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold font-mono transition-all flex items-center gap-1"
+                                    data-game-slug="{{ game.slug }}" data-game-name="{{ game.name }}" title="Play against Computer Bot">
+                                <i class="fa-solid fa-robot text-cyan-400"></i> vs Bot
+                            </button>
+                            {% endif %}
+                            <button type="button" class="btn-card-multi btn-shimmer px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] font-bold font-mono transition-all ml-auto flex items-center gap-1"
+                                    data-game-slug="{{ game.slug }}"
+                                    data-game-name="{{ game.name }}"
+                                    data-min="{{ game.min }}"
+                                    data-max="{{ game.max }}"
+                                    title="Create Multiplayer Table">
+                                <i class="fa-solid fa-gamepad text-amber-300"></i> Multi &rarr;
+                            </button>
                         </div>
-                        <div class="flex items-center gap-1.5 mb-1.5">
-                            <span class="catalog-mini-card {{ 'is-red' if loop.index0 % 2 else '' }}"><b>{{ ['A','K','Q','J','10'][loop.index0 % 5] }}</b><i>{{ ['♠','♥','♦','♣'][loop.index0 % 4] }}</i></span>
-                            <span class="catalog-mini-card {{ 'is-red' if loop.index0 % 3 == 0 else '' }}"><b>{{ ['Q','10','A','K','J'][loop.index0 % 5] }}</b><i>{{ ['♦','♣','♥','♠','♦'][loop.index0 % 5] }}</i></span>
-                            <span class="catalog-mini-card"><b>{{ ['J','9','8','7','6'][loop.index0 % 5] }}</b><i>{{ ['♣','♠','♥','♦','♣'][loop.index0 % 5] }}</i></span>
-                        </div>
-                        <div class="text-[10px] text-slate-500 font-mono mb-1.5">{{ game.min }}-{{ game.max }} players</div>
-                        <div class="text-[10px] text-slate-400 font-sans leading-snug line-clamp-3">{{ game.rules }}</div>
                     </div>
                     {% endfor %}
                 </div>
@@ -566,10 +723,348 @@
     </div>
 </div>
 
+<!-- =========================================================================
+     INTERACTIVE STEP-BY-STEP MULTIPLAYER MATCH WIZARD MODAL
+     ========================================================================= -->
+<div id="multiplayer-wizard-modal" class="wizard-backdrop fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="wizard-modal-card w-full max-w-2xl rounded-3xl p-5 sm:p-7 relative shadow-2xl max-h-[92vh] flex flex-col">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-lg">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+                <div>
+                    <h3 class="text-base sm:text-lg font-bold font-outfit text-white">
+                        Multi Player Match Setup Wizard
+                    </h3>
+                    <p class="text-[11px] text-slate-400 font-mono">
+                        মাল্টিপ্লেয়ার গেম কনফিগারেশন &bull; কোটা &bull; প্রাইভেসি &bull; কয়েন বাজি
+                    </p>
+                </div>
+            </div>
+            <button type="button" id="wizard-close-btn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all text-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Progress Steps Tracker -->
+        <div class="grid grid-cols-6 gap-1.5 py-4 border-b border-slate-800/80 shrink-0 font-mono text-[10px]">
+            <div class="wizard-step-indicator active p-2 rounded-xl border border-slate-800 text-center" data-step="1">
+                <span class="block font-bold">1. Game</span>
+                <span class="text-[8px] text-slate-400">গেম বাছুন</span>
+            </div>
+            <div class="wizard-step-indicator p-2 rounded-xl border border-slate-800 text-center text-slate-500" data-step="2">
+                <span class="block font-bold">2. Quota</span>
+                <span class="text-[8px] text-slate-500">প্লেয়ার সংখ্যা</span>
+            </div>
+            <div class="wizard-step-indicator p-2 rounded-xl border border-slate-800 text-center text-slate-500" data-step="3">
+                <span class="block font-bold">3. Privacy</span>
+                <span class="text-[8px] text-slate-500">প্রাইভেট/পাবলিক</span>
+            </div>
+            <div class="wizard-step-indicator p-2 rounded-xl border border-slate-800 text-center text-slate-500" data-step="4">
+                <span class="block font-bold">4. Coins</span>
+                <span class="text-[8px] text-slate-500">কয়েন বাজি</span>
+            </div>
+            <div class="wizard-step-indicator p-2 rounded-xl border border-slate-800 text-center text-slate-500" data-step="5">
+                <span class="block font-bold">5. Alias</span>
+                <span class="text-[8px] text-slate-500">ছদ্মনাম</span>
+            </div>
+            <div class="wizard-step-indicator p-2 rounded-xl border border-slate-800 text-center text-slate-500" data-step="6">
+                <span class="block font-bold">6. Invite</span>
+                <span class="text-[8px] text-slate-500">আমন্ত্রণ</span>
+            </div>
+        </div>
+
+        <!-- Wizard Steps Container -->
+        <div class="flex-1 overflow-y-auto py-4 pr-1 space-y-4">
+
+            <!-- STEP 1: CHOOSE GAME -->
+            <div id="wizard-pane-1" class="wizard-step-pane space-y-3">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
+                        ধাপ ১: কোন গেমটি খেলতে চান নির্বাচন করুন (Select Game)
+                    </label>
+                    <span class="text-[11px] text-slate-400 font-mono" id="wizard-selected-game-label">Call Break Selected</span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+                    {% for g in catalog %}
+                    <div class="wizard-option-card p-3 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between wizard-game-option {{ 'selected' if loop.first else '' }}"
+                         data-slug="{{ g.slug }}"
+                         data-name="{{ g.name }}"
+                         data-min="{{ g.min }}"
+                         data-max="{{ g.max }}"
+                         data-rules="{{ g.rules }}">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-white">{{ g.name }}</span>
+                                <span class="text-[9px] font-mono text-emerald-400 font-bold">{{ g.min }}-{{ g.max }}p</span>
+                            </div>
+                            <span class="text-[9px] text-slate-500 font-mono block">{{ g.category }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- STEP 2: SELECT PLAYER COUNT (QUOTA) -->
+            <div id="wizard-pane-2" class="wizard-step-pane hidden space-y-3">
+                <label class="block text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
+                    ধাপ ২: কত জন নিয়ে খেলবেন তা নির্বাচন করুন (Player Quota)
+                </label>
+                <p class="text-xs text-slate-300 font-sans">
+                    নির্দিষ্ট গেমের নিয়মানুযায়ী খেলোয়াড় কোটা নির্ধারণ করুন। <strong class="text-amber-300">কোটা পূর্ণ হলে নতুন কেউ আর যোগ হতে পারবে না (First come, first served)</strong>।
+                </p>
+
+                <div id="wizard-quota-buttons-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                    <!-- Injected dynamically via JS based on selected game's min/max -->
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs font-mono text-slate-300 flex items-center gap-2.5">
+                    <i class="fa-solid fa-circle-info text-cyan-400 text-sm shrink-0"></i>
+                    <span>কোটা ফিল হলে টেবিল স্বয়ংক্রিয়ভাবে লক হয়ে যাবে এবং অতিরিক্ত প্লেয়ার যোগ দেওয়া নিষিদ্ধ থাকবে।</span>
+                </div>
+            </div>
+
+            <!-- STEP 3: PRIVACY (PRIVATE VS PUBLIC) -->
+            <div id="wizard-pane-3" class="wizard-step-pane hidden space-y-3">
+                <label class="block text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
+                    ধাপ ৩: গ্রুপটি কি Private হবে না Public তা নির্ধারণ করুন
+                </label>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                    <!-- Private Option -->
+                    <div id="wizard-privacy-private" class="wizard-option-card selected p-4 rounded-2xl bg-slate-900/90 border border-emerald-500 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-lock text-emerald-400"></i> Private Group (প্রাইভেট)
+                                </span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[9px] font-mono font-bold">100% E2EE</span>
+                            </div>
+                            <p class="text-xs text-slate-400 font-sans leading-relaxed">
+                                শুধুমাত্র ইনভাইটেশন লিংক বা কোড যাদের দেওয়া হবে তারাই যোগ দিতে পারবে। সম্পূর্ণ AES-256-GCM এনক্রিপ্টেড চ্যাট এবং ছদ্মনাম (Fake Name) সমর্থন করে।
+                            </p>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-slate-800/80 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-check"></i> প্রস্তাবিত: বন্ধু ও পরিচিতদের জন্য
+                        </div>
+                    </div>
+
+                    <!-- Public Option -->
+                    <div id="wizard-privacy-public" class="wizard-option-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-globe text-cyan-400"></i> Public Room (পাবলিক)
+                                </span>
+                                <span class="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[9px] font-mono font-bold">Open Lobby</span>
+                            </div>
+                            <p class="text-xs text-slate-400 font-sans leading-relaxed">
+                                কার্ড ক্লাবের উন্মুক্ত লবিতে টেবিলটি দেখা যাবে। যে কেউ সিট ফাঁকা থাকা পর্যন্ত সরাসরি টেবিল জয়েন করতে পারবে।
+                            </p>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-slate-800/80 text-[10px] font-mono text-cyan-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users"></i> সবার সাথে খেলার জন্য উন্মুক্ত
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 4: COINS & STAKES -->
+            <div id="wizard-pane-4" class="wizard-step-pane hidden space-y-3.5">
+                <label class="block text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
+                    ধাপ ৪: বাজি ও কয়েন নির্বাচন (Coins &amp; Stakes)
+                </label>
+
+                <!-- Current Balance Display -->
+                <div class="p-3.5 rounded-2xl bg-slate-900 border border-amber-500/30 flex items-center justify-between font-mono">
+                    <div class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-coins text-amber-400 text-lg"></i>
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400">আপনার বর্তমান কয়েন ব্যালেন্স</span>
+                            <div class="text-white font-bold text-base" id="wizard-my-balance-display">{{ wallet.personal }}</div>
+                        </div>
+                    </div>
+                    <button type="button" id="wizard-claim-coins-btn" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-gift text-amber-400"></i>
+                        <span>+100 Coins Claim</span>
+                    </button>
+                </div>
+
+                <!-- Insufficient Coins Alert (hidden by default) -->
+                <div id="wizard-insufficient-coins-alert" class="hidden p-3.5 rounded-2xl bg-rose-950/70 border border-rose-500/50 text-xs font-mono text-rose-200 space-y-2">
+                    <div class="flex items-center gap-2 font-bold text-rose-300">
+                        <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                        <span>কয়েন শেষ হয়ে গেছে! (Insufficient Coins)</span>
+                    </div>
+                    <p class="text-[11px] leading-relaxed">
+                        খেলার নিয়ম অনুযায়ী আপনার টেবিলে বসার জন্য পর্যাপ্ত কয়েন নেই। নতুন কয়েন যোগ না করা পর্যন্ত আপনি এই টেবিলে খেলতে পারবেন না।
+                    </p>
+                    <button type="button" id="wizard-refill-alert-btn" class="w-full py-2 rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-coins"></i>
+                        <span>এখনই ১০০ কয়েন ফ্রিতে রিফিল করুন (Free Recharge)</span>
+                    </button>
+                </div>
+
+                <!-- Select Stake Options -->
+                <div>
+                    <label class="block text-[11px] font-mono text-slate-400 mb-2 font-bold uppercase">টেবিলের প্রতি সিটের বাজি (Stake Per Seat):</label>
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        <button type="button" class="wizard-chip-btn p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs" data-stake="0">0 (Free)</button>
+                        <button type="button" class="wizard-chip-btn selected p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs" data-stake="10">10 🪙</button>
+                        <button type="button" class="wizard-chip-btn p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs" data-stake="25">25 🪙</button>
+                        <button type="button" class="wizard-chip-btn p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs" data-stake="50">50 🪙</button>
+                        <button type="button" class="wizard-chip-btn p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs" data-stake="100">100 🪙</button>
+                        <button type="button" class="wizard-chip-btn p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs" data-stake="250">250 🪙</button>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/20 text-[10px] font-mono text-emerald-300">
+                    <i class="fa-solid fa-scale-balanced mr-1"></i>
+                    খেলা শেষে বিজয়ী(রা) পট থেকে সরাসরি সম্পূর্ণ জয়ী কয়েন স্বয়ংক্রিয় ট্রান্সফারের মাধ্যমে প্রাপ্ত হবেন।
+                </div>
+            </div>
+
+            <!-- STEP 5: ANONYMOUS ALIAS (FAKE NAME) -->
+            <div id="wizard-pane-5" class="wizard-step-pane hidden space-y-3.5">
+                <label class="block text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
+                    ধাপ ৫: ছদ্মনাম গোপনীয়তা (Fake Name Anonymity)
+                </label>
+                <p class="text-xs text-slate-300 font-sans leading-relaxed">
+                    প্রাইভেট গ্রুপে আপনি চাইলে ছদ্মনাম ব্যবহার করতে পারেন। <strong class="text-cyan-300">আপনার আসল নাম বা প্রোফাইল কখনো অন্য কারো কাছে প্রকাশ করা হবে না (Real Identity Never Disclosed)</strong>।
+                </p>
+
+                <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="wizard-use-alias-toggle" checked
+                               class="w-4 h-4 rounded text-emerald-600 bg-slate-800 border-slate-700 focus:ring-emerald-500">
+                        <label for="wizard-use-alias-toggle" class="text-xs font-bold text-white select-none cursor-pointer">
+                            প্রাইভেট গ্রুপে আমার ছদ্মনাম (Fake Name) ব্যবহার করুন
+                        </label>
+                    </div>
+
+                    <div id="wizard-alias-input-wrapper" class="space-y-1.5 pt-1">
+                        <label class="block text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
+                            আপনার পছন্দের ছদ্মনাম (Fake Name / Alias):
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-mask absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400 text-xs"></i>
+                            <input type="text" id="wizard-fake-name-input" value="GhostAce_{{ (user.id or 1) * 7 }}"
+                                   placeholder="e.g. ShadowMaster, PhantomKing, Ace99"
+                                   class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-cyan-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/20 text-[10px] font-mono text-cyan-300 flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-cyan-400 text-sm shrink-0"></i>
+                    <span>চ্যাট ও টেবিল স্ক্রিনে শুধুমাত্র এই ছদ্মনামটি দেখানো হবে। আপনার আসল ইমেইল ও ইউজারনেম ১০০% গোপন থাকবে।</span>
+                </div>
+            </div>
+
+            <!-- STEP 6: CONFIRM, LAUNCH & INVITE HUB -->
+            <div id="wizard-pane-6" class="wizard-step-pane hidden space-y-4">
+                <label class="block text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
+                    ধাপ ৬: টেবিল তৈরি ও আমন্ত্রণ জানান (Create &amp; Invite)
+                </label>
+
+                <!-- Configuration Summary Card -->
+                <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 font-mono text-xs space-y-2">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-slate-300">
+                        <span>নির্বাচিত গেম:</span>
+                        <strong class="text-white" id="w-sum-game">Call Break</strong>
+                    </div>
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-slate-300">
+                        <span>খেলোয়াড় কোটা (Player Quota):</span>
+                        <strong class="text-amber-300" id="w-sum-quota">4 Players (Strict Limit)</strong>
+                    </div>
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-slate-300">
+                        <span>গ্রুপ প্রাইভেসি:</span>
+                        <strong class="text-emerald-300" id="w-sum-privacy">Private (100% Encrypted)</strong>
+                    </div>
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-slate-300">
+                        <span>বাজি (Stake):</span>
+                        <strong class="text-amber-300" id="w-sum-stake">10 Coins</strong>
+                    </div>
+                    <div class="flex items-center justify-between text-slate-300">
+                        <span>আপনার প্রদর্শিত নাম (Display Identity):</span>
+                        <strong class="text-cyan-300" id="w-sum-alias">GhostAce_7</strong>
+                    </div>
+                </div>
+
+                <!-- Launch Button -->
+                <div id="wizard-launch-action-box">
+                    <button type="button" id="wizard-btn-launch-table" class="btn-shimmer w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-extrabold text-sm shadow-xl flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rocket text-amber-300"></i>
+                        <span>টেবিল তৈরি করুন ও আমন্ত্রণ লিংক তৈরি করুন &rarr;</span>
+                    </button>
+                </div>
+
+                <!-- Success & Live Invites Box (hidden until created) -->
+                <div id="wizard-created-hub-box" class="hidden space-y-3 pt-2">
+                    <div class="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-center space-y-2">
+                        <i class="fa-solid fa-circle-check text-emerald-400 text-2xl"></i>
+                        <h4 class="text-sm font-bold text-white">টেবিল সফলভাবে তৈরি হয়েছে!</h4>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-emerald-500/30 text-emerald-300 font-mono text-xs">
+                            <span id="wizard-created-quota-badge">কোটা: ১ / ৪ জন ভর্তি</span>
+                            <span class="text-slate-500">&bull;</span>
+                            <span class="text-amber-300">First Come First Served</span>
+                        </div>
+                    </div>
+
+                    <!-- Instant Share Actions -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <a id="wizard-created-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer"
+                           class="whatsapp-share-btn py-3 px-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs shadow-lg">
+                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                            <span>WhatsApp এ পাঠান</span>
+                        </a>
+
+                        <button type="button" id="wizard-created-copy-btn"
+                                class="py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white flex items-center justify-center gap-2 font-bold text-xs shadow-lg transition-all">
+                            <i class="fa-solid fa-copy text-amber-400"></i>
+                            <span>ইনভাইট লিঙ্ক কপি করুন</span>
+                        </button>
+                    </div>
+
+                    <!-- Direct Go to Table Felt -->
+                    <a id="wizard-created-table-link" href="#"
+                       class="btn-shimmer w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xl">
+                        <span>টেবিলে প্রবেশ করুন (Go to Table Felt)</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Modal Footer Navigation -->
+        <div class="flex items-center justify-between pt-4 border-t border-slate-800 shrink-0">
+            <button type="button" id="wizard-prev-btn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs font-mono transition-all disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                &larr; Back
+            </button>
+            <div class="text-[11px] font-mono text-slate-400" id="wizard-step-counter">Step 1 of 6</div>
+            <button type="button" id="wizard-next-btn" class="btn-shimmer px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs font-mono transition-all flex items-center gap-1.5 shadow-lg">
+                <span>Next</span> &rarr;
+            </button>
+        </div>
+
+    </div>
+</div>
+
 <div id="club-toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl font-mono text-xs font-bold shadow-2xl border"></div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/card_sound_engine.js') }}"></script>
+<script src="{{ url_for('static', filename='js/card_crypto_chat.js') }}"></script>
 <script src="{{ url_for('static', filename='js/card_club.js') }}"></script>
-<script>document.addEventListener('DOMContentLoaded', () => ClubSection.init());</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        ClubSection.init();
+    });
+</script>
 {% endblock %}

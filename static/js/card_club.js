@@ -344,6 +344,15 @@ const ClubSection = (() => {
             if (typeof this.initPlayerDiscovery === 'function') {
                 try { this.initPlayerDiscovery(); } catch (e) { /* discovery optional */ }
             }
+            if (typeof this.initCoinFaucet === 'function') {
+                try { this.initCoinFaucet(); } catch (e) { /* faucet optional */ }
+            }
+            if (typeof this.initGameCatalogFilters === 'function') {
+                try { this.initGameCatalogFilters(); } catch (e) { /* filters optional */ }
+            }
+            if (typeof this.initMultiplayerWizard === 'function') {
+                try { this.initMultiplayerWizard(); } catch (e) { /* wizard optional */ }
+            }
             // Arm the AudioContext on the first real user gesture
             // (browser autoplay policy) and fire the welcome flourish.
             const armOnce = () => {
@@ -797,6 +806,516 @@ const ClubSection = (() => {
                 });
             }
             wireInviteButtons();
+        },
+        initCoinFaucet() {
+            const claimButtons = [
+                document.getElementById('hero-btn-claim-coins'),
+                document.getElementById('wizard-claim-coins-btn'),
+                document.getElementById('wizard-refill-alert-btn')
+            ].filter(Boolean);
+
+            claimButtons.forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const originalHtml = btn.innerHTML;
+                    try {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Claiming...';
+                        const res = await post('/club/api/wallet/claim', {});
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                        if (res && res.ok) {
+                            if (window.ClubAudio) {
+                                window.ClubAudio.coins();
+                                setTimeout(() => window.ClubAudio && window.ClubAudio.win(), 250);
+                            }
+                            const r = btn.getBoundingClientRect();
+                            confettiBurst(r.left + r.width / 2, r.top, 80);
+                            toast(res.message || '🎉 +100 Coins claimed successfully!', true);
+
+                            // Update balances across the UI
+                            const walletEl = document.getElementById('club-wallet-count');
+                            if (walletEl) {
+                                walletEl.textContent = res.balance;
+                                walletEl.dataset.target = res.balance;
+                            }
+                            const wizardBalEl = document.getElementById('wizard-my-balance-display');
+                            if (wizardBalEl) {
+                                wizardBalEl.textContent = res.balance;
+                            }
+
+                            // Dismiss insufficient coins alerts
+                            const alertBox = document.getElementById('wizard-insufficient-coins-alert');
+                            if (alertBox) alertBox.classList.add('hidden');
+                            const nextBtn = document.getElementById('wizard-next-btn');
+                            if (nextBtn) nextBtn.disabled = false;
+                        }
+                    } catch (err) {
+                        toast(err.message || 'Failed to claim coins', false);
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
+                });
+            });
+        },
+        initGameCatalogFilters() {
+            const pills = document.querySelectorAll('.mode-filter-pill');
+            const searchInput = document.getElementById('game-catalog-search');
+            const cards = document.querySelectorAll('.catalog-game-card');
+
+            let currentMode = 'all';
+            let currentSearch = '';
+
+            const applyFilter = () => {
+                const q = currentSearch.toLowerCase().trim();
+                cards.forEach(card => {
+                    const solo = card.dataset.solo === '1';
+                    const com = card.dataset.com === '1';
+                    const multi = card.dataset.multi === '1';
+                    const name = (card.dataset.name || '').toLowerCase();
+                    const slug = (card.dataset.slug || '').toLowerCase();
+                    const text = card.textContent.toLowerCase();
+
+                    let modeMatch = true;
+                    if (currentMode === 'solo') modeMatch = solo;
+                    else if (currentMode === 'com') modeMatch = com;
+                    else if (currentMode === 'multiplayer') modeMatch = multi;
+
+                    let textMatch = true;
+                    if (q) {
+                        textMatch = name.includes(q) || slug.includes(q) || text.includes(q);
+                    }
+
+                    if (modeMatch && textMatch) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            };
+
+            pills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pills.forEach(p => {
+                        p.classList.remove('active', 'border-emerald-500/40');
+                        p.classList.add('bg-slate-900', 'border-slate-800', 'text-slate-300');
+                    });
+                    pill.classList.add('active', 'border-emerald-500/40');
+                    pill.classList.remove('bg-slate-900', 'border-slate-800', 'text-slate-300');
+                    currentMode = pill.dataset.mode || 'all';
+                    if (window.ClubAudio) window.ClubAudio.hover();
+                    applyFilter();
+                });
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    currentSearch = searchInput.value;
+                    applyFilter();
+                });
+            }
+        },
+        initMultiplayerWizard() {
+            const modal = document.getElementById('multiplayer-wizard-modal');
+            if (!modal) return;
+
+            const openBtns = [
+                document.getElementById('btn-open-multiplayer-wizard'),
+                document.getElementById('btn-banner-open-wizard')
+            ].filter(Boolean);
+
+            const closeBtn = document.getElementById('wizard-close-btn');
+            const prevBtn = document.getElementById('wizard-prev-btn');
+            const nextBtn = document.getElementById('wizard-next-btn');
+            const counter = document.getElementById('wizard-step-counter');
+
+            // Game options in step 1
+            const gameOptions = document.querySelectorAll('.wizard-game-option');
+            const quotaContainer = document.getElementById('wizard-quota-buttons-container');
+            const privPrivateCard = document.getElementById('wizard-privacy-private');
+            const privPublicCard = document.getElementById('wizard-privacy-public');
+            const stakeBtns = document.querySelectorAll('.wizard-chip-btn[data-stake]');
+            const insufficientAlert = document.getElementById('wizard-insufficient-coins-alert');
+            const aliasToggle = document.getElementById('wizard-use-alias-toggle');
+            const fakeNameInput = document.getElementById('wizard-fake-name-input');
+            const aliasWrapper = document.getElementById('wizard-alias-input-wrapper');
+            const launchBtn = document.getElementById('wizard-btn-launch-table');
+
+            // Summary elements in step 6
+            const sumGame = document.getElementById('w-sum-game');
+            const sumQuota = document.getElementById('w-sum-quota');
+            const sumPrivacy = document.getElementById('w-sum-privacy');
+            const sumStake = document.getElementById('w-sum-stake');
+            const sumAlias = document.getElementById('w-sum-alias');
+
+            // State
+            let step = 1;
+            let selectedSlug = 'callbreak';
+            let selectedName = 'Call Break';
+            let selectedMin = 4;
+            let selectedMax = 4;
+            let selectedQuota = 4;
+            let selectedPrivacy = 'private'; // 'private' or 'public'
+            let selectedStake = 10;
+            let currentFlowMode = 'multiplayer';
+            let useAlias = true;
+            let fakeName = fakeNameInput ? fakeNameInput.value.trim() : 'GhostAce_777';
+            let createdTableId = null;
+
+            function getMyBalance() {
+                const balEl = document.getElementById('wizard-my-balance-display');
+                if (!balEl) return 100;
+                return parseInt(balEl.textContent.replace(/[^0-9]/g, ''), 10) || 0;
+            }
+
+            function openWizard(preselectedSlug = null, initialMode = 'multiplayer') {
+                step = 1;
+                createdTableId = null;
+                currentFlowMode = initialMode || 'multiplayer';
+                document.getElementById('wizard-launch-action-box')?.classList.remove('hidden');
+                document.getElementById('wizard-created-hub-box')?.classList.add('hidden');
+                if (nextBtn) {
+                    nextBtn.innerHTML = '<span>Next</span> &rarr;';
+                    nextBtn.classList.remove('hidden');
+                }
+
+                if (preselectedSlug) {
+                    const opt = document.querySelector(`.wizard-game-option[data-slug="${preselectedSlug}"]`);
+                    if (opt) selectGameOption(opt);
+                } else {
+                    const first = document.querySelector('.wizard-game-option.selected') || gameOptions[0];
+                    if (first) selectGameOption(first);
+                }
+
+                renderStep();
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                if (window.ClubAudio) window.ClubAudio.deal();
+            }
+
+            function closeWizard() {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+
+            openBtns.forEach(b => b.addEventListener('click', () => openWizard()));
+            if (closeBtn) closeBtn.addEventListener('click', closeWizard);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeWizard();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeWizard();
+            });
+
+            // Direct buttons on 23 catalog cards
+            document.querySelectorAll('.btn-card-multi').forEach(b => {
+                b.addEventListener('click', () => {
+                    const slug = b.dataset.gameSlug;
+                    openWizard(slug, 'multiplayer');
+                });
+            });
+            document.querySelectorAll('.btn-card-solo').forEach(b => {
+                b.addEventListener('click', () => {
+                    const slug = b.dataset.gameSlug;
+                    openWizard(slug, 'solo');
+                });
+            });
+            document.querySelectorAll('.btn-card-com').forEach(b => {
+                b.addEventListener('click', () => {
+                    const slug = b.dataset.gameSlug;
+                    openWizard(slug, 'vs_com');
+                });
+            });
+
+            function selectGameOption(opt) {
+                gameOptions.forEach(o => o.classList.remove('selected', 'border-emerald-500'));
+                opt.classList.add('selected', 'border-emerald-500');
+
+                selectedSlug = opt.dataset.slug;
+                selectedName = opt.dataset.name;
+                selectedMin = parseInt(opt.dataset.min, 10) || 2;
+                selectedMax = parseInt(opt.dataset.max, 10) || 4;
+
+                const lbl = document.getElementById('wizard-selected-game-label');
+                if (lbl) lbl.textContent = `${selectedName} Selected`;
+                if (sumGame) sumGame.textContent = selectedName;
+
+                buildQuotaButtons();
+            }
+
+            gameOptions.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    selectGameOption(opt);
+                    if (window.ClubAudio) window.ClubAudio.hover();
+                });
+            });
+
+            function buildQuotaButtons() {
+                if (!quotaContainer) return;
+                quotaContainer.innerHTML = '';
+                const min = Math.max(1, selectedMin);
+                const max = Math.max(min, selectedMax);
+
+                if (selectedQuota < min || selectedQuota > max) {
+                    selectedQuota = max;
+                }
+
+                for (let count = min; count <= max; count++) {
+                    const isSel = (count === selectedQuota);
+                    const qBtn = document.createElement('button');
+                    qBtn.type = 'button';
+                    qBtn.className = `wizard-chip-btn ${isSel ? 'selected' : ''} p-3.5 rounded-2xl bg-slate-900 border ${isSel ? 'border-amber-400 text-amber-300' : 'border-slate-700 text-white'} font-mono flex flex-col items-center justify-center gap-1 transition-all`;
+                    qBtn.dataset.quota = count;
+                    qBtn.innerHTML = `
+                        <span class="text-sm font-bold">${count} Players</span>
+                        <span class="text-[9px] text-slate-400 uppercase">${count === max ? 'Standard Full' : (count === 1 ? 'Solo' : 'Custom Limit')}</span>
+                    `;
+                    qBtn.addEventListener('click', () => {
+                        quotaContainer.querySelectorAll('.wizard-chip-btn').forEach(b => {
+                            b.classList.remove('selected', 'border-amber-400', 'text-amber-300');
+                            b.classList.add('border-slate-700', 'text-white');
+                        });
+                        qBtn.classList.add('selected', 'border-amber-400', 'text-amber-300');
+                        qBtn.classList.remove('border-slate-700', 'text-white');
+                        selectedQuota = count;
+                        if (sumQuota) sumQuota.textContent = `${selectedQuota} Players (Strict Limit)`;
+                        if (window.ClubAudio) window.ClubAudio.hover();
+                    });
+                    quotaContainer.appendChild(qBtn);
+                }
+
+                if (sumQuota) sumQuota.textContent = `${selectedQuota} Players (Strict Limit)`;
+            }
+
+            // Step 3: Privacy
+            if (privPrivateCard && privPublicCard) {
+                privPrivateCard.addEventListener('click', () => {
+                    privPrivateCard.classList.add('selected', 'border-emerald-500');
+                    privPublicCard.classList.remove('selected', 'border-cyan-500');
+                    selectedPrivacy = 'private';
+                    if (sumPrivacy) sumPrivacy.textContent = 'Private (100% Encrypted & Anonymous)';
+                    if (window.ClubAudio) window.ClubAudio.hover();
+                });
+                privPublicCard.addEventListener('click', () => {
+                    privPublicCard.classList.add('selected', 'border-cyan-500');
+                    privPrivateCard.classList.remove('selected', 'border-emerald-500');
+                    selectedPrivacy = 'public';
+                    if (sumPrivacy) sumPrivacy.textContent = 'Public Room (Open Lobby)';
+                    if (window.ClubAudio) window.ClubAudio.hover();
+                });
+            }
+
+            // Step 4: Stakes & Coin Balance
+            stakeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    stakeBtns.forEach(b => {
+                        b.classList.remove('selected', 'border-amber-400', 'text-amber-300');
+                        b.classList.add('border-slate-700', 'text-white');
+                    });
+                    btn.classList.add('selected', 'border-amber-400', 'text-amber-300');
+                    btn.classList.remove('border-slate-700', 'text-white');
+                    selectedStake = parseInt(btn.dataset.stake, 10) || 0;
+                    if (sumStake) sumStake.textContent = `${selectedStake} Coins`;
+                    validateCoins();
+                    if (window.ClubAudio) window.ClubAudio.chips();
+                });
+            });
+
+            function validateCoins() {
+                const bal = getMyBalance();
+                const insufficient = (bal < selectedStake);
+                if (insufficientAlert) {
+                    if (insufficient) insufficientAlert.classList.remove('hidden');
+                    else insufficientAlert.classList.add('hidden');
+                }
+                if (nextBtn && step === 4) {
+                    nextBtn.disabled = insufficient;
+                }
+                return !insufficient;
+            }
+
+            // Step 5: Fake name
+            if (aliasToggle) {
+                aliasToggle.addEventListener('change', () => {
+                    useAlias = aliasToggle.checked;
+                    if (aliasWrapper) {
+                        aliasWrapper.style.opacity = useAlias ? '1' : '0.4';
+                        aliasWrapper.style.pointerEvents = useAlias ? 'auto' : 'none';
+                    }
+                    updateAliasSummary();
+                });
+            }
+            if (fakeNameInput) {
+                fakeNameInput.addEventListener('input', () => {
+                    fakeName = fakeNameInput.value.trim();
+                    updateAliasSummary();
+                });
+            }
+            function updateAliasSummary() {
+                if (sumAlias) {
+                    sumAlias.textContent = useAlias && fakeName ? fakeName : 'Real Username (Unmasked)';
+                }
+            }
+
+            function renderStep() {
+                for (let i = 1; i <= 6; i++) {
+                    const pane = document.getElementById(`wizard-pane-${i}`);
+                    if (pane) {
+                        if (i === step) pane.classList.remove('hidden');
+                        else pane.classList.add('hidden');
+                    }
+                }
+
+                document.querySelectorAll('.wizard-step-indicator').forEach(ind => {
+                    const s = parseInt(ind.dataset.step, 10);
+                    if (s === step) {
+                        ind.className = 'wizard-step-indicator active p-2 rounded-xl border border-emerald-500/60 bg-emerald-950/40 text-center text-emerald-300 font-bold';
+                    } else if (s < step) {
+                        ind.className = 'wizard-step-indicator p-2 rounded-xl border border-emerald-500/30 text-center text-emerald-400/70';
+                    } else {
+                        ind.className = 'wizard-step-indicator p-2 rounded-xl border border-slate-800 text-center text-slate-500';
+                    }
+                });
+
+                if (counter) counter.textContent = `Step ${step} of 6`;
+                if (prevBtn) prevBtn.disabled = (step === 1);
+
+                if (step === 4) {
+                    validateCoins();
+                } else if (nextBtn) {
+                    nextBtn.disabled = false;
+                }
+
+                if (step === 6) {
+                    if (nextBtn) nextBtn.classList.add('hidden');
+                } else {
+                    if (nextBtn) {
+                        nextBtn.classList.remove('hidden');
+                        nextBtn.innerHTML = '<span>Next</span> &rarr;';
+                    }
+                }
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    if (step > 1) {
+                        step--;
+                        renderStep();
+                        if (window.ClubAudio) window.ClubAudio.deal();
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (step === 4 && !validateCoins()) return;
+                    if (step < 6) {
+                        step++;
+                        renderStep();
+                        if (window.ClubAudio) window.ClubAudio.deal();
+                    }
+                });
+            }
+
+            // Step 6: Create Table Action
+            if (launchBtn) {
+                launchBtn.addEventListener('click', async () => {
+                    const originalHtml = launchBtn.innerHTML;
+                    launchBtn.disabled = true;
+                    launchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> টেবিল তৈরি হচ্ছে...';
+
+                    try {
+                        let groupId = null;
+                        let inviteCode = '';
+                        const grpSelect = document.getElementById('hub-group-select');
+                        if (grpSelect && grpSelect.value) {
+                            groupId = grpSelect.value;
+                            const opt = grpSelect.selectedOptions[0];
+                            inviteCode = opt ? opt.getAttribute('data-code') : '';
+                        }
+
+                        // If user doesn't have an existing group, create one
+                        if (!groupId) {
+                            const groupRes = await post('/club/api/groups', {
+                                name: `${selectedName} ${selectedPrivacy === 'private' ? 'Private' : 'Public'} Arena`,
+                                is_private: selectedPrivacy === 'private' ? 1 : 0,
+                                fake_name: useAlias ? fakeName : ''
+                            });
+                            if (groupRes && groupRes.group_id) {
+                                groupId = groupRes.group_id;
+                                inviteCode = groupRes.invite_code;
+                            }
+                        }
+
+                        // Ensure fake name alias is registered for the group if enabled
+                        if (groupId && useAlias && fakeName) {
+                            try {
+                                await post(`/club/api/groups/${groupId}/alias`, { fake_name: fakeName });
+                            } catch (e) { /* ignore */ }
+                        }
+
+                        // Create the table
+                        const tableRes = await post(`/club/api/groups/${groupId}/tables`, {
+                            game_slug: selectedSlug,
+                            name: `${selectedName} Table (${selectedQuota}p)`,
+                            max_seats: selectedQuota,
+                            stake: selectedStake,
+                            is_private: selectedPrivacy === 'private' ? 1 : 0,
+                            mode: currentFlowMode || 'multiplayer',
+                            fake_name: useAlias ? fakeName : ''
+                        });
+
+                        if (tableRes && tableRes.table_id) {
+                            createdTableId = tableRes.table_id;
+                            if (window.ClubAudio) {
+                                window.ClubAudio.win();
+                                setTimeout(() => window.ClubAudio && window.ClubAudio.coins(), 300);
+                            }
+                            const r = launchBtn.getBoundingClientRect();
+                            confettiBurst(r.left + r.width / 2, r.top, 90);
+                            toast('🎉 টেবিল সফলভাবে তৈরি হয়েছে! কোটা: ১/' + selectedQuota, true);
+
+                            // Switch to success UI
+                            document.getElementById('wizard-launch-action-box')?.classList.add('hidden');
+                            const hubBox = document.getElementById('wizard-created-hub-box');
+                            if (hubBox) hubBox.classList.remove('hidden');
+
+                            const quotaBadge = document.getElementById('wizard-created-quota-badge');
+                            if (quotaBadge) quotaBadge.textContent = `কোটা: ১ / ${selectedQuota} জন ভর্তি`;
+
+                            const base = window.location.origin;
+                            const tableUrl = `${base}/club/tables/${createdTableId}`;
+                            const joinUrl = inviteCode ? `${base}/club/join/${inviteCode}` : tableUrl;
+
+                            const tableLinkBtn = document.getElementById('wizard-created-table-link');
+                            if (tableLinkBtn) tableLinkBtn.href = tableUrl;
+
+                            const waBtn = document.getElementById('wizard-created-whatsapp-btn');
+                            if (waBtn) {
+                                const waMsg = `🃏 Hey! Join my ${selectedPrivacy === 'private' ? 'private' : 'public'} ${selectedName} match on Rubique Card Club! (Quota: ${selectedQuota} players, First-come first-served, Stake: ${selectedStake} coins): ${joinUrl}`;
+                                waBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(waMsg)}`;
+                            }
+
+                            const copyBtn = document.getElementById('wizard-created-copy-btn');
+                            if (copyBtn) {
+                                copyBtn.onclick = async () => {
+                                    try {
+                                        await navigator.clipboard.writeText(joinUrl);
+                                        toast('📋 ইনভাইট লিংক কপি হয়েছে! বন্ধুদের মেসেজ দিন।', true);
+                                        if (window.ClubAudio) window.ClubAudio.success();
+                                    } catch (e) {
+                                        toast('ইনভাইট লিঙ্ক: ' + joinUrl, true);
+                                    }
+                                };
+                            }
+                        }
+                    } catch (err) {
+                        toast(err.message || 'টেবিল তৈরিতে সমস্যা হয়েছে', false);
+                        launchBtn.disabled = false;
+                        launchBtn.innerHTML = originalHtml;
+                    }
+                });
+            }
         },
         toast, post
     };

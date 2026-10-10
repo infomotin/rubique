@@ -31,14 +31,29 @@ def get_table(table_id):
 
 
 def seats(table_id):
-    return query_all(
-        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, u.username
+    t = get_table(table_id)
+    is_priv = bool(t.get("is_private", 1) if isinstance(t, dict) else 1) if t else 1
+    rows = query_all(
+        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, s.fake_name, u.username
            FROM club_seats s JOIN users u ON u.id = s.user_id
            WHERE s.table_id = %s ORDER BY s.seat_index ASC""",
-        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, u.username
+        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, s.fake_name, u.username
            FROM club_seats s JOIN users u ON u.id = s.user_id
            WHERE s.table_id = ? ORDER BY s.seat_index ASC""",
         (table_id,))
+    out = []
+    for r in rows or []:
+        d = dict(r) if isinstance(r, dict) else {
+            "id": r[0], "user_id": r[1], "seat_index": r[2], "status": r[3],
+            "rules_read": r[4], "camera_active": r[5], "fake_name": r[6], "username": r[7]
+        }
+        if is_priv and d.get("fake_name"):
+            d["display_name"] = d["fake_name"]
+            d["username"] = d["fake_name"]  # Mask real username in private tables
+        else:
+            d["display_name"] = d.get("fake_name") or d.get("username")
+        out.append(d)
+    return out
 
 
 
@@ -60,7 +75,8 @@ def table_pot(table_id):
     return int(row[0] if not isinstance(row, dict) else list(row.values())[0])
 
 
-def create_table(group_id, user_id, slug, stake=0, pool_bonus=0, name=""):
+def create_table(group_id, user_id, slug, stake=0, pool_bonus=0, name="",
+                 max_seats=None, is_private=1, mode="multiplayer", fake_name=""):
     groups.require_member(group_id, user_id)
     info = catalog_entry(slug)
     stake = int(stake or 0)
@@ -74,20 +90,41 @@ def create_table(group_id, user_id, slug, stake=0, pool_bonus=0, name=""):
         pool = economy.balances_view(user_id, group_id)["pool"]
         if pool < pool_bonus:
             raise CardClubError("Group pool cannot cover this table bonus")
+
+    # Determine max_seats from user selection or defaults
+    if max_seats is not None:
+        try:
+            max_seats = int(max_seats)
+            if max_seats < info["min"] or max_seats > info["max"]:
+                max_seats = info["max"]
+        except (ValueError, TypeError):
+            max_seats = info["max"]
+    else:
+        max_seats = info["max"]
+
+    is_priv = 1 if is_private else 0
+
+    # Strict coin check: If player has 0 coins or less than stake, block creation
+    if stake > 0:
+        bal_view = economy.balances_view(user_id, group_id)
+        if bal_view["group_balance"] < stake and bal_view["personal"] < stake:
+            raise CardClubError("Coins finished! You do not have enough coins to play with this stake. Please add coins first.")
+
     tid = execute_insert(
         """INSERT INTO club_tables
-           (group_id, game_slug, name, stake, pool_bonus, max_seats, created_by)
-           VALUES (%s,%s,%s,%s,%s,%s,%s)""",
+           (group_id, game_slug, name, stake, pool_bonus, max_seats, created_by, is_private, mode)
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
         """INSERT INTO club_tables
-           (group_id, game_slug, name, stake, pool_bonus, max_seats, created_by)
-           VALUES (?,?,?,?,?,?,?)""",
+           (group_id, game_slug, name, stake, pool_bonus, max_seats, created_by, is_private, mode)
+           VALUES (?,?,?,?,?,?,?,?,?)""",
         (group_id, slug, name or info["name"], stake, pool_bonus,
-         info["max"], user_id))
-    join_table(group_id, user_id, tid)          # creator sits first
+         max_seats, user_id, is_priv, mode))
+
+    join_table(group_id, user_id, tid, fake_name=fake_name)          # creator sits first
     return get_table(tid)
 
 
-def join_table(group_id, user_id, table_id):
+def join_table(group_id, user_id, table_id, fake_name=""):
     groups.require_member(group_id, user_id)
     t = get_table(table_id)
     if not t or int(t["group_id"]) != group_id:
@@ -98,18 +135,31 @@ def join_table(group_id, user_id, table_id):
     seated = seats(table_id)
     if any(int(s["user_id"]) == int(user_id) for s in seated):
         raise CardClubError("Already seated")
-    if len(seated) + 1 > int(t["max_seats"]):
-        raise CardClubError("Table is full")
-    if len(seated) + 1 < info["min"]:
-        pass                                  # allowed: table waits for more
+
+    # Strict Quota limit: First-come, first-served
+    max_limit = int(t["max_seats"] or info["max"])
+    if len(seated) >= max_limit:
+        raise CardClubError("Table quota is full (কোটা পূর্ণ হয়েছে). No new players can join.")
+
     stake = int(t["stake"] or 0)
+    if stake > 0:
+        bal_view = economy.balances_view(user_id, group_id)
+        if bal_view["group_balance"] < stake:
+            # If user has personal balance, auto fund into group balance
+            needed = stake - bal_view["group_balance"]
+            if bal_view["personal"] >= needed:
+                economy.fund_group_balance(group_id, user_id, needed)
+            else:
+                raise CardClubError("Coins finished! You do not have enough coins to join this table. Please add coins first.")
+
     bet_id = economy.place_bet(table_id, group_id, user_id, stake)
     next_idx = max([int(s["seat_index"]) for s in seated] or [-1]) + 1
+    fn = (fake_name or "").strip() or None
     try:
         execute_insert(
-            "INSERT INTO club_seats (table_id, user_id, seat_index) VALUES (%s,%s,%s)",
-            "INSERT INTO club_seats (table_id, user_id, seat_index) VALUES (?,?,?)",
-            (table_id, user_id, next_idx))
+            "INSERT INTO club_seats (table_id, user_id, seat_index, fake_name) VALUES (%s,%s,%s,%s)",
+            "INSERT INTO club_seats (table_id, user_id, seat_index, fake_name) VALUES (?,?,?,?)",
+            (table_id, user_id, next_idx, fn))
     except Exception:
         if stake > 0:
             _refund_one(table_id, group_id, user_id, stake)
@@ -214,16 +264,20 @@ def get_view(table_id, user_id=None):
         if user_id and s_uid == int(user_id):
             my_rules_read = r_read
             my_camera_active = c_act
+        disp_name = s.get("display_name") or s.get("username") if isinstance(s, dict) else s[6]
         seat_list.append({
             "seat_index": int(s["seat_index"] if isinstance(s, dict) else s[2]),
             "user_id": s_uid,
-            "username": s["username"] if isinstance(s, dict) else s[6],
+            "username": disp_name,
+            "display_name": disp_name,
+            "fake_name": s.get("fake_name") if isinstance(s, dict) else None,
             "rules_read": r_read,
             "camera_active": c_act,
         })
-    view = {"table": {k: t[k] for k in
-                      ("id", "group_id", "game_slug", "name", "stake",
-                       "pool_bonus", "max_seats", "status", "created_by")},
+    table_keys = ("id", "group_id", "game_slug", "name", "stake",
+                  "pool_bonus", "max_seats", "status", "created_by",
+                  "is_private", "mode")
+    view = {"table": {k: t[k] for k in table_keys if k in t},
             "seat": seat, "pot": table_pot(table_id),
             "seats": seat_list,
             "my_rules_read": my_rules_read,

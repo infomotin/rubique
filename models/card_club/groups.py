@@ -106,19 +106,21 @@ def declare_dob(user_id, dob_text):
 
 # ------------------------------------------------------------------- groups
 
-def create_group(user_id, name, description=""):
+def create_group(user_id, name, description="", is_private=1, fake_name=""):
     name = (name or "").strip()
     if not name:
         raise CardClubError("Group name is required")
     invite_code = secrets.token_hex(5).upper()
+    is_priv = 1 if is_private else 0
     group_id = execute_insert(
-        "INSERT INTO club_groups (name, description, invite_code, created_by) VALUES (%s,%s,%s,%s)",
-        "INSERT INTO club_groups (name, description, invite_code, created_by) VALUES (?,?,?,?)",
-        (name, description or "", invite_code, user_id))
+        "INSERT INTO club_groups (name, description, invite_code, created_by, is_private) VALUES (%s,%s,%s,%s,%s)",
+        "INSERT INTO club_groups (name, description, invite_code, created_by, is_private) VALUES (?,?,?,?,?)",
+        (name, description or "", invite_code, user_id, is_priv))
+    fn = (fake_name or "").strip() or None
     execute_insert(
-        "INSERT INTO club_group_members (group_id, user_id, role) VALUES (%s,%s,%s)",
-        "INSERT INTO club_group_members (group_id, user_id, role) VALUES (?,?,?)",
-        (group_id, user_id, ADMIN))
+        "INSERT INTO club_group_members (group_id, user_id, role, fake_name) VALUES (%s,%s,%s,%s)",
+        "INSERT INTO club_group_members (group_id, user_id, role, fake_name) VALUES (?,?,?,?)",
+        (group_id, user_id, ADMIN, fn))
     try:
         economy.allocate_group_pool(group_id)
     except Exception:
@@ -126,6 +128,16 @@ def create_group(user_id, name, description=""):
                        "DELETE FROM club_groups WHERE id = ?", (group_id,))
         raise
     return get_group(group_id)
+
+
+def set_member_alias(group_id, user_id, fake_name):
+    require_member(group_id, user_id)
+    fn = (fake_name or "").strip() or None
+    execute_update(
+        "UPDATE club_group_members SET fake_name = %s WHERE group_id = %s AND user_id = %s",
+        "UPDATE club_group_members SET fake_name = ? WHERE group_id = ? AND user_id = ?",
+        (fn, group_id, user_id))
+    return fn
 
 
 def get_group(group_id):
@@ -162,14 +174,29 @@ def require_admin(group_id, user_id):
 
 
 def members(group_id):
-    return query_all(
-        """SELECT m.user_id, m.role, m.joined_at, u.username
+    grp = get_group(group_id)
+    is_priv = bool(grp.get("is_private", 1) if isinstance(grp, dict) else (grp[7] if len(grp) > 7 else 1))
+    rows = query_all(
+        """SELECT m.user_id, m.role, m.joined_at, m.fake_name, u.username
            FROM club_group_members m JOIN users u ON u.id = m.user_id
            WHERE m.group_id = %s ORDER BY m.joined_at ASC""",
-        """SELECT m.user_id, m.role, m.joined_at, u.username
+        """SELECT m.user_id, m.role, m.joined_at, m.fake_name, u.username
            FROM club_group_members m JOIN users u ON u.id = m.user_id
            WHERE m.group_id = ? ORDER BY m.joined_at ASC""",
         (group_id,))
+    out = []
+    for r in rows or []:
+        d = dict(r) if isinstance(r, dict) else {
+            "user_id": r[0], "role": r[1], "joined_at": r[2], "fake_name": r[3], "username": r[4]
+        }
+        # In private groups, if fake_name is set, never disclose real username
+        if is_priv and d.get("fake_name"):
+            d["display_name"] = d["fake_name"]
+            d["username"] = d["fake_name"]  # Mask real username for strict privacy
+        else:
+            d["display_name"] = d.get("fake_name") or d.get("username")
+        out.append(d)
+    return out
 
 
 def member_count(group_id):
@@ -181,13 +208,14 @@ def member_count(group_id):
 
 def list_my_groups(user_id):
     return query_all(
-        """SELECT g.id, g.name, g.description, m.role, g.created_at
+        """SELECT g.id, g.name, g.description, g.is_private, g.invite_code, m.role, m.fake_name, g.created_at
            FROM club_groups g JOIN club_group_members m ON m.group_id = g.id
            WHERE m.user_id = %s ORDER BY m.joined_at DESC""",
-        """SELECT g.id, g.name, g.description, m.role, g.created_at
+        """SELECT g.id, g.name, g.description, g.is_private, g.invite_code, m.role, m.fake_name, g.created_at
            FROM club_groups g JOIN club_group_members m ON m.group_id = g.id
            WHERE m.user_id = ? ORDER BY m.joined_at DESC""",
         (user_id,))
+
 
 
 # --------------------------------------------------------------- invitations
@@ -488,10 +516,11 @@ def remove_member(group_id, admin_id, target_user_id):
 
 # ------------------------------------ isolated end-to-end encrypted chat vault
 
-def send_group_encrypted_message(group_id, user_id, ciphertext, iv, salt=None):
+def send_group_encrypted_message(group_id, user_id, ciphertext, iv, salt=None, fake_name=None):
     """Stores client-side encrypted ciphertext in the group-isolated vault.
     Strictly isolated: only members can submit.
-    Server never receives plaintext ('No one capture or Decrypted it')."""
+    Server never receives plaintext ('No one capture or Decrypted it').
+    In private groups, anonymous fake_name is used to never disclose identity."""
     require_member(group_id, user_id)
     ciphertext = (ciphertext or "").strip()
     iv = (iv or "").strip()
@@ -501,23 +530,37 @@ def send_group_encrypted_message(group_id, user_id, ciphertext, iv, salt=None):
     if len(ciphertext) > 65535:
         raise CardClubError("Encrypted payload exceeds size limit")
 
+    if not fake_name:
+        mem = query_one(
+            "SELECT fake_name FROM club_group_members WHERE group_id = %s AND user_id = %s",
+            "SELECT fake_name FROM club_group_members WHERE group_id = ? AND user_id = ?",
+            (group_id, user_id))
+        if mem:
+            fake_name = mem["fake_name"] if isinstance(mem, dict) else mem[0]
+
     mid = execute_insert(
-        """INSERT INTO club_group_messages (group_id, user_id, ciphertext, iv, salt)
-           VALUES (%s,%s,%s,%s,%s)""",
-        """INSERT INTO club_group_messages (group_id, user_id, ciphertext, iv, salt)
-           VALUES (?,?,?,?,?)""",
-        (group_id, user_id, ciphertext, iv, salt))
+        """INSERT INTO club_group_messages (group_id, user_id, ciphertext, iv, salt, fake_name)
+           VALUES (%s,%s,%s,%s,%s,%s)""",
+        """INSERT INTO club_group_messages (group_id, user_id, ciphertext, iv, salt, fake_name)
+           VALUES (?,?,?,?,?,?)""",
+        (group_id, user_id, ciphertext, iv, salt, fake_name))
+
+    grp = get_group(group_id)
+    is_priv = bool(grp.get("is_private", 1) if isinstance(grp, dict) else (grp[7] if len(grp) > 7 else 1))
 
     u = query_one(
         "SELECT username FROM users WHERE id = %s",
         "SELECT username FROM users WHERE id = ?",
         (user_id,))
-    username = u["username"] if isinstance(u, dict) else u[0]
+    real_username = u["username"] if isinstance(u, dict) else u[0]
+    display_name = fake_name if (is_priv and fake_name) else real_username
+
     return {
         "id": mid,
         "group_id": group_id,
         "user_id": user_id,
-        "username": username,
+        "username": display_name,  # Never disclose real username in private group
+        "display_name": display_name,
         "ciphertext": ciphertext,
         "iv": iv,
         "salt": salt,
@@ -527,19 +570,22 @@ def send_group_encrypted_message(group_id, user_id, ciphertext, iv, salt=None):
 
 def list_group_encrypted_messages(group_id, user_id, limit=50):
     """Retrieves encrypted message stream strictly for group members.
-    Completely isolated from non-members and other groups."""
+    Completely isolated from non-members and other groups.
+    In private groups, fake_name is displayed so identity is never exposed."""
     require_member(group_id, user_id)
+    grp = get_group(group_id)
+    is_priv = bool(grp.get("is_private", 1) if isinstance(grp, dict) else (grp[7] if len(grp) > 7 else 1))
     limit = min(max(1, int(limit or 50)), 100)
     rows = query_all(
         """SELECT m.id, m.group_id, m.user_id, m.ciphertext, m.iv, m.salt,
-                  m.created_at, u.username
+                  m.created_at, m.fake_name, u.username
            FROM club_group_messages m
            JOIN users u ON u.id = m.user_id
            WHERE m.group_id = %s
            ORDER BY m.id ASC
            LIMIT %s""",
         """SELECT m.id, m.group_id, m.user_id, m.ciphertext, m.iv, m.salt,
-                  m.created_at, u.username
+                  m.created_at, m.fake_name, u.username
            FROM club_group_messages m
            JOIN users u ON u.id = m.user_id
            WHERE m.group_id = ?
@@ -550,12 +596,18 @@ def list_group_encrypted_messages(group_id, user_id, limit=50):
     for r in rows or []:
         d = dict(r) if isinstance(r, dict) else {
             "id": r[0], "group_id": r[1], "user_id": r[2], "ciphertext": r[3],
-            "iv": r[4], "salt": r[5], "created_at": str(r[6]), "username": r[7]
+            "iv": r[4], "salt": r[5], "created_at": str(r[6]), "fake_name": r[7], "username": r[8]
         }
         if "created_at" in d and hasattr(d["created_at"], "strftime"):
             d["created_at"] = d["created_at"].strftime("%Y-%m-%d %H:%M:%S")
         else:
             d["created_at"] = str(d.get("created_at") or "")
+        fn = d.get("fake_name")
+        if is_priv and fn:
+            d["username"] = fn  # Mask real username
+            d["display_name"] = fn
+        else:
+            d["display_name"] = fn or d.get("username")
         out.append(d)
     return out
 

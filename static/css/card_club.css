@@ -1161,4 +1161,76 @@
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
+/* ---------------------------------------------------------------------
+   Multiplayer Setup Wizard & Mode Filter Styles
+   --------------------------------------------------------------------- */
+.wizard-backdrop {
+    background: rgba(2, 6, 23, 0.88);
+    backdrop-filter: blur(16px);
+}
+
+.wizard-modal-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(2, 6, 23, 0.98) 100%);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 50px rgba(16, 185, 129, 0.15);
+}
+
+.wizard-step-indicator {
+    transition: all 0.3s ease;
+}
+
+.wizard-step-indicator.active {
+    background: linear-gradient(135deg, #059669, #0d9488);
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+    border-color: #34d399;
+}
+
+.wizard-step-indicator.completed {
+    background: #064e3b;
+    color: #6ee7b7;
+    border-color: #059669;
+}
+
+.wizard-option-card {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.wizard-option-card:hover {
+    border-color: rgba(52, 211, 153, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.wizard-option-card.selected {
+    border-color: #10b981;
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.4), rgba(15, 23, 42, 0.8));
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), inset 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+.wizard-chip-btn {
+    transition: all 0.2s ease;
+}
+
+.wizard-chip-btn.selected {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    border-color: #fbbf24;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+    transform: scale(1.05);
+}
+
+.mode-filter-pill {
+    transition: all 0.25s ease;
+}
+
+.mode-filter-pill.active {
+    background: linear-gradient(135deg, #059669, #0d9488);
+    color: #ffffff;
+    border-color: #34d399;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
 

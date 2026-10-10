@@ -11,6 +11,7 @@ Dedicated Controller for:
 """
 
 from flask import Blueprint, render_template, request, session, jsonify, flash, redirect, url_for
+from functools import wraps
 import chess
 import time
 from models.chess_model import ChessModel, FAMOUS_GAMES
@@ -20,6 +21,19 @@ from models.security_model import SecurityModel
 from controllers.auth_controller import login_required
 
 chess_bp = Blueprint('chess', __name__, url_prefix='/chess')
+
+ALLOWED_MATCH_TYPES = ('pvp', 'open', 'public', 'group_vs_group', 'group_vs_public')
+GROUP_MATCH_TYPES = ('group_vs_group', 'group_vs_public')
+
+
+def api_login_required(f):
+    """JSON endpoints answer 401 instead of redirecting guests to the login page."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({"status": "error", "message": "Please log in to use the chess arena."}), 401
+        return f(*args, **kwargs)
+    return wrapper
 
 @chess_bp.route('/')
 def index():
@@ -65,6 +79,15 @@ def index():
     # Active Multiplayer Matches (1v1, Clan vs Clan, Clan vs Public)
     multiplayer_matches = ChessModel.get_multiplayer_matches(limit=20)
 
+    # Invitations: direct subscriber invites + clan (group) invites
+    received_invitations = ChessModel.get_received_invitations(user_id, limit=15) if user_id else []
+    sent_invitations = ChessModel.get_sent_invitations(user_id, limit=15) if user_id else []
+
+    # Clans this subscriber leads or rostered in (Group vs Group seats)
+    my_groups = []
+    if user_id:
+        my_groups = [g for g in groups if ChessModel.is_clan_member(g.get('id'), user_id)]
+
     # User's Saved Play Stages across all styles (AI, 1v1, Clan vs Clan, Clan vs Public)
     effective_user_id = user_id or 1
     saved_stages = ChessModel.get_user_saved_stages(effective_user_id, limit=50)
@@ -90,6 +113,9 @@ def index():
         famous_games=list(FAMOUS_GAMES.values()),
         problems=problems,
         multiplayer_matches=multiplayer_matches,
+        received_invitations=received_invitations,
+        sent_invitations=sent_invitations,
+        my_groups=my_groups,
         saved_stages=saved_stages,
         groups=groups,
         is_override=admin_override
@@ -397,14 +423,38 @@ def multiplayer_arena():
 @chess_bp.route('/multiplayer/create', methods=['POST'])
 @login_required
 def create_multiplayer_game():
-    """Create 1v1, Group vs Group, or Group vs Public match"""
+    """Create Open / Public / 1v1 / Group vs Group / Group vs Public match"""
     user_id = session.get('user_id')
     data = request.get_json() or {}
-    match_type = data.get('match_type', 'pvp')  # 'pvp', 'group_vs_group', 'group_vs_public'
-    title = data.get('title', 'Cyber Arena Match')
+    match_type = data.get('match_type', 'pvp')  # 'pvp', 'open', 'public', 'group_vs_group', 'group_vs_public'
+    title = data.get('title', 'Cyber Arena Match') or 'Cyber Arena Match'
     white_group_id = data.get('white_group_id')
     black_group_id = data.get('black_group_id')
     is_public = int(data.get('is_public', 1))
+
+    if match_type not in ALLOWED_MATCH_TYPES:
+        return jsonify({
+            "status": "error",
+            "message": f"Unknown match type '{match_type}'. Choose one of: {', '.join(ALLOWED_MATCH_TYPES)}."
+        }), 400
+
+    # Open lobby & Public arena are discoverable by every subscriber
+    if match_type in ('open', 'public'):
+        is_public = 1
+
+    if match_type in GROUP_MATCH_TYPES:
+        if not white_group_id:
+            return jsonify({"status": "error", "message": "Pick your clan first (White team)."}), 400
+        if not ChessModel.is_clan_member(white_group_id, user_id):
+            return jsonify({"status": "error", "message": "You can only field a clan you lead or are rostered in."}), 403
+        if match_type == 'group_vs_group':
+            try:
+                black_group_id = int(black_group_id)
+            except (TypeError, ValueError):
+                return jsonify({"status": "error", "message": "Pick the rival clan you want to challenge."}), 400
+            group_exists = any(g.get('id') == black_group_id for g in CommunityModel.get_all_groups())
+            if not group_exists:
+                return jsonify({"status": "error", "message": "Rival clan not found."}), 404
 
     game_id = ChessModel.create_multiplayer_match(
         user_id=user_id,
@@ -419,6 +469,8 @@ def create_multiplayer_game():
         "status": "success",
         "game_id": game_id,
         "match_type": match_type,
+        "seat": "white",
+        "is_public": is_public,
         "message": f"Multiplayer match '{title}' initiated!"
     })
 
@@ -437,22 +489,45 @@ def get_multiplayer_state(game_id):
 
 @chess_bp.route('/multiplayer/<int:game_id>/move', methods=['POST'])
 @login_required
-def make_multiplayer_move():
+def make_multiplayer_move(game_id):
     """Make move in multiplayer / clan vs clan / group vs public battle"""
     user_id = session.get('user_id')
     data = request.get_json() or {}
-    game_id = data.get('game_id', game_id)
     from_sq = data.get('from')
     to_sq = data.get('to')
     promotion = data.get('promotion', 'q')
     team = data.get('team', 'white')
     comment = data.get('comment', '')
 
+    if team not in ('white', 'black'):
+        return jsonify({"status": "error", "message": "Team must be 'white' or 'black'"}), 400
+
     game = ChessModel.get_game(game_id)
     if not game:
         return jsonify({"status": "error", "message": "Match not found"}), 404
 
+    if game.get('status') not in ('active', 'paused'):
+        return jsonify({"status": "error", "message": "This match is already closed."}), 409
+
+    # Seat enforcement: only the seated subscriber may move their own colour
+    has_seats = bool(game.get('white_user_id') or game.get('black_user_id'))
+    if has_seats:
+        seat = 'white' if game.get('white_user_id') == user_id else (
+            'black' if game.get('black_user_id') == user_id else None)
+        if seat is None:
+            return jsonify({"status": "error", "message": "You are not seated in this match."}), 403
+        if seat != team:
+            return jsonify({
+                "status": "error",
+                "message": f"You are seated as {seat.capitalize()} — play for the {seat} team."
+            }), 403
+
     board = chess.Board(game['fen'])
+
+    # Turn enforcement: the side on move must match the claimed team
+    if board.turn != (chess.WHITE if team == 'white' else chess.BLACK):
+        return jsonify({"status": "error", "message": f"Not {team}'s turn."}), 409
+
     move_uci = f"{from_sq}{to_sq}"
     move_candidate = chess.Move.from_uci(move_uci)
     if move_candidate not in board.legal_moves:
@@ -485,6 +560,227 @@ def make_multiplayer_move():
         "is_check": board.is_check(),
         "is_game_over": board.is_game_over(),
         "winner": winner
+    })
+
+# =============================================================================
+# INVITATIONS: DIRECT SUBSCRIBER INVITES & CLAN (GROUP) INVITES
+# =============================================================================
+@chess_bp.route('/invitations/search')
+@api_login_required
+def search_subscribers():
+    """Type-ahead search for the invitation modal"""
+    q = request.args.get('q', '').strip()
+    user_id = session.get('user_id')
+    users = UserModel.search_users(q, exclude_user_id=user_id, limit=8) if q else []
+    return jsonify({
+        "status": "success",
+        "users": [{"id": u['id'], "username": u['username']} for u in users]
+    })
+
+@chess_bp.route('/invitations')
+@api_login_required
+def list_invitations():
+    """Pending invitations this subscriber received + the ones they sent"""
+    user_id = session.get('user_id')
+    return jsonify({
+        "status": "success",
+        "received": ChessModel.get_received_invitations(user_id, limit=20),
+        "sent": ChessModel.get_sent_invitations(user_id, limit=20)
+    })
+
+@chess_bp.route('/invitations/send', methods=['POST'])
+@api_login_required
+def send_invitation():
+    """Invite a subscriber (1v1) or a rival clan (Group vs Group / Group vs Public)"""
+    user_id = session.get('user_id')
+    data = request.get_json() or {}
+
+    to_user_id = data.get('to_user_id')
+    to_username = (data.get('to_username') or '').strip()
+    to_group_id = data.get('to_group_id')
+    my_group_id = data.get('my_group_id')
+    title = (data.get('title') or '').strip() or 'Invitation Battle'
+    message = (data.get('message') or '').strip()[:250]
+
+    if to_username and not to_user_id:
+        target = UserModel.find_by_username(to_username)
+        if not target:
+            return jsonify({"status": "error", "message": f'No subscriber named "{to_username}".'}), 404
+        to_user_id = target['id']
+
+    if to_user_id:
+        try:
+            to_user_id = int(to_user_id)
+        except (TypeError, ValueError):
+            return jsonify({"status": "error", "message": "Invalid subscriber target."}), 400
+    if to_group_id:
+        try:
+            to_group_id = int(to_group_id)
+        except (TypeError, ValueError):
+            return jsonify({"status": "error", "message": "Invalid clan target."}), 400
+    if my_group_id:
+        try:
+            my_group_id = int(my_group_id)
+        except (TypeError, ValueError):
+            return jsonify({"status": "error", "message": "Invalid clan for your side."}), 400
+
+    if bool(to_user_id) == bool(to_group_id):
+        return jsonify({"status": "error", "message": "Pick exactly one target: a subscriber or a clan."}), 400
+
+    if to_user_id and to_user_id == user_id:
+        return jsonify({"status": "error", "message": "You cannot invite yourself."}), 400
+
+    if to_group_id:
+        all_groups = CommunityModel.get_all_groups()
+        target_group = next((g for g in all_groups if g.get('id') == to_group_id), None)
+        if not target_group:
+            return jsonify({"status": "error", "message": "Target clan not found."}), 404
+
+        match_type = 'group_vs_group'
+        white_group_id = None
+        if my_group_id:
+            if not ChessModel.is_clan_member(my_group_id, user_id):
+                return jsonify({"status": "error", "message": "You can only field a clan you lead or are rostered in."}), 403
+            white_group_id = my_group_id
+        else:
+            match_type = 'group_vs_public'
+
+        game_id = ChessModel.create_multiplayer_match(
+            user_id=user_id,
+            match_type=match_type,
+            title=title,
+            white_group_id=white_group_id,
+            black_group_id=to_group_id,
+            is_public=0
+        )
+        invitation_id = ChessModel.create_invitation(
+            game_id=game_id,
+            from_user_id=user_id,
+            to_group_id=to_group_id,
+            message=message
+        )
+        return jsonify({
+            "status": "success",
+            "invitation_id": invitation_id,
+            "game_id": game_id,
+            "match_type": match_type,
+            "message": f'Invite sent to clan "{target_group["name"]}"!'
+        })
+
+    # Direct subscriber invite → private 1v1, host holds White
+    game_id = ChessModel.create_multiplayer_match(
+        user_id=user_id,
+        match_type='pvp',
+        title=title,
+        is_public=0
+    )
+    invitation_id = ChessModel.create_invitation(
+        game_id=game_id,
+        from_user_id=user_id,
+        to_user_id=int(to_user_id),
+        message=message
+    )
+    return jsonify({
+        "status": "success",
+        "invitation_id": invitation_id,
+        "game_id": game_id,
+        "match_type": 'pvp',
+        "message": "Invitation dispatched!"
+    })
+
+@chess_bp.route('/invitations/<int:invitation_id>/accept', methods=['POST'])
+@api_login_required
+def accept_invitation(invitation_id):
+    """Accept an invite and take the open seat"""
+    user_id = session.get('user_id')
+    invitation = ChessModel.get_invitation(invitation_id)
+    if not invitation:
+        return jsonify({"status": "error", "message": "Invitation not found."}), 404
+
+    if invitation.get('status') != 'pending':
+        return jsonify({"status": "error", "message": f"Invitation already {invitation.get('status')}."}), 409
+
+    is_direct_target = invitation.get('to_user_id') == user_id
+    is_clan_target = bool(invitation.get('to_group_id')) and ChessModel.is_clan_member(
+        invitation.get('to_group_id'), user_id)
+    if not (is_direct_target or is_clan_target):
+        return jsonify({"status": "error", "message": "This invitation is not addressed to you."}), 403
+
+    seat_result = ChessModel.join_multiplayer_match(invitation.get('game_id'), user_id)
+    if seat_result.get('status') == 'error':
+        return jsonify(seat_result), seat_result.get('code', 400)
+
+    ChessModel.set_invitation_status(invitation_id, 'accepted')
+    return jsonify({
+        "status": "success",
+        "seat": seat_result.get('seat'),
+        "game_id": invitation.get('game_id'),
+        "message": seat_result.get('message', 'Invitation accepted!')
+    })
+
+@chess_bp.route('/invitations/<int:invitation_id>/decline', methods=['POST'])
+@api_login_required
+def decline_invitation(invitation_id):
+    """Decline an invite"""
+    user_id = session.get('user_id')
+    invitation = ChessModel.get_invitation(invitation_id)
+    if not invitation:
+        return jsonify({"status": "error", "message": "Invitation not found."}), 404
+
+    if invitation.get('status') != 'pending':
+        return jsonify({"status": "error", "message": f"Invitation already {invitation.get('status')}."}), 409
+
+    is_direct_target = invitation.get('to_user_id') == user_id
+    is_clan_target = bool(invitation.get('to_group_id')) and ChessModel.is_clan_member(
+        invitation.get('to_group_id'), user_id)
+    if not (is_direct_target or is_clan_target):
+        return jsonify({"status": "error", "message": "This invitation is not addressed to you."}), 403
+
+    ChessModel.set_invitation_status(invitation_id, 'declined')
+    return jsonify({"status": "success", "message": "Invitation declined."})
+
+# =============================================================================
+# JOIN & QUICK PAIR: OPEN TO ALL SUBSCRIBERS / PUBLIC VS PUBLIC
+# =============================================================================
+@chess_bp.route('/multiplayer/<int:game_id>/join', methods=['POST'])
+@api_login_required
+def join_multiplayer(game_id):
+    """Take the free seat in an Open / Public / Clan battle"""
+    user_id = session.get('user_id')
+    result = ChessModel.join_multiplayer_match(game_id, user_id)
+    if result.get('status') == 'error':
+        return jsonify(result), result.get('code', 400)
+    return jsonify(result)
+
+@chess_bp.route('/multiplayer/quick-pair', methods=['POST'])
+@api_login_required
+def quick_pair():
+    """Jump into a waiting Public vs Public table, otherwise host one"""
+    user_id = session.get('user_id')
+    waiting = ChessModel.find_joinable_public_match(user_id)
+    if waiting:
+        result = ChessModel.join_multiplayer_match(waiting['id'], user_id)
+        if result.get('status') == 'success':
+            return jsonify({
+                "status": "success",
+                "joined": True,
+                "game_id": waiting['id'],
+                "seat": result.get('seat'),
+                "message": f'Paired into "{waiting.get("title")}" as {result.get("seat", "").capitalize()}!'
+            })
+
+    game_id = ChessModel.create_multiplayer_match(
+        user_id=user_id,
+        match_type='public',
+        title=f"Public Arena — {session.get('username', 'open seat')}",
+        is_public=1
+    )
+    return jsonify({
+        "status": "success",
+        "joined": False,
+        "game_id": game_id,
+        "seat": "white",
+        "message": "No open table found — you are hosting a Public vs Public battle."
     })
 
 # =============================================================================

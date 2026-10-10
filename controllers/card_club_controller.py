@@ -118,25 +118,30 @@ def age_gate():
 def _list_lobby_tables(user_id):
     rows = query_all(
         """SELECT t.id, t.group_id, t.game_slug, t.name, t.stake, t.max_seats, t.status,
+                  COALESCE(t.is_private, 1) AS is_private, COALESCE(t.mode, 'multiplayer') AS mode,
                   g.name AS group_name, g.invite_code, u.username AS host_name,
                   (SELECT COUNT(*) FROM club_seats s WHERE s.table_id = t.id) AS seated_count
            FROM club_tables t
            JOIN club_groups g ON g.id = t.group_id
-           JOIN club_group_members gm ON gm.group_id = g.id AND gm.user_id = %s
            JOIN users u ON u.id = t.created_by
            WHERE t.status IN ('waiting', 'active')
-           ORDER BY t.id DESC LIMIT 12""",
+             AND (t.is_private = 0 OR g.is_private = 0
+                  OR EXISTS (SELECT 1 FROM club_group_members gm WHERE gm.group_id = g.id AND gm.user_id = %s))
+           ORDER BY t.id DESC LIMIT 20""",
         """SELECT t.id, t.group_id, t.game_slug, t.name, t.stake, t.max_seats, t.status,
+                  COALESCE(t.is_private, 1) AS is_private, COALESCE(t.mode, 'multiplayer') AS mode,
                   g.name AS group_name, g.invite_code, u.username AS host_name,
                   (SELECT COUNT(*) FROM club_seats s WHERE s.table_id = t.id) AS seated_count
            FROM club_tables t
            JOIN club_groups g ON g.id = t.group_id
-           JOIN club_group_members gm ON gm.group_id = g.id AND gm.user_id = ?
            JOIN users u ON u.id = t.created_by
            WHERE t.status IN ('waiting', 'active')
-           ORDER BY t.id DESC LIMIT 12""",
+             AND (t.is_private = 0 OR g.is_private = 0
+                  OR EXISTS (SELECT 1 FROM club_group_members gm WHERE gm.group_id = g.id AND gm.user_id = ?))
+           ORDER BY t.id DESC LIMIT 20""",
         (user_id,))
     return rows or []
+
 
 
 @card_club_bp.route('/', methods=['GET'])
@@ -345,10 +350,28 @@ def api_create_group():
     uid = _user_id()
     data = request.get_json(silent=True) or request.form
     try:
+        is_private = 1 if str(data.get('is_private', '1')) in ('1', 'true', 'private', 'True') else 0
+        fake_name = (data.get('fake_name') or '').strip()
         group = groups.create_group(uid, data.get('name', ''),
-                                    data.get('description', ''))
+                                    data.get('description', ''),
+                                    is_private=is_private,
+                                    fake_name=fake_name)
         return jsonify({"ok": True, "group_id": int(group["id"]),
-                        "invite_code": group["invite_code"]})
+                        "invite_code": group["invite_code"],
+                        "is_private": is_private})
+    except CardClubError as e:
+        return _deny(e)
+
+
+@card_club_bp.route('/api/groups/<int:gid>/alias', methods=['POST'])
+@api_required
+def api_set_alias(gid):
+    uid = _user_id()
+    data = request.get_json(silent=True) or request.form or {}
+    fake_name = (data.get('fake_name') or '').strip()
+    try:
+        fn = groups.set_member_alias(gid, uid, fake_name)
+        return jsonify({"ok": True, "fake_name": fn})
     except CardClubError as e:
         return _deny(e)
 
@@ -517,8 +540,9 @@ def api_send_group_chat(gid):
     ciphertext = data.get('ciphertext')
     iv = data.get('iv')
     salt = data.get('salt')
+    fake_name = data.get('fake_name')
     try:
-        msg = groups.send_group_encrypted_message(gid, uid, ciphertext, iv, salt)
+        msg = groups.send_group_encrypted_message(gid, uid, ciphertext, iv, salt, fake_name=fake_name)
         if _socketio:
             try:
                 _socketio.emit('group_encrypted_chat', msg, room=f'group:{gid}')
@@ -633,16 +657,55 @@ def api_verify_ledger():
 
 # ========================================================= API: gameplay ===
 
+@card_club_bp.route('/api/wallet/claim', methods=['POST'])
+@api_required
+def api_claim_faucet():
+    uid = _user_id()
+    try:
+        bal = economy.balances_view(uid)
+        if bal['personal'] > 500:
+            return jsonify({"ok": False, "error": "You already have sufficient coins in your wallet."}), 400
+        amount = 100
+        # Refill from reserve
+        from models.card_club.economy import (
+            _tx, _reserve_delta, _ledger_append, _owner_key, _exec, _ensure_wallet
+        )
+        with _tx() as (conn, db_type):
+            _ensure_wallet(conn, db_type, 0, uid)
+            _reserve_delta(conn, db_type, -amount, "grant_refill",
+                           ref_type="user", ref_id=uid, note="wallet replenishment")
+            _exec(conn, db_type,
+                  "UPDATE club_wallets SET balance = balance + %s WHERE group_id = 0 AND user_id = %s",
+                  "UPDATE club_wallets SET balance = balance + ? WHERE group_id = 0 AND user_id = ?",
+                  (amount, uid))
+            b_now = economy.balances_view(uid)
+            _ledger_append(conn, db_type, _owner_key(0, uid), amount, b_now['personal'] + amount,
+                           "grant_refill", group_id=0, user_id=uid, ref_type="user", ref_id=uid,
+                           note="wallet replenishment")
+        return jsonify({"ok": True, "amount": amount, "balances": economy.balances_view(uid)})
+    except CardClubError as e:
+        return _deny(e)
+
+
 @card_club_bp.route('/api/groups/<int:gid>/tables', methods=['POST'])
 @api_required
 def api_create_table(gid):
     uid = _user_id()
     data = request.get_json(silent=True) or request.form
     try:
+        max_seats = data.get('max_seats')
+        is_priv_val = data.get('is_private', '1')
+        is_private = 1 if str(is_priv_val) in ('1', 'true', 'private', 'True') else 0
+        mode = data.get('mode', 'multiplayer')
+        fake_name = (data.get('fake_name') or '').strip()
         t = gameplay.create_table(gid, uid, data.get('game_slug', ''),
                                   int(data.get('stake', 0) or 0),
                                   int(data.get('pool_bonus', 0) or 0),
-                                  data.get('name', ''))
+                                  data.get('name', ''),
+                                  max_seats=max_seats,
+                                  is_private=is_private,
+                                  mode=mode,
+                                  fake_name=fake_name)
         return jsonify({"ok": True, "table_id": int(t["id"])})
     except (CardClubError, ValueError, TypeError) as e:
         return _deny(e if isinstance(e, CardClubError)
@@ -662,9 +725,27 @@ def _table_context(tid):
 @card_club_bp.route('/api/tables/<int:tid>/join', methods=['POST'])
 @api_required
 def api_join_table(tid):
+    data = request.get_json(silent=True) or request.form or {}
+    fake_name = (data.get('fake_name') or '').strip()
+    uid = _user_id()
+    t = gameplay.get_table(tid)
+    if not t:
+        return _deny(NotFoundError("Table not found"))
+    gid = int(t["group_id"])
+    # If table is public and user is not yet in group, join them
+    if not groups.is_member(gid, uid):
+        grp = groups.get_group(gid)
+        t_priv = t.get('is_private', 1) if isinstance(t, dict) else 1
+        g_priv = grp.get('is_private', 1) if isinstance(grp, dict) else 1
+        if not t_priv or not g_priv:
+            execute_insert(
+                "INSERT INTO club_group_members (group_id, user_id, role) VALUES (%s,%s,'member')",
+                "INSERT INTO club_group_members (group_id, user_id, role) VALUES (?,?,'member')",
+                (gid, uid))
+        else:
+            return _deny(PermissionDenied("This is a private table. Invitation required."))
     try:
-        t, gid, uid = _table_context(tid)
-        gameplay.join_table(gid, uid, tid)
+        gameplay.join_table(gid, uid, tid, fake_name=fake_name)
         _broadcast_table(tid)
         return jsonify({"ok": True, "seat": gameplay.seat_index_of(tid, uid)})
     except CardClubError as e:

@@ -352,7 +352,37 @@ def init_database():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
 
-            # 18. Chess Problems Table (Author by Super Admin, Solved by Subscribers)
+            # 17b. Chess Match Invitations (direct subscriber invites & clan invites)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chess_invitations (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    game_id INT NOT NULL,
+                    from_user_id INT NOT NULL,
+                    to_user_id INT NULL,
+                    to_group_id INT NULL,
+                    message VARCHAR(255),
+                    status VARCHAR(20) DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (game_id) REFERENCES chess_games(id) ON DELETE CASCADE,
+                    FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (to_group_id) REFERENCES chat_groups(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 17c. Chess Clan Roster (who may take a clan seat in Group vs Group)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS chess_clan_members (
+                    group_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (group_id, user_id),
+                    FOREIGN KEY (group_id) REFERENCES chat_groups(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+        # 18. Chess Problems Table (Author by Super Admin, Solved by Subscribers)
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS chess_problems (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -714,6 +744,19 @@ def init_database():
                 except Exception:
                     pass
 
+            for _club_extra_sql in (
+                "ALTER TABLE club_groups ADD COLUMN is_private TINYINT DEFAULT 1",
+                "ALTER TABLE club_group_members ADD COLUMN fake_name VARCHAR(60) NULL",
+                "ALTER TABLE club_tables ADD COLUMN is_private TINYINT DEFAULT 1",
+                "ALTER TABLE club_tables ADD COLUMN mode VARCHAR(20) DEFAULT 'multiplayer'",
+                "ALTER TABLE club_seats ADD COLUMN fake_name VARCHAR(60) NULL",
+                "ALTER TABLE club_group_messages ADD COLUMN fake_name VARCHAR(60) NULL",
+            ):
+                try:
+                    cur.execute(_club_extra_sql)
+                except Exception:
+                    pass
+
             for _ledger_sql in (
                 "ALTER TABLE club_ledger ADD COLUMN seq INT NOT NULL DEFAULT 0",
                 "ALTER TABLE club_ledger ADD COLUMN owner_key VARCHAR(80) NOT NULL DEFAULT ''",
@@ -1056,6 +1099,36 @@ def init_database():
                 status TEXT DEFAULT 'open',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (game_id) REFERENCES chess_games(id),
+                FOREIGN KEY (group_id) REFERENCES chat_groups(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 17b. Chess Match Invitations (direct subscriber invites & clan invites)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chess_invitations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_id INTEGER NOT NULL,
+                from_user_id INTEGER NOT NULL,
+                to_user_id INTEGER,
+                to_group_id INTEGER,
+                message TEXT,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (game_id) REFERENCES chess_games(id),
+                FOREIGN KEY (from_user_id) REFERENCES users(id),
+                FOREIGN KEY (to_user_id) REFERENCES users(id),
+                FOREIGN KEY (to_group_id) REFERENCES chat_groups(id)
+            )
+        """)
+
+        # 17c. Chess Clan Roster (who may take a clan seat in Group vs Group)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chess_clan_members (
+                group_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (group_id, user_id),
                 FOREIGN KEY (group_id) REFERENCES chat_groups(id),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
@@ -1413,12 +1486,48 @@ def init_database():
         """)
         cur.execute("PRAGMA table_info(club_seats)")
         _seat_cols = {row[1] for row in cur.fetchall()}
-        for _scol in ("rules_read", "camera_active"):
+        for _scol, _stype in (("rules_read", "INTEGER DEFAULT 0"),
+                              ("camera_active", "INTEGER DEFAULT 0"),
+                              ("fake_name", "TEXT")):
             if _scol not in _seat_cols:
                 try:
-                    cur.execute(f"ALTER TABLE club_seats ADD COLUMN {_scol} INTEGER DEFAULT 0")
+                    cur.execute(f"ALTER TABLE club_seats ADD COLUMN {_scol} {_stype}")
                 except Exception:
                     pass
+
+        cur.execute("PRAGMA table_info(club_groups)")
+        _cg_cols = {row[1] for row in cur.fetchall()}
+        if "is_private" not in _cg_cols:
+            try:
+                cur.execute("ALTER TABLE club_groups ADD COLUMN is_private INTEGER DEFAULT 1")
+            except Exception:
+                pass
+
+        cur.execute("PRAGMA table_info(club_group_members)")
+        _cgm_cols = {row[1] for row in cur.fetchall()}
+        if "fake_name" not in _cgm_cols:
+            try:
+                cur.execute("ALTER TABLE club_group_members ADD COLUMN fake_name TEXT")
+            except Exception:
+                pass
+
+        cur.execute("PRAGMA table_info(club_tables)")
+        _ct_cols = {row[1] for row in cur.fetchall()}
+        for _tcol, _ttype in (("is_private", "INTEGER DEFAULT 1"),
+                              ("mode", "TEXT DEFAULT 'multiplayer'")):
+            if _tcol not in _ct_cols:
+                try:
+                    cur.execute(f"ALTER TABLE club_tables ADD COLUMN {_tcol} {_ttype}")
+                except Exception:
+                    pass
+
+        cur.execute("PRAGMA table_info(club_group_messages)")
+        _cmsg_cols = {row[1] for row in cur.fetchall()}
+        if "fake_name" not in _cmsg_cols:
+            try:
+                cur.execute("ALTER TABLE club_group_messages ADD COLUMN fake_name TEXT")
+            except Exception:
+                pass
 
         cur.execute("PRAGMA table_info(club_ledger)")
         _led_cols = {row[1] for row in cur.fetchall()}
