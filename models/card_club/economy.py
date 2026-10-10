@@ -281,6 +281,24 @@ def grant_starting_balance(user_id):
         return True
 
 
+def replenish_wallet(user_id, amount=100):
+    """Claim top-up coins from the developer reserve when user balance is low."""
+    with _tx() as (conn, db_type):
+        _ensure_wallet(conn, db_type, 0, user_id)
+        cur = _balance_locked(conn, db_type, 0, user_id)
+        _reserve_delta(conn, db_type, -amount, "grant_refill",
+                       ref_type="user", ref_id=user_id, note="wallet replenishment")
+        after = cur + amount
+        _exec(conn, db_type,
+              "UPDATE club_wallets SET balance = %s WHERE group_id = 0 AND user_id = %s",
+              "UPDATE club_wallets SET balance = ? WHERE group_id = 0 AND user_id = ?",
+              (after, user_id))
+        _ledger_append(conn, db_type, _owner_key(0, user_id), amount, after,
+                       "grant_refill", group_id=0, user_id=user_id,
+                       ref_type="user", ref_id=user_id, note="wallet replenishment")
+        return after
+
+
 def allocate_group_pool(group_id):
     """Fixed initial pool allocation from the reserve at group creation."""
     with _tx() as (conn, db_type):

@@ -665,24 +665,8 @@ def api_claim_faucet():
         bal = economy.balances_view(uid)
         if bal['personal'] > 500:
             return jsonify({"ok": False, "error": "You already have sufficient coins in your wallet."}), 400
-        amount = 100
-        # Refill from reserve
-        from models.card_club.economy import (
-            _tx, _reserve_delta, _ledger_append, _owner_key, _exec, _ensure_wallet
-        )
-        with _tx() as (conn, db_type):
-            _ensure_wallet(conn, db_type, 0, uid)
-            _reserve_delta(conn, db_type, -amount, "grant_refill",
-                           ref_type="user", ref_id=uid, note="wallet replenishment")
-            _exec(conn, db_type,
-                  "UPDATE club_wallets SET balance = balance + %s WHERE group_id = 0 AND user_id = %s",
-                  "UPDATE club_wallets SET balance = balance + ? WHERE group_id = 0 AND user_id = ?",
-                  (amount, uid))
-            b_now = economy.balances_view(uid)
-            _ledger_append(conn, db_type, _owner_key(0, uid), amount, b_now['personal'] + amount,
-                           "grant_refill", group_id=0, user_id=uid, ref_type="user", ref_id=uid,
-                           note="wallet replenishment")
-        return jsonify({"ok": True, "amount": amount, "balances": economy.balances_view(uid)})
+        new_bal = economy.replenish_wallet(uid, 100)
+        return jsonify({"ok": True, "claimed": 100, "balance": new_bal, "message": "100 coins claimed from reserve!"})
     except CardClubError as e:
         return _deny(e)
 
