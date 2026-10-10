@@ -13,3 +13,4 @@ from .custom_cube_controller import custom_cube_bp
 from .chess_controller import chess_bp
 from .card_controller import card_bp
 from .card_club_controller import card_club_bp
+from .feed_controller import feed_bp

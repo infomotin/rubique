@@ -1,572 +1,680 @@
 {% extends "base.html" %}
 
-{% block title %}{{ user.username }} &bull; Speedcuber Profile &amp; Studio Hub - CubePermutation AI{% endblock %}
+{% block title %}{{ user.username }} &bull; Profile &amp; Settings - CubePermutation AI{% endblock %}
 
 {% block extra_head %}
 <style>
-    .profile-tab-btn.active {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(6, 182, 212, 0.9));
+    /* Clean Minimalist Architecture Styling */
+    .profile-card {
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(51, 65, 85, 0.5);
+        border-radius: 1.25rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .profile-card:hover {
+        border-color: rgba(99, 102, 241, 0.35);
+    }
+    .profile-input {
+        background: rgba(2, 6, 23, 0.7);
+        border: 1px solid rgba(51, 65, 85, 0.6);
+        color: #f8fafc;
+        border-radius: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    .profile-input:focus {
+        border-color: #6366f1;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+    .nav-tab-pill {
+        transition: all 0.2s ease;
+    }
+    .nav-tab-pill.active {
+        background: #4f46e5;
         color: #ffffff;
-        font-weight: 700;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
-        border-color: rgba(99, 102, 241, 0.6);
+        box-shadow: 0 2px 10px rgba(79, 70, 229, 0.35);
+    }
+    .nav-tab-pill:not(.active):hover {
+        background: rgba(30, 41, 59, 0.7);
+        color: #f1f5f9;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="cyber-grid-bg min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-    
-    <!-- Top Master Profile Hero Banner -->
-    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-indigo-500/30 bg-slate-950/85 backdrop-blur-2xl shadow-2xl relative overflow-hidden mb-8">
-        <div class="absolute -top-24 -right-24 w-80 h-80 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none"></div>
-        <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="min-h-screen bg-[#07090e] text-slate-100 font-sans py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-6">
 
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+    <!-- ========================================================================= -->
+    <!-- 1. MODERN MINIMALIST PROFILE HERO HEADER                                  -->
+    <!-- ========================================================================= -->
+    <header class="profile-card p-6 sm:p-7 shadow-xl relative overflow-hidden">
+        <!-- Subtle ambient top highlight -->
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400"></div>
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             
-            <!-- User Avatar & Core Identity -->
+            <!-- Avatar & Profile Details -->
             <div class="flex items-center gap-5">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl p-1 shadow-2xl relative group flex-shrink-0" style="background: {{ user.avatar_color or '#818cf8' }};">
-                    <div class="w-full h-full bg-slate-950 rounded-[20px] flex items-center justify-center text-3xl sm:text-4xl font-black font-outfit text-white shadow-inner">
-                        {{ user.username[0] | upper }}
+                <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl p-1 shadow-lg relative shrink-0"
+                     style="background: {{ user.avatar_color or '#818cf8' }};">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl sm:text-3xl font-extrabold font-outfit text-white">
+                        {{ user.username[0]|upper }}
                     </div>
-                    <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-950 shadow-md"></span>
+                    <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-950" title="Active"></span>
                 </div>
 
-                <div>
-                    <div class="flex items-center gap-2 flex-wrap mb-1">
-                        <span class="px-2.5 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/40 text-indigo-300 text-[11px] font-mono font-bold">
-                            {{ user.role | upper }}
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-xl sm:text-2xl font-bold font-outfit text-white tracking-tight">
+                            {{ user.username }}
+                        </h1>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-950/80 border border-indigo-500/30 text-indigo-300 uppercase">
+                            {{ user.role }}
                         </span>
-                        {% if user.wca_id %}
-                        <span class="px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300 text-[11px] font-mono font-bold">
-                            WCA: {{ user.wca_id }}
+                        
+                        <!-- Privacy Status Pill -->
+                        {% if user.is_profile_private %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-purple-950/80 border border-purple-500/40 text-purple-300 flex items-center gap-1" title="Profile is Private: Only Name & Public Posts are shown to others">
+                            <i class="fa-solid fa-lock text-[9px]"></i> Private
                         </span>
-                        {% endif %}
-                        {% if user.country %}
-                        <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-mono">
-                            <i class="fa-solid fa-location-dot text-rose-400 mr-1"></i> {{ user.country }}
+                        {% else %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 flex items-center gap-1" title="Profile is Public">
+                            <i class="fa-solid fa-globe text-[9px]"></i> Public
                         </span>
                         {% endif %}
                     </div>
 
-                    <h1 class="text-2xl sm:text-3xl font-extrabold font-outfit text-white tracking-tight flex items-center gap-2">
-                        <span>{{ user.username }}</span>
-                    </h1>
-                    <p class="text-xs sm:text-sm text-slate-400 font-mono mt-1 max-w-xl">
-                        {{ user.bio or 'Group Theory Explorer & Speedcubing Enthusiast' }}
+                    <p class="text-xs text-slate-400 max-w-xl line-clamp-2">
+                        {{ user.bio or 'Speedcubing Contender & Group Theory Explorer' }}
                     </p>
-                    <div class="text-[11px] text-slate-500 font-mono mt-2">
-                        <i class="fa-regular fa-calendar mr-1"></i> Member since {{ (user.created_at|string)[:10] if user.created_at else '2026' }} &bull; Main: <strong class="text-slate-300">{{ user.main_cube or 'GAN 12 MagLev 3x3' }}</strong>
+
+                    <div class="flex items-center gap-3 text-[11px] text-slate-500 font-mono flex-wrap pt-0.5">
+                        {% if user.country %}
+                        <span><i class="fa-solid fa-location-dot text-rose-400 mr-1"></i>{{ user.country }}</span>
+                        {% endif %}
+                        {% if user.wca_id %}
+                        <span><i class="fa-solid fa-id-card text-cyan-400 mr-1"></i>WCA: <strong class="text-slate-300">{{ user.wca_id }}</strong></span>
+                        {% endif %}
+                        <span><i class="fa-regular fa-calendar mr-1"></i>Joined {{ (user.created_at|string)[:10] if user.created_at else '2026' }}</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Header Quick Action Links -->
-            <div class="flex items-center gap-2.5 flex-wrap font-mono text-xs">
-                <a href="{{ url_for('custom_cubes.builder') }}" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-cyan-600/25 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-shapes"></i>
-                    <span>Build Custom Cube</span>
+            <!-- Quick Action Links -->
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="{{ url_for('feed.newsfeed') }}"
+                   class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/25 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-newspaper text-xs"></i>
+                    <span>News Feed</span>
                 </a>
-                <a href="{{ url_for('user.dashboard') }}" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-table-columns text-indigo-400"></i>
-                    <span>Dashboard</span>
+                <a href="{{ url_for('custom_cubes.builder') }}"
+                   class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-cube text-cyan-400 text-xs"></i>
+                    <span>Studio</span>
+                </a>
+                <a href="{{ url_for('card_club.section') }}"
+                   class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-cards text-emerald-400 text-xs"></i>
+                    <span>Card Club</span>
                 </a>
             </div>
 
         </div>
-    </div>
+    </header>
 
-    <!-- 4 High-Level Performance Metric Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 font-mono">
-        <div class="glass-card p-5 rounded-2xl border border-slate-800 bg-slate-950/60">
-            <span class="text-xs text-slate-400 uppercase">Total Solves</span>
-            <div class="text-2xl sm:text-3xl font-bold font-outfit text-white mt-1">{{ stats.total_solves }}</div>
-            <div class="text-[10px] text-slate-500 mt-1">Logged Algorithms</div>
-        </div>
-
-        <div class="glass-card p-5 rounded-2xl border border-slate-800 bg-slate-950/60">
-            <span class="text-xs text-slate-400 uppercase">Best FMC Move</span>
-            <div class="text-2xl sm:text-3xl font-bold font-outfit text-emerald-400 mt-1">{{ stats.min_moves or '--' }} <span class="text-xs font-normal text-slate-400">moves</span></div>
-            <div class="text-[10px] text-slate-500 mt-1">Optimal Shortest Path</div>
-        </div>
-
-        <div class="glass-card p-5 rounded-2xl border border-slate-800 bg-slate-950/60">
-            <span class="text-xs text-slate-400 uppercase">PB Single</span>
-            <div class="text-2xl sm:text-3xl font-bold font-outfit text-cyan-300 mt-1">{{ user.pb_single or stats.best_time or '--' }}{% if user.pb_single or stats.best_time %}s{% endif %}</div>
-            <div class="text-[10px] text-slate-500 mt-1">Personal Record Single</div>
-        </div>
-
-        <div class="glass-card p-5 rounded-2xl border border-slate-800 bg-slate-950/60">
-            <span class="text-xs text-slate-400 uppercase">PB Average (Ao5)</span>
-            <div class="text-2xl sm:text-3xl font-bold font-outfit text-amber-300 mt-1">{{ user.pb_ao5 or stats.ao5 or '--' }}{% if user.pb_ao5 or stats.ao5 %}s{% endif %}</div>
-            <div class="text-[10px] text-slate-500 mt-1">Method: {{ user.preferred_method or 'CFOP' }}</div>
-        </div>
-    </div>
-
-    <!-- =========================================================================
-         PROFILE TABS NAVIGATION BAR (PERSONAL INFO, GROUPS, FRIENDS, BUILDS, SOLVER)
-         ========================================================================= -->
-    <div class="flex overflow-x-auto gap-2 pb-2 mb-6 font-mono text-xs scrollbar-none border-b border-slate-800/80" id="profile-tabs-bar">
-        <button onclick="switchProfileTab('personal')" class="profile-tab-btn active px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 transition-all flex items-center gap-2 shrink-0" data-tab="personal">
-            <i class="fa-solid fa-user-pen text-cyan-400"></i>
-            <span>Personal Information</span>
-        </button>
-
-        <button onclick="switchProfileTab('groups')" class="profile-tab-btn px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 transition-all flex items-center gap-2 shrink-0" data-tab="groups">
-            <i class="fa-solid fa-shield-halved text-teal-400"></i>
-            <span>Groups &amp; Study Clans</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950 text-teal-300 border border-teal-500/30">{{ groups|length }}</span>
-        </button>
-
-        <button onclick="switchProfileTab('friends')" class="profile-tab-btn px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 transition-all flex items-center gap-2 shrink-0" data-tab="friends">
-            <i class="fa-solid fa-user-group text-indigo-400"></i>
-            <span>Speedcubing Friends</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950 text-indigo-300 border border-indigo-500/30">{{ friends|length }}</span>
-        </button>
-
-        <button onclick="switchProfileTab('builds')" class="profile-tab-btn px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 transition-all flex items-center gap-2 shrink-0" data-tab="builds">
-            <i class="fa-solid fa-shapes text-pink-400"></i>
-            <span>Problem Build (Custom Cubes)</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950 text-pink-300 border border-pink-500/30">{{ custom_cubes|length }}</span>
-        </button>
-
-        <button onclick="switchProfileTab('solver')" class="profile-tab-btn px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 transition-all flex items-center gap-2 shrink-0" data-tab="solver">
-            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
-            <span>Solver &amp; Solutions</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-950 text-amber-300 border border-amber-500/30">{{ stats.total_solves + competition_solves|length + solved_challenges|length }}</span>
-        </button>
-    </div>
-
-    <!-- =========================================================================
-         TAB 1: PERSONAL INFORMATION & CREDENTIALS
-         ========================================================================= -->
-    <div id="tab-pane-personal" class="profile-pane space-y-6">
-        <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-                <div>
-                    <h2 class="text-lg font-bold font-outfit text-white flex items-center gap-2">
-                        <i class="fa-solid fa-id-card text-cyan-400"></i> Speedcuber Personal Information &amp; Setup
-                    </h2>
-                    <p class="text-xs text-slate-400 font-mono">Update your personal speedcubing identity, hardware, WCA records, and contact bio</p>
-                </div>
+    <!-- ========================================================================= -->
+    <!-- 2. FOUR CLEAN METRIC TILES                                                -->
+    <!-- ========================================================================= -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 font-mono">
+        <!-- 1. Total Solves -->
+        <div class="profile-card p-4 rounded-xl border border-slate-800/80 bg-slate-900/40">
+            <div class="flex items-center justify-between text-slate-400 text-[11px] uppercase tracking-wider mb-1">
+                <span>Total Solves</span>
+                <i class="fa-solid fa-stopwatch text-indigo-400"></i>
             </div>
+            <div class="text-2xl font-bold font-outfit text-white">{{ stats.total_solves }}</div>
+            <span class="text-[10px] text-slate-500">Practice &amp; visualizer logs</span>
+        </div>
 
-            <form method="POST" action="{{ url_for('profile.update') }}" class="space-y-6 font-mono text-xs">
-                
-                <!-- Row 1: Username & Email -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Username:</label>
-                        <input type="text" value="{{ user.username }}" readonly
-                               class="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-slate-300 cursor-not-allowed">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Email Address:</label>
-                        <input type="email" value="{{ user.email or 'N/A' }}" readonly
-                               class="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-slate-300 cursor-not-allowed">
-                    </div>
+        <!-- 2. Best FMC Moves -->
+        <div class="profile-card p-4 rounded-xl border border-slate-800/80 bg-slate-900/40">
+            <div class="flex items-center justify-between text-slate-400 text-[11px] uppercase tracking-wider mb-1">
+                <span>Best FMC</span>
+                <i class="fa-solid fa-route text-emerald-400"></i>
+            </div>
+            <div class="text-2xl font-bold font-outfit text-emerald-400">
+                {{ stats.min_moves or '--' }} <span class="text-xs font-normal text-slate-400">moves</span>
+            </div>
+            <span class="text-[10px] text-slate-500">Two-Phase shortest reduction</span>
+        </div>
+
+        <!-- 3. Personal Best (PB) -->
+        <div class="profile-card p-4 rounded-xl border border-slate-800/80 bg-slate-900/40">
+            <div class="flex items-center justify-between text-slate-400 text-[11px] uppercase tracking-wider mb-1">
+                <span>Personal Best</span>
+                <i class="fa-solid fa-bolt text-cyan-400"></i>
+            </div>
+            <div class="text-2xl font-bold font-outfit text-cyan-300">
+                {{ user.pb_single or stats.best_time or '--' }}{% if user.pb_single or stats.best_time %}s{% endif %}
+            </div>
+            <span class="text-[10px] text-slate-500">Average: {{ user.pb_ao5 or stats.ao5 or '--' }}{% if user.pb_ao5 or stats.ao5 %}s{% endif %}</span>
+        </div>
+
+        <!-- 4. Card Coins Wallet -->
+        <div class="profile-card p-4 rounded-xl border border-slate-800/80 bg-slate-900/40">
+            <div class="flex items-center justify-between text-slate-400 text-[11px] uppercase tracking-wider mb-1">
+                <span>Card Coins</span>
+                <i class="fa-solid fa-coins text-amber-400"></i>
+            </div>
+            <div class="text-2xl font-bold font-outfit text-amber-400">
+                {{ coins_balance }}
+            </div>
+            <span class="text-[10px] text-slate-500">Available in Card Club</span>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 3. CLEAN SEGMENTED PILL TAB NAVIGATION BAR                                -->
+    <!-- ========================================================================= -->
+    <nav class="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs font-mono overflow-x-auto scrollbar-none" id="profile-tabs-bar">
+        <button onclick="switchTab('personal')"
+                class="nav-tab-pill active px-4 py-2 rounded-xl font-medium flex items-center gap-2 whitespace-nowrap"
+                data-tab="personal">
+            <i class="fa-solid fa-user-gear"></i>
+            <span>Account &amp; Settings</span>
+        </button>
+
+        <button onclick="switchTab('network')"
+                class="nav-tab-pill px-4 py-2 rounded-xl font-medium text-slate-400 flex items-center gap-2 whitespace-nowrap"
+                data-tab="network">
+            <i class="fa-solid fa-users"></i>
+            <span>Network &amp; Clans</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">{{ friends|length + groups|length }}</span>
+        </button>
+
+        <button onclick="switchTab('solves')"
+                class="nav-tab-pill px-4 py-2 rounded-xl font-medium text-slate-400 flex items-center gap-2 whitespace-nowrap"
+                data-tab="solves">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>Solves &amp; Victories</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">{{ stats.total_solves }}</span>
+        </button>
+
+        <button onclick="switchTab('builds')"
+                class="nav-tab-pill px-4 py-2 rounded-xl font-medium text-slate-400 flex items-center gap-2 whitespace-nowrap"
+                data-tab="builds">
+            <i class="fa-solid fa-shapes"></i>
+            <span>Custom Cubes</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">{{ custom_cubes|length }}</span>
+        </button>
+    </nav>
+
+    <!-- ========================================================================= -->
+    <!-- 4. TAB PANES (CLEAN ARCHITECTURE)                                         -->
+    <!-- ========================================================================= -->
+
+    <!-- ------------------------------------------------------------------------- -->
+    <!-- TAB 1: ACCOUNT, SETTINGS & PRIVACY (CLEAN FORM ARCHITECTURE)              -->
+    <!-- ------------------------------------------------------------------------- -->
+    <div id="tab-pane-personal" class="profile-pane space-y-5">
+        <form method="POST" action="{{ url_for('profile.update') }}" class="space-y-5 text-xs font-mono">
+            
+            <!-- Section A: Identity & Account -->
+            <div class="profile-card p-5 sm:p-6 shadow-md space-y-4">
+                <div class="border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                        <i class="fa-solid fa-id-card text-indigo-400"></i>
+                        <span>Account Credentials</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400">Core authentication and login identifiers</p>
                 </div>
 
-                <!-- Row 2: Bio & Accent Color -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-slate-400 mb-1">Speedcubing Bio / Motto:</label>
-                        <input type="text" name="bio" value="{{ user.bio or '' }}" placeholder="Tell contenders about your speedcubing goals, favorite algorithms..."
-                               class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-400">
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-slate-400 mb-1">Avatar Accent Color:</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" name="avatar_color" value="{{ user.avatar_color or '#818cf8' }}"
-                                   class="w-10 h-10 rounded-xl border border-slate-800 bg-transparent cursor-pointer">
-                            <span class="text-slate-300">{{ user.avatar_color or '#818cf8' }}</span>
+                        <label class="block text-slate-400 text-[11px] mb-1">Username</label>
+                        <div class="relative flex items-center">
+                            <input type="text" value="{{ user.username }}" readonly
+                                   class="w-full px-3.5 py-2.5 profile-input bg-slate-950/60 text-slate-400 cursor-not-allowed">
+                            <span class="absolute right-3 text-emerald-400 text-xs" title="Verified"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-400 text-[11px] mb-1">Email Address</label>
+                        <div class="relative flex items-center">
+                            <input type="email" value="{{ user.email or 'N/A' }}" readonly
+                                   class="w-full px-3.5 py-2.5 profile-input bg-slate-950/60 text-slate-400 cursor-not-allowed">
+                            <span class="absolute right-3 text-slate-500 text-xs"><i class="fa-solid fa-lock"></i></span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Row 3: WCA ID & Country -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Official WCA ID (if registered):</label>
-                        <input type="text" name="wca_id" value="{{ user.wca_id or '' }}" placeholder="e.g. 2024KHAN01"
-                               class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-cyan-300 uppercase focus:outline-none focus:border-cyan-400">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Country / Nationality:</label>
-                        <input type="text" name="country" value="{{ user.country or '' }}" placeholder="e.g. Bangladesh, United States, Japan"
-                               class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-400">
-                    </div>
+            <!-- Section B: Speedcubing Hardware & WCA Identity -->
+            <div class="profile-card p-5 sm:p-6 shadow-md space-y-4">
+                <div class="border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                        <i class="fa-solid fa-cube text-cyan-400"></i>
+                        <span>Speedcubing Setup &amp; Preferences</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400">Hardware model, primary method, and competition records</p>
                 </div>
 
-                <!-- Row 4: Main Cube & Preferred Method -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-slate-400 mb-1">Main Speedcube Hardware Model:</label>
-                        <input type="text" name="main_cube" value="{{ user.main_cube or 'GAN 12 MagLev 3x3' }}" placeholder="e.g. GAN 12 MagLev, MoYu RS3M V5, Tornado V3"
-                               class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-400">
+                        <label class="block text-slate-400 text-[11px] mb-1">Main Cube Hardware Model</label>
+                        <input type="text" name="main_cube" value="{{ user.main_cube or 'GAN 12 MagLev 3x3' }}"
+                               placeholder="e.g. GAN 12 MagLev, MoYu RS3M V5"
+                               class="w-full px-3.5 py-2.5 profile-input text-white">
                     </div>
+
                     <div>
-                        <label class="block text-slate-400 mb-1">Primary Solving Method:</label>
-                        <select name="preferred_method" class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-400">
+                        <label class="block text-slate-400 text-[11px] mb-1">Solving Method</label>
+                        <select name="preferred_method" class="w-full px-3.5 py-2.5 profile-input text-white">
                             <option value="CFOP" {% if user.preferred_method == 'CFOP' %}selected{% endif %}>CFOP (Fridrich Method)</option>
                             <option value="Roux" {% if user.preferred_method == 'Roux' %}selected{% endif %}>Roux (Block Building)</option>
                             <option value="ZZ" {% if user.preferred_method == 'ZZ' %}selected{% endif %}>ZZ (Edge Orientation First)</option>
                             <option value="Petrus" {% if user.preferred_method == 'Petrus' %}selected{% endif %}>Petrus Method</option>
                             <option value="Kociemba Two-Phase" {% if user.preferred_method == 'Kociemba Two-Phase' %}selected{% endif %}>Kociemba Two-Phase Optimal</option>
-                            <option value="Blindfolded 3-Style" {% if user.preferred_method == 'Blindfolded 3-Style' %}selected{% endif %}>Blindfolded 3-Style Commutators</option>
+                            <option value="Blindfolded 3-Style" {% if user.preferred_method == 'Blindfolded 3-Style' %}selected{% endif %}>Blindfolded 3-Style</option>
                         </select>
                     </div>
+
+                    <div>
+                        <label class="block text-slate-400 text-[11px] mb-1">Official WCA ID</label>
+                        <input type="text" name="wca_id" value="{{ user.wca_id or '' }}" placeholder="e.g. 2024KHAN01"
+                               class="w-full px-3.5 py-2.5 profile-input text-cyan-300 uppercase">
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-400 text-[11px] mb-1">Country / Region</label>
+                        <input type="text" name="country" value="{{ user.country or '' }}" placeholder="e.g. Bangladesh, United States, Japan"
+                               class="w-full px-3.5 py-2.5 profile-input text-white">
+                    </div>
                 </div>
 
-                <!-- Row 5: Personal Bests (Single & Ao5) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Personal Bests -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div>
-                        <label class="block text-slate-400 mb-1">Personal Best Single Time (PB Single):</label>
+                        <label class="block text-slate-400 text-[11px] mb-1">Personal Best Single (PB Single)</label>
                         <input type="text" name="pb_single" value="{{ user.pb_single or '' }}" placeholder="e.g. 8.42s"
-                               class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-emerald-300 font-bold focus:outline-none focus:border-cyan-400">
+                               class="w-full px-3.5 py-2.5 profile-input text-emerald-300 font-bold">
                     </div>
                     <div>
-                        <label class="block text-slate-400 mb-1">Personal Best Average of 5 (PB Ao5):</label>
+                        <label class="block text-slate-400 text-[11px] mb-1">Personal Best Average of 5 (PB Ao5)</label>
                         <input type="text" name="pb_ao5" value="{{ user.pb_ao5 or '' }}" placeholder="e.g. 10.15s"
-                               class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-amber-300 font-bold focus:outline-none focus:border-cyan-400">
+                               class="w-full px-3.5 py-2.5 profile-input text-amber-300 font-bold">
                     </div>
                 </div>
-
-                <div class="pt-4 border-t border-slate-800 flex justify-end">
-                    <button type="submit" class="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold shadow-xl shadow-cyan-600/30 transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        <span>Save Personal Information</span>
-                    </button>
-                </div>
-
-            </form>
-        </div>
-    </div>
-
-    <!-- =========================================================================
-         TAB 2: GROUPS & SPEEDCUBING CLANS
-         ========================================================================= -->
-    <div id="tab-pane-groups" class="profile-pane hidden space-y-6">
-        
-        <!-- Create Clan Box -->
-        <div class="glass-card p-6 rounded-3xl border border-teal-500/30 bg-slate-950/80">
-            <h3 class="text-sm font-bold font-mono text-white uppercase mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-plus text-teal-400"></i> Found New Speedcubing Clan
-            </h3>
-            <form method="POST" action="{{ url_for('profile.create_group') }}" class="space-y-3 font-mono text-xs">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Clan Name:</label>
-                        <input type="text" name="name" required placeholder="e.g. Sub-12 Theory Clan"
-                               class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-teal-500">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Passcode (Leave blank for public):</label>
-                        <input type="text" name="passcode" placeholder="Optional private clan code"
-                               class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-teal-500">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Clan Mission / Purpose:</label>
-                    <textarea name="description" rows="2" placeholder="Describe your study clan focus (e.g., F2L optimization, blindfolded training)..."
-                              class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-teal-500"></textarea>
-                </div>
-                <button type="submit" class="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold transition-all">
-                    Establish Clan
-                </button>
-            </form>
-        </div>
-
-        <!-- Clans List -->
-        <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80">
-            <h3 class="text-base font-bold font-outfit text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-shield-halved text-teal-400"></i> Speedcubing Study Clans &amp; Groups
-            </h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-                {% if groups %}
-                    {% for g in groups %}
-                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-teal-500/40 transition-all flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="font-bold text-white text-sm font-sans">{{ g.name }}</span>
-                                    {% if g.is_private %}
-                                        <span class="px-2 py-0.5 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-500/30">
-                                            <i class="fa-solid fa-lock text-[9px] mr-1"></i> Private
-                                        </span>
-                                    {% else %}
-                                        <span class="px-2 py-0.5 rounded bg-teal-950 text-teal-300 text-[10px] font-bold border border-teal-500/30">
-                                            <i class="fa-solid fa-globe text-[9px] mr-1"></i> Public
-                                        </span>
-                                    {% endif %}
-                                </div>
-                                <p class="text-slate-400 text-xs mb-3">{{ g.description or 'Dedicated study clan.' }}</p>
-                            </div>
-                            <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
-                                <span class="text-[11px] text-slate-500">ID: #{{ g.id }}</span>
-                                <a href="{{ url_for('user.chat_page') }}" class="text-teal-400 hover:underline font-bold">
-                                    Open Clan Chat &rarr;
-                                </a>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-span-2 text-center py-8 text-slate-500 font-mono">
-                        No groups founded yet. Found your first clan above!
-                    </div>
-                {% endif %}
             </div>
-        </div>
 
+            <!-- Section C: Bio, Avatar Color & Profile Privacy Mode -->
+            <div class="profile-card p-5 sm:p-6 shadow-md space-y-4">
+                <div class="border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-pink-400"></i>
+                        <span>Appearance &amp; Privacy Controls</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400">Bio motto, visual avatar theme, and public/private profile setting</p>
+                </div>
+
+                <!-- Bio -->
+                <div>
+                    <label class="block text-slate-400 text-[11px] mb-1">Speedcubing Bio / Motto</label>
+                    <textarea name="bio" rows="2" placeholder="Tell contenders about your speedcubing goals, favorite algorithms..."
+                              class="w-full p-3 profile-input text-white resize-none">{{ user.bio or '' }}</textarea>
+                </div>
+
+                <!-- Avatar Color & Privacy Switch -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div>
+                        <label class="block text-slate-400 text-[11px] mb-1">Avatar Accent Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="avatar_color" value="{{ user.avatar_color or '#818cf8' }}"
+                                   class="w-10 h-10 rounded-xl border border-slate-700 bg-transparent cursor-pointer p-0.5">
+                            <span class="text-slate-300">{{ user.avatar_color or '#818cf8' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- 1-Click Privacy Toggle Switch -->
+                    <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
+                        <div class="pr-2">
+                            <span class="text-xs font-bold text-white block">
+                                {% if user.is_profile_private %}🔒 Private Profile{% else %}🌐 Public Profile{% endif %}
+                            </span>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">
+                                When Private is ON, other users only see your Name and Public items.
+                            </span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" name="is_profile_private" value="1"
+                                   class="sr-only peer"
+                                   {% if user.is_profile_private %}checked{% endif %}>
+                            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Action Button -->
+            <div class="flex justify-end pt-2">
+                <button type="submit"
+                        class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Save Profile Changes</span>
+                </button>
+            </div>
+
+        </form>
     </div>
 
-    <!-- =========================================================================
-         TAB 3: SPEEDCUBING FRIENDS & CONNECTIONS
-         ========================================================================= -->
-    <div id="tab-pane-friends" class="profile-pane hidden space-y-6">
-        
-        <!-- Add Friend Form -->
-        <div class="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-slate-950/80">
-            <h3 class="text-sm font-bold font-mono text-white uppercase mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-user-plus text-indigo-400"></i> Connect with Speedcuber
-            </h3>
-            <form method="POST" action="{{ url_for('profile.add_friend') }}" class="flex gap-3 max-w-md font-mono text-xs">
-                <input type="text" name="username" required placeholder="Enter speedcuber username..."
-                       class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500">
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all whitespace-nowrap">
-                    Add Friend
-                </button>
-            </form>
-        </div>
+    <!-- ------------------------------------------------------------------------- -->
+    <!-- TAB 2: NETWORK & CLANS (CLEAN 2-COLUMN ARCHITECTURE)                      -->
+    <!-- ------------------------------------------------------------------------- -->
+    <div id="tab-pane-network" class="profile-pane hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs font-mono">
+            
+            <!-- Left: Speedcubing Friends -->
+            <div class="profile-card p-5 sm:p-6 shadow-md space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                        <i class="fa-solid fa-user-group text-indigo-400"></i>
+                        <span>Friends ({{ friends|length }})</span>
+                    </h3>
+                    <span class="text-[10px] text-slate-500">Speedcuber Connections</span>
+                </div>
 
-        <!-- Friends List -->
-        <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80">
-            <h3 class="text-base font-bold font-outfit text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-user-group text-indigo-400"></i> My Speedcubing Friends ({{ friends|length }})
-            </h3>
+                <!-- Add Friend Input -->
+                <form method="POST" action="{{ url_for('profile.add_friend') }}" class="flex gap-2">
+                    <input type="text" name="username" required placeholder="Add friend by username..."
+                           class="flex-1 px-3 py-2 profile-input text-xs">
+                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors shrink-0">
+                        Connect
+                    </button>
+                </form>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 font-mono text-xs">
-                {% if friends %}
-                    {% for f in friends %}
-                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-sm" style="background: {{ f.avatar_color or '#818cf8' }};">
-                                    {{ f.username[0] | upper }}
+                <!-- Friends List -->
+                <div class="space-y-2 max-h-80 overflow-y-auto scrollbar-thin pr-1">
+                    {% if friends %}
+                        {% for f in friends %}
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0"
+                                     style="background: {{ f.avatar_color or '#818cf8' }};">
+                                    {{ f.username[:2]|upper }}
                                 </div>
                                 <div>
-                                    <span class="font-bold text-white text-sm font-sans block">{{ f.username }}</span>
-                                    <span class="text-[10px] text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Friend</span>
+                                    <span class="font-bold text-white block">{{ f.username }}</span>
+                                    <span class="text-[10px] text-emerald-400">Connected</span>
                                 </div>
                             </div>
-                            <a href="{{ url_for('user.chat_page') }}" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 transition-all" title="Message">
-                                <i class="fa-solid fa-message"></i>
+                            <a href="/feed?inbox={{ f.id }}"
+                               class="px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 border border-indigo-500/30 text-indigo-300 hover:text-white transition-all text-[11px] flex items-center gap-1">
+                                <i class="fa-solid fa-comment"></i> Message
                             </a>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col-span-3 text-center py-8 text-slate-500 font-mono">
-                        No friends connected yet. Connect with users using the form above!
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-    </div>
-
-    <!-- =========================================================================
-         TAB 4: PROBLEM BUILD (CUSTOM BUILT RUBIK'S CUBES & GEOMETRIES)
-         ========================================================================= -->
-    <div id="tab-pane-builds" class="profile-pane hidden space-y-6">
-        <div class="glass-card p-6 sm:p-8 rounded-3xl border border-pink-500/30 bg-slate-950/80">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-                <div>
-                    <h2 class="text-lg font-bold font-outfit text-white flex items-center gap-2">
-                        <i class="fa-solid fa-shapes text-pink-400"></i> Problem Build &bull; My Custom Puzzles ({{ custom_cubes|length }})
-                    </h2>
-                    <p class="text-xs text-slate-400 font-mono">Puzzles built in your workshop across the 10 Particula shape geometries</p>
-                </div>
-                <a href="{{ url_for('custom_cubes.builder') }}" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white font-mono font-bold text-xs shadow-lg transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Build New Puzzle</span>
-                </a>
-            </div>
-
-            {% if custom_cubes %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-mono text-xs">
-                    {% for cube in custom_cubes %}
-                        <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-pink-500/40 transition-all flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 text-[10px] border border-cyan-500/40">
-                                        {{ supported_shapes[cube.shape_type].name if cube.shape_type in supported_shapes else cube.shape_type }}
-                                    </span>
-                                    <span class="text-slate-500 text-[10px]">{{ (cube.created_at|string)[:10] if cube.created_at else '' }}</span>
-                                </div>
-                                <h3 class="font-bold text-white font-outfit text-base mb-1">{{ cube.name }}</h3>
-                                <p class="text-slate-400 text-xs line-clamp-2 mb-3">{{ cube.description or 'Custom puzzle built in workshop.' }}</p>
-
-                                <div class="p-2.5 rounded-xl bg-black/60 border border-slate-800/80 space-y-1 text-[11px] mb-3">
-                                    <div class="text-slate-400">Palette: <strong class="text-white capitalize">{{ cube.color_scheme }}</strong></div>
-                                    <div class="text-slate-400 truncate">Scramble: <span class="text-amber-300 font-bold">{{ cube.scramble or 'Solved' }}</span></div>
-                                </div>
-                            </div>
-
-                            <div class="pt-3 border-t border-slate-800 flex items-center gap-2">
-                                <a href="{{ url_for('custom_cubes.builder', shape=cube.shape_type) }}" class="flex-1 py-2 text-center rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-200 font-bold transition-all">
-                                    Open in Studio
-                                </a>
-                                <form method="POST" action="{{ url_for('custom_cubes.delete_cube', cube_id=cube.id) }}" onsubmit="return confirm('Delete custom puzzle?');">
-                                    <button type="submit" class="p-2 rounded-xl bg-rose-950/40 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition-all" title="Delete">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="py-8 text-center text-slate-500">
+                            <i class="fa-regular fa-user text-2xl text-slate-600 mb-1 block"></i>
+                            No friends connected yet. Connect using the form above!
                         </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
-            {% else %}
-                <div class="text-center py-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 font-mono">
-                    <i class="fa-solid fa-shapes text-4xl text-slate-600 mb-3 block"></i>
-                    <h4 class="text-white font-bold text-sm">No Custom Puzzles Built Yet</h4>
-                    <p class="text-xs text-slate-400 mt-1 mb-4">Craft your own Rubik's puzzle shapes with unique palettes and custom kinematics.</p>
-                    <a href="{{ url_for('custom_cubes.builder') }}" class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs inline-flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Launch Cube Studio
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- =========================================================================
-         TAB 5: SOLVER & SOLUTIONS
-         ========================================================================= -->
-    <div id="tab-pane-solver" class="profile-pane hidden space-y-6">
-        
-        <!-- Section 1: Solved Clan Challenges -->
-        {% if solved_challenges %}
-        <div class="glass-card p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-slate-950/80">
-            <h3 class="text-base font-bold font-outfit text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-medal text-emerald-400"></i>
-                <span>Solved Clan Challenge Victories ({{ solved_challenges|length }})</span>
-            </h3>
-            <div class="space-y-3 font-mono text-xs">
-                {% for sc in solved_challenges %}
-                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-bold text-[10px]">VERIFIED SOLVE</span>
-                                <span class="text-white font-bold">{{ sc.cube_name }}</span>
-                                <span class="text-slate-400">in Clan @{{ sc.group_name }}</span>
-                            </div>
-                            <div class="text-emerald-300 font-bold break-all">Solution Moves: {{ sc.solution }}</div>
-                        </div>
-                    </div>
-                {% endfor %}
             </div>
-        </div>
-        {% endif %}
 
-        <!-- Section 2: Competition Solves -->
-        {% if competition_solves %}
-        <div class="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/80">
-            <h3 class="text-base font-bold font-outfit text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-trophy text-amber-400"></i>
-                <span>Official Tournament Submissions ({{ competition_solves|length }})</span>
-            </h3>
-            <div class="space-y-3 font-mono text-xs">
-                {% for cs in competition_solves %}
-                    <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-                        <div>
-                            <span class="font-bold text-white text-sm block font-sans">{{ cs.comp_title }}</span>
-                            <div class="text-slate-400 text-[11px] mt-0.5">Moves: <strong class="text-emerald-300">{{ cs.move_count }}</strong> &bull; Time: <strong class="text-cyan-300">{{ cs.time_seconds }}s</strong> &bull; Prize: {{ cs.prize_trophy }}</div>
-                            <div class="text-amber-300 font-bold mt-1 break-all">{{ cs.solution }}</div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Section 3: Practice Solves History Table -->
-        <div class="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800/80 bg-slate-950/80">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-                <div>
-                    <h3 class="text-base font-bold font-outfit text-white flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i> Speedcubing Solve History
+            <!-- Right: Study Clans -->
+            <div class="profile-card p-5 sm:p-6 shadow-md space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-teal-400"></i>
+                        <span>Study Clans ({{ groups|length }})</span>
                     </h3>
-                    <p class="text-xs text-slate-400 font-mono">Recent 3D Visualizer and Kociemba Two-Phase solve sessions</p>
+                    <span class="text-[10px] text-slate-500">Collaborative Study Groups</span>
                 </div>
-                <form method="POST" action="{{ url_for('profile.clear_history') }}" onsubmit="return confirm('Clear all practice solve history?');">
-                    <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900 border border-rose-500/30 text-rose-300 font-mono text-xs transition-all">
-                        <i class="fa-solid fa-trash mr-1"></i> Clear History
+
+                <!-- Create Clan Form -->
+                <form method="POST" action="{{ url_for('profile.create_group') }}" class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="name" required placeholder="Clan Name..." class="px-3 py-2 profile-input text-xs">
+                        <input type="text" name="passcode" placeholder="Passcode (Optional)..." class="px-3 py-2 profile-input text-xs">
+                    </div>
+                    <input type="text" name="description" placeholder="Clan mission (e.g. Sub-12 lookahead drills)..." class="w-full px-3 py-2 profile-input text-xs">
+                    <button type="submit" class="w-full py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-colors">
+                        Establish Clan
+                    </button>
+                </form>
+
+                <!-- Clans List -->
+                <div class="space-y-2 max-h-60 overflow-y-auto scrollbar-thin pr-1">
+                    {% if groups %}
+                        {% for g in groups %}
+                        <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-teal-500/40 transition-all flex items-center justify-between">
+                            <div class="min-w-0 pr-2">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="font-bold text-white text-xs truncate">{{ g.name }}</span>
+                                    {% if g.is_private %}
+                                    <span class="text-[9px] px-1 py-0.2 rounded bg-amber-950 text-amber-300 font-mono">Private</span>
+                                    {% else %}
+                                    <span class="text-[9px] px-1 py-0.2 rounded bg-teal-950 text-teal-300 font-mono">Public</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-[10px] text-slate-400 truncate">{{ g.description or 'Study clan.' }}</p>
+                            </div>
+                            <a href="{{ url_for('user.chat_page') }}" class="text-teal-400 hover:underline text-[11px] font-bold shrink-0">
+                                Clan Chat &rarr;
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="py-6 text-center text-slate-500">
+                            No study clans founded yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------------- -->
+    <!-- TAB 3: SOLVES & PRACTICE HISTORY                                          -->
+    <!-- ------------------------------------------------------------------------- -->
+    <div id="tab-pane-solves" class="profile-pane hidden space-y-6">
+        
+        <!-- Tournament Submissions & Clan Victories -->
+        {% if competition_solves or solved_challenges %}
+        <div class="profile-card p-5 sm:p-6 shadow-md space-y-3 font-mono text-xs">
+            <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-400"></i>
+                <span>Tournament Victories &amp; Verified Solves</span>
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {% for cs in competition_solves %}
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="font-bold text-white">{{ cs.comp_title }}</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Moves: <strong class="text-emerald-300">{{ cs.move_count }}</strong> &bull; Time: {{ cs.time_seconds }}s</p>
+                    <p class="text-amber-300 font-bold truncate mt-1 text-[11px]">{{ cs.solution }}</p>
+                </div>
+                {% endfor %}
+
+                {% for sc in solved_challenges %}
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="font-bold text-emerald-300">Challenge Victory: {{ sc.cube_name }}</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Clan: @{{ sc.group_name }}</p>
+                    <p class="text-emerald-400 font-bold truncate mt-1 text-[11px]">{{ sc.solution }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Practice Solves History Table -->
+        <div class="profile-card p-5 sm:p-6 shadow-md space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i>
+                        <span>Solve History ({{ history|length }})</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400 font-mono">Logged 3D visualizer &amp; Kociemba sessions</p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('profile.clear_history') }}" onsubmit="return confirm('Clear practice solve history?');">
+                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900 border border-rose-500/30 text-rose-300 font-mono text-xs transition-colors">
+                        <i class="fa-solid fa-trash mr-1"></i> Clear
                     </button>
                 </form>
             </div>
 
             {% if history %}
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left font-mono text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
-                                <th class="py-2.5 px-3">#</th>
-                                <th class="py-2.5 px-3">Scramble Sequence</th>
-                                <th class="py-2.5 px-3">Solution Move Sequence</th>
-                                <th class="py-2.5 px-3 text-center">Moves</th>
-                                <th class="py-2.5 px-3">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-900">
-                            {% for s in history %}
-                                <tr class="hover:bg-slate-900/50">
-                                    <td class="py-2.5 px-3 text-slate-500">{{ loop.index }}</td>
-                                    <td class="py-2.5 px-3 text-amber-300 font-bold max-w-xs truncate">{{ s.scramble }}</td>
-                                    <td class="py-2.5 px-3 text-emerald-300 font-bold max-w-xs truncate">{{ s.solution }}</td>
-                                    <td class="py-2.5 px-3 text-center">
-                                        <span class="px-2 py-0.5 rounded bg-slate-900 text-white font-bold">{{ s.move_count }}</span>
-                                    </td>
-                                    <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap">{{ (s.created_at|string)[:16] if s.created_at else '' }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left font-mono text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+                            <th class="py-2 px-3">#</th>
+                            <th class="py-2 px-3">Scramble Sequence</th>
+                            <th class="py-2 px-3">Solution Move Sequence</th>
+                            <th class="py-2 px-3 text-center">Moves</th>
+                            <th class="py-2 px-3">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900">
+                        {% for s in history %}
+                        <tr class="hover:bg-slate-900/40">
+                            <td class="py-2.5 px-3 text-slate-500">{{ loop.index }}</td>
+                            <td class="py-2.5 px-3 text-amber-300 font-bold max-w-xs truncate">{{ s.scramble }}</td>
+                            <td class="py-2.5 px-3 text-emerald-300 font-bold max-w-xs truncate">{{ s.solution }}</td>
+                            <td class="py-2.5 px-3 text-center">
+                                <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-white font-bold">{{ s.move_count }}</span>
+                            </td>
+                            <td class="py-2.5 px-3 text-slate-500 whitespace-nowrap text-[11px]">{{ (s.created_at|string)[:16] if s.created_at else '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-                <div class="text-center py-8 text-slate-500 font-mono text-xs">
-                    No practice solves recorded yet. Solve cubes in the 3D Visualizer Lab!
-                </div>
+            <div class="py-10 text-center text-slate-500 font-mono text-xs">
+                No solve logs recorded yet. Practice solving in the 3D Visualizer Lab!
+            </div>
             {% endif %}
         </div>
 
     </div>
 
+    <!-- ------------------------------------------------------------------------- -->
+    <!-- TAB 4: CUSTOM PUZZLE BUILDS                                               -->
+    <!-- ------------------------------------------------------------------------- -->
+    <div id="tab-pane-builds" class="profile-pane hidden space-y-5">
+        <div class="profile-card p-5 sm:p-6 shadow-md space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                        <i class="fa-solid fa-shapes text-pink-400"></i>
+                        <span>Custom Built Puzzles ({{ custom_cubes|length }})</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400 font-mono">Custom geometries crafted in the Workshop</p>
+                </div>
+                <a href="{{ url_for('custom_cubes.builder') }}"
+                   class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus text-xs"></i> Build Puzzle
+                </a>
+            </div>
+
+            {% if custom_cubes %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 font-mono text-xs">
+                {% for cube in custom_cubes %}
+                <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-pink-500/40 transition-all flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 text-[10px] border border-cyan-500/40">
+                                {{ supported_shapes[cube.shape_type].name if cube.shape_type in supported_shapes else cube.shape_type }}
+                            </span>
+                            <span class="text-slate-500 text-[10px]">{{ (cube.created_at|string)[:10] if cube.created_at else '' }}</span>
+                        </div>
+                        <h4 class="font-bold text-white font-outfit text-sm">{{ cube.name }}</h4>
+                        <p class="text-slate-400 text-[11px] line-clamp-2 mt-1">{{ cube.description or 'Custom workshop puzzle.' }}</p>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-800 flex items-center gap-2">
+                        <a href="{{ url_for('custom_cubes.builder', shape=cube.shape_type) }}"
+                           class="flex-1 py-1.5 text-center rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 font-bold transition-all text-xs">
+                            Open Studio
+                        </a>
+                        <form method="POST" action="{{ url_for('custom_cubes.delete_cube', cube_id=cube.id) }}" onsubmit="return confirm('Delete custom puzzle?');">
+                            <button type="submit" class="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition-all" title="Delete">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12 rounded-xl border border-dashed border-slate-800 font-mono text-xs text-slate-500">
+                <i class="fa-solid fa-shapes text-3xl text-slate-600 mb-2 block"></i>
+                <h4 class="text-white font-bold text-sm">No Custom Puzzles Yet</h4>
+                <p class="text-slate-400 mt-1 mb-4">Design your own twisty puzzle shapes with custom colors and kinematics.</p>
+                <a href="{{ url_for('custom_cubes.builder') }}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> Open Workshop
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 
+<!-- Tab Switching Script -->
 <script>
-    function switchProfileTab(tabName) {
-        document.querySelectorAll('.profile-tab-btn').forEach(btn => {
-            if (btn.getAttribute('data-tab') === tabName) {
+    function switchTab(tabKey) {
+        // Update tab buttons
+        document.querySelectorAll('.nav-tab-pill').forEach(btn => {
+            if (btn.getAttribute('data-tab') === tabKey) {
                 btn.classList.add('active');
+                btn.classList.remove('text-slate-400');
             } else {
                 btn.classList.remove('active');
+                btn.classList.add('text-slate-400');
             }
         });
 
+        // Update tab panes
         document.querySelectorAll('.profile-pane').forEach(pane => {
             pane.classList.add('hidden');
         });
 
-        const activePane = document.getElementById('tab-pane-' + tabName);
-        if (activePane) {
-            activePane.classList.remove('hidden');
+        const targetPane = document.getElementById('tab-pane-' + tabKey);
+        if (targetPane) {
+            targetPane.classList.remove('hidden');
+        }
+
+        // Update URL hash without scroll
+        if (history.replaceState) {
+            history.replaceState(null, null, '#' + tabKey);
         }
     }
 
-    // Auto-switch based on URL hash if present
-    document.addEventListener('DOMContentLoaded', function() {
+    // Hash check on load
+    document.addEventListener('DOMContentLoaded', () => {
         const hash = window.location.hash.replace('#', '');
-        if (hash && ['personal', 'groups', 'friends', 'builds', 'solver'].includes(hash)) {
-            switchProfileTab(hash);
+        if (hash) {
+            // Map legacy hash aliases
+            const aliasMap = {
+                'groups': 'network',
+                'friends': 'network',
+                'solver': 'solves',
+                'personal': 'personal',
+                'builds': 'builds',
+                'network': 'network',
+                'solves': 'solves'
+            };
+            const mappedTab = aliasMap[hash];
+            if (mappedTab) switchTab(mappedTab);
         }
     });
 </script>

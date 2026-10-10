@@ -161,7 +161,7 @@ def login():
             return redirect(url_for('super_admin.dashboard'))
         elif role == 'developer':
             return redirect(url_for('developer.dashboard'))
-        return redirect(url_for('user.dashboard'))
+        return redirect(url_for('feed.newsfeed'))
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -199,13 +199,13 @@ def login():
             if target_next and target_next.startswith('/') and not target_next.startswith('//'):
                 return redirect(target_next)
                 
-            # Role-Specific Dashboard Redirection
+            # Role-Specific Dashboard Redirection - Subscribers go to News Feed
             if session['role'] == 'super_admin':
                 return redirect(url_for('super_admin.dashboard'))
             elif session['role'] == 'developer':
                 return redirect(url_for('developer.dashboard'))
             else:
-                return redirect(url_for('user.dashboard'))
+                return redirect(url_for('feed.newsfeed'))
             
         flash('Invalid username or password. Please verify your credentials and try again.', 'error')
 

@@ -69,6 +69,14 @@ def index():
         (user_id,)
     )
 
+    # 6. Card Club Coins Balance
+    wallet_row = query_one(
+        "SELECT balance FROM club_wallets WHERE user_id = %s",
+        "SELECT balance FROM club_wallets WHERE user_id = ?",
+        (user_id,)
+    )
+    coins_balance = int(wallet_row['balance']) if wallet_row and wallet_row.get('balance') is not None else 1000
+
     return render_template(
         'profile.html',
         user=user,
@@ -79,7 +87,8 @@ def index():
         custom_cubes=custom_cubes,
         solved_challenges=solved_challenges,
         competition_solves=competition_solves,
-        supported_shapes=SUPPORTED_SHAPES
+        supported_shapes=SUPPORTED_SHAPES,
+        coins_balance=coins_balance
     )
 
 @profile_bp.route('/update', methods=['POST'])
@@ -107,6 +116,16 @@ def update():
         pb_single=pb_single,
         pb_ao5=pb_ao5
     )
+
+    if 'is_profile_private' in request.form:
+        is_private = 1 if request.form.get('is_profile_private') in ('1', 'on', 'true', 'True') else 0
+        from models.db import execute_update
+        execute_update(
+            "UPDATE users SET is_profile_private = %s WHERE id = %s",
+            "UPDATE users SET is_profile_private = ? WHERE id = ?",
+            (is_private, user_id)
+        )
+
     flash('Personal information and speedcubing credentials successfully updated!', 'success')
     return redirect(url_for('profile.index'))
 

@@ -12,7 +12,7 @@ from models import init_database
 from controllers import (
     home_bp, auth_bp, super_admin_bp, developer_bp,
     user_bp, visualizer_bp, profile_bp, api_bp, custom_cube_bp, chess_bp,
-    card_bp, card_club_bp
+    card_bp, card_club_bp, feed_bp
 )
 
 import json
@@ -48,6 +48,7 @@ def create_app():
     app.register_blueprint(chess_bp)
     app.register_blueprint(card_bp)
     app.register_blueprint(card_club_bp)
+    app.register_blueprint(feed_bp)
 
     # Card Club live tables (Socket.IO - websocket push + HTTP polling fallback)
     from controllers.card_club_controller import init_socketio

@@ -807,6 +807,53 @@ def init_database():
                             (1000000000,))
             except Exception:
                 pass
+
+            # 37. Notifications Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    actor_id INT NULL,
+                    notif_type VARCHAR(50) DEFAULT 'info',
+                    title VARCHAR(200) NOT NULL,
+                    content TEXT NOT NULL,
+                    link VARCHAR(255) NULL,
+                    is_read INT DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # 38. Post Likes Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS post_likes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    post_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uq_post_user_like (post_id, user_id),
+                    FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+
+            # Defensive Column Migrations for Feed, Privacy & Chat
+            for _mig in (
+                "ALTER TABLE users ADD COLUMN is_profile_private INT DEFAULT 0",
+                "ALTER TABLE blog_posts ADD COLUMN post_type VARCHAR(50) DEFAULT 'post'",
+                "ALTER TABLE blog_posts ADD COLUMN privacy VARCHAR(20) DEFAULT 'public'",
+                "ALTER TABLE blog_posts ADD COLUMN game_type VARCHAR(50) NULL",
+                "ALTER TABLE blog_posts ADD COLUMN invite_code VARCHAR(100) NULL",
+                "ALTER TABLE blog_posts ADD COLUMN target_group_id INT NULL",
+                "ALTER TABLE blog_posts ADD COLUMN image_url TEXT NULL",
+                "ALTER TABLE blog_posts ADD COLUMN video_url TEXT NULL",
+                "ALTER TABLE blog_posts ADD COLUMN media_type VARCHAR(20) DEFAULT 'text'",
+                "ALTER TABLE chat_messages ADD COLUMN is_read INT DEFAULT 0",
+            ):
+                try:
+                    cur.execute(_mig)
+                except Exception:
+                    pass
         conn.close()
     else:
         print("[Database] Initializing SQLite Multi-Role RBAC Tables...")
@@ -1550,6 +1597,53 @@ def init_database():
         if not cur.fetchone():
             cur.execute("INSERT INTO club_reserve (id, balance) VALUES (1, ?)", (1000000000,))
 
+        # 37. Notifications Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                actor_id INTEGER NULL,
+                notif_type TEXT DEFAULT 'info',
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                link TEXT NULL,
+                is_read INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # 38. Post Likes Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS post_likes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (post_id, user_id),
+                FOREIGN KEY (post_id) REFERENCES blog_posts(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+
+        # Defensive Column Migrations for SQLite
+        for _mig in (
+            "ALTER TABLE users ADD COLUMN is_profile_private INTEGER DEFAULT 0",
+            "ALTER TABLE blog_posts ADD COLUMN post_type TEXT DEFAULT 'post'",
+            "ALTER TABLE blog_posts ADD COLUMN privacy TEXT DEFAULT 'public'",
+            "ALTER TABLE blog_posts ADD COLUMN game_type TEXT",
+            "ALTER TABLE blog_posts ADD COLUMN invite_code TEXT",
+            "ALTER TABLE blog_posts ADD COLUMN target_group_id INTEGER",
+            "ALTER TABLE blog_posts ADD COLUMN image_url TEXT",
+            "ALTER TABLE blog_posts ADD COLUMN video_url TEXT",
+            "ALTER TABLE blog_posts ADD COLUMN media_type TEXT DEFAULT 'text'",
+            "ALTER TABLE chat_messages ADD COLUMN is_read INTEGER DEFAULT 0",
+        ):
+            try:
+                cur.execute(_mig)
+            except Exception:
+                pass
+
         conn.commit()
         conn.close()
 
@@ -1822,6 +1916,149 @@ def seed_demo_data():
                 "Sacrifice the dark-squared bishop to destroy the pawn shield and setup a devastating double-attack fork.",
                 350
             )
+        )
+
+    # 19. Seed Initial News Feed Public Posts, Game Invitations & Notifications
+    inv_post = query_one(
+        "SELECT id FROM blog_posts WHERE post_type IN ('card_invite', 'chess_invite') LIMIT 1",
+        "SELECT id FROM blog_posts WHERE post_type IN ('card_invite', 'chess_invite') LIMIT 1"
+    )
+    if not inv_post:
+        dev_user = query_one("SELECT id FROM users WHERE username = 'developer'", "SELECT id FROM users WHERE username = 'developer'")
+        admin_user = query_one("SELECT id FROM users WHERE username = 'admin'", "SELECT id FROM users WHERE username = 'admin'")
+        cuber_user = query_one("SELECT id FROM users WHERE username = 'speedcuber'", "SELECT id FROM users WHERE username = 'speedcuber'")
+        dev_id = dev_user['id'] if dev_user else 1
+        admin_id = admin_user['id'] if admin_user else 1
+        cuber_id = cuber_user['id'] if cuber_user else 1
+
+        # Post 1: Card Club Call Break 4-Player Multi-Player Game Invitation
+        p1 = execute_insert(
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy, game_type, invite_code)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy, game_type, invite_code)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                dev_id,
+                "🃏 Call Break 4-Player High-Stakes Championship Match",
+                "Calling all card tacticians! We are hosting a 4-player Call Break table in our Private Arena. 500 Entry Coin Pool with automatic coin rewards on win. Click Join Room to claim a seat before the table is full!",
+                "CallBreak,Cards,Multiplayer",
+                12,
+                "card_invite",
+                "public",
+                "call_break",
+                "CB-ARENA-99"
+            )
+        )
+
+        # Post 2: GoChess 3D Smart Board Challenge Invitation
+        p2 = execute_insert(
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy, game_type, invite_code)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy, game_type, invite_code)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                admin_id,
+                "♟️ GoChess 3D Smart Board Blitz Duel - Open Challenge",
+                "I am challenging any subscriber to an 8-minute Blitz Duel on the Obsidian Smart Board. Real-time move synchronization with automated anti-cheat telemetry. Who wants White?",
+                "Chess,Blitz,Duel",
+                24,
+                "chess_invite",
+                "public",
+                "chess_blitz",
+                "CHESS-VIP"
+            )
+        )
+
+        # Post 3: Public Community Speedcubing Post
+        p3 = execute_insert(
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                cuber_id,
+                "🎲 Sub-12 PLL Recognition Secrets for 3x3 Speedsolvers",
+                "When looking at the headlights on the left face, check the opposite edge color immediately. If it's the opposite color, it's either an Ra or Rb perm. Cut your pause by over 300ms!",
+                "Speedcubing,PLL,Algorithms",
+                18,
+                "post",
+                "public"
+            )
+        )
+
+        # Post 4: Solve Video Breakdown (Video Post)
+        p4 = execute_insert(
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy, video_url, media_type)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy, video_url, media_type)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                cuber_id,
+                "🎥 9.42s Single CFOP Solve Walkthrough & Finger-trick Replay",
+                "Watch this step-by-step breakdown of my 9.42s single solve! Lookahead into F2L pairs was completely pause-free with a clean Sune OLL and J-perm finish. Feedback welcome!",
+                "Video,Walkthrough,CFOP",
+                31,
+                "post",
+                "public",
+                "https://www.w3schools.com/html/mov_bbb.mp4",
+                "video"
+            )
+        )
+
+        # Post 5: High-Res Speedcubing & Card Photography (Image Post)
+        p5 = execute_insert(
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy, image_url, media_type)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO blog_posts (user_id, title, content, tags, likes, post_type, privacy, image_url, media_type)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                dev_id,
+                "📸 Cyber Neon Smart Cube Hardware Studio Setup",
+                "Freshly calibrated Bluetooth magnetic core with tension compression set to 0.6. Ready for tonight's tournament round!",
+                "Photo,Setup,Hardware",
+                27,
+                "post",
+                "public",
+                "https://images.unsplash.com/photo-1591994843349-f415893b3a6b?q=80&w=1200&auto=format&fit=crop",
+                "image"
+            )
+        )
+
+        # Comments on posts
+        execute_insert(
+            "INSERT INTO blog_comments (post_id, user_id, comment) VALUES (%s, %s, %s)",
+            "INSERT INTO blog_comments (post_id, user_id, comment) VALUES (?, ?, ?)",
+            (p1, cuber_id, "I'm in! Saving 250 coins to bid 4 spades.")
+        )
+        execute_insert(
+            "INSERT INTO blog_comments (post_id, user_id, comment) VALUES (%s, %s, %s)",
+            "INSERT INTO blog_comments (post_id, user_id, comment) VALUES (?, ?, ?)",
+            (p2, dev_id, "Accepting the duel with the Sicilian Defense!")
+        )
+
+        # Initial Notifications for speedcuber
+        execute_insert(
+            """INSERT INTO notifications (user_id, actor_id, notif_type, title, content, link, is_read)
+               VALUES (%s, %s, %s, %s, %s, %s, 0)""",
+            """INSERT INTO notifications (user_id, actor_id, notif_type, title, content, link, is_read)
+               VALUES (?, ?, ?, ?, ?, ?, 0)""",
+            (cuber_id, dev_id, "invite", "Card Club Invitation", "developer invited you to join Call Break Championship table (CB-ARENA-99)", "/club/table/call_break",)
+        )
+        execute_insert(
+            """INSERT INTO notifications (user_id, actor_id, notif_type, title, content, link, is_read)
+               VALUES (%s, %s, %s, %s, %s, %s, 0)""",
+            """INSERT INTO notifications (user_id, actor_id, notif_type, title, content, link, is_read)
+               VALUES (?, ?, ?, ?, ?, ?, 0)""",
+            (cuber_id, admin_id, "like", "admin liked your post", "admin liked your Sub-12 PLL Recognition Secrets post", "/feed")
+        )
+
+        # Initial 1-on-1 Inbox Message from admin to speedcuber
+        execute_insert(
+            """INSERT INTO chat_messages (sender_id, receiver_id, message, is_read)
+               VALUES (%s, %s, %s, 0)""",
+            """INSERT INTO chat_messages (sender_id, receiver_id, message, is_read)
+               VALUES (?, ?, ?, 0)""",
+            (admin_id, cuber_id, "Hey! Welcome to the Rubique News Feed. Check out the active multiplayer card and chess invitations on your feed!")
         )
 
 def query_one(sql_mysql, sql_sqlite, params=()):
