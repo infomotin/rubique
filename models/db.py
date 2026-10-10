@@ -2061,13 +2061,19 @@ def seed_demo_data():
             (admin_id, cuber_id, "Hey! Welcome to the Rubique News Feed. Check out the active multiplayer card and chess invitations on your feed!")
         )
 
+def _ensure_mysql_placeholders(sql):
+    """Defensive helper: ensure SQLite ? placeholders are converted to %s if needed"""
+    if '?' in sql:
+        return sql.replace('?', '%s')
+    return sql
+
 def query_one(sql_mysql, sql_sqlite, params=()):
     """Single row fetch helper"""
     conn, db_type = get_db_connection()
     try:
         if db_type == 'mysql':
             with conn.cursor() as cur:
-                cur.execute(sql_mysql, params)
+                cur.execute(_ensure_mysql_placeholders(sql_mysql), params)
                 return cur.fetchone()
         else:
             cur = conn.cursor()
@@ -2083,7 +2089,7 @@ def query_all(sql_mysql, sql_sqlite, params=()):
     try:
         if db_type == 'mysql':
             with conn.cursor() as cur:
-                cur.execute(sql_mysql, params)
+                cur.execute(_ensure_mysql_placeholders(sql_mysql), params)
                 return cur.fetchall()
         else:
             cur = conn.cursor()
@@ -2099,7 +2105,7 @@ def execute_insert(sql_mysql, sql_sqlite, params=()):
     try:
         if db_type == 'mysql':
             with conn.cursor() as cur:
-                cur.execute(sql_mysql, params)
+                cur.execute(_ensure_mysql_placeholders(sql_mysql), params)
                 return cur.lastrowid
         else:
             cur = conn.cursor()
@@ -2115,7 +2121,7 @@ def execute_update(sql_mysql, sql_sqlite, params=()):
     try:
         if db_type == 'mysql':
             with conn.cursor() as cur:
-                return cur.execute(sql_mysql, params)
+                return cur.execute(_ensure_mysql_placeholders(sql_mysql), params)
         else:
             cur = conn.cursor()
             res = cur.execute(sql_sqlite, params)

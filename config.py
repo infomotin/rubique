@@ -38,7 +38,7 @@ class Config:
     # MySQL Database Connection Settings (Default for Laragon / XAMPP)
     MYSQL_HOST = os.environ.get('MYSQL_HOST', 'localhost')
     MYSQL_USER = os.environ.get('MYSQL_USER', 'root')
-    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', '')
+    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', 'toor')
     MYSQL_DB = os.environ.get('MYSQL_DB', 'cube_permutation')
     MYSQL_PORT = int(os.environ.get('MYSQL_PORT', 3306))
 

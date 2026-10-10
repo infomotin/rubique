@@ -953,7 +953,7 @@ class ChessModel:
         return query_one(
             """SELECT * FROM chess_games
                WHERE match_type = 'public' AND is_public = 1 AND status = 'active'
-                 AND black_user_id IS NULL AND user_id != ?
+                 AND black_user_id IS NULL AND user_id != %s
                ORDER BY created_at DESC LIMIT 1""",
             """SELECT * FROM chess_games
                WHERE match_type = 'public' AND is_public = 1 AND status = 'active'
