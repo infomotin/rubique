@@ -630,6 +630,23 @@ class CardClubTests(unittest.TestCase):
         code, data = self.api('POST', f'/club/api/tables/{tid}/start')
         self.assertTrue(data.get('ok'))
 
+        # strict-rules gate: moving before acknowledgement is rejected
+        code, data = self.api('GET', f'/club/api/tables/{tid}/state')
+        st_legal = ((data.get('state') or {}).get('legal') or [])
+        if st_legal:
+            code, data = self.api('POST', f'/club/api/tables/{tid}/move',
+                                  {'action': st_legal[0]})
+            self.assertEqual(code, 400)
+            self.assertIn('Strict Rules', str(data))
+
+        # both players must read + acknowledge strict rules before playing
+        code, data = self.api('POST', f'/club/api/tables/{tid}/strict-rules')
+        self.assertTrue(data.get('ok'), data)          # b (current session)
+        self.login(a)
+        code, data = self.api('POST', f'/club/api/tables/{tid}/strict-rules')
+        self.assertTrue(data.get('ok'), data)          # a (creator seat)
+        self.login(b)
+
         settled, current, steps = None, b, 0
         while steps < 400:
             steps += 1

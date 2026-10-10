@@ -341,6 +341,9 @@ const ClubSection = (() => {
             if (typeof this.initHeroInteractive === 'function') {
                 try { this.initHeroInteractive(); } catch (e) { /* hero optional */ }
             }
+            if (typeof this.initPlayerDiscovery === 'function') {
+                try { this.initPlayerDiscovery(); } catch (e) { /* discovery optional */ }
+            }
             // Arm the AudioContext on the first real user gesture
             // (browser autoplay policy) and fire the welcome flourish.
             const armOnce = () => {
@@ -626,6 +629,175 @@ const ClubSection = (() => {
                 }
             }
         },
+        initPlayerDiscovery() {
+            // Tab switching
+            const tabs = document.querySelectorAll('.lobby-tab-btn');
+            const panes = document.querySelectorAll('.lobby-tab-pane');
+            tabs.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        t.classList.remove('active');
+                        t.classList.add('text-slate-400');
+                    });
+                    btn.classList.add('active');
+                    btn.classList.remove('text-slate-400');
+                    const targetId = btn.getAttribute('data-target');
+                    panes.forEach(p => {
+                        if (p.id === targetId) {
+                            p.classList.remove('hidden');
+                        } else {
+                            p.classList.add('hidden');
+                        }
+                    });
+                    if (window.ClubAudio) window.ClubAudio.deal();
+                });
+            });
+
+            // Group selector changing join URL & WhatsApp text
+            const grpSelect = document.getElementById('hub-group-select');
+            const urlInput = document.getElementById('hub-share-url-input');
+            const waBtn = document.getElementById('hub-whatsapp-btn');
+            const tgBtn = document.getElementById('hub-telegram-btn');
+
+            function updateShareUrls() {
+                if (!grpSelect || !urlInput) return;
+                const opt = grpSelect.selectedOptions[0];
+                if (!opt) return;
+                const code = opt.getAttribute('data-code');
+                const name = opt.getAttribute('data-name') || 'Private Room';
+                const base = window.location.origin;
+                const joinUrl = `${base}/club/join/${code}`;
+                urlInput.value = joinUrl;
+
+                const waText = `🃏 Hey! Join my private Card Club room '${name}' on Rubique to play games with real-time video & chips: ${joinUrl}`;
+                if (waBtn) {
+                    waBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+                }
+                if (tgBtn) {
+                    tgBtn.href = `https://t.me/share/url?url=${encodeURIComponent(joinUrl)}&text=${encodeURIComponent(`🃏 Join my private Card Club room on Rubique: ${name}`)}`;
+                }
+            }
+
+            if (grpSelect) {
+                grpSelect.addEventListener('change', () => {
+                    updateShareUrls();
+                    if (window.ClubAudio) window.ClubAudio.hover();
+                });
+            }
+
+            // Copy Link button
+            const copyBtn = document.getElementById('hub-copy-link-btn');
+            if (copyBtn && urlInput) {
+                copyBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(urlInput.value);
+                        toast('📋 Invitation link copied to clipboard! Share on WhatsApp with your friends.', true);
+                        if (window.ClubAudio) window.ClubAudio.success();
+                    } catch (e) {
+                        urlInput.select();
+                        document.execCommand('copy');
+                        toast('📋 Invitation link copied!', true);
+                    }
+                });
+            }
+
+            // Native Web Share
+            const nativeShareBtn = document.getElementById('hub-native-share-btn');
+            if (nativeShareBtn && urlInput) {
+                nativeShareBtn.addEventListener('click', async () => {
+                    const opt = grpSelect ? grpSelect.selectedOptions[0] : null;
+                    const name = opt ? (opt.getAttribute('data-name') || 'Card Club') : 'Card Club';
+                    const shareData = {
+                        title: `Card Club - ${name}`,
+                        text: `🃏 Join my private Card Club room '${name}' on Rubique!`,
+                        url: urlInput.value
+                    };
+                    if (navigator.share) {
+                        try {
+                            await navigator.share(shareData);
+                            toast('Invitation shared!', true);
+                        } catch (e) { /* cancelled */ }
+                    } else if (waBtn) {
+                        waBtn.click();
+                    }
+                });
+            }
+
+            // Live member search
+            const searchInput = document.getElementById('hub-player-search-input');
+            const playersGrid = document.getElementById('hub-players-grid');
+            let searchTimeout = null;
+
+            if (searchInput && playersGrid) {
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(async () => {
+                        const q = searchInput.value.trim();
+                        try {
+                            const res = await fetch(`/club/api/members/search?q=${encodeURIComponent(q)}`, {
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            const data = await res.json();
+                            if (!data.ok || !data.members) return;
+                            playersGrid.innerHTML = '';
+                            if (data.members.length === 0) {
+                                playersGrid.innerHTML = '<p class="text-xs text-slate-500 font-mono col-span-3 text-center py-4">No matching players found.</p>';
+                                return;
+                            }
+                            data.members.forEach(pl => {
+                                const card = document.createElement('div');
+                                card.className = 'p-3 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 transition-all flex items-center justify-between gap-3 player-card-item';
+                                card.innerHTML = `
+                                    <div class="flex items-center gap-2.5 overflow-hidden">
+                                        <div class="player-avatar-chip shrink-0 bg-emerald-600" style="background-color: ${pl.avatar_color || '#059669'}">
+                                            ${(pl.username[0] || 'U').toUpperCase()}
+                                            <span class="player-online-dot"></span>
+                                        </div>
+                                        <div class="overflow-hidden">
+                                            <div class="text-xs font-bold text-white truncate">${pl.username}</div>
+                                            <div class="text-[10px] text-slate-400 font-mono uppercase">${pl.role || 'Member'} &bull; Ready</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="hub-invite-player-btn px-2.5 py-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-500 text-white font-bold text-[11px] font-mono shrink-0 transition-all"
+                                            data-username="${pl.username}" title="Invite to current group">
+                                        <i class="fa-solid fa-paper-plane mr-1"></i>Invite
+                                    </button>
+                                `;
+                                playersGrid.appendChild(card);
+                            });
+                            wireInviteButtons();
+                        } catch (e) { /* ignore */ }
+                    }, 250);
+                });
+            }
+
+            function wireInviteButtons() {
+                document.querySelectorAll('.hub-invite-player-btn').forEach(btn => {
+                    btn.onclick = async () => {
+                        const uname = btn.getAttribute('data-username');
+                        const gid = grpSelect ? grpSelect.value : null;
+                        if (!gid) {
+                            toast('Please create or select a group first', false);
+                            return;
+                        }
+                        try {
+                            btn.disabled = true;
+                            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                            await post(`/club/api/groups/${gid}/invites`, { username: uname });
+                            toast(`VIP Invitation sent to @${uname}!`, true);
+                            if (window.ClubAudio) window.ClubAudio.success();
+                            btn.className = 'px-2.5 py-1.5 rounded-lg bg-slate-800 text-emerald-400 font-mono text-[10px] shrink-0';
+                            btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Invited';
+                        } catch (e) {
+                            toast(e.message, false);
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-1"></i>Invite';
+                        }
+                    };
+                });
+            }
+            wireInviteButtons();
+        },
         toast, post
     };
 })();
@@ -807,14 +979,11 @@ const ClubTable = (() => {
                 </div>`;
             }).join('') || '<span class="text-slate-600">No seats yet</span>';
 
-            // Re-attach local camera feed to local seat pod if active
-            if (localCamStream && mySeat !== null && mySeat !== undefined) {
-                const myVid = document.getElementById(`seat-cam-${mySeat}`);
-                if (myVid) {
-                    myVid.srcObject = localCamStream;
-                    myVid.play().catch(() => {});
-                }
-            }
+            // Re-attach camera feeds (local + all inbound WebRTC streams) —
+            // seats innerHTML is rebuilt on every render, so videos need
+            // their srcObject restored each time.
+            attachAllStreams();
+            maybeRequestRemoteCameras();
 
             if (turn !== null && turn !== undefined) {
                 const me = (v.seats || []).find(s => s.seat_index === mySeat);
@@ -847,6 +1016,173 @@ const ClubTable = (() => {
 
     let localCamStream = null;
 
+    // ---------------- WebRTC mesh (camera share) ----------------
+    // One outbound PC per peer while I share (I offer), one inbound PC per
+    // peer while they share (they offer). Media is P2P; the socket only
+    // relays SDP/ICE between two validated seats of the same table.
+    const rtc = { out: {}, in: {}, streams: {}, pendingIce: {}, watchAsked: {} };
+    const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    function myUid() {
+        if (!view || view.seat === null || view.seat === undefined) return null;
+        const s = (view.seats || []).find(x => x.seat_index === view.seat);
+        return s ? s.user_id : null;
+    }
+
+    function otherSeatUids() {
+        const me = myUid();
+        return (view ? view.seats : [])
+            .filter(s => s.user_id !== me)
+            .map(s => s.user_id);
+    }
+
+    function sendRtc(toUid, kind, payload) {
+        if (socket && socket.connected) {
+            socket.emit('webrtc_signal', {
+                table_id: C().tableId, to_user: toUid,
+                kind: kind, payload: payload
+            });
+        }
+    }
+
+    function seatIndexForUid(uid) {
+        if (!view) return null;
+        const s = (view.seats || []).find(x => x.user_id === uid);
+        return s ? s.seat_index : null;
+    }
+
+    function attachSeatStream(uid, stream) {
+        const idx = seatIndexForUid(uid);
+        if (idx === null) return;
+        const el = document.getElementById(`seat-cam-${idx}`);
+        if (el && el.srcObject !== stream) {
+            el.srcObject = stream;
+            el.play().catch(() => {});
+        }
+    }
+
+    function attachAllStreams() {
+        const me = myUid();
+        if (localCamStream && me !== null) attachSeatStream(me, localCamStream);
+        for (const uid in rtc.streams) attachSeatStream(Number(uid), rtc.streams[uid]);
+    }
+
+    function mySeat() { return view ? view.seat : null; }
+
+    function closeInPeer(uid) {
+        if (rtc.in[uid]) { try { rtc.in[uid].close(); } catch (e) {} delete rtc.in[uid]; }
+        delete rtc.streams[uid];
+        delete rtc.pendingIce[uid];
+        const idx = seatIndexForUid(uid);
+        if (idx !== null) {
+            const el = document.getElementById(`seat-cam-${idx}`);
+            if (el) el.srcObject = null;
+        }
+    }
+
+    function ensureOutPeer(uid) {
+        if (!localCamStream || rtc.out[uid]) return;
+        const pc = new RTCPeerConnection(RTC_CONFIG);
+        rtc.out[uid] = pc;
+        localCamStream.getTracks().forEach(tr => pc.addTrack(tr, localCamStream));
+        pc.onicecandidate = e => { if (e.candidate) sendRtc(uid, 'ice', e.candidate); };
+        pc.onnegotiationneeded = async () => {
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                sendRtc(uid, 'offer', { type: pc.localDescription.type,
+                                        sdp: pc.localDescription.sdp });
+            } catch (e) { console.warn('rtc offer failed', e); }
+        };
+        pc.onconnectionstatechange = () => {
+            if (['failed', 'closed'].includes(pc.connectionState)) {
+                delete rtc.out[uid];
+            }
+        };
+    }
+
+    function makeInPeer(uid) {
+        const pc = new RTCPeerConnection(RTC_CONFIG);
+        rtc.in[uid] = pc;
+        pc.onicecandidate = e => { if (e.candidate) sendRtc(uid, 'ice', e.candidate); };
+        pc.ontrack = e => {
+            rtc.streams[uid] = e.streams[0];
+            attachSeatStream(uid, e.streams[0]);
+        };
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'failed') closeInPeer(uid);
+        };
+        return pc;
+    }
+
+    async function drainPendingIce(uid, pc) {
+        const q = rtc.pendingIce[uid] || [];
+        delete rtc.pendingIce[uid];
+        for (const c of q) { try { await pc.addIceCandidate(c); } catch (e) {} }
+    }
+
+    async function handleRtcSignal(msg) {
+        if (!msg || msg.table_id !== C().tableId) return;
+        const from = Number(msg.from_user);
+        if (from === myUid()) return;
+        try {
+            if (msg.kind === 'stop') { closeInPeer(from); return; }
+            if (msg.kind === 'offer') {
+                let pc = rtc.in[from];
+                if (!pc) pc = makeInPeer(from);
+                await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+                await drainPendingIce(from, pc);
+                const ans = await pc.createAnswer();
+                await pc.setLocalDescription(ans);
+                sendRtc(from, 'answer', { type: pc.localDescription.type,
+                                          sdp: pc.localDescription.sdp });
+                return;
+            }
+            if (msg.kind === 'answer') {
+                const pc = rtc.out[from];
+                if (pc) {
+                    await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+                    await drainPendingIce(from, pc);
+                }
+                return;
+            }
+            if (msg.kind === 'ice') {
+                const pc = rtc.in[from] || rtc.out[from];
+                if (pc && pc.remoteDescription) {
+                    try { await pc.addIceCandidate(msg.payload); } catch (e) {}
+                } else {
+                    (rtc.pendingIce[from] = rtc.pendingIce[from] || []).push(msg.payload);
+                }
+            }
+        } catch (e) { console.warn('rtc signal failed', e); }
+    }
+
+    function startOutMesh() {
+        otherSeatUids().forEach(uid => ensureOutPeer(uid));
+    }
+
+    function stopOutMesh() {
+        otherSeatUids().forEach(uid => sendRtc(uid, 'stop', null));
+        for (const uid in rtc.out) { try { rtc.out[uid].close(); } catch (e) {} }
+        rtc.out = {};
+    }
+
+    // Viewer side: if I see a remote seat sharing but have no inbound PC,
+    // ask (once per peer) the sharer to negotiate a fresh offer to me.
+    function maybeRequestRemoteCameras() {
+        if (!socket || !socket.connected || !view) return;
+        for (const s of (view.seats || [])) {
+            if (!s.camera_active) continue;
+            if (s.user_id === myUid()) continue;
+            if (rtc.in[s.user_id]) continue;
+            if (rtc.watchAsked[s.user_id]) continue;
+            rtc.watchAsked[s.user_id] = true;
+            socket.emit('camera_watch', { table_id: C().tableId });
+        }
+    }
+
+    // ------------------------------------------------------------
+
     async function toggleCameraStream(v) {
         if (!v.my_rules_read) {
             ClubSection.toast('You must read and agree to strict tournament rules before sharing your camera!', false);
@@ -856,7 +1192,8 @@ const ClubTable = (() => {
         }
 
         if (v.my_camera_active) {
-            // Stop camera
+            // Stop camera: tell every peer to tear down, close outbound PCs
+            stopOutMesh();
             if (localCamStream) {
                 localCamStream.getTracks().forEach(t => t.stop());
                 localCamStream = null;
@@ -875,6 +1212,7 @@ const ClubTable = (() => {
                     audio: false
                 });
                 await ClubSection.post(C().cameraUrl, { active: true });
+                startOutMesh();
                 if (window.ClubAudio) window.ClubAudio.deal();
                 ClubSection.toast('🎥 Camera live! Sharing with table.', true);
             } catch (err) {
@@ -1236,6 +1574,16 @@ const ClubTable = (() => {
         el.classList.remove('hidden');
     }
 
+    // Move rejected: show the error, and pop the strict-rules modal when the
+    // server says the player has not acknowledged the rules yet.
+    function surfaceMoveError(msg) {
+        showErr(msg);
+        if (msg && /Strict Rules/i.test(msg)) {
+            const m = document.getElementById('modal-strict-rules');
+            if (m) m.classList.remove('hidden');
+        }
+    }
+
     async function sendMove(action) {
         showErr(null);
         lastLocalMoveAt = Date.now();
@@ -1269,7 +1617,7 @@ const ClubTable = (() => {
                     if (ack.state) render(ack.state);
                     if (ack.settlement) showSettlement(ack.settlement);
                 } else {
-                    showErr((ack && ack.error) || 'Move rejected');
+                    surfaceMoveError((ack && ack.error) || 'Move rejected');
                 }
                 return;
             }
@@ -1279,7 +1627,7 @@ const ClubTable = (() => {
                 if (data.settlement) showSettlement(data.settlement);
             }
         } catch (e) {
-            showErr(e.message);
+            surfaceMoveError(e.message);
         }
     }
 
@@ -1350,6 +1698,13 @@ const ClubTable = (() => {
         socket.on('table_settlement', (payload) => {
             if (payload && payload.table_id === C().tableId && payload.settlement) {
                 showSettlement(payload.settlement);
+            }
+        });
+        socket.on('webrtc_signal', (msg) => { handleRtcSignal(msg); });
+        socket.on('camera_watch_from', (d) => {
+            if (d && d.table_id === C().tableId &&
+                d.user_id !== myUid() && localCamStream) {
+                ensureOutPeer(Number(d.user_id));
             }
         });
     }

@@ -891,5 +891,66 @@ def init_socketio(app):
         leave_room(f'group:{gid}')
         return {"ok": True}
 
+    # ---- WebRTC camera relay: server only forwards opaque SDP/ICE between
+    # two seats at the same table. Video media flows peer-to-peer; the server
+    # never sees or touches camera frames.
+    @_socketio.on('webrtc_signal')
+    def _on_webrtc(data):
+        from flask import session as flask_session
+        from flask_socketio import emit
+        uid = flask_session.get('user_id')
+        if not uid:
+            return {"ok": False, "error": "Login required"}
+        data = data or {}
+        try:
+            tid = int(data.get('table_id', 0))
+            to_user = int(data.get('to_user', 0))
+        except (TypeError, ValueError):
+            return {"ok": False, "error": "bad payload"}
+        kind = data.get('kind')
+        payload = data.get('payload')
+        if kind not in ('offer', 'answer', 'ice', 'stop'):
+            return {"ok": False, "error": "bad kind"}
+        if kind != 'stop' and not payload:
+            return {"ok": False, "error": "payload required"}
+        try:
+            t = gameplay.get_table(tid)
+            if not t:
+                return {"ok": False, "error": "Table not found"}
+            groups.require_member(int(t['group_id']), uid)
+            if gameplay.seat_index_of(tid, uid) is None:
+                return {"ok": False, "error": "Sender not seated at table"}
+            if gameplay.seat_index_of(tid, to_user) is None:
+                return {"ok": False, "error": "Recipient not seated at table"}
+        except CardClubError as e:
+            return {"ok": False, "error": str(e)}
+        emit('webrtc_signal', {"from_user": int(uid), "table_id": tid,
+                               "kind": kind, "payload": payload},
+             room=f'user:{to_user}')
+        return {"ok": True}
+
+    @_socketio.on('camera_watch')
+    def _on_camera_watch(data):
+        from flask import session as flask_session
+        from flask_socketio import emit
+        uid = flask_session.get('user_id')
+        if not uid:
+            return {"ok": False, "error": "Login required"}
+        tid = int((data or {}).get('table_id', 0))
+        try:
+            t = gameplay.get_table(tid)
+            if not t:
+                return {"ok": False, "error": "Table not found"}
+            groups.require_member(int(t['group_id']), uid)
+            if gameplay.seat_index_of(tid, uid) is None:
+                return {"ok": False, "error": "Not seated at table"}
+        except (CardClubError, TypeError, ValueError) as e:
+            return {"ok": False, "error": str(e)}
+        # Ask whoever is already sharing to (re)negotiate a fresh offer
+        # towards this viewer (covers page refresh / late joiners).
+        emit('camera_watch_from', {"user_id": int(uid), "table_id": tid},
+             room=f'table:{tid}')
+        return {"ok": True}
+
     return _socketio
 

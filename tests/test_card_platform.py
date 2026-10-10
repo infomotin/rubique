@@ -338,6 +338,73 @@ class CardPlatformSecurityAndLedgerTests(unittest.TestCase):
         })
         self.assertIn(code, (403, 404))
 
+    def test_shareable_whatsapp_link_registration_flow_and_member_redirect(self):
+        """Test invite link clicked on WhatsApp -> redirects to register -> auto joins group -> lands on member page."""
+        admin_name = f'host_{self.run}'
+        new_friend = f'friend_{self.run}'
+        self.register_user(admin_name)
+        self.login_user(admin_name)
+        admin_row = UserModel.find_by_username(admin_name)
+
+        # Host creates private group
+        gid = groups.create_group(admin_row['id'], f'Spades Club {self.run}')['id']
+        group = groups.get_group(gid)
+        invite_code = group['invite_code']
+        self.assertTrue(bool(invite_code))
+
+        # Check API invite link generator
+        code, invite_info = self.api('POST', '/club/api/invite-link', {'group_id': gid})
+        self.assertEqual(code, 200)
+        self.assertIn('whatsapp_url', invite_info)
+        self.assertIn(invite_code, invite_info['join_url'])
+
+        # Friend logs out / is unauthenticated
+        self.client.get('/logout')
+
+        # Friend clicks join link (e.g. from WhatsApp)
+        res = self.client.get(f'/club/join/{invite_code}', follow_redirects=False)
+        self.assertEqual(res.status_code, 302)
+        self.assertIn('/register', res.headers.get('Location', ''))
+        self.assertIn(invite_code, res.headers.get('Location', ''))
+
+        # Friend registers with the invite code
+        res_reg = self.client.post('/register', data={
+            'username': new_friend,
+            'email': f'{new_friend}@cardtest.com',
+            'password': 'password123',
+            'confirm_password': 'password123',
+            'date_of_birth': '1996-08-15',
+            'device_fp': f'dev-{new_friend}',
+            'invite': invite_code,
+        }, follow_redirects=False)
+
+        # Must redirect directly to the member page (/club/groups/<gid>)
+        self.assertEqual(res_reg.status_code, 302)
+        self.assertEqual(res_reg.headers.get('Location'), f'/club/groups/{gid}')
+
+        # Friend is verified as member in group
+        friend_row = UserModel.find_by_username(new_friend)
+        self.assertIsNotNone(friend_row)
+        self.assertTrue(groups.is_member(gid, friend_row['id']))
+
+        # Friend can view member page
+        res_page = self.client.get(f'/club/groups/{gid}')
+        self.assertEqual(res_page.status_code, 200)
+
+    def test_member_search_api(self):
+        """Test searching site members for game invitations."""
+        u1 = f'searcher_{self.run}'
+        u2 = f'target_player_{self.run}'
+        self.register_user(u1)
+        self.register_user(u2)
+        self.login_user(u1)
+
+        code, body = self.api('GET', f'/club/api/members/search?q={u2[:8]}')
+        self.assertEqual(code, 200)
+        members = body.get('members', [])
+        found = any(m['username'] == u2 for m in members)
+        self.assertTrue(found, f"{u2} should be found in member search")
+
 
 class CardGameEnginesTest(unittest.TestCase):
     """Test standard rules and play-through for all 12 requested games."""

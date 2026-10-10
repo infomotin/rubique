@@ -297,6 +297,15 @@ def perform_move(group_id, user_id, table_id, action):
     seat = seat_index_of(table_id, user_id)
     if seat is None:
         raise PermissionDenied("You are not seated at this table")
+    srow = query_one(
+        "SELECT id, rules_read FROM club_seats WHERE table_id = %s AND user_id = %s",
+        "SELECT id, rules_read FROM club_seats WHERE table_id = ? AND user_id = ?",
+        (table_id, user_id))
+    rules_read = bool(srow.get("rules_read") if isinstance(srow, dict)
+                      else (srow[1] if srow else False))
+    if not rules_read:
+        raise CardClubError("Strict Rules must be read and acknowledged "
+                            "before you can play at this table.")
     info, eng = _engine_for(t)
     eng.apply(seat, action)
     seq = query_one(

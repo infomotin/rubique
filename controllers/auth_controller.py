@@ -114,15 +114,13 @@ def register():
                 flash('Account created, but your starting coin grant failed. '
                       'Please contact support.', 'warning')
 
-            # Auto-login newly registered user
-            session.clear()
-            session['user_id'] = user_id
-            session['username'] = username
-            session['role'] = 'user'
-
             # If user registered via Card Club invite:
             inv_code = request.form.get('invite') or session.pop('pending_invite_code', None)
             if inv_code:
+                session.clear()
+                session['user_id'] = user_id
+                session['username'] = username
+                session['role'] = 'user'
                 try:
                     target_gid = club_groups.join_group_by_invite_code(inv_code, user_id)
                     g_info = club_groups.get_group(target_gid)
@@ -132,8 +130,8 @@ def register():
                     pass
 
             if next_url and next_url.startswith('/') and not next_url.startswith('//'):
-                flash(f'Registration successful! Welcome, {username}!', 'success')
-                return redirect(next_url)
+                flash('Registration successful! Please sign in to continue.', 'success')
+                return redirect(url_for('auth.login', next=next_url))
 
             flash('Registration successful! Please sign in to continue.', 'success')
             return redirect(url_for('auth.login'))
