@@ -196,7 +196,7 @@
                             </select>
                         </div>
 
-                        <!-- AI Level Selector -->
+                        <!-- AI Level Selector & Manual Trigger -->
                         <div class="flex items-center gap-2">
                             <span class="text-slate-400">AI Opponent:</span>
                             <select id="ai-level-select" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-amber-300 focus:outline-none">
@@ -205,6 +205,9 @@
                                 <option value="3">Master (2000 ELO)</option>
                                 <option value="4">Grandmaster (2600 ELO)</option>
                             </select>
+                            <button id="trigger-ai-move-btn" class="px-2.5 py-1 rounded-xl bg-amber-600/30 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/50 transition-all font-mono text-xs flex items-center gap-1.5" title="Force AI Move for current turn">
+                                <i class="fa-solid fa-robot"></i> AI Move
+                            </button>
                         </div>
 
                         <!-- Studio Lighting Intensity Selector -->
@@ -1355,6 +1358,78 @@ document.addEventListener('DOMContentLoaded', function() {
     if (lightSelect) {
         lightSelect.addEventListener('change', function() {
             chess3d.setLightingIntensity(this.value);
+        });
+    }
+
+    // AI Level change listener
+    const aiLevelSelect = document.getElementById('ai-level-select');
+    if (aiLevelSelect) {
+        aiLevelSelect.addEventListener('change', function() {
+            const newLevel = parseInt(this.value, 10);
+            chess3d.options.aiLevel = newLevel;
+            localStorage.setItem('rubique_chess_ai_level', newLevel);
+            document.getElementById('game-status-label').innerText = `AI level set to ${this.options[this.selectedIndex].text}`;
+        });
+        const savedAiLevel = localStorage.getItem('rubique_chess_ai_level');
+        if (savedAiLevel && aiLevelSelect.querySelector(`option[value="${savedAiLevel}"]`)) {
+            aiLevelSelect.value = savedAiLevel;
+            chess3d.options.aiLevel = parseInt(savedAiLevel, 10);
+        }
+    }
+
+    // Trigger AI Move button
+    const triggerAiBtn = document.getElementById('trigger-ai-move-btn');
+    if (triggerAiBtn) {
+        triggerAiBtn.addEventListener('click', function() {
+            const level = parseInt(document.getElementById('ai-level-select')?.value || 2, 10);
+            triggerAiBtn.disabled = true;
+            document.getElementById('game-status-label').innerText = "AI thinking...";
+
+            fetch('/chess/ai-move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fen: currentFen,
+                    ai_level: level,
+                    game_id: activeGameId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                triggerAiBtn.disabled = false;
+                if (data.status === 'success' && data.ai_move) {
+                    currentFen = data.fen;
+                    const turnTag = (currentFen || '').split(' ')[1] === 'w' ? 'B' : 'W';
+                    chess3d.roboticMovePiece(data.ai_move.from, data.ai_move.to, function() {
+                        moveLog.push(`${turnTag}: ${data.ai_move.san}`);
+                        updateMoveLogUI();
+                        document.getElementById('game-status-label').innerText = `${data.fen.split(' ')[1] === 'w' ? 'White' : 'Black'} to move`;
+
+                        if (data.is_check) {
+                            chess3d.playSound('check');
+                            document.getElementById('check-alert-label').classList.remove('hidden');
+                        } else {
+                            document.getElementById('check-alert-label').classList.add('hidden');
+                        }
+
+                        if (data.is_game_over) {
+                            chess3d.playSound('victory');
+                            document.getElementById('game-status-label').innerText = data.result_message || "Game Over";
+                        }
+
+                        updateHints(data.hints);
+                        if (data.hints) {
+                            updateEvalBar(data.hints.eval_advantage_white);
+                        }
+                    });
+                } else {
+                    document.getElementById('game-status-label').innerText = data.message || "No AI move possible";
+                }
+            })
+            .catch(() => {
+                triggerAiBtn.disabled = false;
+                document.getElementById('game-status-label').innerText = "Error calculating AI move";
+            });
         });
     }
 

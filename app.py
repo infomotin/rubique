@@ -54,6 +54,12 @@ def create_app():
     from controllers.card_club_controller import init_socketio
     socketio = init_socketio(app)
 
+    # Enterprise HTTP Security Headers Middleware
+    from utils.security import apply_security_headers
+    @app.after_request
+    def set_security_headers(response):
+        return apply_security_headers(response)
+
     # Multi-Language (i18n) Context Processor
     @app.context_processor
     def inject_i18n():

@@ -1,0 +1,21 @@
+# Environment credentials & secrets
+.env
+.env.local
+.env.*.local
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+
+# Local databases & uploads
+*.sqlite3
+static/uploads/feed/img_*
+static/uploads/feed/vid_*
+
+# OS & IDE metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

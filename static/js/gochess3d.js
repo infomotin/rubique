@@ -1100,9 +1100,12 @@ class GoChess3D {
 
     handleSquareClick(square) {
         const pieceOnSquare = this.piecesOnBoard[square];
+        const activeTurnColor = (this.currentFen ? this.currentFen.split(' ')[1] : 'w');
+        const playerColor = this.options.playerColor || activeTurnColor;
+        const hasLegalMoves = Array.isArray(this.legalMoves[square]) && this.legalMoves[square].length > 0;
 
-        // 1. If clicking our own piece to select
-        if (pieceOnSquare && pieceOnSquare.userData.color === 'w') {
+        // 1. If clicking a piece with legal moves or matching the player color
+        if (pieceOnSquare && (pieceOnSquare.userData.color === playerColor || hasLegalMoves)) {
             this.selectedSquare = square;
             const legalTargets = this.legalMoves[square] || [];
             this.highlightLegalMoves(square, legalTargets);

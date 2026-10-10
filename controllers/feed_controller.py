@@ -25,14 +25,9 @@ FEED_UPLOAD_FOLDER = os.path.join('static', 'uploads', 'feed')
 os.makedirs(FEED_UPLOAD_FOLDER, exist_ok=True)
 
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please sign in to access your News Feed and Inbox.', 'info')
-            return redirect(url_for('auth.login', next=request.path))
-        return f(*args, **kwargs)
-    return decorated_function
+from utils.decorators import login_required
+from utils.security import sanitize_input
+from services.feed_service import FeedService
 
 
 # -----------------------------------------------------------------

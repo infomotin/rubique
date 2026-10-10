@@ -121,6 +121,9 @@ def index():
         is_override=admin_override
     )
 
+from services.chess_service import ChessService
+from utils.decorators import login_required, api_login_required
+
 @chess_bp.route('/new-game', methods=['POST'])
 def new_game():
     data = request.get_json() or {}
@@ -128,26 +131,16 @@ def new_game():
     game_mode = data.get('game_mode', 'ai')
     ai_level = int(data.get('ai_level', 2))
     board_theme = data.get('board_theme', 'obsidian')
-    
-    user_id = session.get('user_id', 1)  # Default fallback if guest
-    
-    game_id = ChessModel.create_game(
+    user_id = session.get('user_id', 1)
+
+    result = ChessService.start_game(
         user_id=user_id,
         title=title,
         game_mode=game_mode,
         ai_level=ai_level,
         board_theme=board_theme
     )
-    
-    board = chess.Board()
-    hints = ChessModel.get_coach_hints(board)
-    
-    return jsonify({
-        "status": "success",
-        "game_id": game_id,
-        "fen": board.fen(),
-        "hints": hints
-    })
+    return jsonify(result)
 
 @chess_bp.route('/move', methods=['POST'])
 def make_move():
@@ -159,123 +152,35 @@ def make_move():
     game_id = data.get('game_id')
     level = int(data.get('ai_level', 2))
     game_mode = data.get('game_mode', 'ai')
-    
-    try:
-        board = chess.Board(fen)
-    except Exception as e:
-        return jsonify({"status": "error", "message": "Invalid FEN board state"}), 400
+    user_id = session.get('user_id')
+    client_ip = request.remote_addr or '127.0.0.1'
 
-    if not from_sq or not to_sq:
-        return jsonify({"status": "error", "message": "Missing move squares"}), 400
-
-    # Build UCI move string
-    move_uci = f"{from_sq}{to_sq}"
-    
-    # Check if this requires promotion
-    move_candidate = chess.Move.from_uci(move_uci)
-    if move_candidate not in board.legal_moves:
-        # Try with promotion
-        move_candidate = chess.Move.from_uci(f"{move_uci}{promotion.lower()}")
-        if move_candidate not in board.legal_moves:
-            SecurityModel.log_security_event(
-                game_type='chess',
-                game_id=game_id,
-                event_type='ILLEGAL_MOVE_ATTEMPT',
-                severity='warning',
-                details=f"Illegal move {move_uci} attempted on FEN {fen[:35]}",
-                user_id=session.get('user_id'),
-                client_ip=request.remote_addr or '127.0.0.1'
-            )
-            return jsonify({
-                "status": "illegal_move",
-                "message": f"Move {move_uci} is illegal in current position."
-            }), 400
-
-    # Execute player move
-    player_san = board.san(move_candidate)
-    player_captured = board.is_capture(move_candidate)
-    board.push(move_candidate)
-
-    SecurityModel.log_telemetry_bit(
-        module='CHESS_XR',
-        action='PLAYER_MOVE',
-        payload_data=f"game_id={game_id}&move={player_san}&fen={board.fen()[:30]}",
-        latency_ms=2.8,
-        http_status=200,
-        severity='INFO',
-        user_id=session.get('user_id'),
-        role=session.get('role', 'guest'),
-        client_ip=request.remote_addr or '127.0.0.1'
+    ok, result, code = ChessService.process_player_move(
+        fen=fen,
+        from_sq=from_sq,
+        to_sq=to_sq,
+        promotion=promotion,
+        game_id=game_id,
+        ai_level=level,
+        game_mode=game_mode,
+        user_id=user_id,
+        client_ip=client_ip
     )
-    
-    player_result = {
-        "status": "success",
-        "player_move": {
-            "from": from_sq,
-            "to": to_sq,
-            "san": player_san,
-            "uci": move_candidate.uci(),
-            "captured": player_captured
-        },
-        "fen": board.fen(),
-        "is_check": board.is_check(),
-        "is_game_over": board.is_game_over(),
-        "result_message": None,
-        "ai_move": None
-    }
+    return jsonify(result), code
 
-    if board.is_checkmate():
-        player_result["result_message"] = "Checkmate! You win!"
-        if game_id:
-            ChessModel.update_game_state(game_id, board.fen(), "", board.fullmove_number, 'completed', 'player')
-        return jsonify(player_result)
-
-    if board.is_stalemate() or board.is_insufficient_material() or board.is_fivefold_repetition():
-        player_result["result_message"] = "Game Draw!"
-        if game_id:
-            ChessModel.update_game_state(game_id, board.fen(), "", board.fullmove_number, 'completed', 'draw')
-        return jsonify(player_result)
-
-    # AI Turn
-    if game_mode == 'ai' and not board.is_game_over():
-        ai_move, ai_score = ChessModel.get_ai_move(board, level=level)
-        if ai_move:
-            ai_san = board.san(ai_move)
-            ai_from = chess.square_name(ai_move.from_square)
-            ai_to = chess.square_name(ai_move.to_square)
-            ai_captured = board.is_capture(ai_move)
-            
-            board.push(ai_move)
-            
-            player_result["ai_move"] = {
-                "from": ai_from,
-                "to": ai_to,
-                "san": ai_san,
-                "uci": ai_move.uci(),
-                "captured": ai_captured,
-                "score": ai_score
-            }
-            player_result["fen"] = board.fen()
-            player_result["is_check"] = board.is_check()
-            player_result["is_game_over"] = board.is_game_over()
-            
-            if board.is_checkmate():
-                player_result["result_message"] = "Checkmate! AI wins!"
-                if game_id:
-                    ChessModel.update_game_state(game_id, board.fen(), "", board.fullmove_number, 'completed', 'ai')
-            elif board.is_stalemate() or board.is_insufficient_material():
-                player_result["result_message"] = "Game Draw!"
-                if game_id:
-                    ChessModel.update_game_state(game_id, board.fen(), "", board.fullmove_number, 'completed', 'draw')
-
-    # Update state in DB
-    if game_id:
-        ChessModel.update_game_state(game_id, board.fen(), "", board.fullmove_number, 'active')
-
-    # Compute new LED coach hints
-    player_result["hints"] = ChessModel.get_coach_hints(board)
-
-    return jsonify(player_result)
+@chess_bp.route('/ai-move', methods=['POST'])
+def trigger_ai_move():
+    """Forces or triggers an autonomous AI move for the active position."""
+    data = request.get_json() or {}
+    fen = data.get('fen', chess.STARTING_FEN)
+    level = int(data.get('ai_level', 2))
+    game_id = data.get('game_id')
+    ok, result, code = ChessService.trigger_ai_turn(
+        fen=fen,
+        ai_level=level,
+        game_id=game_id
+    )
+    return jsonify(result), code
 
 @chess_bp.route('/hint', methods=['POST'])
 def get_hint():

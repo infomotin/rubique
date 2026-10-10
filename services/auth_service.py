@@ -49,7 +49,7 @@ class AuthService:
 
         # Device binding check (one account per device security policy)
         if request_obj:
-            device_key = club_devices.compose_device_key(request_obj)[1]
+            device_key = club_devices.compose_device_key(request_obj)
             device_ok, device_msg = club_devices.check_login(user, device_key)
             if not device_ok:
                 return False, None, device_msg

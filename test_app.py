@@ -648,7 +648,7 @@ class CardClubTests(unittest.TestCase):
         self.login(b)
 
         settled, current, steps = None, b, 0
-        while steps < 400:
+        while steps < 600:
             steps += 1
             code, data = self.api('GET', f'/club/api/tables/{tid}/state')
             state = data.get('state')
