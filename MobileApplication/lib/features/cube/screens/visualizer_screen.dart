@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cube_service.dart';
 import '../models/solve_result.dart';
-import '../models/pattern_item.dart';
 
 class VisualizerScreen extends StatefulWidget {
   final CubeService cubeService;
@@ -44,12 +43,24 @@ class _VisualizerScreenState extends State<VisualizerScreen> {
     // Solved standard facelet state: 9 Y, 9 R, 9 G, 9 W, 9 O, 9 B
     // U=Yellow, L=Orange, F=Green, R=Red, B=Blue, D=White
     final list = <String>[];
-    for (int i = 0; i < 9; i++) list.add('Y'); // U
-    for (int i = 0; i < 9; i++) list.add('O'); // L
-    for (int i = 0; i < 9; i++) list.add('G'); // F
-    for (int i = 0; i < 9; i++) list.add('R'); // R
-    for (int i = 0; i < 9; i++) list.add('B'); // B
-    for (int i = 0; i < 9; i++) list.add('W'); // D
+    for (int i = 0; i < 9; i++) {
+      list.add('Y'); // U
+    }
+    for (int i = 0; i < 9; i++) {
+      list.add('O'); // L
+    }
+    for (int i = 0; i < 9; i++) {
+      list.add('G'); // F
+    }
+    for (int i = 0; i < 9; i++) {
+      list.add('R'); // R
+    }
+    for (int i = 0; i < 9; i++) {
+      list.add('B'); // B
+    }
+    for (int i = 0; i < 9; i++) {
+      list.add('W'); // D
+    }
     setState(() {
       _facelets = list;
       _activeScramble = '';

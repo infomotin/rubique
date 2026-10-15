@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:drift/drift.dart';
 import '../../core/network/api_client.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/database/app_database.dart';
@@ -183,7 +183,7 @@ class AuthService extends ChangeNotifier {
     try {
       await _db.cacheProfile(
         CachedUserProfileCompanion.insert(
-          id: const Value(1),
+          id: const Value<int>(1),
           username: user.username,
           email: Value(user.email),
           role: Value(user.role),

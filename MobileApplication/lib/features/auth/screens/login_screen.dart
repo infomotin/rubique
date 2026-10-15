@@ -371,11 +371,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
 
                   // Register link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Text(
-                        "Don't have an account?",
+                        "Don't have an account? ",
                         style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
                       ),
                       TextButton(
@@ -390,7 +391,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        child: const Text('Register (18+ Verification)'),
+                        child: const Text('Register (18+)'),
                       ),
                     ],
                   ),

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/database/app_database.dart';
@@ -154,7 +153,8 @@ class _OfflineViewScreenState extends State<OfflineViewScreen> {
                                   children: [
                                     _buildMiniStat('TOTAL SOLVES', '${_profile!.totalSolves}'),
                                     _buildMiniStat('MIN MOVES', '${_profile!.minMoves}'),
-                                    _buildMiniStat('AVG MOVES', '${_profile!.avgMoves.toStringAsFixed(1)}'),
+                                    _buildMiniStat('AVG MOVES', _profile!.avgMoves.toStringAsFixed(1)),
+                                    _buildMiniStat('SCANS', '${_scans.length}'),
                                   ],
                                 ),
                               ],

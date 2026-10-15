@@ -3,7 +3,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../auth/auth_service.dart';
-import '../../auth/models/user_model.dart';
 import '../../cube/cube_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -147,6 +146,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (_isLoading) ...[
+                  const LinearProgressIndicator(color: AppTheme.accentCyan),
+                  const SizedBox(height: 10),
+                ],
                 // Profile Header Card
                 Card(
                   child: Padding(
