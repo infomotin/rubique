@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "100000000000",
+    "project_id": "cube-permutation-ai",
+    "storage_bucket": "cube-permutation-ai.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:100000000000:android:abcdef0123456789",
+        "android_client_info": {
+          "package_name": "com.cubeverse.mobile_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyMockKeyForDevelopmentOnly123456"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
