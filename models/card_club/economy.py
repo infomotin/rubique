@@ -624,16 +624,23 @@ def place_classic_stake(game_id, user_id, amount, group_id=0):
             (game_id, user_id, amount))
 
 
-def refund_classic_stakes(game_id, group_id=0):
-    """Return every escrowed stake (abandoned or cancelled classic game)."""
+def refund_classic_stakes(game_id, group_id=0, user_id=None):
+    """Return escrowed stakes (abandoned or cancelled classic game). When
+    ``user_id`` is given only that seat's stake is released."""
     with _tx() as (conn, db_type):
-        rows = _all(
-            conn, db_type,
-            "SELECT id, user_id, amount FROM classic_stakes "
-            "WHERE game_id = %s AND status = 'escrowed'",
-            "SELECT id, user_id, amount FROM classic_stakes "
-            "WHERE game_id = ? AND status = 'escrowed'",
-            (game_id,))
+        if user_id is None:
+            sql_m = ("SELECT id, user_id, amount FROM classic_stakes "
+                     "WHERE game_id = %s AND status = 'escrowed'")
+            sql_s = ("SELECT id, user_id, amount FROM classic_stakes "
+                     "WHERE game_id = ? AND status = 'escrowed'")
+            params = (game_id,)
+        else:
+            sql_m = ("SELECT id, user_id, amount FROM classic_stakes "
+                     "WHERE game_id = %s AND user_id = %s AND status = 'escrowed'")
+            sql_s = ("SELECT id, user_id, amount FROM classic_stakes "
+                     "WHERE game_id = ? AND user_id = ? AND status = 'escrowed'")
+            params = (game_id, user_id)
+        rows = _all(conn, db_type, sql_m, sql_s, params)
         for st in rows or []:
             stake_id, user, amount = int(st[0]), int(st[1]), int(st[2])
             if amount > 0:
@@ -678,13 +685,19 @@ def settle_classic(game_id, payouts, group_id=0):
         return {"pot": pot, "total": total}
 
 
-def classic_stakes(game_id):
+def classic_stakes(game_id, status=None):
     with _tx() as (conn, db_type):
-        rows = _all(
-            conn, db_type,
-            "SELECT user_id, amount FROM classic_stakes WHERE game_id = %s",
-            "SELECT user_id, amount FROM classic_stakes WHERE game_id = ?",
-            (game_id,))
+        if status:
+            sql_m = ("SELECT user_id, amount FROM classic_stakes "
+                     "WHERE game_id = %s AND status = %s")
+            sql_s = ("SELECT user_id, amount FROM classic_stakes "
+                     "WHERE game_id = ? AND status = ?")
+            params = (game_id, status)
+        else:
+            sql_m = "SELECT user_id, amount FROM classic_stakes WHERE game_id = %s"
+            sql_s = "SELECT user_id, amount FROM classic_stakes WHERE game_id = ?"
+            params = (game_id,)
+        rows = _all(conn, db_type, sql_m, sql_s, params)
         return [{"user_id": int(r[0]), "amount": int(r[1])} for r in rows or []]
 
 

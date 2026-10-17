@@ -1,0 +1,18 @@
+[Database] Initializing MySQL Multi-Role RBAC Tables...
+[Database] Initializing MySQL Multi-Role RBAC Tables...
+[Database] Initializing MySQL Multi-Role RBAC Tables...
+idx [2]
+node rc 0
+
+head: 
+document.addEventListener('DOMContentLoaded', function() {
+    const MY_USER_ID = 839;
+    const DEFAULT_GROUP = 0;
+    const RESTORE_GAME_ID = null;
+
+    let currentSlug = '29';
+    let gameState = null;
+    let mySeat = 0;
+    let lobbyMode = 'ai';
+    let lobbyGroup = DEFAULT_GROUP || 0;
+    let

@@ -23,7 +23,15 @@
         </div>
 
         <!-- Section Navigation Switchers -->
-        <div class="flex items-center gap-2 font-mono text-xs">
+        <div class="flex items-center gap-2 font-mono text-xs flex-wrap">
+            <button id="open-lobby-btn" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all flex items-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-table-cells-large text-white"></i>
+                <span>Table Lobby</span>
+            </button>
+            <span class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold flex items-center gap-1.5" title="Your coin balance">
+                <i class="fa-solid fa-coins text-amber-400"></i>
+                <span id="lobby-balance">--</span>
+            </span>
             <a href="{{ url_for('card_club.section') }}" class="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-300 font-bold transition-all flex items-center gap-1.5 shadow-md">
                 <i class="fa-solid fa-users-rectangle text-emerald-400"></i>
                 <span>Private Card Club (18+)</span>
@@ -129,14 +137,20 @@
                 <!-- Scores Breakdown -->
                 <div class="pt-3 border-t border-slate-800 space-y-1.5" id="hud-scores-container">
                     <div class="text-[10px] text-slate-400 uppercase font-bold">Trick &amp; Points Count</div>
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-indigo-300">Team South &amp; North:</span>
+                    <div class="flex justify-between items-center text-xs gap-2">
+                        <span id="hud-team0-label" class="text-indigo-300">Seats 0 &amp; 2:</span>
                         <span id="hud-team0-score" class="font-bold text-white">0</span>
                     </div>
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-amber-300">Team West &amp; East:</span>
+                    <div class="flex justify-between items-center text-xs gap-2">
+                        <span id="hud-team1-label" class="text-amber-300">Seats 1 &amp; 3:</span>
                         <span id="hud-team1-score" class="font-bold text-white">0</span>
                     </div>
+                </div>
+
+                <!-- Coin Stake / Pot -->
+                <div class="pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
+                    <span class="text-slate-500">Stake / Pot:</span>
+                    <span id="hud-stake-disp" class="font-bold text-amber-400">--</span>
                 </div>
 
                 <!-- Controls -->
@@ -182,8 +196,8 @@
                 <div class="flex flex-col items-center space-y-2 relative z-20">
                     <div class="flex items-center gap-2.5 px-3.5 py-1 rounded-full bg-slate-950/90 border border-emerald-500/40 text-emerald-300 font-mono text-xs shadow-xl backdrop-blur-md">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <i class="fa-solid fa-robot text-emerald-400"></i>
-                        <span class="font-bold">North (Partner Bot)</span>
+                        <i class="fa-solid fa-robot text-emerald-400" id="ic-north"></i>
+                        <span class="font-bold" id="name-north">North</span>
                         <span id="north-card-count" class="px-2 py-0.5 rounded-full bg-emerald-900/90 border border-emerald-500/40 text-[10px] text-emerald-200 font-bold">0 cards</span>
                     </div>
                     <!-- North Card Backs or Dummy Hands -->
@@ -199,9 +213,9 @@
                     <div class="col-span-3 flex flex-col items-center space-y-2">
                         <div class="flex flex-col items-center px-3 py-2 rounded-2xl bg-slate-950/90 border border-slate-700/80 text-slate-300 font-mono text-xs text-center shadow-xl backdrop-blur-md">
                             <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mb-1">
-                                <i class="fa-solid fa-robot"></i>
+                                <i class="fa-solid fa-robot" id="ic-west"></i>
                             </div>
-                            <span class="font-bold text-[11px]">West (Bot)</span>
+                            <span class="font-bold text-[11px]" id="name-west">West</span>
                             <span id="west-card-count" class="text-[10px] text-slate-400 font-semibold">0 cards</span>
                         </div>
                         <!-- West Bot Visual Card Fan -->
@@ -230,9 +244,9 @@
                     <div class="col-span-3 flex flex-col items-center space-y-2">
                         <div class="flex flex-col items-center px-3 py-2 rounded-2xl bg-slate-950/90 border border-slate-700/80 text-slate-300 font-mono text-xs text-center shadow-xl backdrop-blur-md">
                             <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mb-1">
-                                <i class="fa-solid fa-robot"></i>
+                                <i class="fa-solid fa-robot" id="ic-east"></i>
                             </div>
-                            <span class="font-bold text-[11px]">East (Bot)</span>
+                            <span class="font-bold text-[11px]" id="name-east">East</span>
                             <span id="east-card-count" class="text-[10px] text-slate-400 font-semibold">0 cards</span>
                         </div>
                         <!-- East Bot Visual Card Fan -->
@@ -245,8 +259,8 @@
                     <div class="flex items-center gap-3">
                         <div class="flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-950/95 border border-cyan-500/50 text-cyan-300 font-mono text-xs shadow-2xl backdrop-blur-md">
                             <div class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></div>
-                            <i class="fa-solid fa-user text-cyan-400"></i>
-                            <span class="font-bold tracking-wide">You (South)</span>
+                            <i class="fa-solid fa-user text-cyan-400" id="ic-south"></i>
+                            <span class="font-bold tracking-wide" id="name-south">You</span>
                             <span id="south-turn-indicator" class="hidden px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-lg animate-pulse">YOUR TURN</span>
                         </div>
 
@@ -291,9 +305,86 @@
                 </div>
                 <h2 class="text-2xl font-bold font-outfit text-white" id="victory-title">Deal Completed!</h2>
                 <p class="text-xs font-mono text-slate-300 max-w-md" id="victory-desc">Scores have been settled. Review final standings below.</p>
-                <button id="victory-restart-btn" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs shadow-xl transition-all">
-                    Deal Next Hand
-                </button>
+
+                <!-- Coin Settlement Summary -->
+                <div id="victory-settlement" class="w-full max-w-md rounded-2xl border border-amber-500/40 bg-amber-950/30 p-4 font-mono text-xs space-y-1.5 text-left">
+                    <div class="flex justify-between items-center text-amber-300 font-bold uppercase text-[10px] tracking-wider pb-1.5 border-b border-amber-500/30">
+                        <span><i class="fa-solid fa-coins"></i> Coin Settlement</span>
+                        <span id="victory-pot">Pot 0</span>
+                    </div>
+                    <div id="victory-payouts" class="space-y-1 text-slate-300"></div>
+                    <div id="victory-coin-line" class="pt-1.5 border-t border-amber-500/30 text-emerald-300 font-bold"></div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button id="victory-restart-btn" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs shadow-xl transition-all">
+                        Deal Next Hand
+                    </button>
+                    <button id="victory-lobby-btn" class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-mono font-bold text-xs shadow-xl transition-all">
+                        Back to Lobby
+                    </button>
+                </div>
+            </div>
+
+            <!-- Group / Solo Table Lobby Modal -->
+            <div id="classic-lobby-modal" class="hidden p-6 rounded-3xl border border-slate-700 bg-slate-950/95 backdrop-blur-md shadow-2xl space-y-5">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div>
+                        <div class="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">CLASSIC TABLE LOBBY</div>
+                        <h3 class="text-xl font-extrabold font-outfit text-white">Sit down at a table</h3>
+                    </div>
+                    <button id="close-lobby-btn" class="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- New table form -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-mono text-slate-400 uppercase font-bold">Game</label>
+                        <select id="lobby-game-select" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs focus:border-emerald-500 outline-none">
+                            {% for g in catalog %}
+                            <option value="{{ g.slug }}">{{ g.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-mono text-slate-400 uppercase font-bold">Table Type</label>
+                        <div class="flex gap-2">
+                            <button data-mode="ai" class="lobby-mode-btn active-game flex-1 px-3 py-2.5 rounded-xl bg-emerald-600 text-white font-mono font-bold text-xs">Solo vs AI</button>
+                            <button data-mode="group" class="lobby-mode-btn flex-1 px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-mono font-bold text-xs">Group Table</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2" id="lobby-group-wrap">
+                        <label class="text-[10px] font-mono text-slate-400 uppercase font-bold">Group</label>
+                        <select id="lobby-group-select" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs focus:border-emerald-500 outline-none">
+                            <option value="0">Public table (anyone can join)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-mono text-slate-400 uppercase font-bold">Coin Stake (0 &ndash; {{ 500 }})</label>
+                        <input id="lobby-stake-input" type="number" min="0" max="500" step="5" value="0"
+                               class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-mono text-xs font-bold focus:border-amber-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    <button id="lobby-create-btn" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs shadow-xl transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Open Table
+                    </button>
+                    <button id="lobby-quick-btn" class="px-6 py-2.5 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-mono font-bold text-xs shadow-xl transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-cyan-200"></i> Quick Deal (Solo vs AI)
+                    </button>
+                    <button id="lobby-refresh-btn" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-mono font-bold text-xs transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-rotate text-slate-400"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- Open tables feed -->
+                <div class="space-y-2">
+                    <div class="text-[10px] font-mono text-slate-400 uppercase font-bold pb-1 border-b border-slate-800">Open Tables</div>
+                    <div id="lobby-tables-list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                        <div class="text-xs font-mono text-slate-500">No open tables yet - open one above.</div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -303,18 +394,26 @@
 <!-- Interactive Client-side Card Engine JS -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const MY_USER_ID = {{ user_id or 0 }};
+    const DEFAULT_GROUP = {{ default_group_id or 0 }};
+    const RESTORE_GAME_ID = {{ active_game_id if active_game_id else 'null' }};
+
     let currentSlug = '29';
     let gameState = null;
+    let mySeat = 0;
+    let lobbyMode = 'ai';
+    let lobbyGroup = DEFAULT_GROUP || 0;
+    let pollTimer = null;
 
-    // Web Audio Synthesizer
+    // ------------------------------------------------------------------ audio
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
-    function playTone(freq, type = 'sine', duration = 0.1) {
+    function playTone(freq, type, duration) {
         try {
             if (!audioCtx) audioCtx = new AudioCtx();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = type;
+            osc.type = type || 'sine';
             osc.frequency.value = freq;
             gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
@@ -324,38 +423,37 @@ document.addEventListener('DOMContentLoaded', function() {
             osc.stop(audioCtx.currentTime + duration);
         } catch (e) {}
     }
+    function cardTone() {
+        if (window.ClubAudio) window.ClubAudio.deal();
+        else playTone(600, 'triangle', 0.08);
+    }
 
+    // ------------------------------------------------------------- card faces
     const SUIT_SYMBOLS = { 'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣' };
     const SUIT_NAMES = { 'S': 'Spades', 'H': 'Hearts', 'D': 'Diamonds', 'C': 'Clubs' };
     const SUIT_COLORS = { 'S': '#cbd5e1', 'H': '#ef4444', 'D': '#f97316', 'C': '#38bdf8' };
 
-    function createCardHTML(card, isPlayable = false, isSmall = false, customStyle = '') {
+    function createCardHTML(card, isPlayable, isSmall, customStyle) {
         if (!card) return '';
         if (window.ClubCards && window.ClubCards.render3DCard) {
             let style = customStyle || '';
-            if (isSmall) {
-                style = 'transform: scale(0.72); transform-origin: center; ' + style;
-            }
-            return window.ClubCards.render3DCard(card, {
-                playable: isPlayable,
-                style: style
-            });
+            if (isSmall) style = 'transform: scale(0.72); transform-origin: center; ' + style;
+            return window.ClubCards.render3DCard(card, { playable: isPlayable, style: style });
         }
         const s = card[0];
         const r = card.slice(1);
         const r_disp = r === 'T' ? '10' : r;
         const sym = SUIT_SYMBOLS[s] || s;
-        const col = SUIT_COLORS[s] || '#fff';
         return `<div class="card-obj" data-card="${card}">${r_disp}${sym}</div>`;
     }
 
-    function createCardBackHTML(isSmall = false, customStyle = '') {
+    function createCardBackHTML(isSmall, customStyle) {
         const w = isSmall ? '34px' : '62px';
         const h = isSmall ? '48px' : '90px';
         const iconSize = isSmall ? '8px' : '12px';
         const emblemSize = isSmall ? '18px' : '26px';
         return `
-            <div class="playing-card-3d flex-shrink-0" style="width: ${w}; height: ${h}; ${customStyle}">
+            <div class="playing-card-3d flex-shrink-0" style="width: ${w}; height: ${h}; ${customStyle || ''}">
                 <div class="card-back">
                     <div class="card-back-pattern">
                         <div class="card-back-emblem" style="width: ${emblemSize}; height: ${emblemSize}; font-size: ${iconSize};">
@@ -367,35 +465,320 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
-    function loadGame(slug) {
-        currentSlug = slug;
-        fetch('/cards/classic/new-game', {
+    // ---------------------------------------------------------------- helpers
+    function seatAt(pos) { return ((Number(mySeat) || 0) + pos) % 4; }
+    function labelFor(seat) {
+        if (gameState && Array.isArray(gameState.seat_labels) && gameState.seat_labels[seat]) {
+            return gameState.seat_labels[seat];
+        }
+        return 'Seat ' + seat;
+    }
+    function isBotSeat(seat) {
+        if (gameState && Array.isArray(gameState.bot_seats)) {
+            return gameState.bot_seats.indexOf(Number(seat)) >= 0;
+        }
+        const p = (gameState && gameState.players || []).find(x => Number(x.seat) === Number(seat));
+        return p ? !!p.is_bot : true;
+    }
+    function setText(id, txt) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = txt;
+    }
+    function showEl(id) { const el = document.getElementById(id); if (el) el.classList.remove('hidden'); }
+    function hideEl(id) { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }
+
+    function toast(msg) {
+        let el = document.getElementById('arena-toast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'arena-toast';
+            el.className = 'fixed left-1/2 -translate-x-1/2 top-4 z-50 px-4 py-2.5 rounded-xl bg-rose-950 border border-rose-500/60 text-rose-100 font-mono text-xs font-bold shadow-2xl';
+            document.body.appendChild(el);
+        }
+        el.innerText = msg;
+        el.classList.remove('hidden');
+        clearTimeout(el._t);
+        el._t = setTimeout(() => el.classList.add('hidden'), 3200);
+    }
+
+    function post(url, body) {
+        return fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ slug: slug })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.ok) {
-                gameState = data.state;
-                renderState();
-                playTone(440, 'sine', 0.15);
-            }
+            body: JSON.stringify(body || {})
+        }).then(r => r.json().catch(() => ({ ok: false, error: 'Server error (' + r.status + ')' })));
+    }
+    function get(url) {
+        return fetch(url).then(r => r.json().catch(() => ({ ok: false, error: 'Server error (' + r.status + ')' })));
+    }
+    function fail(data) { toast((data && data.error) || 'Action failed'); }
+    function myEntry() {
+        if (!gameState || !gameState.players) return null;
+        return gameState.players.find(p => Number(p.seat) === Number(mySeat)) || null;
+    }
+
+    // ------------------------------------------------------------------- lobby
+    function openLobby() {
+        showEl('classic-lobby-modal');
+        loadGroups();
+        loadTables();
+    }
+    function closeLobby() { hideEl('classic-lobby-modal'); }
+
+    function loadGroups() {
+        const sel = document.getElementById('lobby-group-select');
+        if (!sel) return;
+        get('/club/api/groups').then(d => {
+            if (!d.ok) return;
+            sel.innerHTML = '<option value="0">Public table (anyone can join)</option>';
+            (d.groups || []).forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.innerText = g.name;
+                if (Number(g.id) === Number(lobbyGroup)) opt.selected = true;
+                sel.appendChild(opt);
+            });
         });
     }
 
+    function loadTables() {
+        const box = document.getElementById('lobby-tables-list');
+        if (!box) return;
+        box.innerHTML = '<div class="text-xs font-mono text-slate-500">Loading tables...</div>';
+        get('/cards/classic/tables?group_id=' + (lobbyGroup || 0)).then(d => {
+            if (!d.ok) {
+                box.innerHTML = `<div class="text-xs font-mono text-rose-400">${d.error || 'Could not load tables'}</div>`;
+                return;
+            }
+            renderTables(d.tables || []);
+        });
+    }
+
+    function renderTables(tables) {
+        const box = document.getElementById('lobby-tables-list');
+        box.innerHTML = '';
+        if (!tables.length) {
+            box.innerHTML = '<div class="text-xs font-mono text-slate-500">No open tables yet - open one above.</div>';
+            return;
+        }
+        tables.forEach(t => {
+            const seated = (t.seats || []).some(s => Number(s.user_id) === Number(MY_USER_ID));
+            const isOwner = Number(t.owner_id) === Number(MY_USER_ID);
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700';
+            const players = (t.players || []).join(', ') || 'Open seats';
+            row.innerHTML = `
+                <div class="flex flex-col min-w-0">
+                    <span class="text-xs text-white font-bold truncate">${t.name}</span>
+                    <span class="text-[10px] text-slate-400 font-mono truncate">${players} &bull; ${t.seated}/${t.max_seats} seated &bull; stake ${t.stake} &bull; ${t.status}</span>
+                </div>
+                <div class="flex gap-2 flex-shrink-0"></div>
+            `;
+            const actions = row.lastElementChild;
+            const btn = (label, cls, fn) => {
+                const b = document.createElement('button');
+                b.className = cls;
+                b.innerText = label;
+                b.addEventListener('click', fn);
+                actions.appendChild(b);
+                return b;
+            };
+            const base = 'px-3 py-1.5 rounded-lg font-mono font-bold text-[11px] transition-all';
+            if (t.status === 'waiting') {
+                if (seated) {
+                    if (isOwner) btn('Start', base + ' bg-emerald-600 hover:bg-emerald-500 text-white', () => startTable(t.id));
+                    else btn('Seated', base + ' bg-slate-800 border border-slate-600 text-slate-400', () => {});
+                    btn('Leave', base + ' bg-rose-900/70 hover:bg-rose-800 text-rose-200', () => leaveTable(t.id));
+                } else {
+                    btn('Join', base + ' bg-cyan-700 hover:bg-cyan-600 text-white', () => joinTable(t.id));
+                }
+            } else if (seated) {
+                btn('Resume', base + ' bg-emerald-600 hover:bg-emerald-500 text-white', () => resumeTable(t.id));
+            } else {
+                btn('In play', base + ' bg-slate-800 border border-slate-700 text-slate-500', () => {});
+            }
+            box.appendChild(row);
+        });
+    }
+
+    function afterState() {
+        if (!gameState) return;
+        mySeat = Number(gameState.my_seat || 0);
+        currentSlug = gameState.slug || currentSlug;
+        markRibbon(currentSlug);
+        renderState();
+        schedulePoll();
+    }
+
+    function markRibbon(slug) {
+        document.querySelectorAll('.game-select-btn').forEach(b => {
+            const active = b.dataset.slug === slug;
+            b.className = 'game-select-btn' + (active ? ' active-game px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold transition-all shadow-md flex items-center gap-2'
+                                                       : ' px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2');
+        });
+    }
+
+    function schedulePoll() {
+        clearTimeout(pollTimer);
+        if (gameState && gameState.mode === 'group' && !gameState.over) {
+            pollTimer = setTimeout(() => { refreshState(); schedulePoll(); }, 3500);
+        }
+    }
+
+    // -------------------------------------------------------------- server I/O
+    function newGame(opts) {
+        return post('/cards/classic/new-game', opts).then(d => {
+            if (!d.ok) { fail(d); return null; }
+            gameState = d.state;
+            afterState();
+            closeLobby();
+            playTone(440, 'sine', 0.15);
+            return gameState;
+        });
+    }
+
+    function quickDeal() {
+        const stake = Math.max(0, parseInt(document.getElementById('lobby-stake-input').value, 10) || 0);
+        return newGame({ slug: document.getElementById('lobby-game-select').value || currentSlug,
+                         mode: 'ai', stake: stake, group_id: 0 });
+    }
+
+    function createTable() {
+        const stake = Math.max(0, parseInt(document.getElementById('lobby-stake-input').value, 10) || 0);
+        const slug = document.getElementById('lobby-game-select').value || currentSlug;
+        const gid = lobbyMode === 'group' ? (parseInt(document.getElementById('lobby-group-select').value, 10) || 0) : 0;
+        return newGame({ slug: slug, mode: lobbyMode, group_id: gid, stake: stake });
+    }
+
+    function resumeTable(gameId) {
+        get('/cards/classic/state?game_id=' + gameId).then(d => {
+            if (d.ok) { gameState = d.state; afterState(); closeLobby(); }
+            else fail(d);
+        });
+    }
+
+    function joinTable(gameId) {
+        post('/cards/classic/join', { game_id: gameId }).then(d => {
+            if (d.ok) { gameState = d.state; afterState(); closeLobby(); }
+            else fail(d);
+        });
+    }
+
+    function startTable(gameId) {
+        post('/cards/classic/start', { game_id: gameId }).then(d => {
+            if (d.ok) { gameState = d.state; afterState(); closeLobby(); playTone(440, 'sine', 0.15); }
+            else fail(d);
+        });
+    }
+
+    function leaveTable(gameId) {
+        post('/cards/classic/leave', { game_id: gameId }).then(d => {
+            if (d.ok) { loadTables(); toast('You left the table.'); }
+            else fail(d);
+        });
+    }
+
+    function cancelTable(gameId) {
+        post('/cards/classic/cancel', { game_id: gameId }).then(d => {
+            if (d.ok) { loadTables(); toast('Table cancelled - stakes refunded.'); }
+            else fail(d);
+        });
+    }
+
+    function refreshState() {
+        if (!gameState || !gameState.game_id) return;
+        get('/cards/classic/state?game_id=' + gameState.game_id).then(d => {
+            if (d.ok) { gameState = d.state; afterState(); }
+        });
+    }
+
+    function restoreState() {
+        const url = RESTORE_GAME_ID ? '/cards/classic/state?game_id=' + RESTORE_GAME_ID : '/cards/classic/state';
+        get(url).then(d => {
+            if (d.ok && d.state) {
+                gameState = d.state;
+                afterState();
+            } else {
+                openLobby();
+            }
+        }).catch(() => openLobby());
+    }
+
+    function sendAction(actionObj) {
+        if (!gameState || !gameState.game_id) return;
+        if (gameState.over) return;
+        const body = Object.assign({}, actionObj, { game_id: gameState.game_id });
+        post('/cards/classic/action', body).then(d => {
+            if (d.ok) {
+                gameState = d.state;
+                afterState();
+                playTone(520, 'sine', 0.1);
+            } else {
+                fail(d);
+                refreshState();
+            }
+        }).catch(() => toast('Network error - your move was not sent.'));
+    }
+
+    // ------------------------------------------------------------------ render
     function renderState() {
         if (!gameState) return;
 
-        // Title and description
-        document.getElementById('arena-game-title').innerText = gameState.title || currentSlug.toUpperCase();
-        document.getElementById('arena-game-desc').innerText = gameState.description || '';
+        setText('arena-game-title', gameState.title || String(currentSlug).toUpperCase());
+        setText('arena-game-desc', gameState.description || '');
+        setText('hud-phase-badge', String(gameState.phase || 'PLAYING').toUpperCase());
 
-        // Phase badge
-        const phaseBadge = document.getElementById('hud-phase-badge');
-        phaseBadge.innerText = (gameState.phase || 'PLAYING').toUpperCase();
+        const over = !!gameState.over;
+        const myTurn = !!gameState.is_my_turn && !over;
+        const controlsDummy = !!gameState.controls_dummy;
 
-        // Trump display
+        // ---- seat plates: my seat is always rendered at the bottom ----------
+        const slots = [
+            { name: 'name-south', icon: 'ic-south', pos: 0 },
+            { name: 'name-west', icon: 'ic-west', pos: 1 },
+            { name: 'name-north', icon: 'ic-north', pos: 2 },
+            { name: 'name-east', icon: 'ic-east', pos: 3 }
+        ];
+        slots.forEach(sl => {
+            const seat = seatAt(sl.pos);
+            let label = labelFor(seat);
+            if (Number(seat) === Number(mySeat)) label = label + ' (You)';
+            setText(sl.name, label);
+            const ic = document.getElementById(sl.icon);
+            if (ic) {
+                const tone = sl.pos === 0 ? ' text-cyan-400' : (sl.pos === 2 ? ' text-emerald-400' : ' text-amber-400');
+                ic.className = 'fa-solid ' + (isBotSeat(seat) ? 'fa-robot' : 'fa-user') + tone;
+            }
+        });
+
+        // ---- turn HUD -------------------------------------------------------
+        const activeSeat = gameState.phase === 'bidding' ? gameState.bid_turn : gameState.turn;
+        if (over) {
+            setText('hud-turn-disp', 'Deal complete');
+        } else if (myTurn) {
+            setText('hud-turn-disp', controlsDummy ? 'You (playing Dummy)'
+                    : (gameState.phase === 'setting_trump' ? 'You (choose trump)'
+                    : 'You (' + labelFor(mySeat) + ')'));
+        } else if (gameState.phase === 'setting_trump') {
+            setText('hud-turn-disp', labelFor(gameState.high_bidder) + ' (choose trump)');
+        } else if (activeSeat === null || activeSeat === undefined) {
+            setText('hud-turn-disp', '--');
+        } else {
+            setText('hud-turn-disp', labelFor(activeSeat));
+        }
+
+        const badge = document.getElementById('south-turn-indicator');
+        if (badge) {
+            if (myTurn) {
+                badge.classList.remove('hidden');
+                badge.innerText = controlsDummy ? 'PLAY DUMMY'
+                    : (gameState.phase === 'setting_trump' ? 'SET TRUMP' : 'YOUR TURN');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // ---- trump / bid HUD ------------------------------------------------
         const trumpDisp = document.getElementById('hud-trump-disp');
         if (gameState.trump_suit) {
             const sym = SUIT_SYMBOLS[gameState.trump_suit] || gameState.trump_suit;
@@ -407,130 +790,64 @@ document.addEventListener('DOMContentLoaded', function() {
             trumpDisp.innerText = 'None / NT';
         }
 
-        // Bids display
         const bidDisp = document.getElementById('hud-bid-disp');
         if (gameState.high_bid) {
-            bidDisp.innerText = `${gameState.high_bid} pts (${gameState.high_bidder === 0 ? 'You' : 'Seat ' + gameState.high_bidder})`;
+            bidDisp.innerText = `${gameState.high_bid} pts (${labelFor(gameState.high_bidder)})`;
         } else if (gameState.contract) {
-            bidDisp.innerText = `${gameState.contract} (by Seat ${gameState.declarer})`;
-        } else if (gameState.team_bids && gameState.team_bids.team0) {
-            bidDisp.innerText = `S+N: ${gameState.team_bids.team0} | W+E: ${gameState.team_bids.team1}`;
+            bidDisp.innerText = `${gameState.contract} (by ${labelFor(gameState.declarer)})`;
+        } else if (gameState.team_bids && gameState.team_bids.team0 !== undefined) {
+            bidDisp.innerText = `${labelFor(0)}+${labelFor(2)}: ${gameState.team_bids.team0} | ${labelFor(1)}+${labelFor(3)}: ${gameState.team_bids.team1}`;
         } else {
             bidDisp.innerText = '--';
         }
 
-        // Turn indicator
-        const isDummyTurn = gameState.slug === 'bridge' && gameState.dummy_seat === gameState.turn && gameState.declarer === 0;
-        const isMyTurn = (gameState.phase === 'bidding' && gameState.bid_turn === 0) || 
-                         (gameState.phase === 'setting_trump' && (gameState.high_bidder === 0 || gameState.high_bidder === undefined)) ||
-                         (gameState.phase === 'playing' && (gameState.turn === 0 || isDummyTurn));
+        setText('hud-stake-disp', `${gameState.stake || 0} coins / pot ${gameState.pot || 0}`);
 
-        if (isDummyTurn) {
-            document.getElementById('hud-turn-disp').innerText = "You (Dummy's Turn)";
-        } else if (gameState.phase === 'setting_trump') {
-            document.getElementById('hud-turn-disp').innerText = "You (Choose Trump)";
-        } else if (isMyTurn) {
-            document.getElementById('hud-turn-disp').innerText = 'You (South)';
-        } else {
-            const botNames = ['South (You)', 'West (Bot)', 'North (Partner)', 'East (Bot)'];
-            const activeSeat = gameState.phase === 'bidding' ? gameState.bid_turn : gameState.turn;
-            document.getElementById('hud-turn-disp').innerText = botNames[activeSeat] || `Seat ${activeSeat} (Bot)`;
-        }
+        // ---- team labels ----------------------------------------------------
+        setText('hud-team0-label', `${labelFor(0)} & ${labelFor(2)}:`);
+        setText('hud-team1-label', `${labelFor(1)} & ${labelFor(3)}:`);
 
-        const turnBadge = document.getElementById('south-turn-indicator');
-        if (isMyTurn && !gameState.over) {
-            turnBadge.classList.remove('hidden');
-            if (isDummyTurn) {
-                turnBadge.innerText = 'PLAYING DUMMY';
-            } else if (gameState.phase === 'setting_trump') {
-                turnBadge.innerText = 'SET TRUMP';
-            } else {
-                turnBadge.innerText = 'YOUR TURN';
-            }
-        } else {
-            turnBadge.classList.add('hidden');
-        }
-
-        // Score container
+        // ---- scores ---------------------------------------------------------
+        const t0 = `${labelFor(0)}+${labelFor(2)}`;
+        const t1 = `${labelFor(1)}+${labelFor(3)}`;
         if (gameState.slug === 'call_break' && gameState.scores) {
-            document.getElementById('hud-team0-score').innerText = `You: ${gameState.scores['0'] !== undefined ? gameState.scores['0'] : 0} pts (${gameState.tricks['0'] || 0}/${gameState.bids['0'] || 0} tricks)`;
-            document.getElementById('hud-team1-score').innerText = `West: ${gameState.scores['1'] || 0} | North: ${gameState.scores['2'] || 0} | East: ${gameState.scores['3'] || 0}`;
+            setText('hud-team0-score', `${labelFor(0)}: ${gameState.scores['0'] || 0} pts (${gameState.tricks['0'] || 0}/${gameState.bids['0'] || 0})`);
+            setText('hud-team1-score', `${labelFor(1)}: ${gameState.scores['1'] || 0} | ${labelFor(2)}: ${gameState.scores['2'] || 0} | ${labelFor(3)}: ${gameState.scores['3'] || 0}`);
         } else if (gameState.card_points && gameState.card_points.team0 !== undefined) {
-            document.getElementById('hud-team0-score').innerText = `${gameState.card_points.team0} pts (Tricks: ${gameState.tricks['0'] + gameState.tricks['2']})`;
-            document.getElementById('hud-team1-score').innerText = `${gameState.card_points.team1} pts (Tricks: ${gameState.tricks['1'] + gameState.tricks['3']})`;
+            const tr = gameState.tricks || {};
+            setText('hud-team0-score', `${gameState.card_points.team0} pts (${tr['0'] || 0}+${tr['2'] || 0} tricks)`);
+            setText('hud-team1-score', `${gameState.card_points.team1} pts (${tr['1'] || 0}+${tr['3'] || 0} tricks)`);
         } else if (gameState.team_tricks && gameState.team_tricks.team0 !== undefined) {
-            document.getElementById('hud-team0-score').innerText = `${gameState.team_tricks.team0} tricks`;
-            document.getElementById('hud-team1-score').innerText = `${gameState.team_tricks.team1} tricks`;
+            setText('hud-team0-score', `${gameState.team_tricks.team0} tricks`);
+            setText('hud-team1-score', `${gameState.team_tricks.team1} tricks`);
         } else if (gameState.penalty_points) {
-            document.getElementById('hud-team0-score').innerText = `You: ${gameState.penalty_points['0']} pen pts`;
-            document.getElementById('hud-team1-score').innerText = `Bots: ${gameState.penalty_points['1'] + gameState.penalty_points['2'] + gameState.penalty_points['3']} pts`;
-        }
-
-        // Other players' card counts & visual mini fans
-        document.getElementById('west-card-count').innerText = `${gameState.counts['1'] || 0} cards`;
-        document.getElementById('north-card-count').innerText = `${gameState.counts['2'] || 0} cards`;
-        document.getElementById('east-card-count').innerText = `${gameState.counts['3'] || 0} cards`;
-
-        const westCount = Math.min(8, gameState.counts['1'] || 0);
-        const westFanEl = document.getElementById('west-hand-fan');
-        if (westFanEl) {
-            westFanEl.innerHTML = '';
-            for (let i = 0; i < westCount; i++) {
-                const rot = (i - westCount / 2) * 5;
-                westFanEl.innerHTML += createCardBackHTML(true, `transform: rotate(${rot}deg);`);
-            }
-        }
-
-        const eastCount = Math.min(8, gameState.counts['3'] || 0);
-        const eastFanEl = document.getElementById('east-hand-fan');
-        if (eastFanEl) {
-            eastFanEl.innerHTML = '';
-            for (let i = 0; i < eastCount; i++) {
-                const rot = (i - eastCount / 2) * 5;
-                eastFanEl.innerHTML += createCardBackHTML(true, `transform: rotate(${rot}deg);`);
-            }
-        }
-
-        // North Hand cards (dummy if Bridge revealed, interactive if it's Dummy's turn!)
-        const northCardsEl = document.getElementById('north-hand-cards');
-        northCardsEl.innerHTML = '';
-        if (gameState.dummy_hand && gameState.dummy_hand.length > 0) {
-            const dummyPlays = isDummyTurn ? (gameState.legal_actions || []).filter(a => a.action === 'play').map(a => a.card) : [];
-            gameState.dummy_hand.forEach(c => {
-                const isDummyPlayable = isDummyTurn && dummyPlays.includes(c);
-                const cardWrapper = document.createElement('div');
-                cardWrapper.innerHTML = createCardHTML(c, isDummyPlayable, true);
-                const cardDiv = cardWrapper.firstElementChild;
-                if (isDummyPlayable && cardDiv) {
-                    cardDiv.classList.add('cursor-pointer', 'hover:scale-110', 'hover:-translate-y-2');
-                    cardDiv.title = "Click to play from Dummy's hand";
-                    cardDiv.addEventListener('click', () => {
-                        sendAction({ action: 'play', card: c, seat: gameState.dummy_seat });
-                        if (window.ClubAudio) window.ClubAudio.deal();
-                        else playTone(600, 'triangle', 0.08);
-                    });
-                }
-                northCardsEl.appendChild(cardDiv || cardWrapper);
-            });
+            setText('hud-team0-score', `${labelFor(0)}: ${gameState.penalty_points['0'] || 0} pen pts`);
+            setText('hud-team1-score', `${t1}: ${(gameState.penalty_points['1'] || 0) + (gameState.penalty_points['2'] || 0) + (gameState.penalty_points['3'] || 0)} pts`);
+        } else if (gameState.scores && Object.keys(gameState.scores).length) {
+            setText('hud-team0-score', `${t0}: ${gameState.scores['0'] || 0} + ${gameState.scores['2'] || 0}`);
+            setText('hud-team1-score', `${t1}: ${gameState.scores['1'] || 0} + ${gameState.scores['3'] || 0}`);
         } else {
-            const n_count = Math.min(13, gameState.counts['2'] || 0);
-            for (let i = 0; i < n_count; i++) {
-                const rot = (i - n_count / 2) * 3;
-                northCardsEl.innerHTML += createCardBackHTML(true, `transform: rotate(${rot}deg); margin-left: -14px;`);
-            }
+            setText('hud-team0-score', '--');
+            setText('hud-team1-score', '--');
         }
 
-        // Center Trick Cards
+        const legalPlays = (gameState.legal_actions || []).filter(a => a.action === 'play').map(a => a.card);
+
+        // ---- opponent seats -------------------------------------------------
+        renderOpponent('west', 1, legalPlays, myTurn);
+        renderOpponent('north', 2, legalPlays, myTurn);
+        renderOpponent('east', 3, legalPlays, myTurn);
+
+        // ---- centre trick ---------------------------------------------------
         const trickZone = document.getElementById('center-trick-cards');
         trickZone.innerHTML = '';
         if (gameState.trick && gameState.trick.length > 0) {
-            const seatNames = ['South (You)', 'West', 'North', 'East'];
             const trickRotations = [-2.5, -6, 3, 5.5];
             gameState.trick.forEach(e => {
                 const rot = trickRotations[e.seat] || 0;
                 trickZone.innerHTML += `
                     <div class="flex flex-col items-center gap-1.5 transition-all">
-                        <span class="text-[10px] font-mono text-amber-200/90 font-bold px-2 py-0.5 rounded-full bg-slate-950/80 border border-amber-500/30">${seatNames[e.seat]}</span>
+                        <span class="text-[10px] font-mono text-amber-200/90 font-bold px-2 py-0.5 rounded-full bg-slate-950/80 border border-amber-500/30">${labelFor(e.seat)}</span>
                         ${createCardHTML(e.card, false, false, `transform: rotate(${rot}deg); filter: drop-shadow(0 10px 18px rgba(0,0,0,0.55));`)}
                     </div>
                 `;
@@ -539,47 +856,41 @@ document.addEventListener('DOMContentLoaded', function() {
             trickZone.innerHTML = `<span class="col-span-full text-xs font-mono text-emerald-300/60 italic text-center font-semibold">Lead a card to start trick</span>`;
         }
 
-        // Human Hand (South) - Realistic Ergonomic Fan
+        // ---- my hand --------------------------------------------------------
         const humanHandEl = document.getElementById('human-hand-container');
         humanHandEl.innerHTML = '';
-        const legalPlays = (gameState.legal_actions || []).filter(a => a.action === 'play').map(a => a.card);
-
         if (gameState.hand && gameState.hand.length > 0) {
             const count = gameState.hand.length;
+            const canPlayMine = myTurn && !controlsDummy && gameState.phase === 'playing';
             gameState.hand.forEach((card, idx) => {
-                const isPlayable = isMyTurn && !isDummyTurn && legalPlays.includes(card) && gameState.phase === 'playing';
+                const isPlayable = canPlayMine && legalPlays.indexOf(card) >= 0;
                 const mid = (count - 1) / 2;
                 const offset = mid === 0 ? 0 : (idx - mid);
                 const rotDeg = offset * (count > 8 ? 2.6 : 3.8);
                 const transY = Math.abs(offset) * (count > 8 ? 2 : 2.6);
                 const zIndex = 10 + idx;
-
-                const cardHtml = createCardHTML(card, isPlayable, false, `transform: rotate(${rotDeg.toFixed(1)}deg) translateY(${transY.toFixed(1)}px); z-index: ${zIndex};`);
+                const cardHtml = createCardHTML(card, isPlayable, false,
+                    `transform: rotate(${rotDeg.toFixed(1)}deg) translateY(${transY.toFixed(1)}px); z-index: ${zIndex};`);
                 const wrapper = document.createElement('div');
                 wrapper.className = 'hand-fan-card';
                 wrapper.style.zIndex = zIndex;
                 wrapper.innerHTML = cardHtml;
-
                 const cardDiv = wrapper.firstElementChild;
                 if (isPlayable && cardDiv) {
                     cardDiv.classList.add('cursor-pointer');
-                    cardDiv.addEventListener('click', () => {
-                        sendAction({ action: 'play', card: card });
-                        if (window.ClubAudio) window.ClubAudio.deal();
-                        else playTone(600, 'triangle', 0.08);
-                    });
+                    cardDiv.addEventListener('click', () => { sendAction({ action: 'play', card: card }); cardTone(); });
                 }
                 humanHandEl.appendChild(wrapper);
             });
         }
 
-        // Trump Selection Drawer (for 29)
+        // ---- trump drawer ---------------------------------------------------
         const trumpDrawer = document.getElementById('trump-drawer');
         const trumpButtonsContainer = document.getElementById('trump-buttons-container');
         if (trumpDrawer && trumpButtonsContainer) {
             trumpButtonsContainer.innerHTML = '';
             const trumpActs = (gameState.legal_actions || []).filter(a => a.action === 'set_trump');
-            if (gameState.phase === 'setting_trump' && isMyTurn && trumpActs.length > 0) {
+            if (gameState.phase === 'setting_trump' && myTurn && trumpActs.length > 0) {
                 trumpDrawer.classList.remove('hidden');
                 const suitMeta = {
                     'H': { name: 'Hearts', icon: '♥', color: 'bg-rose-950/90 hover:bg-rose-900 border-rose-500/60 text-rose-300' },
@@ -592,11 +903,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const btn = document.createElement('button');
                     btn.className = `px-4 py-2 rounded-xl border ${meta.color} font-mono font-bold text-xs shadow-lg active:scale-95 transition-all flex items-center gap-2`;
                     btn.innerHTML = `<span class="text-base">${meta.icon}</span> <span>${meta.name}</span>`;
-                    btn.addEventListener('click', () => {
-                        sendAction(a);
-                        if (window.ClubAudio) window.ClubAudio.deal();
-                        else playTone(550, 'sine', 0.1);
-                    });
+                    btn.addEventListener('click', () => { sendAction(a); cardTone(); });
                     trumpButtonsContainer.appendChild(btn);
                 });
             } else {
@@ -604,43 +911,38 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Bidding drawer
+        // ---- bidding drawer -------------------------------------------------
         const biddingDrawer = document.getElementById('bidding-drawer');
         const bidButtonsContainer = document.getElementById('bid-buttons-container');
         bidButtonsContainer.innerHTML = '';
-        const legalBids = (gameState.legal_actions || []).filter(a => a.action !== 'play' && a.action !== 'set_trump' && a.action !== 'reveal_trump');
+        const legalBids = (gameState.legal_actions || []).filter(
+            a => a.action !== 'play' && a.action !== 'set_trump' && a.action !== 'reveal_trump');
 
-        if (gameState.phase === 'bidding' && isMyTurn && legalBids.length > 0) {
+        if (gameState.phase === 'bidding' && myTurn && legalBids.length > 0) {
             biddingDrawer.classList.remove('hidden');
             legalBids.forEach(a => {
                 const btn = document.createElement('button');
-                btn.className = 'px-3.5 py-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 border border-emerald-300/50 text-white font-extrabold text-xs shadow-lg active:scale-95 transition-all';
                 if (a.action === 'pass') {
                     btn.className = 'px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-extrabold text-xs shadow-md active:scale-95 transition-all';
                     btn.innerText = 'Pass';
-                } else if (a.value !== undefined) {
-                    btn.innerText = `Bid ${a.value}`;
-                } else if (a.level !== undefined) {
-                    btn.innerText = `Bid ${a.level}${a.suit}`;
                 } else {
-                    btn.innerText = a.action;
+                    btn.className = 'px-3.5 py-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 border border-emerald-300/50 text-white font-extrabold text-xs shadow-lg active:scale-95 transition-all';
+                    if (a.value !== undefined) btn.innerText = `Bid ${a.value}`;
+                    else if (a.level !== undefined) btn.innerText = `Bid ${a.level}${a.suit}`;
+                    else btn.innerText = a.action;
                 }
-                btn.addEventListener('click', () => {
-                    sendAction(a);
-                    if (window.ClubAudio) window.ClubAudio.deal();
-                    else playTone(500, 'sine', 0.1);
-                });
+                btn.addEventListener('click', () => { sendAction(a); cardTone(); });
                 bidButtonsContainer.appendChild(btn);
             });
         } else {
             biddingDrawer.classList.add('hidden');
         }
 
-        // Extra Actions (Reveal Trump, etc.)
+        // ---- extra actions (reveal trump) -----------------------------------
         const extraToolbar = document.getElementById('extra-actions-toolbar');
         extraToolbar.innerHTML = '';
         const revealAct = (gameState.legal_actions || []).find(a => a.action === 'reveal_trump');
-        if (revealAct && isMyTurn) {
+        if (revealAct && myTurn) {
             const revBtn = document.createElement('button');
             revBtn.className = 'px-3 py-1 rounded-full bg-amber-600 hover:bg-amber-500 text-white font-mono font-bold text-xs transition-all flex items-center gap-1.5 shadow-md animate-pulse';
             revBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Reveal Trump';
@@ -648,7 +950,29 @@ document.addEventListener('DOMContentLoaded', function() {
             extraToolbar.appendChild(revBtn);
         }
 
-        // Game Log
+        // ---- waiting table controls ----------------------------------------
+        if (gameState.status === 'waiting') {
+            const waiting = document.createElement('div');
+            waiting.className = 'mt-2 w-full glass-card p-3 rounded-2xl border-2 border-cyan-500/50 bg-slate-950/95 font-mono text-xs flex flex-wrap items-center justify-center gap-2 shadow-2xl';
+            const isOwner = Number(gameState.owner_id) === Number(MY_USER_ID);
+            waiting.innerHTML = `<span class="text-cyan-300 font-black uppercase tracking-wider">Waiting for players ${gameState.players.length}/4</span>`;
+            if (isOwner) {
+                const startBtn = document.createElement('button');
+                startBtn.className = 'px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold';
+                startBtn.innerText = 'Start Now (fill with bots)';
+                startBtn.addEventListener('click', () => startTable(gameState.game_id));
+                waiting.appendChild(startBtn);
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'px-4 py-2 rounded-xl bg-rose-900/70 hover:bg-rose-800 text-rose-200 font-bold';
+                cancelBtn.innerText = 'Cancel & refund';
+                cancelBtn.addEventListener('click', () => cancelTable(gameState.game_id));
+                waiting.appendChild(cancelBtn);
+            }
+            const humanHand = document.getElementById('human-hand-container');
+            if (humanHand) humanHand.appendChild(waiting);
+        }
+
+        // ---- log ------------------------------------------------------------
         const logContainer = document.getElementById('arena-game-log');
         logContainer.innerHTML = '';
         (gameState.log || []).forEach(msg => {
@@ -659,49 +983,174 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         logContainer.scrollTop = logContainer.scrollHeight;
 
-        // Victory Modal
-        const vicModal = document.getElementById('arena-victory-modal');
-        if (gameState.over) {
-            vicModal.classList.remove('hidden');
+        // ---- victory / settlement ------------------------------------------
+        if (over) {
+            renderVictory();
+            showEl('arena-victory-modal');
             playTone(880, 'sine', 0.4);
         } else {
-            vicModal.classList.add('hidden');
+            hideEl('arena-victory-modal');
         }
     }
 
-    function sendAction(actionObj) {
-        fetch('/cards/classic/action', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(actionObj)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.ok) {
-                gameState = data.state;
-                renderState();
+    function renderOpponent(prefix, pos, legalPlays, myTurn) {
+        const seat = seatAt(pos);
+        setText(prefix + '-card-count', `${(gameState.counts || {})[String(seat)] || 0} cards`);
+        const holderId = prefix === 'north' ? 'north-hand-cards' : prefix + '-hand-fan';
+        const holder = document.getElementById(holderId);
+        if (!holder) return;
+        holder.innerHTML = '';
+
+        const dummyHere = gameState.dummy_hand && gameState.dummy_hand.length > 0
+            && Number(gameState.dummy_seat) === Number(seat);
+        if (dummyHere) {
+            gameState.dummy_hand.forEach(c => {
+                const playable = myTurn && legalPlays.indexOf(c) >= 0;
+                const wrap = document.createElement('div');
+                wrap.innerHTML = createCardHTML(c, playable, true,
+                    prefix === 'north' ? 'margin-left: -10px;' : '');
+                const cardDiv = wrap.firstElementChild;
+                if (cardDiv) {
+                    if (playable) {
+                        cardDiv.classList.add('cursor-pointer', 'hover:scale-110');
+                        cardDiv.title = "Click to play from Dummy's hand";
+                        cardDiv.addEventListener('click', () => { sendAction({ action: 'play', card: c }); cardTone(); });
+                    }
+                    holder.appendChild(cardDiv);
+                }
+            });
+            return;
+        }
+
+        const n = Math.min(8, (gameState.counts || {})[String(seat)] || 0);
+        for (let i = 0; i < n; i++) {
+            if (prefix === 'north') {
+                const rot = (i - n / 2) * 3;
+                holder.innerHTML += createCardBackHTML(true, `transform: rotate(${rot}deg); margin-left: -14px;`);
             } else {
-                alert(data.error || 'Action failed');
+                const rot = (i - n / 2) * 5;
+                holder.innerHTML += createCardBackHTML(true, `transform: rotate(${rot}deg);`);
             }
-        });
+        }
     }
 
-    // Ribbon Switcher
+    function renderVictory() {
+        const st = gameState.settlement || null;
+        const me = myEntry();
+        let title = 'Deal Completed!';
+        let desc = 'Scores have been settled. Review final standings below.';
+        let myPayout = 0;
+
+        if (st && st.kind === 'settlement') {
+            const winners = st.winner_names && st.winner_names.length
+                ? st.winner_names.join(', ') : (st.winners || []).map(s => labelFor(s)).join(', ');
+            title = winners + ' take the pot!';
+            desc = `Pot of ${st.pot} coins settled on the hash-chained ledger.`;
+            const myUser = me ? Number(me.user_id) : Number(MY_USER_ID);
+            const p = st.payouts || {};
+            Object.keys(p).forEach(k => { if (Number(k) === Number(myUser)) myPayout = Number(p[k]); });
+        } else if (st && st.kind === 'refund') {
+            title = 'Deal complete - no winner';
+            desc = st.pot ? 'Nobody took the pot: every stake was refunded.' : 'Scores have been settled.';
+        } else if (gameState.winner !== null && gameState.winner !== undefined) {
+            title = labelFor(gameState.winner) + ' wins the deal!';
+        } else if (gameState.winner_team) {
+            const seats = gameState.winner_team === 'team0' ? [0, 2] : [1, 3];
+            title = seats.map(s => labelFor(s)).join(' & ') + ' win the deal!';
+        }
+
+        setText('victory-title', title);
+        setText('victory-desc', desc);
+        setText('victory-pot', 'Pot ' + ((st && st.pot) || gameState.pot || 0) + ' coins');
+
+        const box = document.getElementById('victory-payouts');
+        box.innerHTML = '';
+        if (st && st.payouts && Object.keys(st.payouts).length) {
+            const names = {};
+            (gameState.players || []).forEach(p => { names[Number(p.user_id)] = p.name; });
+            Object.keys(st.payouts).forEach(uid => {
+                const line = document.createElement('div');
+                line.className = 'flex justify-between';
+                line.innerHTML = `<span>${names[Number(uid)] || 'Player ' + uid}</span><span class="text-emerald-300 font-bold">+${st.payouts[uid]}</span>`;
+                box.appendChild(line);
+            });
+        } else if (st && st.kind === 'refund') {
+            box.innerHTML = '<div class="text-slate-400">All stakes returned to their owners.</div>';
+        } else {
+            box.innerHTML = '<div class="text-slate-400">No coins moved on this deal.</div>';
+        }
+
+        const stake = Number(gameState.stake || 0);
+        if (myPayout > 0) {
+            setText('victory-coin-line', `You paid ${stake} and won ${myPayout} (+${myPayout - stake} coins)`);
+        } else if (stake > 0) {
+            setText('victory-coin-line', `You lost your ${stake} coin stake`);
+        } else {
+            setText('victory-coin-line', 'Stakeless deal - practice table');
+        }
+    }
+
+    // -------------------------------------------------------------- controls
+    function openGroupLobby() {
+        lobbyMode = 'group';
+        setLobbyModeButtons();
+        openLobby();
+    }
+    function setLobbyModeButtons() {
+        document.querySelectorAll('.lobby-mode-btn').forEach(b => {
+            const on = b.dataset.mode === lobbyMode;
+            b.className = 'lobby-mode-btn' + (on ? ' active-game px-3 py-2.5 rounded-xl bg-emerald-600 text-white font-mono font-bold text-xs'
+                                                 : ' px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-mono font-bold text-xs');
+        });
+        const wrap = document.getElementById('lobby-group-wrap');
+        if (wrap) wrap.style.opacity = lobbyMode === 'group' ? '1' : '0.45';
+    }
+
     document.querySelectorAll('.game-select-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.game-select-btn').forEach(b => {
-                b.className = 'game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2';
-            });
-            this.className = 'game-select-btn active-game px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold transition-all shadow-md flex items-center gap-2';
-            loadGame(this.dataset.slug);
+            const slug = this.dataset.slug;
+            newGame({ slug: slug, mode: 'ai', stake: 0, group_id: 0 });
         });
     });
 
-    document.getElementById('arena-restart-btn')?.addEventListener('click', () => loadGame(currentSlug));
-    document.getElementById('victory-restart-btn')?.addEventListener('click', () => loadGame(currentSlug));
+    document.querySelectorAll('.lobby-mode-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            lobbyMode = this.dataset.mode;
+            setLobbyModeButtons();
+            if (lobbyMode === 'group') loadTables();
+        });
+    });
 
-    // Initial game deal
-    loadGame('29');
+    const groupSel = document.getElementById('lobby-group-select');
+    if (groupSel) {
+        groupSel.addEventListener('change', function() {
+            lobbyGroup = parseInt(this.value, 10) || 0;
+            loadTables();
+        });
+    }
+
+    document.getElementById('open-lobby-btn')?.addEventListener('click', openGroupLobby);
+    document.getElementById('close-lobby-btn')?.addEventListener('click', closeLobby);
+    document.getElementById('lobby-create-btn')?.addEventListener('click', createTable);
+    document.getElementById('lobby-quick-btn')?.addEventListener('click', quickDeal);
+    document.getElementById('lobby-refresh-btn')?.addEventListener('click', loadTables);
+    document.getElementById('arena-restart-btn')?.addEventListener('click', () => {
+        if (gameState && gameState.mode === 'group' && gameState.status !== 'finished') openGroupLobby();
+        else newGame({ slug: currentSlug, mode: 'ai', stake: 0, group_id: 0 });
+    });
+    document.getElementById('victory-restart-btn')?.addEventListener('click', () => {
+        if (gameState && gameState.mode === 'group') openGroupLobby();
+        else newGame({ slug: currentSlug, mode: 'ai', stake: 0, group_id: 0 });
+    });
+    document.getElementById('victory-lobby-btn')?.addEventListener('click', openGroupLobby);
+
+    // wallet badge
+    get('/club/api/wallet').then(d => {
+        if (d && d.balances) setText('lobby-balance', d.balances.personal);
+    }).catch(() => setText('lobby-balance', '--'));
+
+    // boot: restore the table still in play, otherwise open the lobby
+    restoreState();
 });
 </script>
 {% endblock %}

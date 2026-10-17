@@ -95,6 +95,30 @@ def assert_legal(engine, state, seat, action):
         f"'{(action or {}).get('action', '?')}' right now")
 
 
+def acting_seat(state, seat):
+    """Which seat a human actually moves.
+
+    In Contract Bridge the winning declarer also drives the exposed dummy
+    hand while ``turn == dummy``, so their posts have to be validated and
+    applied as the dummy seat.
+    """
+    if seat is None:
+        return None
+    try:
+        seat = int(seat)
+    except (TypeError, ValueError):
+        return seat
+    if (state.get("slug") == "bridge"
+            and state.get("declarer") is not None
+            and state.get("dummy") is not None
+            and state.get("turn") is not None
+            and state.get("turn") == state.get("dummy")
+            and seat == int(state["declarer"])
+            and seat != int(state["dummy"])):
+        return int(state["dummy"])
+    return seat
+
+
 # =====================================================================
 # 1. TWENTY-NINE (29 CARD GAME)
 # =====================================================================
@@ -765,7 +789,7 @@ class BridgeGame:
                 state["dummy"] = (dec + 2) % 4
                 state["phase"] = "playing"
                 state["turn"] = (dec + 1) % 4  # Opening lead is to declarer's left
-                log.append(f"Contract SET: {state['contract']} by {seat_name(state, dec)}. Opening lead by {SEAT_NAMES[state['turn']]}. Dummy is {SEAT_NAMES[state['dummy']]}.")
+                log.append(f"Contract SET: {state['contract']} by {seat_name(state, dec)}. Opening lead by {seat_name(state, state['turn'])}. Dummy is {seat_name(state, state['dummy'])}.")
             else:
                 state["bid_turn"] = (state["bid_turn"] + 1) % 4
             return state
@@ -779,7 +803,7 @@ class BridgeGame:
             # Dummy revealed after opening lead
             if not state["dummy_revealed"] and len(state["trick"]) >= 0:
                 state["dummy_revealed"] = True
-                log.append(f"Opening lead made: Dummy ({SEAT_NAMES[state['dummy']]}) cards laid face-up!")
+                log.append(f"Opening lead made: Dummy ({seat_name(state, state['dummy'])}) cards laid face-up!")
 
             if not state["trick"]:
                 state["lead_suit"] = suit_of(card)
@@ -1184,7 +1208,7 @@ class EuchreGame:
                     state["maker_seat"] = 0
                     state["phase"] = "playing"
                     state["turn"] = 0
-                    log.append(f"Everyone passed. {SEAT_NAMES[0]} orders up {SUIT_NAMES[state['trump_suit']]}!")
+                    log.append(f"Everyone passed. {seat_name(state, 0)} orders up {SUIT_NAMES[state['trump_suit']]}!")
                 else:
                     state["bid_turn"] = (state["bid_turn"] + 1) % 4
             return state
@@ -1440,6 +1464,7 @@ def get_game_view(state, seat=0):
     engine = GAME_ENGINES.get(slug, TwentyNineGame)
 
     human_hand = state["hands"].get(str(seat), [])
+    controls_dummy = acting_seat(state, seat) != (int(seat) if seat is not None else seat)
     
     # Hand counts for other seats
     counts = {str(i): len(state["hands"].get(str(i), [])) for i in range(4)}
@@ -1449,13 +1474,14 @@ def get_game_view(state, seat=0):
     if slug == "bridge" and state.get("dummy_revealed") and state.get("dummy") is not None:
         dummy_hand = state["hands"].get(str(state["dummy"]), [])
 
-    legal_acts = engine.legal_actions(state, seat)
+    legal_acts = engine.legal_actions(state, acting_seat(state, seat))
 
     return {
         "slug": slug,
         "title": getattr(engine, "title", slug),
         "description": getattr(engine, "description", ""),
         "my_seat": seat,
+        "controls_dummy": controls_dummy,
         "seat_labels": [seat_name(state, i) for i in range(4)],
         "seat_roles": list(SEAT_ROLES),
         "human_seats": sorted(human_seats(state)),

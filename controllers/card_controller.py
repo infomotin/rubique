@@ -7,11 +7,14 @@ Guarded by Super Admin Feature Flag and Anti-Cheat Security Engine.
 
 import time
 from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for
+from controllers.auth_controller import login_required
+from utils.decorators import api_login_required
 from models.user_model import UserModel
 from models.card_model import CardModel, CARD_SYMBOLS
 from models.security_model import SecurityModel
+from models import classic_arena as arena_store
+from models.card_club.errors import CardClubError, NotFoundError, PermissionDenied
 from models.card_club.engines.classic_tricks import (
-    create_classic_game, get_game_view, step_ai_until_human,
     CLASSIC_CATALOG, GAME_ENGINES
 )
 
@@ -186,58 +189,177 @@ def destroy_game(game_id):
 # CLASSIC PLAYING CARD SUITE (29, Bridge, Spades, Hearts, Whist, Oh Hell, Euchre)
 # =====================================================================
 
+def _user():
+    """Classic Suite games are money games - they always need a seat owner."""
+    uid = session.get('user_id')
+    if not uid:
+        return None
+    return int(uid)
+
+
+def _deny(err, status=400):
+    code = status
+    if isinstance(err, PermissionDenied):
+        code = 403
+    elif isinstance(err, NotFoundError):
+        code = 404
+    return jsonify({"ok": False, "error": str(err)}), code
+
+
+def _body():
+    data = request.get_json(silent=True) or request.form or {}
+    return dict(data) if hasattr(data, 'items') else {}
+
+
 @card_bp.route('/classic')
+@login_required
 def classic_arena():
     """Classic 4-Player Partnership & Trick-Taking Card Arena View"""
-    user_id = session.get('user_id')
+    user_id = _user()
     user = UserModel.find_by_id(user_id) if user_id else None
+    active = arena_store.active_game_for(user_id) if user_id else None
     return render_template(
         'card/classic_arena.html',
         user=user,
+        user_id=user_id,
         active_page='cards',
-        catalog=CLASSIC_CATALOG
+        catalog=CLASSIC_CATALOG,
+        logged_in=bool(user_id),
+        active_game_id=int(active['id']) if active else None,
+        default_group_id=int(session.get('group_id') or 0)
     )
 
+
 @card_bp.route('/classic/new-game', methods=['POST'])
+@api_login_required
 def classic_new_game():
-    data = request.get_json() or {}
-    slug = data.get('slug', '29')
-    state = create_classic_game(slug)
-    state = step_ai_until_human(state)
-    session['classic_card_state'] = state
-    view = get_game_view(state, seat=0)
-    return jsonify({"ok": True, "state": view})
+    """Create a classic table: solo-vs-bots, or a lobby table for the group."""
+    uid = _user()
+    data = _body()
+    try:
+        game = arena_store.create_game(
+            uid,
+            data.get('slug', '29'),
+            mode=data.get('mode', 'ai'),
+            group_id=int(data.get('group_id') or 0),
+            stake=int(data.get('stake') or 0),
+        )
+        return jsonify({"ok": True, "game_id": int(game["id"]),
+                        "state": arena_store.view_for(game["id"], uid)})
+    except CardClubError as e:
+        return _deny(e)
+
+
+@card_bp.route('/classic/join', methods=['POST'])
+@api_login_required
+def classic_join():
+    uid = _user()
+    data = _body()
+    try:
+        game_id = int(data.get('game_id') or 0)
+        arena_store.join_game(uid, game_id)
+        return jsonify({"ok": True, "game_id": game_id,
+                        "state": arena_store.view_for(game_id, uid)})
+    except (CardClubError, ValueError, TypeError) as e:
+        return _deny(e if isinstance(e, CardClubError)
+                     else CardClubError("game_id required"))
+
+
+@card_bp.route('/classic/start', methods=['POST'])
+@api_login_required
+def classic_start():
+    uid = _user()
+    data = _body()
+    try:
+        game_id = int(data.get('game_id') or 0)
+        arena_store.start_game(uid, game_id)
+        return jsonify({"ok": True, "game_id": game_id,
+                        "state": arena_store.view_for(game_id, uid)})
+    except (CardClubError, ValueError, TypeError) as e:
+        return _deny(e if isinstance(e, CardClubError)
+                     else CardClubError("game_id required"))
+
+
+@card_bp.route('/classic/leave', methods=['POST'])
+@api_login_required
+def classic_leave():
+    uid = _user()
+    data = _body()
+    try:
+        game_id = int(data.get('game_id') or 0)
+        arena_store.leave_game(uid, game_id)
+        return jsonify({"ok": True})
+    except (CardClubError, ValueError, TypeError) as e:
+        return _deny(e if isinstance(e, CardClubError)
+                     else CardClubError("game_id required"))
+
+
+@card_bp.route('/classic/cancel', methods=['POST'])
+@api_login_required
+def classic_cancel():
+    uid = _user()
+    data = _body()
+    try:
+        game_id = int(data.get('game_id') or 0)
+        arena_store.cancel_game(uid, game_id)
+        return jsonify({"ok": True})
+    except (CardClubError, ValueError, TypeError) as e:
+        return _deny(e if isinstance(e, CardClubError)
+                     else CardClubError("game_id required"))
+
+
+@card_bp.route('/classic/tables', methods=['GET'])
+@api_login_required
+def classic_tables():
+    uid = _user()
+    group_id = request.args.get('group_id', type=int, default=0)
+    if not group_id:
+        return jsonify({"ok": True, "tables": [], "group_id": 0})
+    try:
+        from models.card_club import groups
+        groups.require_member(group_id, uid)
+    except CardClubError as e:
+        return _deny(e)
+    return jsonify({"ok": True, "group_id": group_id,
+                    "tables": arena_store.list_group_games(group_id)})
+
 
 @card_bp.route('/classic/action', methods=['POST'])
+@api_login_required
 def classic_action():
-    state = session.get('classic_card_state')
-    if not state:
-        state = create_classic_game('29')
-    data = request.get_json() or {}
-    slug = state.get('slug', '29')
-    engine = GAME_ENGINES.get(slug)
-    if not engine:
-        return jsonify({"ok": False, "error": f"Unknown game '{slug}'"}), 400
+    """Server-validated move: illegal actions never reach the engine."""
+    uid = _user()
+    data = _body()
+    game_id = data.pop('game_id', None)
+    try:
+        game_id = int(game_id) if game_id else None
+    except (ValueError, TypeError):
+        game_id = None
+
+    game = (arena_store.get_game(game_id) if game_id
+            else arena_store.active_game_for(uid))
+    if not game:
+        return _deny(NotFoundError("No classic table in play"))
+    if arena_store.seat_index_of(game["id"], uid) is None:
+        return _deny(PermissionDenied("You are not seated at this table"))
 
     try:
-        seat = 0
-        if slug == "bridge" and state.get("declarer") == 0 and state.get("turn") == state.get("dummy"):
-            seat = state.get("dummy")
-        engine.apply(state, seat, data)
-        state = step_ai_until_human(state)
-        session['classic_card_state'] = state
-        view = get_game_view(state, seat=0)
-        return jsonify({"ok": True, "state": view})
-    except Exception as e:
+        view, settlement = arena_store.apply_action(game["id"], uid, data)
+        return jsonify({"ok": True, "state": view, "settlement": settlement})
+    except CardClubError as e:
+        return _deny(e)
+    except Exception as e:                       # engine-level rejection
         return jsonify({"ok": False, "error": str(e)}), 400
 
+
 @card_bp.route('/classic/state', methods=['GET'])
+@api_login_required
 def classic_state():
-    state = session.get('classic_card_state')
-    if not state:
-        state = create_classic_game('29')
-        state = step_ai_until_human(state)
-        session['classic_card_state'] = state
-    view = get_game_view(state, seat=0)
-    return jsonify({"ok": True, "state": view})
+    uid = _user()
+    game_id = request.args.get('game_id', type=int)
+    game = arena_store.active_game_for(uid, game_id)
+    if not game:
+        return jsonify({"ok": False, "error": "No classic table in play"}), 404
+    return jsonify({"ok": True, "game_id": int(game["id"]),
+                    "state": arena_store.view_for(game["id"], uid)})
 
