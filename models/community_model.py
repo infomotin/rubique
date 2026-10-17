@@ -88,20 +88,61 @@ class CommunityModel:
         )
 
     @staticmethod
-    def get_all_groups():
-        """Fetches all public and private chat groups"""
+    def get_all_groups(user_id=None):
+        """Fetches chat groups visible to ``user_id`` (public groups plus the
+        caller's own private groups). ``None`` keeps the historic unfiltered
+        listing for internal (non-user) callers."""
+        if user_id is None:
+            return query_all(
+                """SELECT g.*, u.username as creator_name,
+                   (SELECT COUNT(*) FROM chat_messages m WHERE m.group_id = g.id) as message_count
+                   FROM chat_groups g
+                   JOIN users u ON g.created_by = u.id
+                   ORDER BY g.created_at DESC""",
+                """SELECT g.*, u.username as creator_name,
+                   (SELECT COUNT(*) FROM chat_messages m WHERE m.group_id = g.id) as message_count
+                   FROM chat_groups g
+                   JOIN users u ON g.created_by = u.id
+                   ORDER BY g.created_at DESC"""
+            )
         return query_all(
             """SELECT g.*, u.username as creator_name,
                (SELECT COUNT(*) FROM chat_messages m WHERE m.group_id = g.id) as message_count
                FROM chat_groups g
                JOIN users u ON g.created_by = u.id
+               WHERE g.is_private = 0 OR g.created_by = %s
                ORDER BY g.created_at DESC""",
             """SELECT g.*, u.username as creator_name,
                (SELECT COUNT(*) FROM chat_messages m WHERE m.group_id = g.id) as message_count
                FROM chat_groups g
                JOIN users u ON g.created_by = u.id
-               ORDER BY g.created_at DESC"""
+               WHERE g.is_private = 0 OR g.created_by = ?
+               ORDER BY g.created_at DESC""",
+            (user_id,)
         )
+
+    @staticmethod
+    def can_access_group(user_id, group_id, role=None):
+        """True when this user may read/write a clan chat group.
+
+        Public groups are readable by any member; private groups only by
+        their creator (or admins). Prevents IDOR on /dashboard/chat/... .
+        """
+        if group_id in (None, ''):
+            return True
+        row = query_one(
+            "SELECT is_private, created_by FROM chat_groups WHERE id = %s",
+            "SELECT is_private, created_by FROM chat_groups WHERE id = ?",
+            (group_id,)
+        )
+        if not row:
+            return False
+        g = dict(row) if not isinstance(row, dict) else row
+        if not int(g.get('is_private') or 0):
+            return True
+        if user_id is not None and int(g.get('created_by') or 0) == int(user_id):
+            return True
+        return role in ('super_admin', 'developer')
 
     @staticmethod
     def send_message(sender_id, message, group_id=None, receiver_id=None):

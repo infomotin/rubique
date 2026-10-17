@@ -92,5 +92,9 @@ if __name__ == '__main__':
     print(f"CubePermutation AI MVC Server shuru hocche port {port} e...")
     print(f"Browser e open korun: http://127.0.0.1:{port}")
     from engineio.async_drivers import threading  # noqa: F401 (threading driver)
-    socketio.run(app, host='127.0.0.1', port=port, debug=True,
-                 allow_unsafe_werkzeug=True)
+    # Interactive Werkzeug debugger (RCE if reachable) only when explicitly
+    # enabled in a development environment - never in production.
+    _debug_flag = os.environ.get('FLASK_DEBUG')
+    _debug = (_debug_flag.lower() in ('1', 'true')) if _debug_flag else bool(Config.DEBUG)
+    socketio.run(app, host='127.0.0.1', port=port, debug=_debug,
+                 allow_unsafe_werkzeug=_debug)

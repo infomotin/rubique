@@ -20,6 +20,20 @@ from models.card_club.engines.classic_tricks import (
 
 card_bp = Blueprint('card', __name__, url_prefix='/cards')
 
+
+def _owns_card_game(game):
+    """True when the signed-in caller is the owner of this CyberDeck game."""
+    if not game:
+        return False
+    owner = game.get('user_id')
+    caller = session.get('user_id')
+    if owner is None or not caller:
+        return False
+    try:
+        return int(owner) == int(caller)
+    except (TypeError, ValueError):
+        return False
+
 @card_bp.route('/')
 def index():
     """CyberDeck Memory Card Protocol Arena View"""
@@ -81,9 +95,10 @@ def index():
     )
 
 @card_bp.route('/new-game', methods=['POST'])
+@api_login_required
 def new_game():
     """Initializes a new randomized CyberDeck matching session"""
-    user_id = session.get('user_id') or 1
+    user_id = session.get('user_id')
     role = session.get('role', 'guest')
     client_ip = request.remote_addr or '127.0.0.1'
 
@@ -119,6 +134,7 @@ def new_game():
     })
 
 @card_bp.route('/update-progress', methods=['POST'])
+@api_login_required
 def update_progress():
     """Updates move count, time elapsed, and matches for score calculation"""
     data = request.get_json() or {}
@@ -134,6 +150,12 @@ def update_progress():
 
     if not game_id:
         return jsonify({"status": "error", "message": "Game ID required"}), 400
+
+    game = CardModel.get_game(game_id)
+    if not game:
+        return jsonify({"status": "error", "message": "Game not found"}), 404
+    if not _owns_card_game(game):
+        return jsonify({"status": "error", "message": "Not your game."}), 403
 
     # Anti-Cheat check: Rapid move anomaly
     anti_cheat_on = SecurityModel.is_game_enabled('game_anti_cheat')
@@ -165,22 +187,34 @@ def update_progress():
     return jsonify({"status": "success", "message": "Card game stage updated!"})
 
 @card_bp.route('/game/<int:game_id>/pause', methods=['POST'])
+@api_login_required
 def pause_game(game_id):
     user_id = session.get('user_id')
+    game = CardModel.get_game(game_id)
+    if not game or not _owns_card_game(game):
+        return jsonify({"status": "error", "message": "Game not found"}), 404
     CardModel.pause_game(game_id, user_id)
     return jsonify({"status": "success", "message": "Card play stage paused!"})
 
 @card_bp.route('/game/<int:game_id>/resume', methods=['POST'])
+@api_login_required
 def resume_game(game_id):
     user_id = session.get('user_id')
+    existing = CardModel.get_game(game_id)
+    if not existing or not _owns_card_game(existing):
+        return jsonify({"status": "error", "message": "Game not found"}), 404
     game = CardModel.resume_game(game_id, user_id)
     if not game:
         return jsonify({"status": "error", "message": "Game not found"}), 404
     return jsonify({"status": "success", "game": game})
 
 @card_bp.route('/game/<int:game_id>/destroy', methods=['POST', 'DELETE'])
+@api_login_required
 def destroy_game(game_id):
     user_id = session.get('user_id')
+    game = CardModel.get_game(game_id)
+    if not game or not _owns_card_game(game):
+        return jsonify({"status": "error", "message": "Game not found"}), 404
     CardModel.destroy_game(game_id, user_id)
     return jsonify({"status": "success", "message": "Card stage destroyed."})
 

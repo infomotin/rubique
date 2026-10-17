@@ -121,7 +121,7 @@
                     <a href="{{ url_for('custom_cubes.builder', shape=cube.shape_type) }}" class="flex-1 py-2 text-center rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-200 font-bold transition-all">
                         Open in Studio
                     </a>
-                    <button onclick="openChallengeModal({{ cube.id }}, '{{ cube.name|escape }}')" class="px-3 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 transition-all" title="Challenge Clan">
+                    <button onclick="openChallengeModal({{ cube.id }}, this.dataset.cname)" data-cname="{{ cube.name }}" class="px-3 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 transition-all" title="Challenge Clan">
                         <i class="fa-solid fa-swords"></i>
                     </button>
                     <form action="{{ url_for('custom_cubes.delete_cube', cube_id=cube.id) }}" method="POST" onsubmit="return confirm('Delete this custom cube?');">
@@ -227,7 +227,7 @@
                         <i class="fa-solid fa-check"></i> Solved by {{ chal.solver_name }}
                     </span>
                     {% else %}
-                    <button onclick="openSolveModal({{ chal.id }}, '{{ chal.cube_name|escape }}', '{{ chal.scramble|escape }}')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-all flex items-center gap-2">
+                    <button onclick="openSolveModal({{ chal.id }}, this.dataset.cname, this.dataset.cscramble)" data-cname="{{ chal.cube_name }}" data-cscramble="{{ chal.scramble }}" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-all flex items-center gap-2">
                         <i class="fa-solid fa-code"></i> Submit Solution
                     </button>
                     {% endif %}

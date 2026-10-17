@@ -131,7 +131,9 @@ def new_game():
     game_mode = data.get('game_mode', 'ai')
     ai_level = int(data.get('ai_level', 2))
     board_theme = data.get('board_theme', 'obsidian')
-    user_id = session.get('user_id', 1)
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "Sign in to start a game."}), 401
 
     result = ChessService.start_game(
         user_id=user_id,
@@ -313,9 +315,10 @@ def submit_solution(problem_id):
     return jsonify(result)
 
 @chess_bp.route('/problems/<int:problem_id>/step', methods=['POST'])
+@login_required
 def problem_step(problem_id):
     """Interactive Problem Solving: verifies player move in real-time, responds with opponent defense"""
-    user_id = session.get('user_id', 1)
+    user_id = session.get('user_id')
     data = request.get_json() or {}
     current_fen = data.get('current_fen', '').strip()
     player_move = data.get('move', '').strip()
@@ -402,11 +405,24 @@ def create_multiplayer_game():
     })
 
 @chess_bp.route('/multiplayer/<int:game_id>/state')
+@login_required
 def get_multiplayer_state(game_id):
-    """Get live state and team moves for a multiplayer match"""
+    """Get live state and team moves for a multiplayer match.
+
+    Any signed-in player can watch a public match; private matches are only
+    visible to their players or rostered clans.
+    """
+    user_id = session.get('user_id')
     game = ChessModel.get_game(game_id)
     if not game:
         return jsonify({"status": "error", "message": "Match not found"}), 404
+    players = {game.get('white_user_id'), game.get('black_user_id'), game.get('user_id')}
+    is_player = user_id in players
+    if not is_player and not game.get('is_public', 1):
+        in_clan = (ChessModel.is_clan_member(game.get('white_group_id'), user_id)
+                   or ChessModel.is_clan_member(game.get('black_group_id'), user_id))
+        if not in_clan:
+            return jsonify({"status": "error", "message": "Match not found"}), 404
     team_moves = ChessModel.get_game_team_moves(game_id)
     return jsonify({
         "status": "success",
@@ -716,7 +732,9 @@ def quick_pair():
 @chess_bp.route('/saved-stages')
 def get_saved_stages():
     """Retrieve all play stages stored for the player across each style"""
-    user_id = session.get('user_id') or 1
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "success", "stages": []})
     style = request.args.get('style') or request.args.get('match_type')
     stages = ChessModel.get_user_saved_stages(user_id, match_type=style, limit=50)
     return jsonify({"status": "success", "stages": stages})
@@ -724,7 +742,9 @@ def get_saved_stages():
 @chess_bp.route('/game/<int:game_id>/pause', methods=['POST'])
 def pause_game_stage(game_id):
     """Stop / Pause play stage: preserves exact board state and frozen clock"""
-    user_id = session.get('user_id') or 1
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "Sign in required."}), 401
     data = request.get_json() or {}
     fen = data.get('fen')
     moves_count = data.get('moves_count')
@@ -734,7 +754,9 @@ def pause_game_stage(game_id):
 @chess_bp.route('/game/<int:game_id>/resume', methods=['POST'])
 def resume_game_stage(game_id):
     """Resume stored play stage from exact position and move count"""
-    user_id = session.get('user_id') or 1
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "Sign in required."}), 401
     game = ChessModel.resume_game(game_id, user_id)
     if not game:
         return jsonify({"status": "error", "message": "Game stage not found"}), 404
@@ -752,14 +774,18 @@ def resume_game_stage(game_id):
 @chess_bp.route('/game/<int:game_id>/destroy', methods=['POST', 'DELETE'])
 def destroy_game_stage(game_id):
     """Permanently destroy / discard saved play stage"""
-    user_id = session.get('user_id') or 1
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "Sign in required."}), 401
     ChessModel.destroy_game(game_id, user_id)
     return jsonify({"status": "success", "message": "Play stage permanently destroyed."})
 
 @chess_bp.route('/game/<int:game_id>/save-title', methods=['POST'])
 def save_stage_title(game_id):
     """Update title / custom label for a stored play stage"""
-    user_id = session.get('user_id') or 1
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "Sign in required."}), 401
     data = request.get_json() or {}
     title = data.get('title')
     if not title:

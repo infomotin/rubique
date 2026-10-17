@@ -7,6 +7,7 @@ MVC Model DB Handler with Multi-Role RBAC:
 - Seeds default demo accounts for instant testing.
 """
 
+import os
 import sqlite3
 import pymysql
 import pymysql.cursors
@@ -1774,7 +1775,18 @@ def seed_demo_data():
     1. Super Admin: username 'admin', password 'admin123', role 'super_admin'
     2. Developer: username 'developer', password 'dev123', role 'developer'
     3. Registered User: username 'speedcuber', password 'user123', role 'user'
+
+    Seeded automatically outside production only. Production requires an
+    explicit SEED_DEMO_ACCOUNTS=1 to create these well-known credentials.
     """
+    seed_flag = Config.SEED_DEMO_ACCOUNTS
+    if seed_flag is not None:
+        allow_seeding = str(seed_flag).lower() in ('1', 'true', 'yes')
+    else:
+        allow_seeding = Config.FLASK_ENV != 'production'
+    if not allow_seeding:
+        return
+
     demo_accounts = [
         ('admin', 'admin@cubeverse.io', 'admin123', 'super_admin', 'Supreme Administrator & Competition Judge', '#f59e0b'),
         ('developer', 'dev@cubeverse.io', 'dev123', 'developer', 'Lead Full-Stack AI & Computer Vision Architect', '#06b6d4'),

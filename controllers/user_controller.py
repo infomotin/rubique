@@ -30,7 +30,7 @@ def dashboard():
     
     # Community & Social Data
     videos = CommunityModel.get_all_videos()
-    groups = CommunityModel.get_all_groups()
+    groups = CommunityModel.get_all_groups(user_id)
     friends = CommunityModel.get_user_friends(user_id)
     posts = CommunityModel.get_all_posts()
 
@@ -127,7 +127,7 @@ def chat_page():
     """Dedicated Speedcuber Live Chat & Clans Page"""
     user_id = session.get('user_id')
     user = UserModel.find_by_id(user_id)
-    groups = CommunityModel.get_all_groups()
+    groups = CommunityModel.get_all_groups(user_id)
     return render_template('user/chat.html', user=user, groups=groups, active_page='chat')
 
 @user_bp.route('/friends')
@@ -259,6 +259,8 @@ def send_chat_message():
         group_id = None
 
     if message:
+        if not CommunityModel.can_access_group(user_id, group_id, session.get('role')):
+            return jsonify({'success': False, 'error': 'Group not found'}), 404
         CommunityModel.send_message(user_id, message, group_id=group_id)
         return jsonify({'success': True, 'message': message, 'username': session.get('username')})
     return jsonify({'success': False}), 400
@@ -266,7 +268,10 @@ def send_chat_message():
 @user_bp.route('/chat/messages/<int:group_id>')
 @login_required
 def get_group_messages(group_id):
-    """Fetches messages for a group"""
+    """Fetches messages for a clan group the caller may actually see"""
+    if not CommunityModel.can_access_group(session.get('user_id'), group_id,
+                                           session.get('role')):
+        return jsonify({'success': False, 'error': 'Group not found'}), 404
     msgs = CommunityModel.get_group_messages(group_id)
     return jsonify({'success': True, 'messages': msgs})
 

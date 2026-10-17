@@ -26,7 +26,7 @@ def index():
     user_cubes = CustomCubeModel.get_user_cubes(user_id)
     public_cubes = CustomCubeModel.get_public_cubes(limit=30)
     challenges = CustomCubeModel.get_group_challenges(limit=30)
-    groups = CommunityModel.get_all_groups()
+    groups = CommunityModel.get_all_groups(user_id)
 
     return render_template(
         'custom_cubes/gallery.html',
@@ -49,7 +49,7 @@ def builder():
         initial_shape = 'classic_3x3'
 
     user_cubes = CustomCubeModel.get_user_cubes(user_id)
-    groups = CommunityModel.get_all_groups()
+    groups = CommunityModel.get_all_groups(user_id)
 
     return render_template(
         'custom_cubes/builder.html',

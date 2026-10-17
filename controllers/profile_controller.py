@@ -16,6 +16,7 @@ from models.community_model import CommunityModel
 from models.custom_cube_model import CustomCubeModel, SUPPORTED_SHAPES
 from models.db import query_all, query_one
 from .auth_controller import login_required
+from utils.security import sanitize_avatar_color
 
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 
@@ -34,7 +35,7 @@ def index():
     history = SolveModel.get_user_history(user_id, limit=50)
 
     # 2. Groups / Study Clans
-    groups = CommunityModel.get_all_groups()
+    groups = CommunityModel.get_all_groups(user_id)
 
     # 3. Friends List
     friends = CommunityModel.get_user_friends(user_id)
@@ -97,7 +98,7 @@ def update():
     """Update personal information, speedcubing credentials, bio, and avatar"""
     user_id = session.get('user_id')
     bio = request.form.get('bio', '').strip()
-    avatar_color = request.form.get('avatar_color', '#818cf8').strip()
+    avatar_color = sanitize_avatar_color(request.form.get('avatar_color', '#818cf8'))
     wca_id = request.form.get('wca_id', '').strip()
     country = request.form.get('country', '').strip()
     main_cube = request.form.get('main_cube', '').strip() or 'GAN 12 MagLev 3x3'

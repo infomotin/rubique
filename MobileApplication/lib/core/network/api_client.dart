@@ -138,6 +138,24 @@ class ApiClient {
     }
   }
 
+  Future<ApiResponse> delete(String endpoint) async {
+    try {
+      final uri = Uri.parse('$_baseUrl$endpoint');
+      final response = await http
+          .delete(uri, headers: _buildHeaders())
+          .timeout(const Duration(seconds: 20));
+
+      _extractAndSaveCookies(response);
+      return _parseResponse(response);
+    } catch (e) {
+      return ApiResponse(
+        statusCode: 0,
+        isSuccess: false,
+        error: 'Network connection error: $e',
+      );
+    }
+  }
+
   Future<ApiResponse> postMultipart(
     String endpoint, {
     required Uint8List fileBytes,

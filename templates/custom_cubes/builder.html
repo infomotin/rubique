@@ -87,7 +87,7 @@
             {% for shape_id, shape in supported_shapes.items() %}
             <button class="shape-card p-3 rounded-2xl border text-left transition-all flex flex-col justify-between h-28 {% if shape_id == initial_shape %}active border-cyan-400 bg-cyan-950/30{% else %}border-slate-800 bg-slate-900/60 hover:border-slate-700{% endif %}"
                     data-shape-id="{{ shape_id }}"
-                    onclick="selectBuilderShape('{{ shape_id }}')">
+                    onclick="selectBuilderShape(this.dataset.shapeId)">
                 <div class="flex items-center justify-between w-full">
                     <i class="{{ shape.icon }} text-lg {% if shape_id == initial_shape %}text-cyan-400{% else %}text-slate-400{% endif %}"></i>
                     <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">{{ shape.faces }}F</span>

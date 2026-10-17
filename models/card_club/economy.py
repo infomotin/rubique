@@ -281,11 +281,17 @@ def grant_starting_balance(user_id):
         return True
 
 
-def replenish_wallet(user_id, amount=100):
-    """Claim top-up coins from the developer reserve when user balance is low."""
+def replenish_wallet(user_id, amount=100, max_balance=None):
+    """Claim top-up coins from the developer reserve when user balance is low.
+
+    ``max_balance`` (when given) is re-checked *inside* the wallet lock so
+    concurrent claims cannot all pass a stale pre-check and mint repeatedly.
+    """
     with _tx() as (conn, db_type):
         _ensure_wallet(conn, db_type, 0, user_id)
         cur = _balance_locked(conn, db_type, 0, user_id)
+        if max_balance is not None and cur > max_balance:
+            raise CardClubError("Wallet balance too high to claim a refill")
         _reserve_delta(conn, db_type, -amount, "grant_refill",
                        ref_type="user", ref_id=user_id, note="wallet replenishment")
         after = cur + amount
@@ -494,9 +500,12 @@ def place_bet(table_id, group_id, user_id, amount):
         raise BetLimitExceeded(f"Per-table bet limit is {MAX_BET_LIMIT}")
     with _tx() as (conn, db_type):
         if amount > 0:
+            # Lock the payer's wallet first: concurrent stakes otherwise all
+            # read the same pre-lock exposure snapshot and bypass the cap.
+            _balance_locked(conn, db_type, group_id, user_id)
             outstanding = _one(conn, db_type,
                                """SELECT COALESCE(SUM(amount),0) FROM club_bets
-                                  WHERE user_id = %s AND status = 'escrowed'""",
+                                  WHERE user_id = %s AND status = 'escrowed' FOR UPDATE""",
                                """SELECT COALESCE(SUM(amount),0) FROM club_bets
                                   WHERE user_id = ? AND status = 'escrowed'""",
                                (user_id,))
@@ -603,10 +612,12 @@ def place_classic_stake(game_id, user_id, amount, group_id=0):
         raise BetLimitExceeded(f"Per-table bet limit is {MAX_BET_LIMIT}")
     with _tx() as (conn, db_type):
         if amount > 0:
+            # Lock the payer's wallet before the exposure snapshot (see place_bet).
+            _balance_locked(conn, db_type, group_id, user_id)
             outstanding = _one(
                 conn, db_type,
                 """SELECT COALESCE(SUM(amount),0) FROM classic_stakes
-                   WHERE user_id = %s AND status = 'escrowed'""",
+                   WHERE user_id = %s AND status = 'escrowed' FOR UPDATE""",
                 """SELECT COALESCE(SUM(amount),0) FROM classic_stakes
                    WHERE user_id = ? AND status = 'escrowed'""",
                 (user_id,))
@@ -699,6 +710,39 @@ def classic_stakes(game_id, status=None):
             params = (game_id,)
         rows = _all(conn, db_type, sql_m, sql_s, params)
         return [{"user_id": int(r[0]), "amount": int(r[1])} for r in rows or []]
+
+
+def ledger_for_user(user_id, group_id=0, limit=30):
+    """Most recent hash-chained entries for one wallet (coin history feed)."""
+    limit = max(1, min(int(limit or 30), 200))
+    with _tx() as (conn, db_type):
+        rows = _all(conn, db_type,
+            """SELECT seq, amount, balance_after, entry_type, ref_type, ref_id,
+                      note, entry_hash, created_at
+                 FROM club_ledger
+                WHERE owner_key = %s
+                ORDER BY seq DESC LIMIT %s""",
+            """SELECT seq, amount, balance_after, entry_type, ref_type, ref_id,
+                      note, entry_hash, created_at
+                 FROM club_ledger
+                WHERE owner_key = ?
+                ORDER BY seq DESC LIMIT ?""",
+            (_owner_key(int(group_id or 0), user_id), limit))
+        out = []
+        for r in rows or []:
+            seq, amount, after = int(r[0]), int(r[1]), int(r[2])
+            out.append({
+                "seq": seq,
+                "amount": amount,
+                "balance_after": after,
+                "entry_type": r[3],
+                "ref_type": r[4],
+                "ref_id": int(r[5]) if r[5] is not None else None,
+                "note": r[6] or "",
+                "entry_hash": r[7],
+                "created_at": str(r[8]) if r[8] is not None else "",
+            })
+        return out
 
 
 def sweep_member_balance(group_id, user_id):

@@ -14,6 +14,7 @@ from pydantic import BaseModel, EmailStr
 from fastapi import APIRouter, Response, Depends, HTTPException, status
 from services.auth_service import AuthService
 from models.user_model import UserModel
+from config import Config
 from fastapi_app.session_manager import encode_flask_cookie
 from fastapi_app.firebase_auth import verify_firebase_id_token, map_firebase_user_to_mysql
 from fastapi_app.dependencies import get_current_user
@@ -84,6 +85,7 @@ async def login(req: LoginRequest, response: Response):
         value=cookie_str,
         httponly=True,
         samesite="lax",
+        secure=Config.SESSION_COOKIE_SECURE,
         max_age=7 * 86400
     )
 
@@ -129,6 +131,7 @@ async def register(req: RegisterRequest, response: Response):
         value=cookie_str,
         httponly=True,
         samesite="lax",
+        secure=Config.SESSION_COOKIE_SECURE,
         max_age=7 * 86400
     )
 
@@ -172,6 +175,7 @@ async def firebase_login(req: FirebaseLoginRequest, response: Response):
         value=cookie_str,
         httponly=True,
         samesite="lax",
+        secure=Config.SESSION_COOKIE_SECURE,
         max_age=7 * 86400
     )
 

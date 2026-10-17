@@ -8,8 +8,6 @@ database remains the sole source of truth.
 
 import os
 import re
-import json
-import base64
 import secrets
 from typing import Dict, Any, Optional, Tuple
 import firebase_admin
@@ -47,26 +45,25 @@ def init_firebase_admin():
 def verify_firebase_id_token(token: str) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
     """
     Verifies a Firebase ID token.
-    In production: Uses firebase_admin.auth.verify_id_token.
-    In testing/dev: Supports test tokens and signed JWT payload extraction.
+
+    Production: firebase_admin.auth.verify_id_token (signature, audience,
+    expiry) - nothing else is ever accepted.
+    Development/testing: literal ``test_token_``/``mock_token_`` shortcuts are
+    tolerated, but only outside production (ALLOW_DEV_AUTH_TOKENS=0/1 to
+    override) and never for the unsigned-JWT payload trick this function used
+    to allow (a 3-part JWT with no signature check = full auth bypass).
     """
     if not token or not isinstance(token, str):
         return False, None, "Missing or invalid token string."
 
-    init_firebase_admin()
+    # 1. Development & testing shortcut (unsigned test tokens).
+    allow_dev = os.environ.get("ALLOW_DEV_AUTH_TOKENS")
+    if allow_dev is not None:
+        dev_tokens_ok = allow_dev.lower() in ("1", "true", "yes")
+    else:
+        dev_tokens_ok = Config.FLASK_ENV in ("development", "testing")
 
-    # 1. First attempt full Firebase Admin verification if active
-    if _FIREBASE_INITIALIZED:
-        try:
-            decoded_claims = fb_auth.verify_id_token(token)
-            return True, decoded_claims, None
-        except Exception as e:
-            # If verification failed via admin, check if we're in dev/test mode
-            pass
-
-    # 2. Development & Testing Token Support
-    # Allows automated unit/integration tests and local emulator testing without live GCP project
-    if token.startswith("test_token_") or token.startswith("mock_token_"):
+    if dev_tokens_ok and (token.startswith("test_token_") or token.startswith("mock_token_")):
         parts = token.split(":")
         email = parts[1] if len(parts) > 1 else "test_cuber@example.com"
         username = email.split("@")[0]
@@ -78,18 +75,16 @@ def verify_firebase_id_token(token: str) -> Tuple[bool, Optional[Dict[str, Any]]
         }
         return True, claims, None
 
-    # 3. Development JWT unpack fallback (if valid 3-part JWT)
-    try:
-        segments = token.split(".")
-        if len(segments) == 3:
-            payload_seg = segments[1]
-            padded = payload_seg + "=" * (-len(payload_seg) % 4)
-            data = json.loads(base64.urlsafe_b64decode(padded.encode("utf-8")).decode("utf-8"))
-            if "email" in data or "sub" in data:
-                return True, data, None
-    except Exception:
-        pass
+    # 2. Real tokens: strict Firebase Admin verification (fail closed).
+    init_firebase_admin()
+    if _FIREBASE_INITIALIZED:
+        try:
+            decoded_claims = fb_auth.verify_id_token(token)
+            return True, decoded_claims, None
+        except Exception:
+            return False, None, "Invalid Firebase authentication token."
 
+    # 3. No verifier configured and not a dev token: refuse.
     return False, None, "Invalid Firebase authentication token."
 
 

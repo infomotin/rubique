@@ -44,8 +44,9 @@ def verify_password(stored_hash: str, candidate_password: str) -> bool:
     try:
         return check_password_hash(stored_hash, candidate_password)
     except Exception:
-        # Fallback to constant-time comparison in case of legacy test seeds
-        return hmac.compare_digest(str(stored_hash), str(candidate_password))
+        # Never fall back to comparing the stored value verbatim: that would
+        # accept a plaintext-stored credential as a valid password.
+        return False
 
 
 def timing_safe_compare(val_a: str, val_b: str) -> bool:
@@ -72,6 +73,22 @@ def sanitize_input(value: str) -> str:
     # Strip dangerous NULL bytes and unprintable characters
     cleaned = value.replace('\x00', '').strip()
     return html.escape(cleaned)
+
+
+def sanitize_avatar_color(value: str, default: str = "#818cf8") -> str:
+    """
+    Accepts only a plain hex color (#abc / #aabbcc / #aabbccdd).
+
+    Easy Description:
+    Blocks CSS/HTML attribute injection through the avatar color field
+    (it is interpolated into style="background-color: ..." attributes).
+    """
+    if not isinstance(value, str):
+        return default
+    candidate = value.strip()
+    if re.fullmatch(r"#[0-9a-fA-F]{3,8}", candidate):
+        return candidate
+    return default
 
 
 def generate_csrf_token() -> str:

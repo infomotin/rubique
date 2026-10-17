@@ -421,7 +421,13 @@ def api_generate_invite_link():
         my_grps = groups.list_my_groups(uid)
         if not my_grps:
             return jsonify({"ok": False, "error": "No groups found. Please create a group first."}), 400
-        gid = my_grps[0]['id']
+            gid = my_grps[0]['id']
+    # Only members may read a group's invite code (otherwise any account could
+    # harvest private-group invite codes by iterating group ids).
+    try:
+        groups.require_member(int(gid), uid)
+    except CardClubError as e:
+        return _deny(e)
     group = groups.get_group(int(gid))
     if not group:
         return jsonify({"ok": False, "error": "Group not found"}), 404
@@ -557,6 +563,18 @@ def api_send_group_chat(gid):
 # ============================================================ API: wallet ===
 
 
+def _json_only():
+    """Money-moving endpoints accept JSON bodies only.
+
+    Cross-site HTML forms cannot set a JSON content type (it is not a CORS
+    'simple request'), so once CORS origins are locked down a forged form
+    post can never move coins. Returns an error response, or None when OK.
+    """
+    if not request.is_json:
+        return jsonify({"ok": False, "error": "JSON body required"}), 415
+    return None
+
+
 @card_club_bp.route('/api/wallet', methods=['GET'])
 @api_required
 def api_wallet():
@@ -574,6 +592,9 @@ def api_wallet():
 @card_club_bp.route('/api/wallet/fund', methods=['POST'])
 @api_required
 def api_fund():
+    guard = _json_only()
+    if guard:
+        return guard
     uid = _user_id()
     data = request.get_json(silent=True) or request.form
     gid = int(data.get('group_id', 0))
@@ -589,6 +610,9 @@ def api_fund():
 @card_club_bp.route('/api/wallet/transfer', methods=['POST'])
 @api_required
 def api_transfer():
+    guard = _json_only()
+    if guard:
+        return guard
     uid = _user_id()
     data = request.get_json(silent=True) or request.form
     try:
@@ -606,6 +630,9 @@ def api_transfer():
 @card_club_bp.route('/api/wallet/transfers/<int:tid>/resolve', methods=['POST'])
 @api_required
 def api_resolve_transfer(tid):
+    guard = _json_only()
+    if guard:
+        return guard
     uid = _user_id()
     data = request.get_json(silent=True) or request.form
     approve = str(data.get('approve', '')).lower() in ('1', 'true', 'yes')
@@ -619,6 +646,9 @@ def api_resolve_transfer(tid):
 @card_club_bp.route('/api/wallet/escrow', methods=['POST'])
 @api_required
 def api_escrow_offer():
+    guard = _json_only()
+    if guard:
+        return guard
     uid = _user_id()
     data = request.get_json(silent=True) or request.form
     try:
@@ -637,6 +667,9 @@ def api_escrow_offer():
 @card_club_bp.route('/api/wallet/escrow/<int:eid>/act', methods=['POST'])
 @api_required
 def api_escrow_act(eid):
+    guard = _json_only()
+    if guard:
+        return guard
     uid = _user_id()
     data = request.get_json(silent=True) or request.form
     try:
@@ -661,12 +694,15 @@ def api_verify_ledger():
 @card_club_bp.route('/api/wallet/claim', methods=['POST'])
 @api_required
 def api_claim_faucet():
+    guard = _json_only()
+    if guard:
+        return guard
     uid = _user_id()
     try:
         bal = economy.balances_view(uid)
         if bal['personal'] > 500:
             return jsonify({"ok": False, "error": "You already have sufficient coins in your wallet."}), 400
-        new_bal = economy.replenish_wallet(uid, 100)
+        new_bal = economy.replenish_wallet(uid, 100, max_balance=500)
         return jsonify({"ok": True, "claimed": 100, "balance": new_bal, "message": "100 coins claimed from reserve!"})
     except CardClubError as e:
         return _deny(e)
@@ -892,7 +928,7 @@ def init_socketio(app):
     """Attach Socket.IO to the app and register Card Club live handlers."""
     global _socketio
     from flask_socketio import SocketIO
-    _socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading",
+    _socketio = SocketIO(app, async_mode="threading",
                          logger=False, engineio_logger=False)
 
     @_socketio.on('connect')

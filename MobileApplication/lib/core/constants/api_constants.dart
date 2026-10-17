@@ -32,4 +32,14 @@ class ApiConstants {
   static const String profile = '/api/v1/profile';
   static const String profileUpdate = '/api/v1/profile/update';
   static const String clearHistory = '/api/v1/profile/clear-history';
+
+  // Playing cards (Classic Suite practice + money tables)
+  static const String cardCatalog = '/api/v1/cards/catalog';
+  static const String cardWallet = '/api/v1/cards/wallet';
+  static const String cardLedger = '/api/v1/cards/ledger';
+  static const String cardPractice = '/api/v1/cards/practice';
+  static const String cardPracticeActive = '/api/v1/cards/practice/active';
+  static const String cardClassic = '/api/v1/cards/classic';
+  static const String cardClassicActive = '/api/v1/cards/classic/active';
+  static const String cardClassicTables = '/api/v1/cards/classic/tables';
 }

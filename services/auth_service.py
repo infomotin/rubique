@@ -10,7 +10,9 @@ Easy Description:
 - Prepares session variables safely so users get sent to the right dashboard.
 """
 
-from typing import Tuple, Optional, Dict, Any
+import threading
+import time
+from typing import Dict, List, Tuple, Optional, Any
 from flask import session, url_for
 from models.user_model import UserModel
 from models.db import execute_update
@@ -19,6 +21,42 @@ from models.card_club import economy as club_economy
 from models.card_club import devices as club_devices
 from utils.validators import validate_username, validate_email, validate_password_strength
 from utils.security import verify_password
+
+
+# Brute-force protection: failed sign-ins are throttled per username.
+# (Per-IP throttling belongs at the reverse proxy / WAF layer.)
+LOGIN_FAIL_WINDOW_SECS = 600
+LOGIN_FAIL_LIMIT = 8
+
+_login_failures: Dict[str, List[float]] = {}
+_login_failures_lock = threading.Lock()
+
+
+def _login_failure_key(username: str) -> str:
+    return (username or "").strip().lower()
+
+
+def _login_locked_out(key: str) -> Tuple[bool, int]:
+    now = time.monotonic()
+    with _login_failures_lock:
+        hits = [t for t in _login_failures.get(key, []) if now - t < LOGIN_FAIL_WINDOW_SECS]
+        _login_failures[key] = hits
+        if len(hits) >= LOGIN_FAIL_LIMIT:
+            retry = int(LOGIN_FAIL_WINDOW_SECS - (now - hits[0])) + 1
+            return True, retry
+    return False, 0
+
+
+def _record_login_failure(key: str) -> None:
+    with _login_failures_lock:
+        hits = [t for t in _login_failures.get(key, []) if time.monotonic() - t < LOGIN_FAIL_WINDOW_SECS]
+        hits.append(time.monotonic())
+        _login_failures[key] = hits
+
+
+def _clear_login_failures(key: str) -> None:
+    with _login_failures_lock:
+        _login_failures.pop(key, None)
 
 
 class AuthService:
@@ -38,14 +76,25 @@ class AuthService:
         if not username or not password:
             return False, None, "Username and password are required."
 
+        fail_key = _login_failure_key(username)
+        locked, retry_after = _login_locked_out(fail_key)
+        if locked:
+            return False, None, (
+                f"Too many failed sign-in attempts. Try again in {retry_after} seconds."
+            )
+
         user = UserModel.find_by_username(username.strip())
         if not user:
+            _record_login_failure(fail_key)
             return False, None, "Invalid username or password. Please verify your credentials."
 
         # Verify password using secure hash verification
         is_valid = UserModel.verify_password(user['password_hash'], password.strip())
         if not is_valid:
+            _record_login_failure(fail_key)
             return False, None, "Invalid username or password. Please verify your credentials."
+
+        _clear_login_failures(fail_key)
 
         # Device binding check (one account per device security policy)
         if request_obj:
@@ -141,6 +190,9 @@ class AuthService:
         Clears old session data and logs in the current user with their ID, name, and role.
         """
         session.clear()
+        # Permanent sessions expire after Config.PERMANENT_SESSION_LIFETIME
+        # instead of surviving until the browser is closed.
+        session.permanent = True
         session['user_id'] = user['id']
         session['username'] = user['username']
         session['role'] = user.get('role', 'user')

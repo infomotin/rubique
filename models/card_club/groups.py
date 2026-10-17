@@ -110,7 +110,7 @@ def create_group(user_id, name, description="", is_private=1, fake_name=""):
     name = (name or "").strip()
     if not name:
         raise CardClubError("Group name is required")
-    invite_code = secrets.token_hex(5).upper()
+    invite_code = secrets.token_hex(8).upper()   # 64-bit, URL-safe, uppercase
     is_priv = 1 if is_private else 0
     group_id = execute_insert(
         "INSERT INTO club_groups (name, description, invite_code, created_by, is_private) VALUES (%s,%s,%s,%s,%s)",

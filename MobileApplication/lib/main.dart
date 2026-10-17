@@ -10,6 +10,8 @@ import 'features/cube/screens/visualizer_screen.dart';
 import 'features/scan/scan_service.dart';
 import 'features/scan/screens/scan_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
+import 'features/card/card_service.dart';
+import 'features/card/screens/cards_home_screen.dart';
 import 'features/offline/screens/offline_view_screen.dart';
 
 void main() async {
@@ -23,6 +25,7 @@ void main() async {
   final authService = AuthService(apiClient, db);
   final cubeService = CubeService(apiClient, db);
   final scanService = ScanService(apiClient, db);
+  final cardService = CardService(apiClient);
 
   // Restore active Flask session or cached profile
   await authService.restoreSession();
@@ -34,6 +37,7 @@ void main() async {
     authService: authService,
     cubeService: cubeService,
     scanService: scanService,
+    cardService: cardService,
   ));
 }
 
@@ -44,6 +48,7 @@ class CubePermutationApp extends StatelessWidget {
   final AuthService authService;
   final CubeService cubeService;
   final ScanService scanService;
+  final CardService cardService;
 
   const CubePermutationApp({
     super.key,
@@ -53,6 +58,7 @@ class CubePermutationApp extends StatelessWidget {
     required this.authService,
     required this.cubeService,
     required this.scanService,
+    required this.cardService,
   });
 
   @override
@@ -67,6 +73,7 @@ class CubePermutationApp extends StatelessWidget {
         authService: authService,
         cubeService: cubeService,
         scanService: scanService,
+        cardService: cardService,
       ),
     );
   }
@@ -78,6 +85,7 @@ class AppRoot extends StatefulWidget {
   final AuthService authService;
   final CubeService cubeService;
   final ScanService scanService;
+  final CardService cardService;
 
   const AppRoot({
     super.key,
@@ -86,6 +94,7 @@ class AppRoot extends StatefulWidget {
     required this.authService,
     required this.cubeService,
     required this.scanService,
+    required this.cardService,
   });
 
   @override
@@ -140,6 +149,7 @@ class _AppRootState extends State<AppRoot> {
         scanService: widget.scanService,
         onSendToSolver: _handleSendToSolver,
       ),
+      CardsHomeScreen(cardService: widget.cardService),
       ProfileScreen(
         authService: widget.authService,
         apiClient: widget.apiClient,
@@ -184,6 +194,11 @@ class _AppRootState extends State<AppRoot> {
               icon: Icon(Icons.camera_alt_outlined),
               activeIcon: Icon(Icons.camera_alt, color: AppTheme.accentCyan),
               label: 'OpenCV Scan',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.style_outlined),
+              activeIcon: Icon(Icons.style, color: AppTheme.accentCyan),
+              label: 'Cards',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),

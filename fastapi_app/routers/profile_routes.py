@@ -12,6 +12,7 @@ from models.user_model import UserModel
 from models.solve_model import SolveModel
 from models.db import query_one
 from fastapi_app.dependencies import get_current_user
+from utils.security import sanitize_avatar_color
 
 router = APIRouter(prefix="/api/v1/profile", tags=["User Profile"])
 
@@ -98,7 +99,7 @@ async def update_profile(
     UserModel.update_profile(
         user_id=user_id,
         bio=req.bio or "",
-        avatar_color=req.avatar_color or "#818cf8",
+        avatar_color=sanitize_avatar_color(req.avatar_color or "#818cf8"),
         wca_id=req.wca_id or "",
         country=req.country or "",
         main_cube=req.main_cube or "GAN 12 MagLev 3x3",

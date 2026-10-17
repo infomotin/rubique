@@ -29,7 +29,10 @@ def decode_flask_cookie(cookie_value: str) -> Optional[Dict[str, Any]]:
     if not cookie_value:
         return None
     try:
-        data = _signer.loads(cookie_value)
+        data = _signer.loads(
+            cookie_value,
+            max_age=int(Config.PERMANENT_SESSION_LIFETIME.total_seconds())
+        )
         if isinstance(data, dict):
             return data
         return None

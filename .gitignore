@@ -19,3 +19,9 @@ static/uploads/feed/vid_*
 Thumbs.db
 .vscode/
 .idea/
+
+# Runtime secrets, local databases & scratch logs
+.instance/
+*.db
+*.sqlite
+_vscom_catalog.log

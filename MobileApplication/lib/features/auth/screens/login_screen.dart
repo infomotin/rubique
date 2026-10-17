@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleFirebaseLogin() async {
-    final tokenController = TextEditingController(text: 'test_token_firebase:mobile_cuber@cubeverse.io');
+    final tokenController = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
