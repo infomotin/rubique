@@ -42,6 +42,10 @@
                 <i class="fa-solid fa-trophy text-amber-300"></i>
                 <span>29 (Twenty-Nine)</span>
             </button>
+            <button data-slug="call_break" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <i class="fa-solid fa-flag-checkered text-amber-400"></i>
+                <span>Call Break</span>
+            </button>
             <button data-slug="bridge" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
                 <i class="fa-solid fa-handshake text-indigo-400"></i>
                 <span>Contract Bridge</span>
@@ -66,26 +70,30 @@
                 <i class="fa-solid fa-shield-halved text-fuchsia-400"></i>
                 <span>Euchre (24 Cards)</span>
             </button>
-            <button data-slug="call_break" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
-                <i class="fa-solid fa-flag-checkered text-amber-400"></i>
-                <span>Call Break</span>
-            </button>
-            <button data-slug="hazari" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+
+            <!-- Card Club Live Tables Divider -->
+            <div class="h-6 w-px bg-slate-800 mx-1"></div>
+
+            <a href="{{ url_for('card_club.section') }}" class="px-3 py-2 rounded-xl bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 font-medium transition-all flex items-center gap-1.5 shadow-sm" title="Multiplayer table in CyberDeck Card Club">
                 <i class="fa-solid fa-star text-yellow-400"></i>
                 <span>Hazari (1000 Pts)</span>
-            </button>
-            <button data-slug="teen_patti" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">CLUB</span>
+            </a>
+            <a href="{{ url_for('card_club.section') }}" class="px-3 py-2 rounded-xl bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 font-medium transition-all flex items-center gap-1.5 shadow-sm" title="Multiplayer table in CyberDeck Card Club">
                 <i class="fa-solid fa-coins text-amber-400"></i>
-                <span>Teen Patti (3 Cards)</span>
-            </button>
-            <button data-slug="poker" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <span>Teen Patti</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">CLUB</span>
+            </a>
+            <a href="{{ url_for('card_club.section') }}" class="px-3 py-2 rounded-xl bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 font-medium transition-all flex items-center gap-1.5 shadow-sm" title="Multiplayer table in CyberDeck Card Club">
                 <i class="fa-solid fa-dice text-blue-400"></i>
                 <span>Texas Hold'em</span>
-            </button>
-            <button data-slug="blackjack" class="game-select-btn px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium transition-all flex items-center gap-2">
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">CLUB</span>
+            </a>
+            <a href="{{ url_for('card_club.section') }}" class="px-3 py-2 rounded-xl bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 font-medium transition-all flex items-center gap-1.5 shadow-sm" title="Multiplayer table in CyberDeck Card Club">
                 <i class="fa-solid fa-clover text-emerald-400"></i>
-                <span>Blackjack (21)</span>
-            </button>
+                <span>Blackjack</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">CLUB</span>
+            </a>
         </div>
     </div>
 
@@ -246,19 +254,30 @@
                         <div id="extra-actions-toolbar" class="flex gap-2"></div>
                     </div>
 
+                    <!-- Trump Selection Drawer (When Phase is setting_trump in 29) -->
+                    <div id="trump-drawer" class="hidden glass-card p-3 rounded-2xl border-2 border-amber-500/60 bg-slate-950/95 font-mono text-xs flex flex-wrap items-center justify-center gap-2.5 shadow-2xl backdrop-blur-lg mb-2">
+                        <span class="text-amber-300 font-black uppercase text-xs tracking-wider flex items-center gap-1.5 mr-2">
+                            <i class="fa-solid fa-crown text-amber-400"></i>
+                            Select Secret Trump:
+                        </span>
+                        <div id="trump-buttons-container" class="flex flex-wrap items-center gap-2">
+                            <!-- Populated with suit buttons -->
+                        </div>
+                    </div>
+
                     <!-- Bidding Overlay / Drawer (When Phase is Bidding) -->
-                    <div id="bidding-drawer" class="hidden glass-card p-4 rounded-2xl border-2 border-amber-500/50 bg-slate-950/95 font-mono text-xs flex flex-wrap items-center justify-center gap-2.5 shadow-2xl backdrop-blur-lg">
+                    <div id="bidding-drawer" class="hidden glass-card p-3 rounded-2xl border-2 border-amber-500/50 bg-slate-950/95 font-mono text-xs flex flex-wrap items-center justify-center gap-2 shadow-2xl backdrop-blur-lg mb-2">
                         <span class="text-amber-300 font-black uppercase text-xs tracking-wider flex items-center gap-1.5 mr-2">
                             <i class="fa-solid fa-coins text-amber-400"></i>
                             Your Bid:
                         </span>
-                        <div id="bid-buttons-container" class="flex flex-wrap items-center gap-2">
+                        <div id="bid-buttons-container" class="flex flex-wrap items-center gap-1.5 max-w-xl justify-center">
                             <!-- Populated with legal bids -->
                         </div>
                     </div>
 
                     <!-- Human Hand (Cards with Real Faces & Vector Court Illustrations, Click to Play) -->
-                    <div id="human-hand-container" class="hand-fan-container max-w-full overflow-x-visible min-h-[140px] sm:min-h-[160px] pb-2">
+                    <div id="human-hand-container" class="hand-fan-container max-w-full min-h-[140px] sm:min-h-[160px] pb-3 mb-2">
                         <!-- Populated with real cards -->
                     </div>
                 </div>
@@ -401,17 +420,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Turn indicator
-        const isMyTurn = (gameState.phase === 'bidding' && gameState.bid_turn === 0) || (gameState.phase === 'playing' && gameState.turn === 0);
-        document.getElementById('hud-turn-disp').innerText = isMyTurn ? 'You (South)' : `Seat ${gameState.turn} (Bot)`;
+        const isDummyTurn = gameState.slug === 'bridge' && gameState.dummy_seat === gameState.turn && gameState.declarer === 0;
+        const isMyTurn = (gameState.phase === 'bidding' && gameState.bid_turn === 0) || 
+                         (gameState.phase === 'setting_trump' && (gameState.high_bidder === 0 || gameState.high_bidder === undefined)) ||
+                         (gameState.phase === 'playing' && (gameState.turn === 0 || isDummyTurn));
+
+        if (isDummyTurn) {
+            document.getElementById('hud-turn-disp').innerText = "You (Dummy's Turn)";
+        } else if (gameState.phase === 'setting_trump') {
+            document.getElementById('hud-turn-disp').innerText = "You (Choose Trump)";
+        } else if (isMyTurn) {
+            document.getElementById('hud-turn-disp').innerText = 'You (South)';
+        } else {
+            const botNames = ['South (You)', 'West (Bot)', 'North (Partner)', 'East (Bot)'];
+            const activeSeat = gameState.phase === 'bidding' ? gameState.bid_turn : gameState.turn;
+            document.getElementById('hud-turn-disp').innerText = botNames[activeSeat] || `Seat ${activeSeat} (Bot)`;
+        }
+
         const turnBadge = document.getElementById('south-turn-indicator');
         if (isMyTurn && !gameState.over) {
             turnBadge.classList.remove('hidden');
+            if (isDummyTurn) {
+                turnBadge.innerText = 'PLAYING DUMMY';
+            } else if (gameState.phase === 'setting_trump') {
+                turnBadge.innerText = 'SET TRUMP';
+            } else {
+                turnBadge.innerText = 'YOUR TURN';
+            }
         } else {
             turnBadge.classList.add('hidden');
         }
 
         // Score container
-        if (gameState.card_points && gameState.card_points.team0 !== undefined) {
+        if (gameState.slug === 'call_break' && gameState.scores) {
+            document.getElementById('hud-team0-score').innerText = `You: ${gameState.scores['0'] !== undefined ? gameState.scores['0'] : 0} pts (${gameState.tricks['0'] || 0}/${gameState.bids['0'] || 0} tricks)`;
+            document.getElementById('hud-team1-score').innerText = `West: ${gameState.scores['1'] || 0} | North: ${gameState.scores['2'] || 0} | East: ${gameState.scores['3'] || 0}`;
+        } else if (gameState.card_points && gameState.card_points.team0 !== undefined) {
             document.getElementById('hud-team0-score').innerText = `${gameState.card_points.team0} pts (Tricks: ${gameState.tricks['0'] + gameState.tricks['2']})`;
             document.getElementById('hud-team1-score').innerText = `${gameState.card_points.team1} pts (Tricks: ${gameState.tricks['1'] + gameState.tricks['3']})`;
         } else if (gameState.team_tricks && gameState.team_tricks.team0 !== undefined) {
@@ -447,12 +491,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // North Hand cards (dummy if Bridge revealed, else fanned card backs)
+        // North Hand cards (dummy if Bridge revealed, interactive if it's Dummy's turn!)
         const northCardsEl = document.getElementById('north-hand-cards');
         northCardsEl.innerHTML = '';
         if (gameState.dummy_hand && gameState.dummy_hand.length > 0) {
+            const dummyPlays = isDummyTurn ? (gameState.legal_actions || []).filter(a => a.action === 'play').map(a => a.card) : [];
             gameState.dummy_hand.forEach(c => {
-                northCardsEl.innerHTML += createCardHTML(c, false, true);
+                const isDummyPlayable = isDummyTurn && dummyPlays.includes(c);
+                const cardWrapper = document.createElement('div');
+                cardWrapper.innerHTML = createCardHTML(c, isDummyPlayable, true);
+                const cardDiv = cardWrapper.firstElementChild;
+                if (isDummyPlayable && cardDiv) {
+                    cardDiv.classList.add('cursor-pointer', 'hover:scale-110', 'hover:-translate-y-2');
+                    cardDiv.title = "Click to play from Dummy's hand";
+                    cardDiv.addEventListener('click', () => {
+                        sendAction({ action: 'play', card: c, seat: gameState.dummy_seat });
+                        if (window.ClubAudio) window.ClubAudio.deal();
+                        else playTone(600, 'triangle', 0.08);
+                    });
+                }
+                northCardsEl.appendChild(cardDiv || cardWrapper);
             });
         } else {
             const n_count = Math.min(13, gameState.counts['2'] || 0);
@@ -489,7 +547,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (gameState.hand && gameState.hand.length > 0) {
             const count = gameState.hand.length;
             gameState.hand.forEach((card, idx) => {
-                const isPlayable = isMyTurn && legalPlays.includes(card) && gameState.phase === 'playing';
+                const isPlayable = isMyTurn && !isDummyTurn && legalPlays.includes(card) && gameState.phase === 'playing';
                 const mid = (count - 1) / 2;
                 const offset = mid === 0 ? 0 : (idx - mid);
                 const rotDeg = offset * (count > 8 ? 2.6 : 3.8);
@@ -515,11 +573,42 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+        // Trump Selection Drawer (for 29)
+        const trumpDrawer = document.getElementById('trump-drawer');
+        const trumpButtonsContainer = document.getElementById('trump-buttons-container');
+        if (trumpDrawer && trumpButtonsContainer) {
+            trumpButtonsContainer.innerHTML = '';
+            const trumpActs = (gameState.legal_actions || []).filter(a => a.action === 'set_trump');
+            if (gameState.phase === 'setting_trump' && isMyTurn && trumpActs.length > 0) {
+                trumpDrawer.classList.remove('hidden');
+                const suitMeta = {
+                    'H': { name: 'Hearts', icon: '♥', color: 'bg-rose-950/90 hover:bg-rose-900 border-rose-500/60 text-rose-300' },
+                    'S': { name: 'Spades', icon: '♠', color: 'bg-indigo-950/90 hover:bg-indigo-900 border-indigo-500/60 text-cyan-300' },
+                    'D': { name: 'Diamonds', icon: '♦', color: 'bg-amber-950/90 hover:bg-amber-900 border-amber-500/60 text-amber-300' },
+                    'C': { name: 'Clubs', icon: '♣', color: 'bg-emerald-950/90 hover:bg-emerald-900 border-emerald-500/60 text-emerald-300' }
+                };
+                trumpActs.forEach(a => {
+                    const meta = suitMeta[a.suit] || { name: a.suit, icon: '★', color: 'bg-slate-800' };
+                    const btn = document.createElement('button');
+                    btn.className = `px-4 py-2 rounded-xl border ${meta.color} font-mono font-bold text-xs shadow-lg active:scale-95 transition-all flex items-center gap-2`;
+                    btn.innerHTML = `<span class="text-base">${meta.icon}</span> <span>${meta.name}</span>`;
+                    btn.addEventListener('click', () => {
+                        sendAction(a);
+                        if (window.ClubAudio) window.ClubAudio.deal();
+                        else playTone(550, 'sine', 0.1);
+                    });
+                    trumpButtonsContainer.appendChild(btn);
+                });
+            } else {
+                trumpDrawer.classList.add('hidden');
+            }
+        }
+
         // Bidding drawer
         const biddingDrawer = document.getElementById('bidding-drawer');
         const bidButtonsContainer = document.getElementById('bid-buttons-container');
         bidButtonsContainer.innerHTML = '';
-        const legalBids = (gameState.legal_actions || []).filter(a => a.action !== 'play');
+        const legalBids = (gameState.legal_actions || []).filter(a => a.action !== 'play' && a.action !== 'set_trump' && a.action !== 'reveal_trump');
 
         if (gameState.phase === 'bidding' && isMyTurn && legalBids.length > 0) {
             biddingDrawer.classList.remove('hidden');

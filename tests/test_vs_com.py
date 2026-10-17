@@ -53,23 +53,16 @@ class VsComputerTests(unittest.TestCase):
                 return applied, t
             seat = gameplay.seat_index_of(tid, uid)
             info, eng = gameplay._engine_for(t)
-            actor = bots.current_actor(eng.state)
-            if actor != seat:
-                moves, _ = gameplay.step_pending_bots(tid)
-                if not moves:
-                    return applied, gameplay.get_table(tid)
-                applied += len(moves)
-                continue
             legal = eng.legal_actions(seat)
-            if not legal:
-                moves, _ = gameplay.step_pending_bots(tid)
-                if not moves:
-                    return applied, gameplay.get_table(tid)
-                applied += len(moves)
+            if legal:
+                gameplay.perform_move(gid, uid, tid,
+                                      self._pick(eng.state, seat, legal))
+                applied += 1
                 continue
-            gameplay.perform_move(gid, uid, tid,
-                                  self._pick(eng.state, seat, legal))
-            applied += 1
+            moves, _ = gameplay.step_pending_bots(tid)
+            if not moves:
+                return applied, gameplay.get_table(tid)
+            applied += len(moves)
         return applied, gameplay.get_table(tid)
 
     def _table(self, slug, mode='vs_com', max_seats=None):
@@ -141,6 +134,7 @@ class VsComputerTests(unittest.TestCase):
         """Full human-vs-bot game for every engine except bridge."""
         problems = []
         for slug in AUTO_PLAY_SLUGS:
+            print(f"[vs_com] {slug} ...", flush=True)
             try:
                 u, gid, tid = self._table(
                     slug, max_seats=min(4, CATALOG[slug]['max']))

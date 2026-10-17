@@ -204,7 +204,7 @@
         0 35px 80px -15px rgba(0, 0, 0, 0.95),
         inset 0 0 120px rgba(0, 0, 0, 0.9);
     border: 3px solid #fbbf24;
-    overflow: hidden;
+    overflow: visible;
     transition: all 0.4s ease;
 }
 
@@ -212,6 +212,7 @@
     content: '';
     position: absolute;
     inset: 0;
+    border-radius: inherit;
     background-image: 
         radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
         radial-gradient(rgba(0, 0, 0, 0.22) 1px, transparent 1px);
@@ -265,6 +266,42 @@
 @media (min-width: 640px) {
     .hand-fan-card {
         margin-left: -32px !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .hand-fan-container {
+        padding: 10px 4px 6px;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .hand-fan-card {
+        margin-left: -48px !important;
+        transform-origin: 50% 110%;
+    }
+    .playing-card-3d {
+        width: 64px !important;
+        height: 94px !important;
+    }
+    .card-corner-index {
+        top: 3px !important;
+        left: 4px !important;
+    }
+    .card-corner-index.bottom-index {
+        bottom: 3px !important;
+        right: 4px !important;
+        top: auto !important;
+        left: auto !important;
+    }
+    .card-rank {
+        font-size: 13px !important;
+    }
+    .card-suit-icon {
+        font-size: 10px !important;
+    }
+    .card-center-watermark {
+        font-size: 28px !important;
     }
 }
 

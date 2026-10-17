@@ -157,6 +157,7 @@ class Golf(BaseCardGame):
             s["stocks"][str(i)] = [deck.pop() for _ in range(base)]
         while deck:
             s["stocks"]["0"].append(deck.pop())
+        s["moves"] = {str(i): type(self).GRID for i in range(len(s["players"]))}
         s["turn"] = 0
 
     def _draw_options(self, seat):
@@ -226,19 +227,47 @@ class Golf(BaseCardGame):
         grid[gi] = taken
         s["up"].append(replaced)
         self._say(s, seat, f"{taken} into slot {gi + 1}")
-        if not any(s["stocks"].values()):
+        self._use_move(seat)
+        if self._hole_done() or not any(s["stocks"].values()):
             self._close_hole()
             return
-        s["turn"] = self._next(s, seat)
-        while not self._draw_options(s["turn"]) and not s["over"]:
-            nxt = self._next(s, s["turn"])
-            if nxt == s["turn"]:
-                self._close_hole()
-                break
-            if not any(self._draw_options(i) for i in range(len(s["players"]))):
-                self._close_hole()
-                break
-            s["turn"] = nxt
+        nxt = self._advance_from(seat)
+        if nxt is None:
+            self._close_hole()
+            return
+        s["turn"] = nxt
+
+    # A hole must always close: players draw from a shared up-pile that never
+    # dries, so each seat is limited to one swap per grid slot per hole.
+    GRID = 6
+
+    def _moves_map(self):
+        s = self.state
+        mv = s.get("moves")
+        if not isinstance(mv, dict):
+            mv = {str(i): type(self).GRID for i in range(len(s["players"]))}
+            s["moves"] = mv
+        return mv
+
+    def _use_move(self, seat):
+        mv = self._moves_map()
+        key = str(seat)
+        mv[key] = max(0, int(mv.get(key, type(self).GRID)) - 1)
+
+    def _hole_done(self):
+        mv = self._moves_map()
+        return all(int(mv.get(str(i), 0)) <= 0
+                   for i in range(len(self.state["players"])))
+
+    def _advance_from(self, seat):
+        s = self.state
+        n = len(s["players"])
+        for k in range(1, n + 1):
+            cand = (seat + k) % n
+            if int(self._moves_map().get(str(cand), 0)) > 0 and \
+                    self._draw_options(cand):
+                return cand
+        return None
 
     def _close_hole(self):
         s = self.state
@@ -261,4 +290,9 @@ class Golf(BaseCardGame):
         self._deal_hole(random.Random())
 
     def winners(self):
-        return list(self.state.get("finish", []))
+        s = self.state
+        finish = s.get("finish") or []
+        if not finish:
+            return []
+        best = s.get("totals", {}).get(str(finish[0]))
+        return [i for i in finish if s.get("totals", {}).get(str(i)) == best]

@@ -216,10 +216,38 @@ class Speed(BaseCardGame):
         for pile in ("up", "down"):
             for c in self._playable_on(seat, pile):
                 acts.append({"action": "play", "card": c, "pile": pile})
-        if not acts:
-            acts.append({"action": "draw"} if s["stocks"][str(seat)]
-                        else {"action": "pass"})
-        return acts
+        if acts:
+            return acts
+        if s["stocks"][str(seat)]:
+            return [{"action": "draw"}]
+        if self._any_can_act():
+            return []                       # parked: another player can move
+        return [{"action": "pass"}]         # nobody can move - close it out
+
+    def _can_act(self, seat):
+        s = self.state
+        if seat in s["finish"]:
+            return False
+        if self._playable_on(seat, "up") or self._playable_on(seat, "down"):
+            return True
+        return bool(s["stocks"][str(seat)])
+
+    def _any_can_act(self):
+        return any(self._can_act(i)
+                   for i in range(len(self.state["players"])))
+
+    def _settle_stall(self):
+        """No seat can play and nobody has stock: award by fewest cards left."""
+        s = self.state
+        if s["over"] or self._any_can_act():
+            return
+        order = sorted(range(len(s["players"])),
+                       key=lambda i: (len(s["hands"][str(i)]) +
+                                      len(s["stocks"][str(i)]), i))
+        s["finish"] = order
+        s["over"] = True
+        s["turn"] = -1
+        self._say(s, None, "table locked - fewest cards left wins")
 
     def apply(self, seat, action):
         s = self.state
@@ -243,27 +271,22 @@ class Speed(BaseCardGame):
                 if len(s["finish"]) == 1:
                     s["finish"] += [i for i in range(len(s["players"])) if i != seat]
                     s["over"] = True
+                    return
+            self._settle_stall()
             return
         if act == "draw":
             if not s["stocks"][key]:
                 raise IllegalMove("Stock is empty")
             s["hands"][key].append(s["stocks"][key].pop())
             self._top_up(seat)
+            self._settle_stall()
             return
         if act == "pass":
             if self._playable_on(seat, "up") or self._playable_on(seat, "down") or s["stocks"][key]:
                 raise IllegalMove("You still have options")
-            # Stuck: only decisive when nobody can finish anymore.
-            any_stock = any(s["stocks"].values())
-            any_play = any(self._playable_on(i, "up") or self._playable_on(i, "down")
-                           for i in range(len(s["players"])))
-            if any_stock or any_play:
-                self._say(s, seat, "stuck for now")
-                return
-            order = sorted(range(len(s["players"])),
-                           key=lambda i: (len(s["hands"][str(i)]) + len(s["stocks"][str(i)]), i))
-            s["finish"] = order
-            s["over"] = True
+            if self._any_can_act():
+                raise IllegalMove("Other players can still move")
+            self._settle_stall()
             return
         raise IllegalMove("Unknown action")
 

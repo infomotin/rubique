@@ -220,7 +220,10 @@ def classic_action():
         return jsonify({"ok": False, "error": f"Unknown game '{slug}'"}), 400
 
     try:
-        engine.apply(state, 0, data)
+        seat = 0
+        if slug == "bridge" and state.get("declarer") == 0 and state.get("turn") == state.get("dummy"):
+            seat = state.get("dummy")
+        engine.apply(state, seat, data)
         state = step_ai_until_human(state)
         session['classic_card_state'] = state
         view = get_game_view(state, seat=0)

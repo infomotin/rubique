@@ -111,6 +111,11 @@ class TwentyNineGame:
                 actions.append({"action": "bid", "value": b})
             return actions
 
+        elif phase == "setting_trump":
+            if seat != state.get("high_bidder", 0):
+                return []
+            return [{"action": "set_trump", "suit": s} for s in ["H", "S", "D", "C"]]
+
         elif phase == "playing":
             if seat != state["turn"]:
                 return []
@@ -123,11 +128,22 @@ class TwentyNineGame:
                 follows = [c for c in hand if suit_of(c) == lead]
                 if follows:
                     return [{"action": "play", "card": c} for c in follows]
-                # Can't follow suit: can reveal trump if not revealed and holding trump
-                if not state["trump_revealed"]:
+                
+                # Cannot follow suit
+                if state["trump_revealed"]:
+                    # Trump is revealed: MUST play trump if holding one!
+                    trumps = [c for c in hand if suit_of(c) == state["trump_suit"]]
+                    if trumps:
+                        return [{"action": "play", "card": c} for c in trumps]
+                    return [{"action": "play", "card": c} for c in hand]
+                else:
+                    # Trump not revealed yet: can ask to reveal trump OR discard/sluff card
                     actions.append({"action": "reveal_trump"})
+                    for c in hand:
+                        actions.append({"action": "play", "card": c})
+                    return actions
             
-            # Any card in hand can be played if no follow suit restriction
+            # Any card in hand can be led if no follow suit restriction
             for c in hand:
                 actions.append({"action": "play", "card": c})
             return actions
@@ -150,40 +166,77 @@ class TwentyNineGame:
                 state["bids"][str(seat)] = "pass"
                 log.append(f"{SEAT_NAMES[seat]} passed.")
 
-            # Check if bidding is complete (4 passes or everyone answered)
-            active_bidders = [i for i in range(4) if state["bids"].get(str(i)) != "pass"]
-            if len(state["bids"]) >= 4 or (len(active_bidders) <= 1 and state["high_bidder"] is not None):
-                if state["high_bidder"] is None:
-                    # Default minimum bidder
-                    state["high_bidder"] = 0
-                    state["high_bid"] = 16
-                
+            # Count how many players have passed
+            passed_count = sum(1 for i in range(4) if state["bids"].get(str(i)) == "pass")
+
+            # Check if all 4 players passed without any bid
+            if passed_count == 4:
+                state["high_bidder"] = 0
+                state["high_bid"] = 16
+                state["phase"] = "setting_trump"
+                log.append("All players passed. You are default bidder at 16 points. Select secret trump suit.")
+                return state
+
+            # Check if 3 players passed and there is a high bidder
+            if passed_count == 3 and state.get("high_bidder") is not None:
                 bidder = state["high_bidder"]
-                # Bot sets trump if bot, otherwise wait for player trump or auto-set player's strongest suit
-                suits_in_hand = [suit_of(c) for c in state["hands"][str(bidder)]]
-                trump = action.get("trump") or max(set(suits_in_hand), key=suits_in_hand.count)
-                state["trump_suit"] = trump
+                if bidder == 0:
+                    state["phase"] = "setting_trump"
+                    log.append(f"You won bidding at {state['high_bid']}! Select your secret trump suit.")
+                else:
+                    suits_in_hand = [suit_of(c) for c in state["hands"][str(bidder)]]
+                    trump = max(set(suits_in_hand), key=suits_in_hand.count)
+                    state["trump_suit"] = trump
+                    state["phase"] = "playing"
+                    state["turn"] = bidder
+
+                    # Deal remaining 4 cards to each player
+                    for i in range(4):
+                        state["hands"][str(i)].extend(state["second_half"].get(str(i), []))
+                    state["second_half"] = {}
+
+                    log.append(f"{SEAT_NAMES[bidder]} won bidding at {state['high_bid']}! Secret trump set. Second 4 cards dealt.")
+                return state
+
+            # Advance bid_turn to next player who has not passed!
+            nxt = (state["bid_turn"] + 1) % 4
+            while state["bids"].get(str(nxt)) == "pass":
+                nxt = (nxt + 1) % 4
+            state["bid_turn"] = nxt
+            return state
+
+        elif state["phase"] == "setting_trump":
+            if act == "set_trump":
+                suit = action.get("suit", "H")
+                state["trump_suit"] = suit
                 state["phase"] = "playing"
+                bidder = state.get("high_bidder", 0)
                 state["turn"] = bidder
 
                 # Deal remaining 4 cards to each player
                 for i in range(4):
-                    state["hands"][str(i)].extend(state["second_half"][str(i)])
+                    state["hands"][str(i)].extend(state["second_half"].get(str(i), []))
                 state["second_half"] = {}
 
-                log.append(f"{SEAT_NAMES[bidder]} won bidding at {state['high_bid']}! Secret trump set. Second 4 cards dealt.")
-            else:
-                state["bid_turn"] = (state["bid_turn"] + 1) % 4
+                log.append(f"You selected secret trump {SUIT_NAMES[suit]} ({SUIT_SYMBOLS[suit]})! Remaining 4 cards dealt. Let the battle begin!")
             return state
 
         elif state["phase"] == "playing":
+            if seat != state["turn"]:
+                return state
+
             if act == "reveal_trump":
                 state["trump_revealed"] = True
                 log.append(f"{SEAT_NAMES[seat]} asked for TRUMP! Trump is revealed as {SUIT_NAMES[state['trump_suit']]} ({SUIT_SYMBOLS[state['trump_suit']]})!")
                 return state
 
+            if act != "play":
+                return state
+
             card = action.get("card")
             hand = state["hands"][str(seat)]
+            if not card or card not in hand:
+                return state
             hand.remove(card)
 
             if not state["trick"]:
@@ -1126,11 +1179,167 @@ class EuchreGame:
         return state
 
 
+
+# =====================================================================
+# 8. CALL BREAK (SOUTH ASIAN 4-PLAYER TRICK-TAKING SUITE)
+# =====================================================================
+class CallBreakGame:
+    """
+    Call Break: 52 cards, 4 players (free-for-all).
+    Spades are permanent trump.
+    Bidding: Each player calls 1 to 8 tricks.
+    Rules:
+      1. Must follow suit.
+      2. If following suit, MUST beat highest card in trick if possible.
+      3. If void in led suit, MUST play a spade (trump) if holding any!
+         Must beat highest spade played so far if possible.
+      4. Scoring:
+         - Made bid: bid + 0.1 per overtrick (e.g., bid 3, won 4 = 3.1 pts)
+         - Failed bid: -bid points (e.g., bid 3, won 2 = -3.0 pts)
+    """
+    slug = "call_break"
+    title = "Call Break"
+    description = "Strategic South Asian 4-player trick classic. Spades permanent trump, mandatory follow and beat-card rules, overtrick scoring."
+
+    @classmethod
+    def create(cls, seed=None):
+        rng = random.Random(seed)
+        deck = full_deck()
+        rng.shuffle(deck)
+
+        hands = {str(i): sorted([deck.pop() for _ in range(13)], key=lambda c: (c[0], STANDARD_VALUES[c[1:]])) for i in range(4)}
+
+        state = {
+            "slug": cls.slug,
+            "phase": "bidding",
+            "hands": hands,
+            "bids": {},
+            "bid_turn": 0,
+            "trump_suit": "S",
+            "tricks": {str(i): 0 for i in range(4)},
+            "scores": {str(i): 0.0 for i in range(4)},
+            "trick": [],
+            "lead_suit": None,
+            "turn": 0,
+            "log": ["Call Break match started: 52 cards dealt (13 each). Spades are permanent trump. Bidding open."],
+            "over": False,
+            "winner": None
+        }
+        return state
+
+    @classmethod
+    def legal_actions(cls, state, seat):
+        if state["over"]:
+            return []
+        
+        if state["phase"] == "bidding":
+            if seat != state["bid_turn"]:
+                return []
+            return [{"action": "bid", "value": b} for b in range(1, 9)]
+
+        elif state["phase"] == "playing":
+            if seat != state["turn"]:
+                return []
+            hand = state["hands"][str(seat)]
+            lead = state["lead_suit"]
+
+            if not lead:
+                return [{"action": "play", "card": c} for c in hand]
+
+            follows = [c for c in hand if suit_of(c) == lead]
+            if follows:
+                # Must beat highest card of led suit if possible
+                highest_lead = max([STANDARD_VALUES[rank_of(e["card"])] for e in state["trick"] if suit_of(e["card"]) == lead], default=0)
+                beaters = [c for c in follows if STANDARD_VALUES[rank_of(c)] > highest_lead]
+                if beaters:
+                    return [{"action": "play", "card": c} for c in beaters]
+                return [{"action": "play", "card": c} for c in follows]
+
+            # Void in led suit: MUST play a spade if holding one
+            spades = [c for c in hand if suit_of(c) == "S"]
+            if spades:
+                highest_spade = max([STANDARD_VALUES[rank_of(e["card"])] for e in state["trick"] if suit_of(e["card"]) == "S"], default=0)
+                better_spades = [c for c in spades if STANDARD_VALUES[rank_of(c)] > highest_spade]
+                if better_spades:
+                    return [{"action": "play", "card": c} for c in better_spades]
+                return [{"action": "play", "card": c} for c in spades]
+
+            # Void in led suit and void in spades: can play any card
+            return [{"action": "play", "card": c} for c in hand]
+
+        return []
+
+    @classmethod
+    def apply(cls, state, seat, action):
+        log = state["log"]
+        act = action.get("action")
+
+        if state["phase"] == "bidding":
+            val = int(action.get("value", 2))
+            state["bids"][str(seat)] = val
+            log.append(f"{SEAT_NAMES[seat]} bid {val} tricks.")
+
+            if len(state["bids"]) == 4:
+                state["phase"] = "playing"
+                state["turn"] = 0
+                log.append("All 4 bids registered! 13-trick Call Break play begins with South leading.")
+            else:
+                state["bid_turn"] = (state["bid_turn"] + 1) % 4
+            return state
+
+        elif state["phase"] == "playing":
+            card = action.get("card")
+            hand = state["hands"][str(seat)]
+            hand.remove(card)
+
+            if not state["trick"]:
+                state["lead_suit"] = suit_of(card)
+            state["trick"].append({"seat": seat, "card": card})
+            log.append(f"{SEAT_NAMES[seat]} played {pretty_card(card)}")
+
+            if len(state["trick"]) == 4:
+                lead = state["lead_suit"]
+                # Highest spade wins; else highest of led suit wins
+                def score_cb(e):
+                    c = e["card"]
+                    s, r = suit_of(c), rank_of(c)
+                    mult = 2 if s == "S" else (1 if s == lead else 0)
+                    return (mult, STANDARD_VALUES[r])
+
+                winning_e = max(state["trick"], key=score_cb)
+                winner = winning_e["seat"]
+
+                state["tricks"][str(winner)] += 1
+                log.append(f"{SEAT_NAMES[winner]} won trick (total: {state['tricks'][str(winner)]} / call: {state['bids'][str(winner)]})")
+
+                state["trick"] = []
+                state["lead_suit"] = None
+                state["turn"] = winner
+
+                if all(len(state["hands"][str(i)]) == 0 for i in range(4)):
+                    state["over"] = True
+                    state["phase"] = "round_over"
+                    for i in range(4):
+                        bid = state["bids"][str(i)]
+                        won = state["tricks"][str(i)]
+                        if won >= bid:
+                            state["scores"][str(i)] = round(bid + (won - bid) * 0.1, 1)
+                        else:
+                            state["scores"][str(i)] = -float(bid)
+                    best_seat = max(range(4), key=lambda i: state["scores"][str(i)])
+                    state["winner"] = best_seat
+                    log.append(f"ROUND FINISHED! Call Break Champion: {SEAT_NAMES[best_seat]} with {state['scores'][str(best_seat)]} pts!")
+            else:
+                state["turn"] = (seat + 1) % 4
+            return state
+
+
 # =====================================================================
 # MASTER CATALOG & DISPATCHER WITH SMART AI BOT CONTROLLER
 # =====================================================================
 GAME_ENGINES = {
     "29": TwentyNineGame,
+    "call_break": CallBreakGame,
     "bridge": BridgeGame,
     "spades": SpadesGame,
     "hearts": HeartsGame,
@@ -1141,6 +1350,7 @@ GAME_ENGINES = {
 
 CLASSIC_CATALOG = [
     {"slug": "29", "name": "29 Card Game", "deck_size": 32, "desc": "South Asian classic with Jack=3, 9=2, A=1, 10=1, 28/29 points bidding."},
+    {"slug": "call_break", "name": "Call Break", "deck_size": 52, "desc": "South Asian 4-player trick classic: Spades trump, mandatory follow and beat-card rules."},
     {"slug": "bridge", "name": "Contract Bridge", "deck_size": 52, "desc": "Premier 4-player partnership strategy with bidding and dummy play."},
     {"slug": "spades", "name": "Spades", "deck_size": 52, "desc": "Partnership trick-taking game. Spades are permanent trump."},
     {"slug": "hearts", "name": "Hearts", "deck_size": 52, "desc": "Trick-avoidance classic: dodge penalty Hearts and the Queen of Spades."},
@@ -1229,13 +1439,18 @@ def step_ai_until_human(state):
 
     while not state.get("over") and steps < max_steps:
         phase = state.get("phase")
+        if phase == "setting_trump":
+            if state.get("high_bidder") == 0:
+                break
+
         cur_seat = state.get("bid_turn") if phase == "bidding" else state.get("turn")
 
         # If it's the human's turn (seat 0), stop and wait for human input
         if cur_seat == 0:
-            # In Bridge, if human is declarer and it's dummy's turn, human plays dummy
-            if slug == "bridge" and state.get("dummy") == cur_seat and state.get("declarer") == 0:
-                break
+            break
+
+        # In Bridge, if human is declarer (seat 0) and it's dummy's turn, human controls dummy
+        if slug == "bridge" and cur_seat == state.get("dummy") and state.get("declarer") == 0:
             break
 
         legal = engine.legal_actions(state, cur_seat)
@@ -1270,6 +1485,16 @@ def choose_ai_action(slug, state, seat, legal_actions):
                 if bid_candidates:
                     return bid_candidates[0]
             return {"action": "pass"}
+
+        elif slug == "call_break":
+            hand = state["hands"].get(str(seat), [])
+            high_cards = sum(1 for c in hand if rank_of(c) in ("A", "K"))
+            spades_len = sum(1 for c in hand if suit_of(c) == "S")
+            est = max(1, min(6, high_cards + (1 if spades_len >= 4 else 0)))
+            for a in legal_actions:
+                if a.get("action") == "bid" and a.get("value") == est:
+                    return a
+            return legal_actions[0]
 
         elif slug == "spades":
             # Estimate trick bid: 1 pt per Ace/King + high spades
@@ -1315,6 +1540,14 @@ def choose_ai_action(slug, state, seat, legal_actions):
         return legal_actions[0]
 
     # Card Playing Heuristics
+    # 29 Trump Reveal Heuristic for AI Bots:
+    if slug == "29":
+        reveal_cand = [a for a in legal_actions if a.get("action") == "reveal_trump"]
+        if reveal_cand:
+            pts_in_trick = sum(TwentyNineGame.CARD_POINTS.get(rank_of(e["card"]), 0) for e in state.get("trick", []))
+            if pts_in_trick >= 2 or seat == state.get("high_bidder") or random.random() < 0.6:
+                return reveal_cand[0]
+
     play_actions = [a for a in legal_actions if a.get("action") == "play"]
     if not play_actions:
         return legal_actions[0]
