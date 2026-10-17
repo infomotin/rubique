@@ -4,77 +4,86 @@
 
 {% block extra_head %}
 <style>
-    /* Facebook-like luxury styling tokens */
+    /* Ultra-Modern Luxury Glassmorphism & UI Tokens */
     .fb-card {
-        background: rgba(15, 23, 42, 0.75);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(51, 65, 85, 0.6);
-        border-radius: 1rem;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        background: rgba(13, 19, 33, 0.75);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .fb-card:hover {
-        border-color: rgba(99, 102, 241, 0.4);
+        border-color: rgba(99, 102, 241, 0.35);
+        box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.65), 0 0 20px -5px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
     .fb-input {
-        background: rgba(2, 6, 23, 0.8);
-        border: 1px solid rgba(51, 65, 85, 0.7);
+        background: rgba(8, 12, 22, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         color: #f8fafc;
         transition: all 0.2s ease;
     }
     .fb-input:focus {
+        background: rgba(11, 16, 30, 0.95);
         border-color: #6366f1;
         outline: none;
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
     }
     .fb-btn-action {
-        transition: all 0.15s ease-in-out;
+        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .fb-btn-action:hover {
-        transform: translateY(-1px);
+        transform: translateY(-1.5px);
     }
     .fb-btn-action:active {
         transform: translateY(0);
     }
-    .pulse-glow {
-        box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+    .avatar-glow {
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
     }
     .scrollbar-thin::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 5px;
+        height: 5px;
     }
     .scrollbar-thin::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.4);
+        background: rgba(15, 23, 42, 0.2);
     }
     .scrollbar-thin::-webkit-scrollbar-thumb {
-        background: rgba(51, 65, 85, 0.8);
-        border-radius: 3px;
+        background: rgba(71, 85, 105, 0.6);
+        border-radius: 9999px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-[#07090e] text-slate-100 font-sans pb-16">
+<div class="min-h-screen bg-[#060911] text-slate-100 font-sans pb-16">
 
     <!-- ========================================================================= -->
-    <!-- 1. FACEBOOK-STYLE TOP APP BAR (SEARCH, INBOX & NOTIFICATION BAR)          -->
+    <!-- 1. STREAMLINED SUB-HEADER (LIVE SEARCH, QUICK ACTIONS, INBOX & ALERTS)     -->
     <!-- ========================================================================= -->
-    <section class="sticky top-16 z-40 bg-[#090d16]/95 backdrop-blur-xl border-b border-slate-800/80 shadow-xl">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
+    <section class="sticky top-16 z-40 bg-slate-950/85 backdrop-blur-2xl border-b border-slate-800/80 shadow-xl py-2.5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
             
             <!-- Left: News Feed Badge & Title -->
             <div class="flex items-center gap-3 shrink-0">
-                <a href="{{ url_for('feed.newsfeed') }}" class="flex items-center gap-2 group">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-0.5 shadow-md shadow-indigo-500/20">
+                <a href="{{ url_for('feed.newsfeed') }}" class="flex items-center gap-2.5 group">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-0.5 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-all duration-300">
                         <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                            <i class="fa-solid fa-newspaper text-indigo-400 text-sm group-hover:scale-110 transition-transform"></i>
+                            <i class="fa-solid fa-newspaper text-indigo-400 text-sm group-hover:rotate-6 transition-transform"></i>
                         </div>
                     </div>
-                    <div class="hidden sm:block">
-                        <h1 class="text-sm font-bold font-outfit text-white tracking-wide flex items-center gap-1.5">
-                            News Feed <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono">Live</span>
-                        </h1>
-                        <p class="text-[10px] text-slate-400">Public Posts & Game Invitations</p>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h1 class="text-sm font-bold font-outfit text-white tracking-wide">
+                                News Feed
+                            </h1>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono font-bold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Live
+                            </span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 hidden sm:block">Public Posts & Game Invitations</p>
                     </div>
                 </a>
             </div>
@@ -83,29 +92,29 @@
             <div class="flex-1 max-w-xl relative">
                 <div class="relative flex items-center">
                     <span class="absolute left-3.5 text-slate-400 pointer-events-none">
-                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        <i class="fa-solid fa-magnifying-glass text-xs text-indigo-400"></i>
                     </span>
                     <input id="global-search-input"
                            type="text"
                            value="{{ search_q }}"
                            placeholder="Search posts, game invitations, cubers & card players..."
                            class="w-full pl-9 pr-24 py-2 rounded-full fb-input text-xs placeholder:text-slate-500">
-                    <div class="absolute right-2 flex items-center gap-1">
-                        <button id="search-submit-btn" class="px-2.5 py-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-[11px] font-semibold text-white transition-colors">
+                    <div class="absolute right-1.5 flex items-center gap-1">
+                        <button id="search-submit-btn" class="px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-[11px] font-bold text-white shadow-sm shadow-indigo-600/30 transition-all">
                             Search
                         </button>
                     </div>
                 </div>
 
                 <!-- Universal Search Live Results Dropdown -->
-                <div id="search-results-dropdown" class="hidden absolute left-0 right-0 top-full mt-2 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-3 z-50 max-h-96 overflow-y-auto scrollbar-thin">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 text-xs">
-                        <span class="font-bold text-slate-300">Search Results</span>
+                <div id="search-results-dropdown" class="hidden absolute left-0 right-0 top-full mt-2 rounded-2xl bg-slate-950/95 border border-slate-800 shadow-2xl p-3 z-50 max-h-96 overflow-y-auto scrollbar-thin backdrop-blur-2xl">
+                    <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-2 text-xs">
+                        <span class="font-bold text-slate-200">Search Results</span>
                         <div class="flex gap-1 text-[11px]">
-                            <button class="search-tab-filter px-2 py-0.5 rounded bg-indigo-600 text-white font-mono active" data-tab="all">All</button>
-                            <button class="search-tab-filter px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono" data-tab="posts">Posts</button>
-                            <button class="search-tab-filter px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono" data-tab="invitations">Invites</button>
-                            <button class="search-tab-filter px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono" data-tab="users">Users</button>
+                            <button class="search-tab-filter px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-mono active" data-tab="all">All</button>
+                            <button class="search-tab-filter px-2 py-0.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white font-mono" data-tab="posts">Posts</button>
+                            <button class="search-tab-filter px-2 py-0.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white font-mono" data-tab="invitations">Invites</button>
+                            <button class="search-tab-filter px-2 py-0.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white font-mono" data-tab="users">Users</button>
                         </div>
                     </div>
                     <div id="search-results-content" class="space-y-2 text-xs">
@@ -114,13 +123,21 @@
                 </div>
             </div>
 
-            <!-- Right: INBOX, NOTIFICATIONS BAR & PROFILE PILL -->
-            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+            <!-- Right: QUICK CREATE, INBOX & NOTIFICATIONS BAR -->
+            <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
                 
+                <!-- Quick Create Post Button -->
+                <button type="button"
+                        onclick="openPostModal('post')"
+                        class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white text-xs font-bold shadow-md shadow-indigo-600/25 fb-btn-action transition-all">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>Create Post</span>
+                </button>
+
                 <!-- 1. INBOX MESSAGING BUTTON WITH BADGE -->
                 <div class="relative">
                     <button id="inbox-toggle-btn"
-                            class="relative w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-md"
+                            class="relative w-9 h-9 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-md"
                             title="Direct Messages & Inbox">
                         <i class="fa-solid fa-comment-dots text-sm text-cyan-400"></i>
                         {% if unread_messages_count > 0 %}
@@ -131,7 +148,7 @@
                     </button>
 
                     <!-- Inbox Dropdown Flyout -->
-                    <div id="inbox-dropdown-menu" class="hidden absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-3 z-50 max-h-[28rem] flex flex-col">
+                    <div id="inbox-dropdown-menu" class="hidden absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-slate-950/95 border border-slate-800 shadow-2xl p-3 z-50 max-h-[28rem] flex flex-col backdrop-blur-2xl">
                         <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-inbox text-cyan-400"></i>
@@ -144,10 +161,10 @@
                         <div class="overflow-y-auto space-y-1.5 flex-1 max-h-72 scrollbar-thin pr-1">
                             {% if inbox_threads %}
                                 {% for th in inbox_threads %}
-                                <div class="inbox-thread-item flex items-center justify-between p-2 rounded-xl bg-slate-950/60 hover:bg-indigo-950/40 border border-slate-800 hover:border-indigo-500/40 cursor-pointer transition-all"
+                                <div class="inbox-thread-item flex items-center justify-between p-2 rounded-xl bg-slate-900/40 hover:bg-indigo-950/40 border border-slate-800 hover:border-indigo-500/40 cursor-pointer transition-all"
                                      onclick="openDirectChat({{ th.contact_id }}, '{{ th.contact_username }}')">
                                     <div class="flex items-center gap-2.5 min-w-0">
-                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style="background-color: {{ th.contact_avatar }}">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm" style="background-color: {{ th.contact_avatar }}">
                                             {{ th.contact_username[:2]|upper }}
                                         </div>
                                         <div class="min-w-0">
@@ -189,7 +206,7 @@
                 <!-- 2. NOTIFICATIONS BELL WITH BADGE -->
                 <div class="relative">
                     <button id="notif-toggle-btn"
-                            class="relative w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-md"
+                            class="relative w-9 h-9 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-md"
                             title="Notifications Bar">
                         <i class="fa-solid fa-bell text-sm text-amber-400"></i>
                         {% if unread_notifs_count > 0 %}
@@ -200,7 +217,7 @@
                     </button>
 
                     <!-- Notifications Dropdown Flyout -->
-                    <div id="notif-dropdown-menu" class="hidden absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-3 z-50 max-h-[28rem] flex flex-col">
+                    <div id="notif-dropdown-menu" class="hidden absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-slate-950/95 border border-slate-800 shadow-2xl p-3 z-50 max-h-[28rem] flex flex-col backdrop-blur-2xl">
                         <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-bell text-amber-400"></i>
@@ -215,7 +232,7 @@
                         <div id="notifications-stream-list" class="overflow-y-auto space-y-1.5 flex-1 max-h-72 scrollbar-thin pr-1">
                             {% if notifications %}
                                 {% for n in notifications %}
-                                <a href="{{ n.link or '#' }}" class="block p-2 rounded-xl {% if n.is_read == 0 %}bg-indigo-950/30 border-indigo-500/30{% else %}bg-slate-950/40 border-slate-800/60{% endif %} border hover:border-indigo-400/50 transition-all">
+                                <a href="{{ n.link or '#' }}" class="block p-2 rounded-xl {% if n.is_read == 0 %}bg-indigo-950/30 border-indigo-500/30{% else %}bg-slate-900/40 border-slate-800/60{% endif %} border hover:border-indigo-400/50 transition-all">
                                     <div class="flex items-start gap-2.5">
                                         <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5"
                                              style="background-color: {{ n.actor_color or '#6366f1' }}">
@@ -243,96 +260,90 @@
                     </div>
                 </div>
 
-                <!-- 3. USER PROFILE PILL & QUICK PRIVACY STATUS -->
-                <div class="flex items-center gap-2 pl-1 border-l border-slate-800">
-                    <button onclick="openUserProfileModal({{ current_user.id }})"
-                            class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 hover:border-indigo-500/60 transition-all">
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style="background-color: {{ current_user.avatar_color or '#818cf8' }}">
-                            {{ current_user.username[:2]|upper }}
-                        </div>
-                        <span class="text-xs font-semibold text-white hidden md:inline">{{ current_user.username }}</span>
-                        {% if current_user.is_profile_private %}
-                        <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-purple-950 border border-purple-500/40 text-purple-300" title="Your Profile is Set to Private">🔒 Private</span>
-                        {% else %}
-                        <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-emerald-950 border border-emerald-500/40 text-emerald-300" title="Your Profile is Set to Public">🌐 Public</span>
-                        {% endif %}
-                    </button>
-                </div>
-
             </div>
         </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- 2. MAIN 3-COLUMN FACEBOOK-STYLE LAYOUT                                    -->
+    <!-- 2. MAIN 3-COLUMN MODERN SOCIAL LAYOUT                                     -->
     <!-- ========================================================================= -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         <!-- --------------------------------------------------------------------- -->
         <!-- LEFT COLUMN: USER PROFILE CARD & 1-CLICK PRIVACY TOGGLE SWITCH        -->
         <!-- --------------------------------------------------------------------- -->
-        <aside class="lg:col-span-3 space-y-4">
+        <aside class="lg:col-span-3 space-y-5">
             
             <!-- User Basic Profile Card -->
-            <div class="fb-card p-4 shadow-xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 right-0 h-14 bg-gradient-to-r from-indigo-900/60 via-purple-900/40 to-slate-900 border-b border-indigo-500/20"></div>
+            <div class="fb-card p-5 shadow-2xl relative overflow-hidden group">
+                <!-- Iridescent mesh gradient banner -->
+                <div class="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-indigo-900/70 via-purple-900/50 to-cyan-900/40 border-b border-indigo-500/20">
+                    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent"></div>
+                </div>
                 
                 <div class="relative pt-6 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full p-1 bg-slate-900 border-2 border-indigo-500 shadow-xl" style="background-color: {{ current_user.avatar_color or '#818cf8' }}">
-                        <div class="w-full h-full rounded-full flex items-center justify-center text-lg font-black text-white">
-                            {{ current_user.username[:2]|upper }}
+                    <div class="relative">
+                        <div class="w-18 h-18 rounded-2xl p-1 bg-slate-950 border-2 border-indigo-500/80 shadow-xl shadow-indigo-500/25 group-hover:scale-105 transition-all duration-300" style="background-color: {{ current_user.avatar_color or '#818cf8' }}">
+                            <div class="w-full h-full rounded-[14px] flex items-center justify-center text-xl font-black text-white">
+                                {{ current_user.username[:2]|upper }}
+                            </div>
                         </div>
+                        <span class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-400 border-2 border-slate-950 shadow-md shadow-emerald-400/50" title="Online"></span>
                     </div>
 
-                    <h2 class="mt-2 text-sm font-bold text-white flex items-center gap-1.5">
+                    <h2 class="mt-3 text-base font-bold text-white flex items-center gap-1.5 font-outfit">
                         {{ current_user.username }}
-                        <span class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 font-mono uppercase">{{ current_user.role }}</span>
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 font-mono font-semibold uppercase tracking-wider">{{ current_user.role }}</span>
                     </h2>
                     
-                    <p class="text-xs text-slate-400 line-clamp-2 mt-1 px-2">
+                    <p class="text-xs text-slate-400 line-clamp-2 mt-1 px-1 leading-relaxed">
                         {{ current_user.bio or 'Speedcubing & Card Club Explorer' }}
                     </p>
 
                     <!-- Quick Stats Badges -->
-                    <div class="grid grid-cols-3 gap-1.5 w-full mt-3.5 pt-3 border-t border-slate-800 text-center">
-                        <div class="bg-slate-900/80 p-1.5 rounded-lg border border-slate-800/80">
-                            <span class="block text-xs font-bold text-emerald-400 font-mono">{{ current_user.coins_balance }}</span>
-                            <span class="text-[9px] text-slate-500 uppercase tracking-wider">Coins</span>
+                    <div class="grid grid-cols-3 gap-2 w-full mt-4 pt-4 border-t border-slate-800/80 text-center">
+                        <div class="bg-slate-950/70 p-2 rounded-xl border border-emerald-500/20 hover:border-emerald-500/50 transition-all shadow-sm">
+                            <span class="block text-sm font-black text-emerald-400 font-mono">{{ current_user.coins_balance }}</span>
+                            <span class="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Coins</span>
                         </div>
-                        <div class="bg-slate-900/80 p-1.5 rounded-lg border border-slate-800/80">
-                            <span class="block text-xs font-bold text-cyan-400 font-mono">{{ current_user.total_solves }}</span>
-                            <span class="text-[9px] text-slate-500 uppercase tracking-wider">Solves</span>
+                        <div class="bg-slate-950/70 p-2 rounded-xl border border-cyan-500/20 hover:border-cyan-500/50 transition-all shadow-sm">
+                            <span class="block text-sm font-black text-cyan-400 font-mono">{{ current_user.total_solves }}</span>
+                            <span class="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Solves</span>
                         </div>
-                        <div class="bg-slate-900/80 p-1.5 rounded-lg border border-slate-800/80">
-                            <span class="block text-xs font-bold text-indigo-400 font-mono">{{ current_user.public_posts_count }}</span>
-                            <span class="text-[9px] text-slate-500 uppercase tracking-wider">Posts</span>
+                        <div class="bg-slate-950/70 p-2 rounded-xl border border-indigo-500/20 hover:border-indigo-500/50 transition-all shadow-sm">
+                            <span class="block text-sm font-black text-indigo-400 font-mono">{{ current_user.public_posts_count }}</span>
+                            <span class="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Posts</span>
                         </div>
                     </div>
 
                     <!-- 1-CLICK PRIVACY TOGGLE SWITCH -->
-                    <div class="w-full mt-4 p-3 rounded-xl bg-slate-950/80 border border-indigo-500/30 text-left">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="text-base">{% if current_user.is_profile_private %}🔒{% else %}🌐{% endif %}</span>
+                    <div class="w-full mt-4 p-3 rounded-2xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/30 transition-all text-left shadow-sm">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-xs">
+                                    {% if current_user.is_profile_private %}🔒{% else %}🌐{% endif %}
+                                </div>
                                 <div>
-                                    <h4 class="text-xs font-bold text-white">Profile Privacy</h4>
+                                    <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                                        Profile Privacy
+                                    </h4>
                                     <p class="text-[10px] text-slate-400">
                                         {% if current_user.is_profile_private %}
-                                        <span class="text-purple-400 font-semibold">Private:</span> Others only see your Name & public items.
+                                        <span class="text-purple-400 font-semibold">Private:</span> Public items only
                                         {% else %}
-                                        <span class="text-emerald-400 font-semibold">Public:</span> All details visible.
+                                        <span class="text-emerald-400 font-semibold">Public:</span> Full profile visible
                                         {% endif %}
                                     </p>
                                 </div>
                             </div>
 
                             <!-- Toggle Checkbox Switch -->
-                            <label class="relative inline-flex items-center cursor-pointer">
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                 <input type="checkbox" id="profile-privacy-toggle"
                                        class="sr-only peer"
                                        {% if current_user.is_profile_private %}checked{% endif %}
                                        onchange="handlePrivacyToggle(this.checked)">
-                                <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                                <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
                             </label>
                         </div>
                     </div>
@@ -341,25 +352,33 @@
             </div>
 
             <!-- Gaming & Arena Shortcuts -->
-            <div class="fb-card p-3 shadow-lg text-xs space-y-1">
-                <div class="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+            <div class="fb-card p-4 shadow-xl text-xs space-y-1.5">
+                <div class="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
                     Multiplayer Arenas
                 </div>
-                <a href="{{ url_for('card_club.section') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-emerald-950/30 hover:border-emerald-500/30 border border-transparent text-slate-300 hover:text-emerald-300 transition-all">
-                    <i class="fa-solid fa-cards text-emerald-400"></i>
-                    <span>Card Club (23 Games Arena)</span>
+                <a href="{{ url_for('card_club.section') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-emerald-950/30 border border-transparent hover:border-emerald-500/30 text-slate-300 hover:text-emerald-300 transition-all group">
+                    <div class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 group-hover:border-emerald-500/40 flex items-center justify-center text-emerald-400 transition-colors">
+                        <i class="fa-solid fa-cards text-xs"></i>
+                    </div>
+                    <span class="font-medium">Card Club (23 Games Arena)</span>
                 </a>
-                <a href="{{ url_for('chess.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-amber-950/30 hover:border-amber-500/30 border border-transparent text-slate-300 hover:text-amber-300 transition-all">
-                    <i class="fa-solid fa-chess-knight text-amber-400"></i>
-                    <span>GoChess 3D Smart Duel</span>
+                <a href="{{ url_for('chess.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-amber-950/30 border border-transparent hover:border-amber-500/30 text-slate-300 hover:text-amber-300 transition-all group">
+                    <div class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 group-hover:border-amber-500/40 flex items-center justify-center text-amber-400 transition-colors">
+                        <i class="fa-solid fa-chess-knight text-xs"></i>
+                    </div>
+                    <span class="font-medium">GoChess 3D Smart Duel</span>
                 </a>
-                <a href="{{ url_for('visualizer.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-indigo-950/30 hover:border-indigo-500/30 border border-transparent text-slate-300 hover:text-indigo-300 transition-all">
-                    <i class="fa-solid fa-cube text-indigo-400"></i>
-                    <span>3D Speedcube Visualizer</span>
+                <a href="{{ url_for('visualizer.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-950/30 border border-transparent hover:border-indigo-500/30 text-slate-300 hover:text-indigo-300 transition-all group">
+                    <div class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 group-hover:border-indigo-500/40 flex items-center justify-center text-indigo-400 transition-colors">
+                        <i class="fa-solid fa-cube text-xs"></i>
+                    </div>
+                    <span class="font-medium">3D Speedcube Visualizer</span>
                 </a>
-                <a href="{{ url_for('profile.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 border border-transparent text-slate-300 hover:text-white transition-all">
-                    <i class="fa-solid fa-gear text-slate-400"></i>
-                    <span>Edit Profile & Password</span>
+                <a href="{{ url_for('profile.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-900 border border-transparent hover:border-slate-800 text-slate-300 hover:text-white transition-all group">
+                    <div class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 group-hover:border-slate-700 flex items-center justify-center text-slate-400 transition-colors">
+                        <i class="fa-solid fa-gear text-xs"></i>
+                    </div>
+                    <span class="font-medium">Edit Profile & Password</span>
                 </a>
             </div>
 
@@ -370,71 +389,79 @@
         <!-- --------------------------------------------------------------------- -->
         <section class="lg:col-span-6 space-y-5">
 
-            <!-- 1. "WHAT'S ON YOUR MIND?" FACEBOOK-STYLE POST CREATOR -->
-            <div class="fb-card p-4 shadow-xl">
+            <!-- 1. "WHAT'S ON YOUR MIND?" POST CREATOR CARD -->
+            <div class="fb-card p-4 shadow-xl relative overflow-hidden group">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style="background-color: {{ current_user.avatar_color or '#818cf8' }}">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-md" style="background-color: {{ current_user.avatar_color or '#818cf8' }}">
                         {{ current_user.username[:2]|upper }}
                     </div>
                     <button type="button"
                             onclick="openPostModal('post')"
-                            class="flex-1 text-left px-4 py-2.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs text-slate-400 hover:border-indigo-500/50 hover:text-slate-200 transition-all">
+                            class="flex-1 text-left px-4 py-2.5 rounded-full bg-slate-950/80 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900 text-xs text-slate-400 hover:text-slate-200 transition-all shadow-inner">
                         What's on your mind, {{ current_user.username }}?
                     </button>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-800">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-800/80">
                     <button type="button"
                             onclick="openPostModal('post')"
-                            class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl hover:bg-indigo-950/40 text-xs font-semibold text-slate-300 hover:text-indigo-300 transition-all">
-                        <i class="fa-solid fa-pen-to-square text-indigo-400"></i>
+                            class="flex items-center justify-center gap-2 py-2 px-2.5 rounded-xl hover:bg-indigo-950/40 text-xs font-semibold text-slate-300 hover:text-indigo-300 transition-all group">
+                        <div class="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                        </div>
                         <span>Text Post</span>
                     </button>
                     <button type="button"
                             onclick="openPostModalWithMedia('image')"
-                            class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl hover:bg-emerald-950/40 text-xs font-semibold text-slate-300 hover:text-emerald-300 transition-all">
-                        <i class="fa-solid fa-image text-emerald-400"></i>
+                            class="flex items-center justify-center gap-2 py-2 px-2.5 rounded-xl hover:bg-emerald-950/40 text-xs font-semibold text-slate-300 hover:text-emerald-300 transition-all group">
+                        <div class="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-image text-xs"></i>
+                        </div>
                         <span>Photo</span>
                     </button>
                     <button type="button"
                             onclick="openPostModalWithMedia('video')"
-                            class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl hover:bg-rose-950/40 text-xs font-semibold text-slate-300 hover:text-rose-300 transition-all">
-                        <i class="fa-solid fa-video text-rose-400"></i>
+                            class="flex items-center justify-center gap-2 py-2 px-2.5 rounded-xl hover:bg-rose-950/40 text-xs font-semibold text-slate-300 hover:text-rose-300 transition-all group">
+                        <div class="w-6 h-6 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-video text-xs"></i>
+                        </div>
                         <span>Video</span>
                     </button>
                     <button type="button"
                             onclick="openPostModal('card_invite')"
-                            class="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl hover:bg-amber-950/40 text-xs font-semibold text-slate-300 hover:text-amber-300 transition-all">
-                        <i class="fa-solid fa-gamepad text-amber-400"></i>
+                            class="flex items-center justify-center gap-2 py-2 px-2.5 rounded-xl hover:bg-amber-950/40 text-xs font-semibold text-slate-300 hover:text-amber-300 transition-all group">
+                        <div class="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-gamepad text-xs"></i>
+                        </div>
                         <span>Game</span>
                     </button>
                 </div>
             </div>
 
-            <!-- 2. FEED FILTER TABS -->
-            <div class="flex items-center justify-between bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800 text-xs font-mono">
-                <div class="flex gap-1 overflow-x-auto scrollbar-thin">
+            <!-- 2. FEED FILTER TABS (SEGMENTED CONTROL) -->
+            <div class="flex items-center justify-between bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 text-xs font-mono backdrop-blur-xl shadow-lg">
+                <div class="flex gap-1 overflow-x-auto scrollbar-thin w-full sm:w-auto">
                     <a href="{{ url_for('feed.newsfeed', filter='all') }}"
-                       class="px-3 py-1.5 rounded-xl font-semibold transition-all {% if filter_type == 'all' %}bg-indigo-600 text-white shadow-md shadow-indigo-600/30{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %}">
+                       class="px-3.5 py-1.5 rounded-xl font-semibold transition-all {% if filter_type == 'all' %}bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/30{% else %}text-slate-400 hover:text-white hover:bg-slate-900{% endif %}">
                         🔥 All Feed
                     </a>
                     <a href="{{ url_for('feed.newsfeed', filter='invitations') }}"
-                       class="px-3 py-1.5 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if filter_type == 'invitations' %}bg-emerald-600 text-white shadow-md shadow-emerald-600/30{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %}">
+                       class="px-3.5 py-1.5 rounded-xl font-semibold transition-all flex items-center gap-1.5 {% if filter_type == 'invitations' %}bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-600/30{% else %}text-slate-400 hover:text-white hover:bg-slate-900{% endif %}">
                         🃏 Invitations
                         {% if pending_invitations %}<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>{% endif %}
                     </a>
                     <a href="{{ url_for('feed.newsfeed', filter='posts') }}"
-                       class="px-3 py-1.5 rounded-xl font-semibold transition-all {% if filter_type == 'posts' %}bg-indigo-600 text-white shadow-md shadow-indigo-600/30{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %}">
+                       class="px-3.5 py-1.5 rounded-xl font-semibold transition-all {% if filter_type == 'posts' %}bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/30{% else %}text-slate-400 hover:text-white hover:bg-slate-900{% endif %}">
                         💬 Community
                     </a>
                     <a href="{{ url_for('feed.newsfeed', filter='mine') }}"
-                       class="px-3 py-1.5 rounded-xl font-semibold transition-all {% if filter_type == 'mine' %}bg-purple-600 text-white shadow-md shadow-purple-600/30{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %}">
+                       class="px-3.5 py-1.5 rounded-xl font-semibold transition-all {% if filter_type == 'mine' %}bg-gradient-to-r from-purple-600 to-violet-500 text-white shadow-md shadow-purple-600/30{% else %}text-slate-400 hover:text-white hover:bg-slate-900{% endif %}">
                         👤 My Posts
                     </a>
                 </div>
 
                 {% if search_q %}
-                <a href="{{ url_for('feed.newsfeed') }}" class="text-[11px] text-rose-400 hover:underline px-2">Clear search</a>
+                <a href="{{ url_for('feed.newsfeed') }}" class="text-[11px] text-rose-400 hover:underline px-2 shrink-0">Clear search</a>
                 {% endif %}
             </div>
 
@@ -442,50 +469,50 @@
             <div class="space-y-4">
                 {% if posts %}
                     {% for p in posts %}
-                    <article id="post-{{ p.id }}" class="fb-card p-4 shadow-xl space-y-3">
+                    <article id="post-{{ p.id }}" class="fb-card p-5 shadow-2xl space-y-3.5 transition-all duration-300">
                         
                         <!-- Post Header -->
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <button onclick="openUserProfileModal({{ p.user_id }})" class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 hover:scale-105 transition-transform" style="background-color: {{ p.avatar_color or '#818cf8' }}">
+                                <button onclick="openUserProfileModal({{ p.user_id }})" class="w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-bold text-white shrink-0 hover:scale-105 transition-all shadow-md" style="background-color: {{ p.avatar_color or '#818cf8' }}">
                                     {{ p.username[:2]|upper }}
                                 </button>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <button onclick="openUserProfileModal({{ p.user_id }})" class="font-bold text-xs text-white hover:underline">
+                                        <button onclick="openUserProfileModal({{ p.user_id }})" class="font-bold text-xs text-white hover:text-indigo-300 transition-colors">
                                             {{ p.username }}
                                         </button>
                                         {% if p.author_is_private %}
-                                        <span class="text-[9px] px-1.5 py-0.2 rounded bg-purple-950 border border-purple-500/40 text-purple-300 font-mono" title="Author has set profile to Private (Public Items Only)">🔒 Private Profile</span>
+                                        <span class="text-[9px] px-1.5 py-0.2 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300 font-mono" title="Author has set profile to Private (Public Items Only)">🔒 Private</span>
                                         {% endif %}
                                         <span class="text-[9px] text-slate-500 font-mono uppercase">• {{ p.role }}</span>
                                     </div>
-                                    <p class="text-[10px] text-slate-500 font-mono">{{ p.created_at }}</p>
+                                    <p class="text-[10px] text-slate-400 font-mono mt-0.5">{{ p.created_at }}</p>
                                 </div>
                             </div>
 
                             <!-- Post Type & Media Badges -->
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 {% if p.image_url %}
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 flex items-center gap-1 font-mono">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 flex items-center gap-1 font-mono shadow-sm">
                                     <i class="fa-solid fa-image"></i> Photo
                                 </span>
                                 {% endif %}
                                 {% if p.video_url %}
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/90 border border-rose-500/50 text-rose-300 flex items-center gap-1 font-mono">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/90 border border-rose-500/40 text-rose-300 flex items-center gap-1 font-mono shadow-sm">
                                     <i class="fa-solid fa-video"></i> Video
                                 </span>
                                 {% endif %}
                                 {% if p.post_type == 'card_invite' %}
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950 border border-amber-500/50 text-amber-300 flex items-center gap-1 font-mono">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/90 border border-amber-500/40 text-amber-300 flex items-center gap-1 font-mono shadow-sm">
                                     <i class="fa-solid fa-cards"></i> Card Invitation
                                 </span>
                                 {% elif p.post_type == 'chess_invite' %}
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950 border border-amber-500/50 text-amber-300 flex items-center gap-1 font-mono">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/90 border border-amber-500/40 text-amber-300 flex items-center gap-1 font-mono shadow-sm">
                                     <i class="fa-solid fa-chess-knight"></i> Chess Duel
                                 </span>
                                 {% elif not p.image_url and not p.video_url %}
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-800 text-slate-400">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-slate-900 border border-slate-800 text-slate-400">
                                     🌐 Public
                                 </span>
                                 {% endif %}
@@ -495,20 +522,22 @@
                         <!-- Post Body / Content -->
                         <div>
                             {% if p.title and p.title != p.content %}
-                            <h3 class="text-sm font-bold text-white mb-1.5">{{ p.title }}</h3>
+                            <h3 class="text-sm font-bold text-white mb-1.5 font-outfit">{{ p.title }}</h3>
                             {% endif %}
                             <p class="text-xs text-slate-200 leading-relaxed whitespace-pre-line">{{ p.content }}</p>
                         </div>
 
-                        <!-- Post Image Attachment -->
+                        <!-- Post Image Attachment (with auto-hide on broken/empty test images) -->
                         {% if p.image_url %}
-                        <div class="mt-3 overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-950 group relative">
+                        <div class="post-media-wrap mt-3 overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950 group relative">
                             <img src="{{ p.image_url }}"
                                  alt="{{ p.title or 'Feed Image' }}"
                                  class="w-full max-h-[460px] object-cover cursor-pointer hover:opacity-95 transition-all duration-300 rounded-2xl"
                                  onclick="openLightbox('image', '{{ p.image_url }}', '{{ (p.title or 'Feed Image')|escape }}')"
+                                 onload="if(this.naturalWidth <= 2 || this.naturalHeight <= 2) this.closest('.post-media-wrap').style.display='none';"
+                                 onerror="this.closest('.post-media-wrap').style.display='none';"
                                  loading="lazy">
-                            <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-xl bg-black/80 backdrop-blur-md text-[10px] text-slate-200 font-mono flex items-center gap-1.5 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity border border-white/10 shadow-lg">
+                            <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-xl bg-slate-950/80 backdrop-blur-md text-[10px] text-slate-200 font-mono flex items-center gap-1.5 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity border border-white/10 shadow-lg">
                                 <i class="fa-solid fa-up-right-and-down-left-from-center text-emerald-400"></i> Expand Photo
                             </div>
                         </div>
@@ -581,45 +610,50 @@
                         {% endif %}
 
                         <!-- Post Engagement Bar (Likes, Comments Count) -->
-                        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
-                            <span id="post-likes-count-{{ p.id }}" class="flex items-center gap-1 font-mono">
-                                <i class="fa-solid fa-thumbs-up text-indigo-400"></i> {{ p.likes or 0 }} likes
+                        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2.5 border-t border-slate-800/80">
+                            <span id="post-likes-count-{{ p.id }}" class="flex items-center gap-1.5 font-mono">
+                                <span class="w-4 h-4 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400 text-[9px]">
+                                    <i class="fa-solid fa-heart"></i>
+                                </span>
+                                <span>{{ p.likes or 0 }} likes</span>
                             </span>
-                            <span class="font-mono">{{ p.comment_count or 0 }} comments</span>
+                            <span class="font-mono text-slate-400 hover:text-slate-200 cursor-pointer" onclick="toggleCommentsSection({{ p.id }})">
+                                {{ p.comment_count or 0 }} comments
+                            </span>
                         </div>
 
                         <!-- Interactive Action Buttons -->
-                        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800">
+                        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80">
                             <button type="button"
                                     id="like-btn-{{ p.id }}"
                                     onclick="toggleLikePost({{ p.id }})"
-                                    class="flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-800 text-xs font-semibold transition-colors {% if p.liked_by_me %}text-rose-400 font-bold{% else %}text-slate-300{% endif %}">
+                                    class="flex items-center justify-center gap-1.5 py-2 rounded-xl hover:bg-slate-800/80 text-xs font-semibold transition-all {% if p.liked_by_me %}text-rose-400 font-bold bg-rose-500/10{% else %}text-slate-300 hover:text-white{% endif %}">
                                 <i class="fa-solid fa-heart {% if p.liked_by_me %}text-rose-500{% endif %}"></i>
                                 <span id="like-label-{{ p.id }}">{% if p.liked_by_me %}Liked{% else %}Like{% endif %}</span>
                             </button>
 
                             <button type="button"
                                     onclick="toggleCommentsSection({{ p.id }})"
-                                    class="flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-colors">
+                                    class="flex items-center justify-center gap-1.5 py-2 rounded-xl hover:bg-slate-800/80 text-xs font-semibold text-slate-300 hover:text-white transition-all">
                                 <i class="fa-regular fa-comment text-indigo-400"></i>
                                 <span>Comment</span>
                             </button>
 
                             <button type="button"
                                     onclick="sharePost({{ p.id }})"
-                                    class="flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-800 text-xs font-semibold text-slate-300 hover:text-white transition-colors">
+                                    class="flex items-center justify-center gap-1.5 py-2 rounded-xl hover:bg-slate-800/80 text-xs font-semibold text-slate-300 hover:text-white transition-all">
                                 <i class="fa-solid fa-share-nodes text-cyan-400"></i>
                                 <span>Share</span>
                             </button>
                         </div>
 
                         <!-- Comments Section (Collapsible / Toggleable) -->
-                        <div id="comments-section-{{ p.id }}" class="pt-2 border-t border-slate-800/80 space-y-2">
+                        <div id="comments-section-{{ p.id }}" class="pt-3 border-t border-slate-800/80 space-y-2.5">
                             <!-- Existing Comments -->
-                            <div id="comments-list-{{ p.id }}" class="space-y-1.5">
+                            <div id="comments-list-{{ p.id }}" class="space-y-2">
                                 {% for c in p.comments %}
-                                <div class="flex items-start gap-2 bg-slate-900/60 p-2 rounded-xl text-xs">
-                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5" style="background-color: {{ c.avatar_color or '#818cf8' }}">
+                                <div class="flex items-start gap-2.5 bg-slate-950/60 p-2.5 rounded-2xl border border-slate-800/60 text-xs shadow-sm">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5 shadow-sm" style="background-color: {{ c.avatar_color or '#818cf8' }}">
                                         {{ c.username[:2]|upper }}
                                     </div>
                                     <div class="flex-1">
@@ -627,20 +661,20 @@
                                             <span class="font-bold text-white">{{ c.username }}</span>
                                             <span class="text-[9px] text-slate-500 font-mono">{{ c.created_at }}</span>
                                         </div>
-                                        <p class="text-slate-300 mt-0.5">{{ c.comment }}</p>
+                                        <p class="text-slate-300 mt-1 leading-relaxed">{{ c.comment }}</p>
                                     </div>
                                 </div>
                                 {% endfor %}
                             </div>
 
                             <!-- New Comment Input Box -->
-                            <form onsubmit="submitComment(event, {{ p.id }})" class="flex items-center gap-2 pt-1">
+                            <form onsubmit="submitComment(event, {{ p.id }})" class="flex items-center gap-2 pt-1.5">
                                 <input id="comment-input-{{ p.id }}"
                                        type="text"
                                        placeholder="Write a comment..."
-                                       class="flex-1 px-3 py-1.5 rounded-full fb-input text-xs">
-                                <button type="submit" class="px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors">
-                                    <i class="fa-solid fa-paper-plane"></i>
+                                       class="flex-1 px-4 py-2 rounded-full fb-input text-xs">
+                                <button type="submit" class="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white flex items-center justify-center text-xs font-semibold shadow-md shadow-indigo-600/30 transition-all">
+                                    <i class="fa-solid fa-paper-plane text-[10px]"></i>
                                 </button>
                             </form>
                         </div>
@@ -652,7 +686,7 @@
                         <i class="fa-regular fa-newspaper text-4xl text-slate-600 mb-3 block"></i>
                         <h4 class="text-sm font-bold text-white">No posts in this feed view yet</h4>
                         <p class="text-xs text-slate-500 mt-1">Be the first to share an algorithm tip or post a Card Club match invitation!</p>
-                        <button onclick="openPostModal('post')" class="mt-4 px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-md">
+                        <button onclick="openPostModal('post')" class="mt-4 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-xs font-bold text-white shadow-md">
                             Create First Post
                         </button>
                     </div>
@@ -664,68 +698,78 @@
         <!-- --------------------------------------------------------------------- -->
         <!-- RIGHT COLUMN: PENDING INVITATIONS WIDGET & COMMUNITY MEMBERS          -->
         <!-- --------------------------------------------------------------------- -->
-        <aside class="lg:col-span-3 space-y-4">
+        <aside class="lg:col-span-3 space-y-5">
             
             <!-- Pending Game Invitations Widget -->
-            <div class="fb-card p-4 shadow-xl">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
-                    <h3 class="text-xs font-bold text-white flex items-center gap-1.5 font-outfit">
-                        <i class="fa-solid fa-envelope-open-text text-emerald-400"></i>
-                        Pending Invitations
+            <div class="fb-card p-5 shadow-2xl relative overflow-hidden">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
+                    <h3 class="text-xs font-bold text-white flex items-center gap-2 font-outfit">
+                        <div class="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                            <i class="fa-solid fa-envelope-open-text text-xs"></i>
+                        </div>
+                        <span>Pending Invitations</span>
                     </h3>
-                    <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-300 font-mono font-bold">
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30">
                         {{ pending_invitations|length }}
                     </span>
                 </div>
 
-                <div class="space-y-2">
+                <div class="space-y-2.5">
                     {% if pending_invitations %}
                         {% for inv in pending_invitations %}
-                        <div class="p-2.5 rounded-xl bg-slate-950/70 border border-emerald-500/30 hover:border-emerald-400 transition-all text-xs">
+                        <div class="p-3 rounded-2xl bg-slate-950/70 border border-emerald-500/30 hover:border-emerald-400 transition-all text-xs shadow-sm">
                             <div class="flex items-start justify-between gap-1">
                                 <div>
-                                    <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-emerald-950 text-emerald-300 font-bold">
+                                    <span class="px-2 py-0.5 rounded-md text-[9px] font-mono bg-emerald-950 text-emerald-300 font-bold border border-emerald-500/40">
                                         {{ inv.badge }}
                                     </span>
-                                    <h4 class="font-bold text-white mt-1">{{ inv.title }}</h4>
-                                    <p class="text-[10px] text-slate-400">From: <span class="text-indigo-300">{{ inv.inviter_name or 'Admin' }}</span></p>
+                                    <h4 class="font-bold text-white mt-1.5">{{ inv.title }}</h4>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">From: <span class="text-indigo-300 font-medium">{{ inv.inviter_name or 'Admin' }}</span></p>
                                 </div>
                             </div>
-                            <div class="mt-2 flex items-center gap-2">
-                                <a href="{{ inv.action_url }}" class="flex-1 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-center text-white text-[11px] font-bold transition-colors">
+                            <div class="mt-2.5 flex items-center gap-2">
+                                <a href="{{ inv.action_url }}" class="flex-1 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-center text-white text-[11px] font-bold shadow-md shadow-emerald-600/30 transition-all">
                                     Accept / Play
                                 </a>
                             </div>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <div class="py-4 text-center text-slate-500 text-xs">
-                            <i class="fa-regular fa-envelope text-slate-600 text-xl block mb-1"></i>
-                            No pending invitations. Look above on the feed to join open rooms!
+                        <div class="py-6 text-center text-slate-500 text-xs">
+                            <div class="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto mb-2 text-slate-600">
+                                <i class="fa-regular fa-envelope text-lg"></i>
+                            </div>
+                            <p class="font-medium text-slate-400">No pending invitations</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Match invitations will appear here</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Community Members & Direct Chat Quick Contacts -->
-            <div class="fb-card p-4 shadow-xl">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
-                    <h3 class="text-xs font-bold text-white flex items-center gap-1.5 font-outfit">
-                        <i class="fa-solid fa-users text-cyan-400"></i>
-                        Community Members
+            <div class="fb-card p-5 shadow-2xl relative overflow-hidden">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
+                    <h3 class="text-xs font-bold text-white flex items-center gap-2 font-outfit">
+                        <div class="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                            <i class="fa-solid fa-users text-xs"></i>
+                        </div>
+                        <span>Community Members</span>
                     </h3>
                     <span class="text-[10px] text-slate-500 font-mono">1-on-1 Inbox</span>
                 </div>
 
-                <div class="space-y-1.5 max-h-80 overflow-y-auto scrollbar-thin pr-1">
+                <div class="space-y-2 max-h-80 overflow-y-auto scrollbar-thin pr-1">
                     {% for u in community_users %}
-                    <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/40 hover:bg-slate-800/60 border border-slate-800/80 transition-all text-xs">
-                        <div class="flex items-center gap-2 min-w-0 cursor-pointer" onclick="openUserProfileModal({{ u.id }})">
-                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style="background-color: {{ u.avatar_color or '#818cf8' }}">
-                                {{ u.username[:2]|upper }}
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/40 hover:bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 transition-all text-xs group">
+                        <div class="flex items-center gap-2.5 min-w-0 cursor-pointer" onclick="openUserProfileModal({{ u.id }})">
+                            <div class="relative shrink-0">
+                                <div class="w-7 h-7 rounded-xl flex items-center justify-center text-[10px] font-bold text-white shadow-sm" style="background-color: {{ u.avatar_color or '#818cf8' }}">
+                                    {{ u.username[:2]|upper }}
+                                </div>
+                                <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-slate-950"></span>
                             </div>
                             <div class="min-w-0">
-                                <span class="font-bold text-white block truncate hover:underline">{{ u.username }}</span>
+                                <span class="font-bold text-white block truncate group-hover:text-indigo-300 transition-colors">{{ u.username }}</span>
                                 {% if u.is_profile_private %}
                                 <span class="text-[9px] text-purple-400 font-mono">🔒 Private</span>
                                 {% else %}
@@ -736,9 +780,9 @@
 
                         <!-- Direct Message Button -->
                         <button onclick="openDirectChat({{ u.id }}, '{{ u.username }}')"
-                                class="px-2 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 border border-indigo-500/40 text-indigo-300 hover:text-white text-[11px] font-semibold transition-all"
+                                class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-indigo-600 border border-slate-800 hover:border-indigo-500 text-slate-400 hover:text-white flex items-center justify-center text-xs transition-all shadow-sm"
                                 title="Send Direct Message">
-                            <i class="fa-solid fa-comment"></i>
+                            <i class="fa-solid fa-comment text-[10px]"></i>
                         </button>
                     </div>
                     {% endfor %}

@@ -16,6 +16,7 @@ from models.card_club.errors import IllegalMove, NotYourTurn
 from models.card_club.engines.base import (
     BaseCardGame, full_deck, rank_val, suit_of, RANK_VALUE, VALUE_RANK
 )
+from models.card_club.engines.poker_hands import evaluate_best, describe
 
 SUITS = ["S", "H", "D", "C"]
 STANDARD_RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
@@ -722,17 +723,27 @@ class ContractBridge(BaseCardGame):
 # 6. TEXAS HOLD'EM POKER (2-9 Players)
 # =====================================================================
 class TexasHoldem(BaseCardGame):
-    """Texas Hold'em Poker: 2-9 players. 2 hole cards.
+    """Texas Hold'em Poker: 2-9 players. 2 hole cards each.
     Community cards: Flop (3), Turn (1), River (1).
-    Betting rounds: Preflop, Flop, Turn, River. Best 5-card hand wins."""
+    Real betting rounds (blinds, check/call/raise/fold/all-in) that only
+    advance once every live player has acted and matched the bet, then a
+    genuine best-5-of-7 showdown via ``poker_hands.evaluate_best``."""
 
     slug = "poker"
     display_name = "Texas Hold'em Poker"
     min_players, max_players = 2, 9
     rules = ("2 hole cards each. Flop (3), Turn (1), River (1) community cards. "
-             "Betting rounds with Check, Bet, Call, Raise, Fold. "
-             "Best 5 of 7 cards wins the pot.")
+             "Small/big blinds, then Check, Call, Raise, Fold, All-In each round. "
+             "Best 5-card hand out of your 2 + the 5 community cards wins the pot.")
 
+    START_STACK = 1000
+    SMALL_BLIND = 10
+    BIG_BLIND = 20
+    RAISE_STEP = 100
+    STAGES = ("preflop", "flop", "turn", "river")
+    REVEAL_AT = {"flop": 3, "turn": 4, "river": 5}
+
+    # ---------------------------------------------------------------- setup
     @classmethod
     def create(cls, players, seed=None):
         rng = random.Random(seed)
@@ -741,86 +752,240 @@ class TexasHoldem(BaseCardGame):
         rng.shuffle(deck)
         hands = {str(i): [deck.pop(), deck.pop()] for i in range(n)}
         community = [deck.pop() for _ in range(5)]
+        sb, bb = cls.SMALL_BLIND, cls.BIG_BLIND
+        stacks = {str(i): cls.START_STACK for i in range(n)}
+        stacks[str(0)] -= sb                      # blinds come out of the
+        if n > 1:                                 # posters' own stacks so
+            stacks[str(1)] -= bb                  # chips stay conserved
         return {
             "slug": cls.slug, "players": list(players), "hands": hands,
             "community_cards": community, "visible_community": [],
-            "pot": n * 10, "current_bet": 10, "stage": "preflop",
-            "turn": 0, "folded": [], "finish": [],
-            "log": ["Texas Hold'em started: Hole cards dealt. Preflop betting."], "over": False
+            "pot": sb + bb, "current_bet": bb, "stage": "preflop",
+            "turn": 2 if n > 2 else 0, "folded": [], "finish": [],
+            "stacks": stacks,
+            "round_bets": {str(0): sb, str(1): bb} if n > 1 else {},
+            "acted": [],
+            "log": ["Texas Hold'em started: blinds posted. Preflop betting."],
+            "over": False,
         }
 
+    def _norm(self, s):
+        """Fill keys introduced by this rewrite so older stored states load."""
+        n = len(s.get("players", []))
+        s.setdefault("stacks", {str(i): self.START_STACK for i in range(n)})
+        s.setdefault("round_bets", {str(i): 0 for i in range(n)})
+        s.setdefault("acted", [])
+        s.setdefault("folded", [])
+        s.setdefault("visible_community", [])
+        s.setdefault("finish", [])
+        return s
+
     def view(self, seat):
-        s = self.state
+        s = self._norm(self.state)
+        to_call = None
+        if seat is not None and seat not in s["folded"] and not s["over"]:
+            to_call = max(0, s["current_bet"] - s["round_bets"].get(str(seat), 0))
         return {
             "slug": s["slug"], "players": s["players"], "stage": s["stage"],
             "pot": s["pot"], "current_bet": s["current_bet"], "turn": s["turn"],
             "community": s["visible_community"], "folded": s["folded"],
+            "stacks": dict(s["stacks"]),
+            "my_stack": s["stacks"].get(str(seat)) if seat is not None else None,
+            "to_call": to_call,
             "hand": list(s["hands"].get(str(seat), [])) if seat is not None else None,
+            "hand_rank": (describe(evaluate_best(
+                list(s["hands"].get(str(seat), []) + s["visible_community"]))
+                ) if seat is not None and len(s["visible_community"]) >= 3 else None),
+            "showdown_hands": s.get("showdown_hands", {}) if s["over"] else {},
             "finish": s["finish"], "over": s["over"], "log": s["log"][-20:]
         }
 
+    # -------------------------------------------------------- betting logic
+    def _needs_action(self, s, seat):
+        if seat in s["folded"]:
+            return False
+        if s["stacks"].get(str(seat), 0) <= 0:
+            return False                                    # all-in
+        if seat not in s["acted"]:
+            return True
+        return s["round_bets"].get(str(seat), 0) != s["current_bet"]
+
+    def _pending(self, s):
+        return [i for i in range(len(s["players"])) if self._needs_action(s, i)]
+
+    @staticmethod
+    def _after(s, seat):
+        n = len(s["players"])
+        for i in range(1, n + 1):
+            cand = (seat + i) % n
+            if cand not in s["folded"] and s["stacks"].get(str(cand), 0) > 0:
+                return cand
+        return None
+
+    def _match(self, legal, action):
+        """Accept a client action that equals one of the generated ones
+        (extra client-side keys are ignored, required keys must match)."""
+        for a in legal:
+            if a.get("action") != action.get("action"):
+                continue
+            if all(action.get(k) == v for k, v in a.items()):
+                return a
+        return None
+
     def legal_actions(self, seat):
-        s = self.state
+        s = self._norm(self.state)
         if s["over"] or seat != s["turn"] or seat in s["folded"]:
             return []
-        return [
-            {"action": "check"},
-            {"action": "call", "amount": s["current_bet"]},
-            {"action": "raise", "amount": s["current_bet"] * 2},
-            {"action": "fold"}
-        ]
+        if s["stage"] not in self.STAGES:
+            return []
+        stack = s["stacks"].get(str(seat), 0)
+        to_call = s["current_bet"] - s["round_bets"].get(str(seat), 0)
+        acts = []
+        if to_call <= 0:
+            acts.append({"action": "check"})
+        elif stack <= to_call:
+            acts.append({"action": "allin", "amount": stack})
+        else:
+            acts.append({"action": "call", "amount": to_call})
+        if stack > to_call:
+            ceiling = s["round_bets"].get(str(seat), 0) + stack
+            target = min(s["current_bet"] + self.RAISE_STEP, ceiling)
+            if target > s["current_bet"]:
+                acts.append({"action": "raise", "amount": target})
+        acts.append({"action": "fold"})
+        return acts
+
+    def _pay(self, s, seat, amount):
+        stack = s["stacks"].get(str(seat), 0)
+        amount = max(0, min(int(amount), stack))
+        s["stacks"][str(seat)] = stack - amount
+        s["round_bets"][str(seat)] = s["round_bets"].get(str(seat), 0) + amount
+        s["pot"] += amount
+        return amount
 
     def apply(self, seat, action):
-        s = self.state
-        act = action.get("action")
-        active = [i for i in range(len(s["players"])) if i not in s["folded"]]
+        s = self._norm(self.state)
+        self._require_turn(s, seat)
+        if seat in s["folded"]:
+            raise IllegalMove("You already folded")
+        legal = self.legal_actions(seat)
+        move = self._match(legal, action)
+        if move is None:
+            raise IllegalMove("That action is not available in this betting round")
 
-        if act == "fold":
+        kind = move["action"]
+        stack = s["stacks"].get(str(seat), 0)
+        to_call = s["current_bet"] - s["round_bets"].get(str(seat), 0)
+
+        if kind == "fold":
             s["folded"].append(seat)
+            s["acted"].append(seat)
             self._say(s, seat, "folded")
-            rem = [i for i in range(len(s["players"])) if i not in s["folded"]]
-            if len(rem) == 1:
-                s["over"] = True
-                s["finish"] = [rem[0]] + list(s["folded"])
-                self._say(s, rem[0], f"won the pot of {s['pot']}!")
-                return
-        elif act in ("call", "raise"):
-            amt = int(action.get("amount", s["current_bet"]))
-            s["pot"] += amt
-            if act == "raise":
-                s["current_bet"] = amt
-            self._say(s, seat, f"{act} {amt} (pot: {s['pot']})")
-        else:
+        elif kind == "check":
+            s["acted"].append(seat)
             self._say(s, seat, "checked")
+        elif kind in ("call", "allin"):
+            paid = self._pay(s, seat, min(to_call, stack))
+            s["acted"].append(seat)
+            if s["round_bets"][str(seat)] > s["current_bet"]:
+                s["current_bet"] = s["round_bets"][str(seat)]
+                s["acted"] = [seat]                        # others must respond
+            verb = "calls" if kind == "call" else "is all-in for"
+            self._say(s, seat, f"{verb} {paid} (pot: {s['pot']})")
+        else:                                              # raise
+            target = int(move["amount"])
+            self._pay(s, seat, target - s["round_bets"].get(str(seat), 0))
+            s["current_bet"] = s["round_bets"][str(seat)]
+            s["acted"] = [seat]                            # re-open the action
+            self._say(s, seat, f"raises to {s['current_bet']} (pot: {s['pot']})")
 
-        # Advance stage after round completes
-        n = len(s["players"])
-        nxt = (seat + 1) % n
-        while nxt in s["folded"]:
-            nxt = (nxt + 1) % n
+        active = [i for i in range(len(s["players"])) if i not in s["folded"]]
+        if len(active) <= 1:
+            self._win_by_fold(s, active[0] if active else seat)
+            return
 
-        if nxt == 0:
-            if s["stage"] == "preflop":
-                s["stage"] = "flop"
-                s["visible_community"] = s["community_cards"][:3]
-                self._say(s, None, f"Flop: {' '.join(s['visible_community'])}")
-            elif s["stage"] == "flop":
-                s["stage"] = "turn"
-                s["visible_community"] = s["community_cards"][:4]
-                self._say(s, None, f"Turn: {s['visible_community'][-1]}")
-            elif s["stage"] == "turn":
-                s["stage"] = "river"
-                s["visible_community"] = s["community_cards"][:5]
-                self._say(s, None, f"River: {s['visible_community'][-1]}")
-            elif s["stage"] == "river":
-                s["over"] = True
-                # Showdown evaluation
-                winner = max(active, key=lambda p: max(rank_val(c) for c in s["hands"][str(p)]))
-                s["finish"] = [winner] + [p for p in active if p != winner] + list(s["folded"])
-                self._say(s, winner, f"won showdown with pot of {s['pot']}!")
-                return
+        if not self._pending(s):
+            self._next_street(s)
+        else:
+            nxt = self._after(s, seat)
+            while nxt is not None and not self._needs_action(s, nxt):
+                nxt = self._after(s, nxt)
+            s["turn"] = nxt if nxt is not None else self._first_pending(s)
 
-        s["turn"] = nxt
+    def _first_pending(self, s):
+        pending = self._pending(s)
+        return pending[0] if pending else None
+
+    # ------------------------------------------------------------- streets
+    def _win_by_fold(self, s, seat):
+        s["over"] = True
+        s["stage"] = "showdown"
+        s["turn"] = -1
+        s["finish"] = [seat] + [i for i in reversed(s["folded"]) if i != seat]
+        s["showdown_winners"] = [seat]
+        self._say(s, seat, f"wins the pot of {s['pot']} - everyone else folded")
+
+    def _next_street(self, s):
+        idx = self.STAGES.index(s["stage"]) if s["stage"] in self.STAGES else 0
+        if s["stage"] == "river":
+            self._showdown(s)
+            return
+        nxt_stage = self.STAGES[idx + 1]
+        s["stage"] = nxt_stage
+        s["visible_community"] = s["community_cards"][:self.REVEAL_AT[nxt_stage]]
+        s["round_bets"] = {str(i): 0 for i in range(len(s["players"]))}
+        s["current_bet"] = 0
+        s["acted"] = []
+        card = s["visible_community"][-1] if s["stage"] != "flop" else None
+        self._say(s, None, (f"Flop: {' '.join(s['visible_community'])}"
+                            if s["stage"] == "flop" else f"{s['stage'].title()}: {card}"))
+
+        # Nobody can bet any more (everyone all-in): run the board out.
+        if not self._pending(s):
+            while s["stage"] != "river":
+                i = self.STAGES.index(s["stage"]) + 1
+                s["stage"] = self.STAGES[i]
+                s["visible_community"] = s["community_cards"][:self.REVEAL_AT[s["stage"]]]
+            self._showdown(s)
+            return
+        # Postflop the first player to act is the one left of the button.
+        first = self._after(s, 0)
+        s["turn"] = first if first is not None else self._first_pending(s)
+
+    def _showdown(self, s):
+        s["visible_community"] = list(s["community_cards"])
+        s["stage"] = "showdown"
+        s["over"] = True
+        s["turn"] = -1
+        active = [i for i in range(len(s["players"])) if i not in s["folded"]]
+        board = s["visible_community"]
+        scores = {}
+        ranks = {}
+        for i in active:
+            cards = list(s["hands"][str(i)]) + board
+            scores[i] = evaluate_best(cards)
+            ranks[str(i)] = describe(scores[i])
+        order = sorted(active, key=lambda i: scores[i], reverse=True)
+        best = scores[order[0]]
+        winners = [i for i in order if scores[i] == best]
+        s["showdown_winners"] = winners
+        s["showdown_hands"] = ranks
+        s["finish"] = winners + [i for i in order if i not in winners] + \
+            [i for i in reversed(s["folded"]) if i not in order]
+        label = describe(best)
+        if len(winners) > 1:
+            self._say(s, None, f"Showdown: {label} splits the pot of {s['pot']} "
+                               f"between seats {winners}")
+        else:
+            self._say(s, winners[0], f"wins the showdown with {label} "
+                                     f"(pot: {s['pot']})")
+
+    def winners(self):
+        w = self.state.get("showdown_winners")
+        if w:
+            return list(w)
+        finish = self.state.get("finish") or []
+        return finish[:1]
 
 
 # =====================================================================

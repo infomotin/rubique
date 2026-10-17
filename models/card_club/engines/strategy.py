@@ -82,8 +82,6 @@ class GOPS(BaseCardGame):
             s["scores"]["1"] += prize // 2
             s["scores"]["0"] += prize % 2             # odd pip to seat 0
             winner = None
-        s["chips"]["0"] += a
-        s["chips"]["1"] += b                          # refunds flow back
         self._say(s, winner, f"prize {prize}: bids {a}/{b}")
         s["bids"] = {}
         s["round"] += 1

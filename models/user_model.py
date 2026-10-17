@@ -78,15 +78,18 @@ class UserModel:
         Search registered users by username for card game lobby and invites.
         """
         pattern = f"%{query.strip()}%" if query else "%"
+        prefix = f"{query.strip()}%"
         limit = max(1, min(int(limit or 10), 50))
+        # Rank exact/prefix hits first, then newest accounts, so a freshly
+        # registered player is never buried under stale partial matches.
         if exclude_user_id:
-            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE %s AND id != %s ORDER BY username ASC LIMIT %s"
-            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE ? AND id != ? ORDER BY username ASC LIMIT ?"
-            return query_all(sql_m, sql_s, (pattern, int(exclude_user_id), limit)) or []
+            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE %s AND id != %s AND role != 'bot' ORDER BY (username LIKE %s) DESC, created_at DESC LIMIT %s"
+            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE ? AND id != ? AND role != 'bot' ORDER BY (username LIKE ?) DESC, created_at DESC LIMIT ?"
+            return query_all(sql_m, sql_s, (pattern, int(exclude_user_id), prefix, limit)) or []
         else:
-            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE %s ORDER BY username ASC LIMIT %s"
-            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE ? ORDER BY username ASC LIMIT ?"
-            return query_all(sql_m, sql_s, (pattern, limit)) or []
+            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE %s AND role != 'bot' ORDER BY (username LIKE %s) DESC, created_at DESC LIMIT %s"
+            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE username LIKE ? AND role != 'bot' ORDER BY (username LIKE ?) DESC, created_at DESC LIMIT ?"
+            return query_all(sql_m, sql_s, (pattern, prefix, limit)) or []
 
     @staticmethod
     def list_active_players(exclude_user_id=None, limit=12):
@@ -95,11 +98,11 @@ class UserModel:
         """
         limit = max(1, min(int(limit or 12), 50))
         if exclude_user_id:
-            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE id != %s ORDER BY id DESC LIMIT %s"
-            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE id != ? ORDER BY id DESC LIMIT ?"
+            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE id != %s AND role != 'bot' ORDER BY id DESC LIMIT %s"
+            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE id != ? AND role != 'bot' ORDER BY id DESC LIMIT ?"
             return query_all(sql_m, sql_s, (int(exclude_user_id), limit)) or []
         else:
-            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users ORDER BY id DESC LIMIT %s"
-            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users ORDER BY id DESC LIMIT ?"
+            sql_m = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE role != 'bot' ORDER BY id DESC LIMIT %s"
+            sql_s = "SELECT id, username, email, role, avatar_color, created_at FROM users WHERE role != 'bot' ORDER BY id DESC LIMIT ?"
             return query_all(sql_m, sql_s, (limit,)) or []
 

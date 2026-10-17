@@ -63,7 +63,8 @@ class Rummy(BaseCardGame):
         s = self.state
         return {
             "slug": s["slug"], "players": s["players"], "turn": s["turn"],
-            "top": s["discard"][-1], "stock_count": len(s["stock"]),
+            "top": s["discard"][-1] if s["discard"] else None,
+            "stock_count": len(s["stock"]),
             "counts": {str(k): len(v) for k, v in s["hands"].items()},
             "melds": s["melds"], "hand": list(s["hands"].get(str(seat), [])) if seat is not None else None,
             "finish": s["finish"], "over": s["over"], "log": s["log"][-15:],

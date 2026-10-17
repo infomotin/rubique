@@ -8,23 +8,28 @@
     .gochess-canvas-container {
         position: relative;
         width: 100%;
-        height: 620px;
+        height: clamp(360px, 58vh, 660px);
+        min-height: 360px;
         border-radius: 1.5rem;
         overflow: hidden;
-        background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        background: radial-gradient(circle at center, #0a1128 0%, #02050c 100%);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(6, 182, 212, 0.05);
+        touch-action: none;
     }
     .eval-bar-track {
-        width: 8px;
+        width: 10px;
         height: 100%;
-        background: #1e293b;
+        background: #090e1a;
         border-radius: 9999px;
         overflow: hidden;
         position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
     }
     .eval-bar-fill {
         width: 100%;
-        background: linear-gradient(to top, #ffffff, #e2e8f0);
+        background: linear-gradient(to top, #ffffff 0%, #cbd5e1 100%);
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
         transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .led-pill {
@@ -35,9 +40,16 @@
         border-radius: 9999px;
         font-family: monospace;
         font-size: 0.7rem;
-        border: 1px solid rgba(6, 182, 212, 0.3);
-        background: rgba(6, 182, 212, 0.1);
+        border: 1px solid rgba(6, 182, 212, 0.35);
+        background: rgba(6, 182, 212, 0.12);
         color: #67e8f9;
+    }
+    @media (max-width: 640px) {
+        .gochess-canvas-container {
+            height: 380px;
+            min-height: 340px;
+            border-radius: 1rem;
+        }
     }
 </style>
 {% endblock %}
@@ -210,10 +222,11 @@
                         <div id="ai-controls-wrapper" class="flex items-center gap-2">
                             <span class="text-slate-400">AI Level:</span>
                             <select id="ai-level-select" class="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-amber-300 focus:outline-none">
-                                <option value="1">Novice (800 ELO)</option>
-                                <option value="2" selected>Club Player (1400 ELO)</option>
-                                <option value="3">Master (2000 ELO)</option>
-                                <option value="4">Grandmaster (2600 ELO)</option>
+                                <option value="1">Level 1: Novice (800 ELO)</option>
+                                <option value="2" selected>Level 2: Club Player (1400 ELO)</option>
+                                <option value="3">Level 3: Master (2000 ELO)</option>
+                                <option value="4">Level 4: Grandmaster (2400 ELO)</option>
+                                <option value="5">Level 5: Super GM (2700 ELO)</option>
                             </select>
                             <button id="trigger-ai-move-btn" class="px-2.5 py-1 rounded-xl bg-amber-600/30 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/50 transition-all font-mono text-xs flex items-center gap-1.5" title="Force AI Move for current turn">
                                 <i class="fa-solid fa-robot"></i> AI Move
@@ -480,16 +493,25 @@
 
                         <!-- Solver Controls -->
                         <div class="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
-                            <div class="flex items-center gap-2">
-                                <span class="text-slate-400">Your Moves:</span>
-                                <input id="subscriber-moves-input" type="text" placeholder="e.g. d3h7 or play on 3D board" class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-white w-56 focus:outline-none focus:border-amber-500">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-slate-400">Moves:</span>
+                                <input id="subscriber-moves-input" type="text" placeholder="e.g. d3h7 or play on 3D board" class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-white w-52 focus:outline-none focus:border-amber-500">
+                                <span class="px-2 py-0.5 rounded-lg bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-[10px]">
+                                    <i class="fa-solid fa-hand-pointer mr-1"></i> Interactive 3D Play
+                                </span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button id="problem-hint-card-btn" class="px-3 py-2 rounded-xl bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 transition-all font-bold flex items-center gap-1.5" title="Get Step-by-Step Tactical Hint">
+                                    <i class="fa-solid fa-lightbulb text-amber-400"></i> Hint
+                                </button>
+                                <button id="problem-reset-card-btn" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 transition-all flex items-center gap-1.5" title="Reset Problem Position">
+                                    <i class="fa-solid fa-rotate-left text-cyan-400"></i> Reset
+                                </button>
                                 <button id="submit-problem-solution-btn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg shadow-emerald-600/30">
-                                    <i class="fa-solid fa-check-circle mr-1"></i> Submit Solution
+                                    <i class="fa-solid fa-check-circle mr-1"></i> Submit
                                 </button>
                                 <button id="cancel-problem-btn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
-                                    Cancel
+                                    Exit
                                 </button>
                             </div>
                         </div>
@@ -1203,7 +1225,86 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function handleProblemMove(fromSq, toSq) {
+        const moveUci = `${fromSq}${toSq}`;
+        chess3d.roboticMovePiece(fromSq, toSq, function() {
+            fetch(`/chess/problems/${activeProblemId}/step`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    current_fen: currentFen,
+                    move: moveUci
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                const alertBox = document.getElementById('solution-feedback-alert');
+                const movesInput = document.getElementById('subscriber-moves-input');
+
+                if (data.status === 'success' && data.correct) {
+                    if (movesInput) {
+                        const cur = movesInput.value.trim();
+                        movesInput.value = cur ? `${cur},${moveUci}` : moveUci;
+                    }
+                    moveLog.push(`W: ${data.player_move?.san || moveUci}`);
+                    updateMoveLogUI();
+
+                    if (data.is_solved) {
+                        chess3d.playSound('victory');
+                        document.getElementById('game-status-label').innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-trophy mr-1"></i> PROBLEM SOLVED!</span>`;
+                        if (alertBox) {
+                            alertBox.classList.remove('hidden');
+                            alertBox.className = 'mt-3 p-3 rounded-xl text-xs font-mono bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 animate-fade-in';
+                            alertBox.innerHTML = `<i class="fa-solid fa-trophy mr-1.5 text-amber-400 text-sm"></i> <strong>${data.message}</strong>`;
+                        }
+                        chess3d.setSquareLed(toSq, 'best');
+                        return;
+                    }
+
+                    // Opponent defensive counter-move
+                    if (data.opponent_move) {
+                        chess3d.playSound('move');
+                        if (alertBox) {
+                            alertBox.classList.remove('hidden');
+                            alertBox.className = 'mt-3 p-3 rounded-xl text-xs font-mono bg-indigo-950/80 border border-indigo-500/50 text-indigo-200 animate-fade-in';
+                            alertBox.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5 text-emerald-400"></i> ${data.message}`;
+                        }
+                        document.getElementById('game-status-label').innerText = "Opponent defensive move gliding...";
+
+                        setTimeout(() => {
+                            chess3d.roboticMovePiece(data.opponent_move.from, data.opponent_move.to, function() {
+                                currentFen = data.new_fen;
+                                moveLog.push(`B: ${data.opponent_move.san}`);
+                                updateMoveLogUI();
+                                document.getElementById('game-status-label').innerText = "Your turn - find the tactical continuation!";
+                            });
+                        }, 500);
+                    }
+                } else {
+                    // Incorrect move
+                    chess3d.playSound('check');
+                    chess3d.loadFen(currentFen);
+                    if (alertBox) {
+                        alertBox.classList.remove('hidden');
+                        alertBox.className = 'mt-3 p-3 rounded-xl text-xs font-mono bg-rose-950/80 border border-rose-500/50 text-rose-200 animate-fade-in';
+                        alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5 text-rose-400"></i> ${data.message || 'Incorrect combination. Try again or check the hint!'}`;
+                    }
+                    document.getElementById('game-status-label').innerText = "Incorrect move - try another tactical sequence!";
+                }
+            })
+            .catch(() => {
+                chess3d.loadFen(currentFen);
+            });
+        });
+    }
+
     function handlePlayerMove(fromSq, toSq) {
+        // Grandmaster Problem solving mode
+        if (activeProblemId) {
+            handleProblemMove(fromSq, toSq);
+            return;
+        }
+
         // Live multiplayer seat: post to the clan/public battle endpoint instead of the AI
         if (activeMultiplayerSeat && String(activeGameId) === String(multiplayerGameId)) {
             handleMultiplayerMove(fromSq, toSq);
@@ -1227,6 +1328,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     fen: currentFen,
                     from: fromSq,
                     to: toSq,
+                    promotion: 'q',
                     ai_level: aiLevel,
                     game_mode: gameMode
                 })
@@ -1238,11 +1340,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     moveLog.push(`${movingTurnTag}: ${data.player_move.san}`);
                     updateMoveLogUI();
 
-                    // If In Active Problem Mode, auto-append move
-                    const movesInput = document.getElementById('subscriber-moves-input');
-                    if (movesInput && activeProblemId) {
-                        const currentVal = movesInput.value.trim();
-                        movesInput.value = currentVal ? `${currentVal},${data.player_move.uci}` : data.player_move.uci;
+                    // If pawn promoted, refresh 3D piece mesh to Queen
+                    if (data.player_move.san && data.player_move.san.includes('=')) {
+                        chess3d.loadFen(currentFen);
                     }
 
                     // Check status
@@ -1276,9 +1376,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('game-status-label').innerText = "GoChess XR internal motors gliding...";
                         setTimeout(() => {
                             chess3d.roboticMovePiece(data.ai_move.from, data.ai_move.to, function() {
+                                currentFen = data.fen;
                                 moveLog.push(`B: ${data.ai_move.san}`);
                                 updateMoveLogUI();
                                 document.getElementById('game-status-label').innerText = "White to move";
+
+                                // If AI pawn promoted, reload 3D meshes
+                                if (data.ai_move.san && data.ai_move.san.includes('=')) {
+                                    chess3d.loadFen(currentFen);
+                                }
 
                                 if (data.is_check) {
                                     chess3d.playSound('check');
@@ -1486,6 +1592,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     chess3d.roboticMovePiece(data.ai_move.from, data.ai_move.to, function() {
                         moveLog.push(`${turnTag}: ${data.ai_move.san}`);
                         updateMoveLogUI();
+                        if (data.ai_move.san && data.ai_move.san.includes('=')) {
+                            chess3d.loadFen(currentFen);
+                        }
                         document.getElementById('game-status-label').innerText = `${data.fen.split(' ')[1] === 'w' ? 'White' : 'Black'} to move`;
 
                         if (data.is_check) {
@@ -1613,6 +1722,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Coach hint button
     document.getElementById('get-hint-btn').addEventListener('click', function() {
+        if (activeProblemId) {
+            fetch(`/chess/problems/${activeProblemId}/hint`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ current_fen: currentFen })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (data.from_sq && data.to_sq) {
+                        chess3d.setSquareLed(data.from_sq, 'selected');
+                        chess3d.setSquareLed(data.to_sq, 'best');
+                    }
+                    document.getElementById('hint-display').innerHTML = `<span class="text-amber-300 font-bold">${data.hint}</span>`;
+                }
+            });
+            return;
+        }
+
         fetch('/chess/hint', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2042,6 +2170,32 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('active-problem-card').classList.add('hidden');
         startNewGame();
     });
+
+    const probHintCardBtn = document.getElementById('problem-hint-card-btn');
+    if (probHintCardBtn) {
+        probHintCardBtn.addEventListener('click', function() {
+            if (!activeProblemId) return;
+            document.getElementById('get-hint-btn').click();
+        });
+    }
+
+    const probResetCardBtn = document.getElementById('problem-reset-card-btn');
+    if (probResetCardBtn) {
+        probResetCardBtn.addEventListener('click', function() {
+            if (!activeProblemId) return;
+            const card = document.querySelector(`.load-problem-btn[data-id="${activeProblemId}"]`);
+            if (card) {
+                const initialFen = card.getAttribute('data-fen');
+                currentFen = initialFen;
+                chess3d.loadFen(initialFen);
+                document.getElementById('subscriber-moves-input').value = '';
+                const alertBox = document.getElementById('solution-feedback-alert');
+                if (alertBox) alertBox.classList.add('hidden');
+                document.getElementById('game-status-label').innerText = `Solving: ${card.getAttribute('data-title')}`;
+                chess3d.playSound('move');
+            }
+        });
+    }
 
     document.getElementById('submit-problem-solution-btn').addEventListener('click', function() {
         if (!activeProblemId) return;

@@ -4,7 +4,7 @@ import json
 import random
 
 from models.db import query_one, query_all, execute_insert, execute_update
-from models.card_club import economy, groups
+from models.card_club import bots, economy, groups
 from models.card_club.errors import (
     CardClubError, IllegalMove, NotFoundError, PermissionDenied,
 )
@@ -34,10 +34,10 @@ def seats(table_id):
     t = get_table(table_id)
     is_priv = bool(t.get("is_private", 1) if isinstance(t, dict) else 1) if t else 1
     rows = query_all(
-        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, s.fake_name, u.username
+        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, s.fake_name, s.is_bot, u.username
            FROM club_seats s JOIN users u ON u.id = s.user_id
            WHERE s.table_id = %s ORDER BY s.seat_index ASC""",
-        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, s.fake_name, u.username
+        """SELECT s.id, s.user_id, s.seat_index, s.status, s.rules_read, s.camera_active, s.fake_name, s.is_bot, u.username
            FROM club_seats s JOIN users u ON u.id = s.user_id
            WHERE s.table_id = ? ORDER BY s.seat_index ASC""",
         (table_id,))
@@ -45,8 +45,10 @@ def seats(table_id):
     for r in rows or []:
         d = dict(r) if isinstance(r, dict) else {
             "id": r[0], "user_id": r[1], "seat_index": r[2], "status": r[3],
-            "rules_read": r[4], "camera_active": r[5], "fake_name": r[6], "username": r[7]
+            "rules_read": r[4], "camera_active": r[5], "fake_name": r[6],
+            "is_bot": r[7], "username": r[8]
         }
+        d["is_bot"] = bool(d.get("is_bot"))
         if is_priv and d.get("fake_name"):
             d["display_name"] = d["fake_name"]
             d["username"] = d["fake_name"]  # Mask real username in private tables
@@ -214,25 +216,54 @@ def start_table(group_id, user_id, table_id):
     if t["status"] != "waiting":
         raise CardClubError("Table already started")
     info = catalog_entry(t["game_slug"])
+    # Human-vs-computer tables fill their empty seats with bots before the
+    # seat-count validation below runs.
     seated = seats(table_id)
+    need = bots.bots_needed(t, info, seated)
+    if need:
+        bots.seat_bots(group_id, table_id, need, stake=int(t["stake"] or 0))
+        seated = seats(table_id)
     n = len(seated)
     if n < info["min"] or n > info["max"] or n > int(t["max_seats"]):
         raise CardClubError(
             f"{info['name']} needs {info['min']}-{info['max']} players (seated: {n})")
     players = [int(s["user_id"]) for s in seated]
-    state = info["cls"].create(players, seed=random.randrange(1 << 30))
+    seed = random.randrange(1 << 30)
+    state = info["cls"].create(players, seed=seed)
+    eng = info["cls"].from_state(state)
+    bot_idx = bots.bot_seats_of(table_id, seated)
+    bot_moves = bots.step(eng, bot_idx) if bot_idx else []
     execute_update(
         """UPDATE club_tables SET status = 'active', state = %s,
            started_at = CURRENT_TIMESTAMP WHERE id = %s""",
         """UPDATE club_tables SET status = 'active', state = ?,
            started_at = CURRENT_TIMESTAMP WHERE id = ?""",
-        (json.dumps(state), table_id))
+        (json.dumps(eng.state), table_id))
+    _log_move(table_id, 0, user_id,
+              {"action": "start", "game": t["game_slug"], "seed": seed})
+    _log_moves(table_id, 1, _seat_user_map(seated), bot_moves)
+    if eng.is_over():
+        _settle(t, eng)
+        return get_table(table_id)
+    return get_table(table_id)
+
+
+def _seat_user_map(seat_rows):
+    return {int(s["seat_index"]): int(s["user_id"]) for s in seat_rows}
+
+
+def _log_move(table_id, seq, user_id, action):
     execute_insert(
         "INSERT INTO club_moves (table_id, seq, user_id, move_json) VALUES (%s,%s,%s,%s)",
         "INSERT INTO club_moves (table_id, seq, user_id, move_json) VALUES (?,?,?,?)",
-        (table_id, 0, user_id, json.dumps({"action": "start",
-                                            "game": t["game_slug"]})))
-    return get_table(table_id)
+        (table_id, seq, user_id, json.dumps(action)))
+
+
+def _log_moves(table_id, seq, seat_to_user, bot_moves):
+    for m in bot_moves:
+        _log_move(table_id, seq, seat_to_user.get(int(m["seat"])), m["action"])
+        seq += 1
+    return seq
 
 
 def seat_index_of(table_id, user_id):
@@ -264,13 +295,14 @@ def get_view(table_id, user_id=None):
         if user_id and s_uid == int(user_id):
             my_rules_read = r_read
             my_camera_active = c_act
-        disp_name = s.get("display_name") or s.get("username") if isinstance(s, dict) else s[6]
+        disp_name = s.get("display_name") or s.get("username") if isinstance(s, dict) else s[7]
         seat_list.append({
             "seat_index": int(s["seat_index"] if isinstance(s, dict) else s[2]),
             "user_id": s_uid,
             "username": disp_name,
             "display_name": disp_name,
             "fake_name": s.get("fake_name") if isinstance(s, dict) else None,
+            "is_bot": bool(s.get("is_bot")) if isinstance(s, dict) else False,
             "rules_read": r_read,
             "camera_active": c_act,
         })
@@ -362,23 +394,54 @@ def perform_move(group_id, user_id, table_id, action):
                             "before you can play at this table.")
     info, eng = _engine_for(t)
     eng.apply(seat, action)
-    seq = query_one(
-        "SELECT COALESCE(MAX(seq),0) FROM club_moves WHERE table_id = %s",
-        "SELECT COALESCE(MAX(seq),0) FROM club_moves WHERE table_id = ?",
-        (table_id,))
-    seq = int(seq[0] if not isinstance(seq, dict) else list(seq.values())[0]) + 1
+    all_seats = seats(table_id)
+    bot_idx = bots.bot_seats_of(table_id, all_seats)
+    bot_moves = bots.step(eng, bot_idx) if bot_idx else []
+    seq = _next_seq(table_id)
     execute_update(
         "UPDATE club_tables SET state = %s WHERE id = %s",
         "UPDATE club_tables SET state = ? WHERE id = ?",
         (json.dumps(eng.state), table_id))
-    execute_insert(
-        "INSERT INTO club_moves (table_id, seq, user_id, move_json) VALUES (%s,%s,%s,%s)",
-        "INSERT INTO club_moves (table_id, seq, user_id, move_json) VALUES (?,?,?,?)",
-        (table_id, seq, user_id, json.dumps(action)))
+    _log_move(table_id, seq, user_id, action)
+    _log_moves(table_id, seq + 1, _seat_user_map(all_seats), bot_moves)
     settlement = None
     if eng.is_over():
         settlement = _settle(t, eng)
     return {"view": get_view(table_id, user_id), "settlement": settlement}
+
+
+def _next_seq(table_id):
+    row = query_one(
+        "SELECT COALESCE(MAX(seq),0) FROM club_moves WHERE table_id = %s",
+        "SELECT COALESCE(MAX(seq),0) FROM club_moves WHERE table_id = ?",
+        (table_id,))
+    return int(row[0] if not isinstance(row, dict) else list(row.values())[0]) + 1
+
+
+def step_pending_bots(table_id):
+    """Read-path safety net: play any computer seat whose turn is already due,
+    so a table can never stall waiting for a bot.
+
+    Returns ``(bot_moves, settlement)`` - both empty/None when nothing moved.
+    """
+    t = get_table(table_id)
+    if not t or t["status"] != "active" or not t["state"]:
+        return [], None
+    all_seats = seats(table_id)
+    bot_idx = bots.bot_seats_of(table_id, all_seats)
+    if not bot_idx:
+        return [], None
+    info, eng = _engine_for(t)
+    bot_moves = bots.step(eng, bot_idx)
+    if not bot_moves:
+        return [], None
+    execute_update(
+        "UPDATE club_tables SET state = %s WHERE id = %s",
+        "UPDATE club_tables SET state = ? WHERE id = ?",
+        (json.dumps(eng.state), table_id))
+    _log_moves(table_id, _next_seq(table_id), _seat_user_map(all_seats), bot_moves)
+    settlement = _settle(t, eng) if eng.is_over() else None
+    return bot_moves, settlement
 
 
 def _settle(t, eng):

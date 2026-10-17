@@ -735,6 +735,20 @@ def init_database():
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            # 42. Card Club - Human vs Computer practice games (mobile + web)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS club_practice_games (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    game_slug VARCHAR(40) NOT NULL,
+                    opponents INT DEFAULT 1,
+                    status VARCHAR(20) DEFAULT 'active',
+                    state TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
             for _seat_col in (
                 "ALTER TABLE club_seats ADD COLUMN rules_read TINYINT DEFAULT 0",
                 "ALTER TABLE club_seats ADD COLUMN camera_active TINYINT DEFAULT 0",
@@ -750,6 +764,7 @@ def init_database():
                 "ALTER TABLE club_tables ADD COLUMN is_private TINYINT DEFAULT 1",
                 "ALTER TABLE club_tables ADD COLUMN mode VARCHAR(20) DEFAULT 'multiplayer'",
                 "ALTER TABLE club_seats ADD COLUMN fake_name VARCHAR(60) NULL",
+                "ALTER TABLE club_seats ADD COLUMN is_bot TINYINT DEFAULT 0",
                 "ALTER TABLE club_group_messages ADD COLUMN fake_name VARCHAR(60) NULL",
             ):
                 try:
@@ -1531,11 +1546,26 @@ def init_database():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
+        # 42. Card Club - Human vs Computer practice games (mobile + web)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS club_practice_games (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                game_slug TEXT NOT NULL,
+                opponents INTEGER DEFAULT 1,
+                status TEXT DEFAULT 'active',
+                state TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
         cur.execute("PRAGMA table_info(club_seats)")
         _seat_cols = {row[1] for row in cur.fetchall()}
         for _scol, _stype in (("rules_read", "INTEGER DEFAULT 0"),
                               ("camera_active", "INTEGER DEFAULT 0"),
-                              ("fake_name", "TEXT")):
+                              ("fake_name", "TEXT"),
+                              ("is_bot", "INTEGER DEFAULT 0")):
             if _scol not in _seat_cols:
                 try:
                     cur.execute(f"ALTER TABLE club_seats ADD COLUMN {_scol} {_stype}")

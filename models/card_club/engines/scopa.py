@@ -39,9 +39,10 @@ class Scopa(BaseCardGame):
             "slug": cls.slug, "players": list(players),
             "hands": {str(k): v for k, v in hands.items()},
             "stock": deck, "table": table,
-            "piles": {str(i): [] for i in range(len(players))},
-            "scopas": {str(i): 0 for i in range(len(players))},
-            "turn": 0, "finish": [], "log": [], "over": False,
+             "piles": {str(i): [] for i in range(len(players))},
+             "scopas": {str(i): 0 for i in range(len(players))},
+             "last_capture_seat": None,
+             "turn": 0, "finish": [], "log": [], "over": False,
         }
 
     def _captures(self, seat, card):
@@ -125,6 +126,7 @@ class Scopa(BaseCardGame):
         if capture:
             for c in capture:
                 s["table"].remove(c)
+            s["last_capture_seat"] = seat
             if not s["table"]:
                 s["scopas"][str(seat)] += 1
                 self._say(s, seat, "SCOPA!")
@@ -148,9 +150,20 @@ class Scopa(BaseCardGame):
 
     def _score_and_close(self):
         s = self.state
+        # Cards still on the table go to the last player to capture a
+        # combination (fallback: the player before the dealer). They must be
+        # awarded before the "most cards" point is scored, otherwise those
+        # cards silently vanish from the tally.
+        if s["table"]:
+            n = len(s["players"])
+            owner = s.get("last_capture_seat")
+            if owner is None or owner not in range(n):
+                owner = n - 1
+            s["piles"][str(owner)].extend(s["table"])
+            self._say(s, owner, f"takes the {len(s['table'])} leftover table card(s)")
+            s["table"] = []
         points = {str(i): 0 for i in range(len(s["players"]))}
         counts = {i: len(s["piles"][str(i)]) for i in range(len(s["players"]))}
-        # leftover table cards go to the last winner (player before dealer)
         top = max(counts.values())
         winners_cards = [i for i, c in counts.items() if c == top]
         for i in winners_cards:

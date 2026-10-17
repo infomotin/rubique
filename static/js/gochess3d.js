@@ -1073,10 +1073,43 @@ class GoChess3D {
     }
 
     // =========================================================================
-    // INTERACTIVE EVENTS (Click-to-Move & Pick)
+    // INTERACTIVE EVENTS (Click, Tap & Touch Raycasting)
     // =========================================================================
     setupEventListeners() {
         this.container.addEventListener('click', (e) => this.onClick(e));
+
+        // Mobile touch handling (iOS, Android, touchscreen laptops)
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+
+        this.container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+            }
+        }, { passive: true });
+
+        this.container.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 1) {
+                const dt = Date.now() - touchStartTime;
+                const dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
+                const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+                // Direct tap (< 400ms duration, < 12px drag distance)
+                if (dt < 400 && dx < 12 && dy < 12) {
+                    this.onClick(e.changedTouches[0]);
+                }
+            }
+        }, { passive: true });
+
+        // Automatic ResizeObserver for mobile orientation changes & collapsible sidebar
+        if (typeof ResizeObserver !== 'undefined') {
+            this.resizeObserver = new ResizeObserver(() => {
+                this.onResize();
+            });
+            this.resizeObserver.observe(this.container);
+        }
     }
 
     onClick(event) {
@@ -1088,13 +1121,25 @@ class GoChess3D {
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
-        // Raycast against squares
+        // Raycast against both squares and 3D piece meshes for forgiving mobile tap targets
         const squareMeshes = Object.values(this.boardSquares);
-        const intersects = this.raycaster.intersectObjects(squareMeshes);
+        const pieceMeshes = Object.values(this.piecesOnBoard);
+        const targets = [...squareMeshes, ...pieceMeshes];
+        const intersects = this.raycaster.intersectObjects(targets, true);
 
         if (intersects.length > 0) {
-            const hitSquare = intersects[0].object.userData.square;
-            this.handleSquareClick(hitSquare);
+            let hitObj = intersects[0].object;
+            let hitSquare = null;
+            while (hitObj && hitObj !== this.scene) {
+                if (hitObj.userData && hitObj.userData.square) {
+                    hitSquare = hitObj.userData.square;
+                    break;
+                }
+                hitObj = hitObj.parent;
+            }
+            if (hitSquare) {
+                this.handleSquareClick(hitSquare);
+            }
         }
     }
 
@@ -1174,6 +1219,7 @@ class GoChess3D {
     }
 
     destroy() {
+        if (this.resizeObserver) this.resizeObserver.disconnect();
         if (this.autoPlayTimer) clearInterval(this.autoPlayTimer);
         if (this.renderer && this.renderer.domElement) {
             this.container.removeChild(this.renderer.domElement);

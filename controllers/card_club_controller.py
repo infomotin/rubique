@@ -14,7 +14,7 @@ from flask import (Blueprint, render_template, request, session, jsonify,
                    redirect, url_for, flash)
 
 from models.user_model import UserModel
-from models.db import query_one, query_all
+from models.db import query_one, query_all, execute_insert
 from models.card_club import economy, groups, gameplay, devices
 from models.card_club.engines import CATALOG, ordered_catalog
 from models.card_club.errors import (
@@ -298,6 +298,7 @@ def table_page(tid):
         groups.require_member(gid, uid)
     except CardClubError as e:
         return _deny(e)
+    _drain_bots(tid)
     view = gameplay.get_view(tid, uid)
     info = CATALOG.get(t['game_slug'], {})
     return render_template(
@@ -800,6 +801,7 @@ def api_move(tid):
 def api_table_state(tid):
     try:
         t, gid, uid = _table_context(tid)
+        _drain_bots(tid)
         return jsonify({"ok": True,
                         "state": gameplay.get_view(tid, uid)})
     except CardClubError as e:
@@ -841,6 +843,18 @@ def _do_move(gid, uid, tid, action):
     return result
 
 
+def _drain_bots(tid):
+    """Advance any queued computer moves so a read can never observe a table
+    that is stalled on a bot. Returns the settlement when the game ended."""
+    try:
+        _, settlement = gameplay.step_pending_bots(tid)
+    except Exception:
+        return None
+    if settlement:
+        _broadcast_table(tid, settlement)
+    return settlement
+
+
 def _broadcast_table(tid, settlement=None):
     """Push private views to every seated user, public view to watchers."""
     if _socketio is None:
@@ -849,6 +863,9 @@ def _broadcast_table(tid, settlement=None):
         t = gameplay.get_table(tid)
         if not t:
             return
+        if settlement is None:
+            _, settlement = gameplay.step_pending_bots(tid)
+            t = gameplay.get_table(tid) or t
         for s in gameplay.seats(tid):
             su = int(s["user_id"])
             _socketio.emit('table_state',
@@ -902,6 +919,7 @@ def init_socketio(app):
             return {"ok": False, "error": str(e)}
         from flask_socketio import join_room
         join_room(f'table:{tid}')
+        _drain_bots(tid)
         return {"ok": True, "state": gameplay.get_view(tid, uid)}
 
     @_socketio.on('unwatch_table')

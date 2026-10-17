@@ -179,10 +179,12 @@ def members(group_id):
     rows = query_all(
         """SELECT m.user_id, m.role, m.joined_at, m.fake_name, u.username
            FROM club_group_members m JOIN users u ON u.id = m.user_id
-           WHERE m.group_id = %s ORDER BY m.joined_at ASC""",
+           WHERE m.group_id = %s AND m.role != 'bot' AND u.role != 'bot'
+           ORDER BY m.joined_at ASC""",
         """SELECT m.user_id, m.role, m.joined_at, m.fake_name, u.username
            FROM club_group_members m JOIN users u ON u.id = m.user_id
-           WHERE m.group_id = ? ORDER BY m.joined_at ASC""",
+           WHERE m.group_id = ? AND m.role != 'bot' AND u.role != 'bot'
+           ORDER BY m.joined_at ASC""",
         (group_id,))
     out = []
     for r in rows or []:
@@ -200,9 +202,12 @@ def members(group_id):
 
 
 def member_count(group_id):
-    row = query_one("SELECT COUNT(*) c FROM club_group_members WHERE group_id = %s",
-                    "SELECT COUNT(*) c FROM club_group_members WHERE group_id = ?",
-                    (group_id,))
+    row = query_one(
+        """SELECT COUNT(*) c FROM club_group_members m JOIN users u ON u.id = m.user_id
+           WHERE m.group_id = %s AND m.role != 'bot' AND u.role != 'bot'""",
+        """SELECT COUNT(*) c FROM club_group_members m JOIN users u ON u.id = m.user_id
+           WHERE m.group_id = ? AND m.role != 'bot' AND u.role != 'bot'""",
+        (group_id,))
     return int(row["c"] if isinstance(row, dict) else row[0])
 
 

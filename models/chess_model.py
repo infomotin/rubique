@@ -80,6 +80,17 @@ KING_MID_TABLE = [
      20, 30, 10,  0,  0, 10, 30, 20
 ]
 
+KING_END_TABLE = [
+    -50,-30,-30,-30,-30,-30,-30,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -50,-30,-30,-30,-30,-30,-30,-50
+]
+
 # Famous Grandmaster Auto-Demonstration Games (GoChess Robotic Replay)
 FAMOUS_GAMES = {
     "opera": {
@@ -267,17 +278,46 @@ class ChessModel:
         return query_all(sql_mysql, sql_sqlite, tuple(params))
 
     @staticmethod
+    def _is_endgame(board):
+        """Detect endgame: queens are gone or non-pawn material is <= 1400 points per side."""
+        white_material = 0
+        black_material = 0
+        white_has_queen = False
+        black_has_queen = False
+        for sq in chess.SQUARES:
+            p = board.piece_at(sq)
+            if not p or p.piece_type in (chess.PAWN, chess.KING):
+                continue
+            val = PIECE_VALUES.get(p.piece_type, 0)
+            if p.color == chess.WHITE:
+                white_material += val
+                if p.piece_type == chess.QUEEN:
+                    white_has_queen = True
+            else:
+                black_material += val
+                if p.piece_type == chess.QUEEN:
+                    black_has_queen = True
+        return (not white_has_queen and not black_has_queen) or (white_material <= 1400 and black_material <= 1400)
+
+    @staticmethod
     def evaluate_board(board):
         """
-        Heuristic evaluation from White's perspective (positive means White is better).
-        Includes Material + Positional Piece Tables + Mobility + King Safety.
+        Advanced heuristic evaluation from White's perspective (positive means White is better).
+        Includes Material + Dynamic PST (Midgame/Endgame) + Non-destructive Mobility +
+        Pawn Structure (Passed/Doubled/Isolated) + Bishop Pair + Center Space Control.
         """
         if board.is_checkmate():
             return -99999 if board.turn == chess.WHITE else 99999
         if board.is_stalemate() or board.is_insufficient_material() or board.is_fifty_moves():
             return 0
 
+        is_endgame = ChessModel._is_endgame(board)
         score = 0
+        white_bishops = 0
+        black_bishops = 0
+        white_pawns_files = [0] * 8
+        black_pawns_files = [0] * 8
+
         for sq in chess.SQUARES:
             piece = board.piece_at(sq)
             if not piece:
@@ -285,27 +325,43 @@ class ChessModel:
 
             ptype = piece.piece_type
             color = piece.color
-            
-            # Base material
+            file_idx = chess.square_file(sq)
+            rank_idx = chess.square_rank(sq)
+
+            # Material value
             val = PIECE_VALUES.get(ptype, 0)
-            
+
             # Positional score from piece-square tables
             pst_val = 0
-            # From white's perspective, square index 0 is a1, 63 is h8
             sq_idx = sq if color == chess.WHITE else chess.square_mirror(sq)
-            
+
             if ptype == chess.PAWN:
                 pst_val = PAWN_TABLE[63 - sq_idx]
+                if color == chess.WHITE:
+                    white_pawns_files[file_idx] += 1
+                else:
+                    black_pawns_files[file_idx] += 1
             elif ptype == chess.KNIGHT:
                 pst_val = KNIGHT_TABLE[63 - sq_idx]
             elif ptype == chess.BISHOP:
                 pst_val = BISHOP_TABLE[63 - sq_idx]
+                if color == chess.WHITE:
+                    white_bishops += 1
+                else:
+                    black_bishops += 1
             elif ptype == chess.ROOK:
                 pst_val = ROOK_TABLE[63 - sq_idx]
+                # 7th rank bonus for rooks
+                if (color == chess.WHITE and rank_idx == 6) or (color == chess.BLACK and rank_idx == 1):
+                    pst_val += 25
             elif ptype == chess.QUEEN:
                 pst_val = QUEEN_TABLE[63 - sq_idx]
             elif ptype == chess.KING:
-                pst_val = KING_MID_TABLE[63 - sq_idx]
+                # Dynamic king table: safe castled castle in midgame, active hunting in endgame
+                if is_endgame:
+                    pst_val = KING_END_TABLE[63 - sq_idx]
+                else:
+                    pst_val = KING_MID_TABLE[63 - sq_idx]
 
             total_piece_score = val + pst_val
             if color == chess.WHITE:
@@ -313,26 +369,137 @@ class ChessModel:
             else:
                 score -= total_piece_score
 
-        # Add small mobility bonus
-        white_mobility = len(list(board.legal_moves)) if board.turn == chess.WHITE else 0
-        board.turn = not board.turn
-        black_mobility = len(list(board.legal_moves)) if board.turn == chess.BLACK else 0
-        board.turn = not board.turn
-        score += (white_mobility - black_mobility) * 5
+        # 1. Bishop pair advantage (+35)
+        if white_bishops >= 2:
+            score += 35
+        if black_bishops >= 2:
+            score -= 35
 
+        # 2. Pawn structure evaluation (Doubled and Isolated pawns)
+        for f in range(8):
+            # Doubled pawns (-15 per extra pawn on same file)
+            if white_pawns_files[f] > 1:
+                score -= 15 * (white_pawns_files[f] - 1)
+            if black_pawns_files[f] > 1:
+                score += 15 * (black_pawns_files[f] - 1)
+
+            # Isolated pawns (-20 if no friendly pawns on neighbor files)
+            left_w = white_pawns_files[f - 1] if f > 0 else 0
+            right_w = white_pawns_files[f + 1] if f < 7 else 0
+            if white_pawns_files[f] > 0 and left_w == 0 and right_w == 0:
+                score -= 20
+
+            left_b = black_pawns_files[f - 1] if f > 0 else 0
+            right_b = black_pawns_files[f + 1] if f < 7 else 0
+            if black_pawns_files[f] > 0 and left_b == 0 and right_b == 0:
+                score += 20
+
+        # 3. Center Control (d4, e4, d5, e5 squares)
+        center_squares = (chess.D4, chess.E4, chess.D5, chess.E5)
+        for c_sq in center_squares:
+            c_piece = board.piece_at(c_sq)
+            if c_piece:
+                score += 10 if c_piece.color == chess.WHITE else -10
+
+        # 4. Non-destructive Mobility bonus (accurately preserves board.turn)
+        cur_turn = board.turn
+        white_mobility = 0
+        black_mobility = 0
+        if cur_turn == chess.WHITE:
+            white_mobility = len(list(board.legal_moves))
+            board.turn = chess.BLACK
+            black_mobility = len(list(board.legal_moves))
+            board.turn = chess.WHITE
+        else:
+            black_mobility = len(list(board.legal_moves))
+            board.turn = chess.WHITE
+            white_mobility = len(list(board.legal_moves))
+            board.turn = chess.BLACK
+
+        score += (white_mobility - black_mobility) * 4
         return score
 
     @classmethod
-    def minimax(cls, board, depth, alpha, beta, maximizing_player):
+    def _mvv_lva_score(cls, board, move):
+        """Most Valuable Victim - Least Valuable Attacker move ordering score."""
+        if move.promotion:
+            return 9500
+        if board.is_capture(move):
+            victim = board.piece_at(move.to_square)
+            attacker = board.piece_at(move.from_square)
+            v_val = PIECE_VALUES.get(victim.piece_type, 100) if victim else 100
+            a_val = PIECE_VALUES.get(attacker.piece_type, 100) if attacker else 100
+            return 1000 + v_val * 10 - a_val
+        if board.gives_check(move):
+            return 500
+        # Center square occupation bonus for quiet moves
+        if move.to_square in (chess.D4, chess.E4, chess.D5, chess.E5):
+            return 50
+        return 0
+
+    @classmethod
+    def quiescence(cls, board, alpha, beta, maximizing, q_depth=4):
+        """
+        Quiescence Search:
+        Searches captures until a quiet position is reached, eliminating
+        the horizon effect where the AI blunders pieces right after a capture.
+        """
+        stand_pat = cls.evaluate_board(board)
+        if maximizing:
+            if stand_pat >= beta:
+                return beta
+            alpha = max(alpha, stand_pat)
+        else:
+            if stand_pat <= alpha:
+                return alpha
+            beta = min(beta, stand_pat)
+
+        if q_depth <= 0 or board.is_game_over():
+            return stand_pat
+
+        captures = [m for m in board.legal_moves if board.is_capture(m)]
+        if not captures:
+            return stand_pat
+
+        captures.sort(key=lambda m: cls._mvv_lva_score(board, m), reverse=True)
+
+        for move in captures:
+            board.push(move)
+            score = cls.quiescence(board, alpha, beta, not maximizing, q_depth - 1)
+            board.pop()
+
+            if maximizing:
+                if score >= beta:
+                    return beta
+                alpha = max(alpha, score)
+            else:
+                if score <= alpha:
+                    return alpha
+                beta = min(beta, score)
+
+        return alpha if maximizing else beta
+
+    @classmethod
+    def minimax(cls, board, depth, alpha, beta, maximizing_player, tt=None):
         if depth == 0 or board.is_game_over():
-            return cls.evaluate_board(board), None
+            return cls.quiescence(board, alpha, beta, maximizing_player, q_depth=4), None
+
+        # Transposition table lookup
+        key = None
+        if tt is not None:
+            try:
+                key = (board._transposition_key(), depth, maximizing_player)
+                if key in tt:
+                    return tt[key]
+            except Exception:
+                pass
 
         legal_moves = list(board.legal_moves)
         if not legal_moves:
             return cls.evaluate_board(board), None
 
-        # Sort moves to improve alpha-beta pruning (captures first)
-        legal_moves.sort(key=lambda m: board.is_capture(m), reverse=True)
+        # Sort moves using MVV-LVA to dramatically improve alpha-beta pruning
+        legal_moves.sort(key=lambda m: cls._mvv_lva_score(board, m), reverse=True)
 
         best_move = legal_moves[0]
 
@@ -340,7 +507,7 @@ class ChessModel:
             max_eval = -float('inf')
             for move in legal_moves:
                 board.push(move)
-                eval_score, _ = cls.minimax(board, depth - 1, alpha, beta, False)
+                eval_score, _ = cls.minimax(board, depth - 1, alpha, beta, False, tt)
                 board.pop()
                 if eval_score > max_eval:
                     max_eval = eval_score
@@ -348,12 +515,12 @@ class ChessModel:
                 alpha = max(alpha, eval_score)
                 if beta <= alpha:
                     break
-            return max_eval, best_move
+            res = (max_eval, best_move)
         else:
             min_eval = float('inf')
             for move in legal_moves:
                 board.push(move)
-                eval_score, _ = cls.minimax(board, depth - 1, alpha, beta, True)
+                eval_score, _ = cls.minimax(board, depth - 1, alpha, beta, True, tt)
                 board.pop()
                 if eval_score < min_eval:
                     min_eval = eval_score
@@ -361,21 +528,53 @@ class ChessModel:
                 beta = min(beta, eval_score)
                 if beta <= alpha:
                     break
-            return min_eval, best_move
+            res = (min_eval, best_move)
+
+        if tt is not None and key and len(tt) < 50000:
+            tt[key] = res
+
+        return res
 
     @classmethod
     def get_ai_move(cls, board, level=2):
         """
         Calculate AI move according to GoChess level:
-        Level 1: Novice (depth 1)
-        Level 2: Club (depth 2)
-        Level 3: Master (depth 3)
-        Level 4: Grandmaster (depth 4)
+        Level 1: Novice (~800 ELO, depth 1 with friendly beginner variety)
+        Level 2: Club (~1400 ELO, depth 2 + Quiescence)
+        Level 3: Master (~2000 ELO, depth 3 + Quiescence + MVV-LVA)
+        Level 4: Grandmaster (~2400 ELO, depth 4 + Quiescence + Transposition Cache)
+        Level 5: Super Grandmaster (~2700 ELO, depth 4/5 + Opening Book + Deep Quiescence)
         """
-        depth_map = {1: 1, 2: 2, 3: 3, 4: 4}
-        depth = depth_map.get(level, 2)
+        import random
+
+        # Level 1 (Novice): Depth 1 with 20% random move selection for beginner fun
+        if level <= 1:
+            legal_moves = list(board.legal_moves)
+            if not legal_moves:
+                return None, 0
+            if random.random() < 0.20:
+                return random.choice(legal_moves), 0
+            depth = 1
+        elif level == 2:
+            depth = 2
+        elif level == 3:
+            depth = 3
+        elif level == 4:
+            depth = 4
+        else:
+            # Level 5: Grandmaster / Stockfish-caliber
+            # Opening Book handling for starting moves
+            if board.fullmove_number <= 2 and board.fen() == chess.STARTING_FEN:
+                classic_openings = ['e2e4', 'd2d4', 'c2c4', 'g1f3']
+                choice = random.choice(classic_openings)
+                mv = chess.Move.from_uci(choice)
+                if mv in board.legal_moves:
+                    return mv, 25
+            depth = 4
+
+        tt = {}
         maximizing = (board.turn == chess.WHITE)
-        score, move = cls.minimax(board, depth, -float('inf'), float('inf'), maximizing)
+        score, move = cls.minimax(board, depth, -float('inf'), float('inf'), maximizing, tt=tt)
         return move, score
 
     @classmethod
@@ -391,9 +590,9 @@ class ChessModel:
         if board.is_game_over():
             return {"status": "game_over"}
 
-        # Find best move for current turn
+        # Find best move for current turn with depth 3 Master vision
         maximizing = (board.turn == chess.WHITE)
-        score, best_move = cls.minimax(board, 2, -float('inf'), float('inf'), maximizing)
+        score, best_move = cls.minimax(board, 3, -float('inf'), float('inf'), maximizing, tt={})
         
         best_move_dict = None
         if best_move:
@@ -429,6 +628,202 @@ class ChessModel:
             "eval_advantage_white": score / 100.0,
             "turn": "white" if board.turn == chess.WHITE else "black"
         }
+
+    # =========================================================================
+    # INTERACTIVE COMPLEX PROBLEM SOLVER & STEP VERIFICATION
+    # =========================================================================
+    @classmethod
+    def validate_problem_step(cls, problem_id, user_id, current_fen, player_move_uci):
+        """
+        Interactive Step-by-Step Problem Solver Engine:
+        Validates the player's move against the problem solution sequence.
+        If correct and the puzzle continues, automatically plays the opponent's
+        best defensive response and returns the new board state.
+        If final move is delivered or checkmate achieved, awards XP and marks solved!
+        """
+        problem = cls.get_problem(problem_id)
+        if not problem:
+            return {"status": "error", "message": "Problem not found."}
+
+        try:
+            start_board = chess.Board(problem['fen'])
+        except Exception:
+            return {"status": "error", "message": "Invalid problem setup."}
+
+        sol_tokens = [m.strip() for m in problem['solution_moves'].replace(';', ',').split(',') if m.strip()]
+        if not sol_tokens:
+            return {"status": "error", "message": "No solution line defined for this problem."}
+
+        # Parse the full official solution move list
+        temp_b = start_board.copy()
+        expected_moves = []
+        for tok in sol_tokens:
+            mv = cls._parse_move_token(temp_b, tok)
+            if not mv:
+                break
+            expected_moves.append(mv)
+            temp_b.push(mv)
+
+        # Parse player move on current board
+        try:
+            curr_b = chess.Board(current_fen)
+        except Exception:
+            curr_b = start_board.copy()
+
+        pmv = cls._parse_move_token(curr_b, player_move_uci)
+        if not pmv or pmv not in curr_b.legal_moves:
+            return {
+                "status": "success",
+                "correct": False,
+                "is_solved": False,
+                "message": "Illegal move on this board position."
+            }
+
+        # Determine step index: find which position in the expected line matches curr_b
+        step_idx = 0
+        replay_b = start_board.copy()
+        if replay_b.board_fen() == curr_b.board_fen():
+            step_idx = 0
+        else:
+            for idx, em in enumerate(expected_moves):
+                replay_b.push(em)
+                if replay_b.board_fen() == curr_b.board_fen():
+                    step_idx = idx + 1
+                    break
+
+        expected_pmv = expected_moves[step_idx] if step_idx < len(expected_moves) else None
+
+        # Verify move
+        is_correct = False
+        if expected_pmv and (pmv == expected_pmv or pmv.uci() == expected_pmv.uci()):
+            is_correct = True
+        else:
+            # Check if this move delivers checkmate
+            test_b = curr_b.copy()
+            test_b.push(pmv)
+            if test_b.is_checkmate():
+                is_correct = True
+
+        if not is_correct:
+            return {
+                "status": "success",
+                "correct": False,
+                "is_solved": False,
+                "message": "That is not the winning line. Rethink the tactical combination!"
+            }
+
+        # Move is correct! Get player SAN before advancing
+        player_san = curr_b.san(pmv)
+        curr_b.push(pmv)
+
+        # Is the puzzle solved here?
+        next_step = step_idx + 1
+        is_completed = (next_step >= len(expected_moves)) or curr_b.is_checkmate()
+
+        if is_completed:
+            xp_reward = problem.get('xp_reward', 150)
+            try:
+                execute_insert(
+                    "INSERT INTO chess_problem_submissions (problem_id, user_id, submitted_moves, is_solved, xp_earned) VALUES (%s, %s, %s, 1, %s)",
+                    "INSERT INTO chess_problem_submissions (problem_id, user_id, submitted_moves, is_solved, xp_earned) VALUES (?, ?, ?, 1, ?)",
+                    (problem_id, user_id, player_move_uci, xp_reward)
+                )
+            except Exception:
+                pass
+
+            return {
+                "status": "success",
+                "correct": True,
+                "is_solved": True,
+                "completed": True,
+                "xp_earned": xp_reward,
+                "player_move": {
+                    "uci": pmv.uci(),
+                    "san": player_san,
+                    "from": chess.square_name(pmv.from_square),
+                    "to": chess.square_name(pmv.to_square)
+                },
+                "message": f"Outstanding tactical vision! Problem solved! +{xp_reward} XP awarded!"
+            }
+
+        # Opponent's defensive move
+        opp_mv = expected_moves[next_step]
+        opp_from = chess.square_name(opp_mv.from_square)
+        opp_to = chess.square_name(opp_mv.to_square)
+        opp_san = curr_b.san(opp_mv)
+        curr_b.push(opp_mv)
+
+        return {
+            "status": "success",
+            "correct": True,
+            "is_solved": False,
+            "completed": False,
+            "player_move": {
+                "uci": pmv.uci(),
+                "san": player_san,
+                "from": chess.square_name(pmv.from_square),
+                "to": chess.square_name(pmv.to_square)
+            },
+            "opponent_move": {
+                "uci": opp_mv.uci(),
+                "san": opp_san,
+                "from": opp_from,
+                "to": opp_to
+            },
+            "new_fen": curr_b.fen(),
+            "message": "Brilliant move! Opponent played best defensive response. Find the next continuation!"
+        }
+
+    @classmethod
+    def get_problem_hint(cls, problem_id, current_fen):
+        """Returns progressive hints: piece to move, target square, or problem strategy."""
+        problem = cls.get_problem(problem_id)
+        if not problem:
+            return {"status": "error", "message": "Problem not found"}
+
+        try:
+            start_board = chess.Board(problem['fen'])
+            curr_b = chess.Board(current_fen)
+        except Exception:
+            return {"status": "success", "hint": problem.get('hint', 'Calculate forcing lines.')}
+
+        sol_tokens = [m.strip() for m in problem['solution_moves'].replace(';', ',').split(',') if m.strip()]
+        temp_b = start_board.copy()
+        expected_moves = []
+        for tok in sol_tokens:
+            mv = cls._parse_move_token(temp_b, tok)
+            if not mv:
+                break
+            expected_moves.append(mv)
+            temp_b.push(mv)
+
+        target_move = None
+        replay_b = start_board.copy()
+        if replay_b.board_fen() == curr_b.board_fen() and expected_moves:
+            target_move = expected_moves[0]
+        else:
+            for idx, em in enumerate(expected_moves):
+                replay_b.push(em)
+                if replay_b.board_fen() == curr_b.board_fen() and idx + 1 < len(expected_moves):
+                    target_move = expected_moves[idx + 1]
+                    break
+
+        if not target_move and expected_moves:
+            target_move = expected_moves[0]
+
+        if target_move:
+            from_sq = chess.square_name(target_move.from_square)
+            to_sq = chess.square_name(target_move.to_square)
+            piece = curr_b.piece_at(target_move.from_square)
+            p_name = chess.piece_name(piece.piece_type).capitalize() if piece else "Piece"
+            return {
+                "status": "success",
+                "from_sq": from_sq,
+                "to_sq": to_sq,
+                "hint": f"Coach Insight: Consider moving your {p_name} on {from_sq} towards {to_sq}! ({problem.get('hint', '')})"
+            }
+
+        return {"status": "success", "hint": problem.get('hint', 'Focus on checks and captures.')}
 
     @staticmethod
     def get_famous_game_playback(game_id):

@@ -41,13 +41,18 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
     stats = SolveModel.get_user_stats(user_id)
     history = SolveModel.get_user_history(user_id, limit=20)
 
-    # Wallet balance
+    # Wallet balance: club_wallets is keyed by (group_id, user_id) and the
+    # personal wallet always lives in group_id = 0. Querying by user_id alone
+    # could surface an unrelated group's balance.
+    from models.card_club import economy
     wallet_row = query_one(
-        "SELECT balance FROM club_wallets WHERE user_id = %s",
-        "SELECT balance FROM club_wallets WHERE user_id = ?",
+        "SELECT balance FROM club_wallets WHERE group_id = 0 AND user_id = %s",
+        "SELECT balance FROM club_wallets WHERE group_id = 0 AND user_id = ?",
         (user_id,)
     )
-    coins_balance = int(wallet_row["balance"]) if wallet_row and wallet_row.get("balance") is not None else 1000
+    coins_balance = (int(wallet_row["balance"])
+                     if wallet_row and wallet_row.get("balance") is not None
+                     else economy.STARTING_GRANT)
 
     clean_history = []
     for item in history:

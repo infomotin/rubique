@@ -312,6 +312,28 @@ def submit_solution(problem_id):
     result = ChessModel.verify_and_submit_solution(problem_id, user_id, submitted_moves)
     return jsonify(result)
 
+@chess_bp.route('/problems/<int:problem_id>/step', methods=['POST'])
+def problem_step(problem_id):
+    """Interactive Problem Solving: verifies player move in real-time, responds with opponent defense"""
+    user_id = session.get('user_id', 1)
+    data = request.get_json() or {}
+    current_fen = data.get('current_fen', '').strip()
+    player_move = data.get('move', '').strip()
+
+    if not current_fen or not player_move:
+        return jsonify({"status": "error", "message": "Missing current FEN or player move."}), 400
+
+    result = ChessModel.validate_problem_step(problem_id, user_id, current_fen, player_move)
+    return jsonify(result)
+
+@chess_bp.route('/problems/<int:problem_id>/hint', methods=['POST'])
+def problem_hint(problem_id):
+    """Progressive coach hint for tactical problems"""
+    data = request.get_json() or {}
+    current_fen = data.get('current_fen', '').strip()
+    result = ChessModel.get_problem_hint(problem_id, current_fen)
+    return jsonify(result)
+
 # =============================================================================
 # MULTIPLAYER MATCHMAKING: 1v1, GROUP VS GROUP, GROUP VS PUBLIC
 # =============================================================================

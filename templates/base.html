@@ -78,44 +78,47 @@
     <canvas id="math-particle-canvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
 
     <!-- Top Navigation Bar -->
-    <header class="navbar-glass sticky top-0 z-50 border-b border-slate-800/80 backdrop-blur-xl bg-black/80">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header class="navbar-glass sticky top-0 z-50 border-b border-slate-800/80 backdrop-blur-xl bg-slate-950/90 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             
             <!-- Brand Logo -->
-            <a href="{{ url_for('home.index') }}" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 rounded-xl bg-indigo-600 p-0.5 shadow-lg shadow-indigo-600/20 group-hover:bg-indigo-500 transition-all duration-300">
-                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                        <i class="fa-solid fa-cube text-indigo-400 group-hover:rotate-12 transition-transform duration-300"></i>
+            <a href="{{ url_for('home.index') }}" class="flex items-center gap-3 group shrink-0">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-0.5 shadow-lg shadow-indigo-500/25 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all duration-300">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                        <i class="fa-solid fa-cube text-indigo-400 text-base group-hover:rotate-12 transition-transform duration-300"></i>
                     </div>
                 </div>
-                <div>
-                    <span class="font-outfit font-bold text-lg tracking-tight text-white">
-                        CubePermutation <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/40 text-indigo-300 font-mono">AI</span>
-                    </span>
+                <div class="flex flex-col justify-center">
+                    <div class="flex items-center gap-2">
+                        <span class="font-outfit font-black text-lg tracking-tight text-white group-hover:text-indigo-200 transition-colors">
+                            CubePermutation
+                        </span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-mono font-bold shadow-sm shadow-indigo-500/30">AI</span>
+                    </div>
                     <p class="text-[10px] font-mono text-slate-400 tracking-wider">MVC &bull; GROUP THEORY &bull; S₅₄</p>
                 </div>
             </a>
 
             <!-- Navigation Links -->
-            <nav class="flex items-center gap-2.5">
-                <a href="{{ url_for('home.index') }}" class="hidden sm:inline-block text-xs font-medium px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition-all" data-i18n="nav_home">
+            <nav class="flex items-center gap-2 overflow-x-auto scrollbar-thin py-1">
+                <a href="{{ url_for('home.index') }}" class="hidden xl:inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all" data-i18n="nav_home">
                     {{ t('nav_home') }}
                 </a>
 
                 <!-- Multi-Language Selector Dropdown -->
-                <div class="relative inline-block text-left">
-                    <button id="lang-toggle-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-indigo-500/60 text-xs font-mono text-slate-200 transition-all shadow-md">
-                        <i class="fa-solid fa-globe text-indigo-400"></i>
-                        <span id="current-lang-display">
-                            {% if current_lang == 'bn' %}🇧🇩 বাংলা
-                            {% elif current_lang == 'hi' %}🇮🇳 हिन्दी
+                <div class="relative inline-block text-left shrink-0">
+                    <button id="lang-toggle-btn" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 text-xs font-mono text-slate-200 transition-all shadow-sm">
+                        <i class="fa-solid fa-globe text-indigo-400 text-xs"></i>
+                        <span id="current-lang-display" class="font-semibold text-[11px]">
+                            {% if current_lang == 'bn' %}🇧🇩 BN
+                            {% elif current_lang == 'hi' %}🇮🇳 HI
                             {% elif current_lang == 'ru' %}🇷🇺 RU
-                            {% elif current_lang == 'zh' %}🇨🇳 中文
+                            {% elif current_lang == 'zh' %}🇨🇳 ZH
                             {% else %}🇬🇧 EN{% endif %}
                         </span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
                     </button>
-                    <div id="lang-dropdown-menu" class="hidden absolute right-0 mt-2 w-36 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-1.5 z-50 font-mono text-xs backdrop-blur-xl">
+                    <div id="lang-dropdown-menu" class="hidden absolute right-0 mt-2 w-36 rounded-2xl bg-slate-950/95 border border-slate-800 shadow-2xl p-1.5 z-50 font-mono text-xs backdrop-blur-xl">
                         <a href="/set-language/en" class="lang-select-option flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-indigo-600/20 text-slate-200 hover:text-indigo-300 transition-colors" data-lang="en">
                             <span>🇬🇧</span> <span>English</span>
                         </a>
@@ -134,136 +137,71 @@
                     </div>
                 </div>
 
-                <!-- Dark / Light Theme Toggle Button -->
-                <button id="theme-toggle-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-indigo-500/60 text-xs font-mono text-slate-200 transition-all shadow-md" title="Toggle Dark / Light Theme">
-                    <i id="theme-toggle-icon" class="fa-solid fa-moon text-indigo-400"></i>
-                    <span id="theme-toggle-label" class="hidden sm:inline text-[11px]">Dark</span>
-                </button>
-
-                <!-- Playful Color Theme Accent Selector Dropdown -->
-                <div class="relative inline-block text-left">
-                    <button id="accent-toggle-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-indigo-500/60 text-xs font-mono text-slate-200 transition-all shadow-md" title="Pick Theme Accent Colors">
-                        <i class="fa-solid fa-palette text-pink-400"></i>
-                        <span class="hidden sm:inline text-[11px]">Colors</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
-                    </button>
-                    <div id="accent-dropdown-menu" class="hidden absolute right-0 mt-2 w-44 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-1.5 z-50 font-mono text-xs backdrop-blur-xl">
-                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-indigo-600/20 text-slate-200 hover:text-indigo-300 transition-colors" data-accent="indigo">
-                            <span class="w-3 h-3 rounded-full bg-indigo-500 shadow-sm"></span> <span>Cosmic Indigo</span>
-                        </a>
-                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-emerald-600/20 text-slate-200 hover:text-emerald-300 transition-colors" data-accent="emerald">
-                            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></span> <span>Emerald Meadow</span>
-                        </a>
-                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-amber-600/20 text-slate-200 hover:text-amber-300 transition-colors" data-accent="amber">
-                            <span class="w-3 h-3 rounded-full bg-amber-400 shadow-sm"></span> <span>Solar Gold</span>
-                        </a>
-                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-rose-600/20 text-slate-200 hover:text-rose-300 transition-colors" data-accent="rose">
-                            <span class="w-3 h-3 rounded-full bg-rose-500 shadow-sm"></span> <span>Bubblegum Rose</span>
-                        </a>
-                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-purple-600/20 text-slate-200 hover:text-purple-300 transition-colors" data-accent="purple">
-                            <span class="w-3 h-3 rounded-full bg-purple-500 shadow-sm"></span> <span>Magic Violet</span>
-                        </a>
-                        <a href="#" class="accent-select-option flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-accent="cyan">
-                            <span class="w-3 h-3 rounded-full bg-cyan-400 shadow-sm"></span> <span>Cyber Aqua</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Device Resolution & 3-Mode Viewport Dropdown -->
-                <div class="relative inline-block text-left">
-                    <button id="device-mode-toggle-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700 hover:border-cyan-500/60 text-xs font-mono text-slate-200 transition-all shadow-md" title="Screen Resolution & Viewport Mode">
-                        <i id="device-hud-icon" class="fa-solid fa-desktop text-cyan-400"></i>
-                        <span id="device-hud-label" class="hidden md:inline text-[11px] font-bold text-cyan-300">Desktop</span>
-                        <span id="device-hud-res" class="hidden lg:inline text-[10px] text-slate-400 font-mono">1920×1080</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
-                    </button>
-                    <div id="device-mode-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl p-1.5 z-50 font-mono text-xs backdrop-blur-xl">
-                        <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 mb-1">
-                            Screen Modes & Viewports
-                        </div>
-                        <a href="#" class="device-mode-option flex items-center justify-between px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-mode="auto">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-400"></i> <span>Auto Screen Fit</span></span>
-                            <span class="text-[10px] text-slate-500">Native</span>
-                        </a>
-                        <a href="#" class="device-mode-option flex items-center justify-between px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-mode="desktop">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-desktop text-indigo-400"></i> <span>Desktop Mode</span></span>
-                            <span class="text-[10px] text-slate-500">1280px+</span>
-                        </a>
-                        <a href="#" class="device-mode-option flex items-center justify-between px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-mode="tablet">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-tablet-screen-button text-purple-400"></i> <span>Tablet Mode</span></span>
-                            <span class="text-[10px] text-slate-500">768px</span>
-                        </a>
-                        <a href="#" class="device-mode-option flex items-center justify-between px-3 py-2 rounded-xl hover:bg-cyan-600/20 text-slate-200 hover:text-cyan-300 transition-colors" data-mode="mobile">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-mobile-screen-button text-rose-400"></i> <span>Mobile Phone</span></span>
-                            <span class="text-[10px] text-slate-500">390px</span>
-                        </a>
-                    </div>
-                </div>
-
                 {% if session.get('user_id') %}
                     <!-- Role-Specific Dashboard Link -->
                     {% if session.get('role') == 'super_admin' %}
-                        <a href="{{ url_for('super_admin.dashboard') }}" class="btn-nav text-xs font-mono px-3 py-1.5 rounded-lg border border-amber-500/40 bg-amber-950/40 text-amber-300 hover:bg-amber-900/40 transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-crown text-amber-400"></i>
-                            <span data-i18n="nav_admin_center">{{ t('nav_admin_center') }}</span>
+                        <a href="{{ url_for('super_admin.dashboard') }}" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-300 bg-amber-950/40 hover:bg-amber-900/50 border border-amber-500/40 hover:border-amber-400 transition-all flex items-center gap-1.5 shadow-sm shadow-amber-500/10">
+                            <i class="fa-solid fa-crown text-amber-400 text-xs"></i>
+                            <span data-i18n="nav_admin_center">{{ t('nav_admin_center', 'Admin Center') }}</span>
                         </a>
                     {% elif session.get('role') == 'developer' %}
-                        <a href="{{ url_for('developer.dashboard') }}" class="btn-nav text-xs font-mono px-3 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/40 text-cyan-300 hover:bg-cyan-900/40 transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-terminal text-cyan-400"></i>
-                            <span data-i18n="nav_dev_hud">{{ t('nav_dev_hud') }}</span>
-                        </a>
-                    {% else %}
-                        <a href="{{ url_for('feed.newsfeed') }}" class="btn-nav text-xs font-mono px-3 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/40 text-cyan-300 hover:bg-cyan-900/40 transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-newspaper text-cyan-400"></i>
-                            <span>News Feed</span>
+                        <a href="{{ url_for('developer.dashboard') }}" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/40 hover:border-cyan-400 transition-all flex items-center gap-1.5 shadow-sm shadow-cyan-500/10">
+                            <i class="fa-solid fa-terminal text-cyan-400 text-xs"></i>
+                            <span data-i18n="nav_dev_hud">{{ t('nav_dev_hud', 'Dev HUD') }}</span>
                         </a>
                     {% endif %}
 
-                    <!-- News Feed Link for Admins/Devs -->
-                    {% if session.get('role') in ('super_admin', 'developer') %}
-                        <a href="{{ url_for('feed.newsfeed') }}" class="btn-nav text-xs font-medium px-3.5 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-600/10 text-cyan-300 hover:bg-cyan-600/20 transition-all flex items-center gap-1.5" title="Social News Feed">
-                            <i class="fa-solid fa-newspaper text-cyan-400"></i> <span>Feed</span>
-                        </a>
-                    {% endif %}
+                    <!-- News Feed Link -->
+                    <a href="{{ url_for('feed.newsfeed') }}" class="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-200 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 transition-all flex items-center gap-1.5 shadow-sm group">
+                        <i class="fa-solid fa-newspaper text-cyan-400 text-xs group-hover:scale-110 transition-transform"></i>
+                        <span>Feed</span>
+                    </a>
 
                     <!-- Card Club 23 Games Arena -->
-                    <a href="{{ url_for('card_club.section') }}" class="btn-nav text-xs font-medium px-3.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-600/10 text-emerald-300 hover:bg-emerald-600/20 transition-all flex items-center gap-1.5" title="Card Club 23 Games Arena">
-                        <i class="fa-solid fa-cards text-emerald-400"></i> <span>Card Club</span>
+                    <a href="{{ url_for('card_club.section') }}" class="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-200 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 transition-all flex items-center gap-1.5 shadow-sm group" title="Card Club 23 Games Arena">
+                        <i class="fa-solid fa-cards text-emerald-400 text-xs group-hover:scale-110 transition-transform"></i>
+                        <span>Card Club</span>
                     </a>
 
                     <!-- Visualizer Link -->
-                    <a href="{{ url_for('visualizer.index') }}" class="btn-nav text-xs font-medium px-3.5 py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-600/10 text-indigo-300 hover:bg-indigo-600/20 transition-all">
-                        <i class="fa-solid fa-atom mr-1.5"></i> <span data-i18n="nav_visualizer">{{ t('nav_visualizer') }}</span>
+                    <a href="{{ url_for('visualizer.index') }}" class="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-200 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 transition-all flex items-center gap-1.5 shadow-sm group">
+                        <i class="fa-solid fa-cube text-indigo-400 text-xs group-hover:scale-110 transition-transform"></i>
+                        <span data-i18n="nav_visualizer">{{ t('nav_visualizer', '3D Visualizer') }}</span>
                     </a>
 
-                    <!-- 3D Smart Chess Board (GoChess) -->
-                    <a href="{{ url_for('chess.index') }}" class="btn-nav text-xs font-medium px-3.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-600/10 text-amber-300 hover:bg-amber-600/20 transition-all flex items-center gap-1.5" title="GoChess 3D Smart Board">
-                        <i class="fa-solid fa-chess-knight text-amber-400"></i> <span data-i18n="stage_chess_board">{{ t('stage_chess_board', '3D Chess') }}</span>
+                    <!-- 3D Smart Chess Board -->
+                    <a href="{{ url_for('chess.index') }}" class="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-200 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 transition-all flex items-center gap-1.5 shadow-sm group" title="GoChess 3D Smart Board">
+                        <i class="fa-solid fa-chess-knight text-amber-400 text-xs group-hover:scale-110 transition-transform"></i>
+                        <span data-i18n="stage_chess_board">{{ t('stage_chess_board', '3D Chess') }}</span>
                     </a>
 
                     <!-- CyberDeck Memory Cards -->
-                    <a href="{{ url_for('card.index') }}" class="btn-nav text-xs font-medium px-3.5 py-1.5 rounded-lg border border-violet-500/30 bg-violet-600/10 text-violet-300 hover:bg-violet-600/20 transition-all flex items-center gap-1.5" title="CyberDeck Memory Cards">
-                        <i class="fa-solid fa-clone text-violet-400"></i> <span data-i18n="stage_cards_game">{{ t('stage_cards_game', 'Memory Cards') }}</span>
+                    <a href="{{ url_for('card.index') }}" class="hidden lg:flex px-3 py-1.5 rounded-xl text-xs font-medium text-slate-200 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-violet-500/40 transition-all items-center gap-1.5 shadow-sm group" title="CyberDeck Memory Cards">
+                        <i class="fa-solid fa-clone text-violet-400 text-xs group-hover:scale-110 transition-transform"></i>
+                        <span data-i18n="stage_cards_game">{{ t('stage_cards_game', 'Memory Cards') }}</span>
                     </a>
 
-                    <!-- Profile Dashboard Link -->
-                    <a href="{{ url_for('profile.index') }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300 hover:border-slate-700 transition-all">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <i class="fa-solid fa-user text-indigo-400"></i>
-                        <span>{{ session.get('username') }}</span>
-                    </a>
-                    
-                    <!-- Logout -->
-                    <a href="{{ url_for('auth.logout') }}" class="btn-nav text-xs font-medium px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all" title="Logout">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    </a>
+                    <!-- User Profile & Logout Group -->
+                    <div class="flex items-center gap-1.5 pl-2 border-l border-slate-800 shrink-0">
+                        <a href="{{ url_for('profile.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 text-xs text-slate-200 transition-all shadow-sm group">
+                            <div class="w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+                                {{ (session.get('username') or 'U')[:1]|upper }}
+                            </div>
+                            <span class="font-semibold text-xs group-hover:text-white">{{ session.get('username') }}</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+                        </a>
+                        
+                        <a href="{{ url_for('auth.logout') }}" class="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 text-xs transition-all" title="Logout">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </a>
+                    </div>
                 {% else %}
                     <!-- Guest Authentication Links -->
-                    <div class="flex items-center gap-2">
-                        <a href="{{ url_for('auth.login') }}" class="text-xs font-medium px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all" data-i18n="nav_sign_in">
+                    <div class="flex items-center gap-2 pl-2">
+                        <a href="{{ url_for('auth.login') }}" class="text-xs font-medium px-3.5 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all" data-i18n="nav_sign_in">
                             {{ t('nav_sign_in') }}
                         </a>
-                        <a href="{{ url_for('auth.register') }}" class="text-xs font-medium px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all" data-i18n="nav_create_account">
+                        <a href="{{ url_for('auth.register') }}" class="text-xs font-semibold px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white shadow-lg shadow-indigo-600/25 transition-all" data-i18n="nav_create_account">
                             {{ t('nav_create_account') }}
                         </a>
                     </div>
