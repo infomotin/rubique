@@ -749,6 +749,50 @@ def init_database():
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
+            # 43. Classic Playing Cards Suite - server-side game store
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS classic_games (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    slug VARCHAR(40) NOT NULL,
+                    mode VARCHAR(20) NOT NULL DEFAULT 'ai',
+                    group_id INT DEFAULT 0,
+                    owner_id INT NOT NULL,
+                    stake INT DEFAULT 0,
+                    status VARCHAR(20) DEFAULT 'active',
+                    state TEXT,
+                    result TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    finished_at TIMESTAMP NULL,
+                    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 44. Classic Suite - seat occupancy (humans + bots)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS classic_seats (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    game_id INT NOT NULL,
+                    seat_index INT NOT NULL,
+                    user_id INT DEFAULT NULL,
+                    is_bot TINYINT DEFAULT 0,
+                    display_name VARCHAR(60) DEFAULT '',
+                    UNIQUE KEY uq_classic_seat (game_id, seat_index),
+                    FOREIGN KEY (game_id) REFERENCES classic_games(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            # 45. Classic Suite - escrowed stakes (hash-chained ledger refs)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS classic_stakes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    game_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    amount INT DEFAULT 0,
+                    status VARCHAR(20) DEFAULT 'escrowed',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (game_id) REFERENCES classic_games(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
             for _seat_col in (
                 "ALTER TABLE club_seats ADD COLUMN rules_read TINYINT DEFAULT 0",
                 "ALTER TABLE club_seats ADD COLUMN camera_active TINYINT DEFAULT 0",
@@ -1557,6 +1601,50 @@ def init_database():
                 state TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        # 43. Classic Playing Cards Suite - server-side game store
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS classic_games (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                slug TEXT NOT NULL,
+                mode TEXT NOT NULL DEFAULT 'ai',
+                group_id INTEGER DEFAULT 0,
+                owner_id INTEGER NOT NULL,
+                stake INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                state TEXT,
+                result TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                finished_at TIMESTAMP,
+                FOREIGN KEY (owner_id) REFERENCES users(id)
+            )
+        """)
+        # 44. Classic Suite - seat occupancy (humans + bots)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS classic_seats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_id INTEGER NOT NULL,
+                seat_index INTEGER NOT NULL,
+                user_id INTEGER DEFAULT NULL,
+                is_bot INTEGER DEFAULT 0,
+                display_name TEXT DEFAULT '',
+                UNIQUE (game_id, seat_index),
+                FOREIGN KEY (game_id) REFERENCES classic_games(id)
+            )
+        """)
+        # 45. Classic Suite - escrowed stakes (hash-chained ledger refs)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS classic_stakes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                amount INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'escrowed',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (game_id) REFERENCES classic_games(id),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)

@@ -16,6 +16,8 @@ allowing the human player (seat 0) to play instantly against partner and opponen
 
 import random
 
+from models.card_club.errors import IllegalMove
+
 SUITS = ["S", "H", "D", "C"]
 SUIT_NAMES = {"S": "Spades", "H": "Hearts", "D": "Diamonds", "C": "Clubs"}
 SUIT_SYMBOLS = {"S": "♠", "H": "♥", "D": "♦", "C": "♣"}
@@ -42,6 +44,55 @@ def pretty_card(card):
     s, r = card[0], card[1:]
     r_disp = "10" if r == "T" else r
     return f"{SUIT_SYMBOLS[s]}{r_disp}"
+
+
+def seat_name(state, seat):
+    """Dynamic seat label. Group games rename seats after the humans who took
+    them; solo games fall back to the classic fixed labels."""
+    try:
+        names = (state or {}).get("seat_names") or []
+        idx = int(seat)
+        if 0 <= idx < len(names) and names[idx]:
+            return names[idx]
+    except (TypeError, ValueError, IndexError, KeyError):
+        pass
+    return SEAT_NAMES[int(seat)]
+
+
+def action_matches(action, option):
+    """A submitted action is legal only when it satisfies every field of one
+    of the options returned by the engine's legal_actions()."""
+    if not isinstance(action, dict) or not isinstance(option, dict):
+        return False
+    if action.get("action") != option.get("action"):
+        return False
+    for key, value in option.items():
+        if key == "action":
+            continue
+        if key not in action or action[key] != value:
+            return False
+    return True
+
+
+def human_seats(state):
+    """Seats driven by a real player. Solo games default to seat 0."""
+    raw = (state or {}).get("human_seats")
+    if raw is None:
+        return {0}
+    try:
+        return {int(x) for x in raw}
+    except (TypeError, ValueError):
+        return {0}
+
+
+def assert_legal(engine, state, seat, action):
+    """Server-side gate: no engine may apply a move the legal set forbids."""
+    legal = engine.legal_actions(state, seat)
+    if any(action_matches(action, opt) for opt in legal):
+        return action
+    raise IllegalMove(
+        f"{seat_name(state, seat)} cannot play "
+        f"'{(action or {}).get('action', '?')}' right now")
 
 
 # =====================================================================
@@ -152,6 +203,7 @@ class TwentyNineGame:
 
     @classmethod
     def apply(cls, state, seat, action):
+        assert_legal(cls, state, seat, action)
         log = state["log"]
         act = action.get("action")
 
@@ -161,28 +213,31 @@ class TwentyNineGame:
                 state["high_bid"] = val
                 state["high_bidder"] = seat
                 state["bids"][str(seat)] = val
-                log.append(f"{SEAT_NAMES[seat]} bid {val} points.")
+                log.append(f"{seat_name(state, seat)} bid {val} points.")
             else:
                 state["bids"][str(seat)] = "pass"
-                log.append(f"{SEAT_NAMES[seat]} passed.")
+                log.append(f"{seat_name(state, seat)} passed.")
 
             # Count how many players have passed
             passed_count = sum(1 for i in range(4) if state["bids"].get(str(i)) == "pass")
 
             # Check if all 4 players passed without any bid
             if passed_count == 4:
-                state["high_bidder"] = 0
+                state["high_bidder"] = sorted(human_seats(state))[0] if human_seats(state) else 0
                 state["high_bid"] = 16
                 state["phase"] = "setting_trump"
-                log.append("All players passed. You are default bidder at 16 points. Select secret trump suit.")
+                log.append("All players passed. "
+                           f"{seat_name(state, state['high_bidder'])} is default "
+                           "bidder at 16 points - select the secret trump suit.")
                 return state
 
             # Check if 3 players passed and there is a high bidder
             if passed_count == 3 and state.get("high_bidder") is not None:
                 bidder = state["high_bidder"]
-                if bidder == 0:
+                if bidder in human_seats(state):
                     state["phase"] = "setting_trump"
-                    log.append(f"You won bidding at {state['high_bid']}! Select your secret trump suit.")
+                    log.append(f"{seat_name(state, bidder)} won bidding at "
+                               f"{state['high_bid']}! Select your secret trump suit.")
                 else:
                     suits_in_hand = [suit_of(c) for c in state["hands"][str(bidder)]]
                     trump = max(set(suits_in_hand), key=suits_in_hand.count)
@@ -195,7 +250,7 @@ class TwentyNineGame:
                         state["hands"][str(i)].extend(state["second_half"].get(str(i), []))
                     state["second_half"] = {}
 
-                    log.append(f"{SEAT_NAMES[bidder]} won bidding at {state['high_bid']}! Secret trump set. Second 4 cards dealt.")
+                    log.append(f"{seat_name(state, bidder)} won bidding at {state['high_bid']}! Secret trump set. Second 4 cards dealt.")
                 return state
 
             # Advance bid_turn to next player who has not passed!
@@ -218,7 +273,9 @@ class TwentyNineGame:
                     state["hands"][str(i)].extend(state["second_half"].get(str(i), []))
                 state["second_half"] = {}
 
-                log.append(f"You selected secret trump {SUIT_NAMES[suit]} ({SUIT_SYMBOLS[suit]})! Remaining 4 cards dealt. Let the battle begin!")
+                log.append(f"{seat_name(state, bidder)} selected secret trump "
+                           f"{SUIT_NAMES[suit]} ({SUIT_SYMBOLS[suit]})! Remaining "
+                           "4 cards dealt. Let the battle begin!")
             return state
 
         elif state["phase"] == "playing":
@@ -227,7 +284,7 @@ class TwentyNineGame:
 
             if act == "reveal_trump":
                 state["trump_revealed"] = True
-                log.append(f"{SEAT_NAMES[seat]} asked for TRUMP! Trump is revealed as {SUIT_NAMES[state['trump_suit']]} ({SUIT_SYMBOLS[state['trump_suit']]})!")
+                log.append(f"{seat_name(state, seat)} asked for TRUMP! Trump is revealed as {SUIT_NAMES[state['trump_suit']]} ({SUIT_SYMBOLS[state['trump_suit']]})!")
                 return state
 
             if act != "play":
@@ -242,7 +299,7 @@ class TwentyNineGame:
             if not state["trick"]:
                 state["lead_suit"] = suit_of(card)
             state["trick"].append({"seat": seat, "card": card})
-            log.append(f"{SEAT_NAMES[seat]} played {pretty_card(card)}")
+            log.append(f"{seat_name(state, seat)} played {pretty_card(card)}")
 
             # Trick complete (4 cards)
             if len(state["trick"]) == 4:
@@ -272,7 +329,7 @@ class TwentyNineGame:
                     "winner": winner,
                     "points": trick_pts
                 })
-                log.append(f"{SEAT_NAMES[winner]} won the trick (+{trick_pts} pts, Team {winner_team[-1]} total: {state['card_points'][winner_team]})")
+                log.append(f"{seat_name(state, winner)} won the trick (+{trick_pts} pts, Team {winner_team[-1]} total: {state['card_points'][winner_team]})")
 
                 state["trick"] = []
                 state["lead_suit"] = None
@@ -374,13 +431,14 @@ class SpadesGame:
 
     @classmethod
     def apply(cls, state, seat, action):
+        assert_legal(cls, state, seat, action)
         log = state["log"]
         act = action.get("action")
 
         if state["phase"] == "bidding":
             val = int(action.get("value", 3))
             state["bids"][str(seat)] = val
-            log.append(f"{SEAT_NAMES[seat]} bid {val} tricks.")
+            log.append(f"{seat_name(state, seat)} bid {val} tricks.")
 
             if len(state["bids"]) == 4:
                 state["team_bids"]["team0"] = state["bids"]["0"] + state["bids"]["2"]
@@ -404,7 +462,7 @@ class SpadesGame:
             if not state["trick"]:
                 state["lead_suit"] = suit_of(card)
             state["trick"].append({"seat": seat, "card": card})
-            log.append(f"{SEAT_NAMES[seat]} played {pretty_card(card)}")
+            log.append(f"{seat_name(state, seat)} played {pretty_card(card)}")
 
             if len(state["trick"]) == 4:
                 lead = state["lead_suit"]
@@ -421,7 +479,7 @@ class SpadesGame:
 
                 state["tricks"][str(winner)] += 1
                 state["team_tricks"][team] += 1
-                log.append(f"{SEAT_NAMES[winner]} took the trick (Team {team[-1]} total: {state['team_tricks'][team]})")
+                log.append(f"{seat_name(state, winner)} took the trick (Team {team[-1]} total: {state['team_tricks'][team]})")
 
                 state["trick"] = []
                 state["lead_suit"] = None
@@ -528,6 +586,7 @@ class HeartsGame:
 
     @classmethod
     def apply(cls, state, seat, action):
+        assert_legal(cls, state, seat, action)
         card = action.get("card")
         hand = state["hands"][str(seat)]
         hand.remove(card)
@@ -540,7 +599,7 @@ class HeartsGame:
         if not state["trick"]:
             state["lead_suit"] = suit_of(card)
         state["trick"].append({"seat": seat, "card": card})
-        log.append(f"{SEAT_NAMES[seat]} played {pretty_card(card)}")
+        log.append(f"{seat_name(state, seat)} played {pretty_card(card)}")
 
         if len(state["trick"]) == 4:
             state["first_trick"] = False
@@ -566,7 +625,7 @@ class HeartsGame:
             state["tricks"][str(winner)] += 1
             state["penalty_points"][str(winner)] += penalty
             pen_text = f" ({penalty} penalty pts!)" if penalty > 0 else ""
-            log.append(f"{SEAT_NAMES[winner]} won trick{pen_text}")
+            log.append(f"{seat_name(state, winner)} won trick{pen_text}")
 
             state["trick"] = []
             state["lead_suit"] = None
@@ -586,11 +645,11 @@ class HeartsGame:
                 if shooter is not None:
                     for i in range(4):
                         state["penalty_points"][str(i)] = 0 if i == shooter else 26
-                    log.append(f"MOON SHOT! {SEAT_NAMES[shooter]} shot the moon! 0 penalty points, 26 to all opponents!")
+                    log.append(f"MOON SHOT! {seat_name(state, shooter)} shot the moon! 0 penalty points, 26 to all opponents!")
 
                 best_player = min(range(4), key=lambda i: state["penalty_points"][str(i)])
                 state["winner"] = best_player
-                log.append(f"GAME OVER: Winner is {SEAT_NAMES[best_player]} with lowest penalty score ({state['penalty_points'][str(best_player)]} pts)!")
+                log.append(f"GAME OVER: Winner is {seat_name(state, best_player)} with lowest penalty score ({state['penalty_points'][str(best_player)]} pts)!")
         else:
             state["turn"] = (seat + 1) % 4
         return state
@@ -676,6 +735,7 @@ class BridgeGame:
 
     @classmethod
     def apply(cls, state, seat, action):
+        assert_legal(cls, state, seat, action)
         log = state["log"]
         act = action.get("action")
 
@@ -688,10 +748,10 @@ class BridgeGame:
                 state["trump_suit"] = None if suit == "NT" else suit
                 state["contract_tricks"] = 6 + lvl
                 state["bids"][str(seat)] = state["contract"]
-                log.append(f"{SEAT_NAMES[seat]} bid contract: {state['contract']}")
+                log.append(f"{seat_name(state, seat)} bid contract: {state['contract']}")
             else:
                 state["bids"][str(seat)] = "pass"
-                log.append(f"{SEAT_NAMES[seat]} passed.")
+                log.append(f"{seat_name(state, seat)} passed.")
 
             # End bidding if 4 bids evaluated and someone bid
             if len(state["bids"]) >= 4:
@@ -705,7 +765,7 @@ class BridgeGame:
                 state["dummy"] = (dec + 2) % 4
                 state["phase"] = "playing"
                 state["turn"] = (dec + 1) % 4  # Opening lead is to declarer's left
-                log.append(f"Contract SET: {state['contract']} by {SEAT_NAMES[dec]}. Opening lead by {SEAT_NAMES[state['turn']]}. Dummy is {SEAT_NAMES[state['dummy']]}.")
+                log.append(f"Contract SET: {state['contract']} by {seat_name(state, dec)}. Opening lead by {SEAT_NAMES[state['turn']]}. Dummy is {SEAT_NAMES[state['dummy']]}.")
             else:
                 state["bid_turn"] = (state["bid_turn"] + 1) % 4
             return state
@@ -724,7 +784,7 @@ class BridgeGame:
             if not state["trick"]:
                 state["lead_suit"] = suit_of(card)
             state["trick"].append({"seat": active_seat, "card": card})
-            log.append(f"{SEAT_NAMES[active_seat]} played {pretty_card(card)}")
+            log.append(f"{seat_name(state, active_seat)} played {pretty_card(card)}")
 
             if len(state["trick"]) == 4:
                 lead = state["lead_suit"]
@@ -742,7 +802,7 @@ class BridgeGame:
 
                 state["tricks"][str(winner)] += 1
                 state["team_tricks"][team] += 1
-                log.append(f"{SEAT_NAMES[winner]} won the trick (Team {team[-1]} tricks: {state['team_tricks'][team]})")
+                log.append(f"{seat_name(state, winner)} won the trick (Team {team[-1]} tricks: {state['team_tricks'][team]})")
 
                 state["trick"] = []
                 state["lead_suit"] = None
@@ -823,6 +883,7 @@ class WhistGame:
 
     @classmethod
     def apply(cls, state, seat, action):
+        assert_legal(cls, state, seat, action)
         card = action.get("card")
         hand = state["hands"][str(seat)]
         hand.remove(card)
@@ -831,7 +892,7 @@ class WhistGame:
         if not state["trick"]:
             state["lead_suit"] = suit_of(card)
         state["trick"].append({"seat": seat, "card": card})
-        log.append(f"{SEAT_NAMES[seat]} played {pretty_card(card)}")
+        log.append(f"{seat_name(state, seat)} played {pretty_card(card)}")
 
         if len(state["trick"]) == 4:
             lead = state["lead_suit"]
@@ -849,7 +910,7 @@ class WhistGame:
 
             state["tricks"][str(winner)] += 1
             state["team_tricks"][team] += 1
-            log.append(f"{SEAT_NAMES[winner]} won trick (Team {team[-1]} tricks: {state['team_tricks'][team]})")
+            log.append(f"{seat_name(state, winner)} won trick (Team {team[-1]} tricks: {state['team_tricks'][team]})")
 
             state["trick"] = []
             state["lead_suit"] = None
@@ -931,11 +992,12 @@ class OhHellGame:
 
     @classmethod
     def apply(cls, state, seat, action):
+        assert_legal(cls, state, seat, action)
         log = state["log"]
         if state["phase"] == "bidding":
             val = int(action.get("value", 2))
             state["bids"][str(seat)] = val
-            log.append(f"{SEAT_NAMES[seat]} bid exactly {val} tricks.")
+            log.append(f"{seat_name(state, seat)} bid exactly {val} tricks.")
 
             if len(state["bids"]) == 4:
                 state["phase"] = "playing"
@@ -953,7 +1015,7 @@ class OhHellGame:
             if not state["trick"]:
                 state["lead_suit"] = suit_of(card)
             state["trick"].append({"seat": seat, "card": card})
-            log.append(f"{SEAT_NAMES[seat]} played {pretty_card(card)}")
+            log.append(f"{seat_name(state, seat)} played {pretty_card(card)}")
 
             if len(state["trick"]) == 4:
                 lead = state["lead_suit"]
@@ -969,7 +1031,7 @@ class OhHellGame:
                 winner = winner_e["seat"]
 
                 state["tricks"][str(winner)] += 1
-                log.append(f"{SEAT_NAMES[winner]} won the trick (took: {state['tricks'][str(winner)]} / target: {state['bids'][str(winner)]})")
+                log.append(f"{seat_name(state, winner)} won the trick (took: {state['tricks'][str(winner)]} / target: {state['bids'][str(winner)]})")
 
                 state["trick"] = []
                 state["lead_suit"] = None
@@ -987,7 +1049,7 @@ class OhHellGame:
                             state["scores"][str(i)] = 0
                     best_seat = max(range(4), key=lambda i: state["scores"][str(i)])
                     state["winner"] = best_seat
-                    log.append(f"ROUND FINISHED! Winner is {SEAT_NAMES[best_seat]} with {state['scores'][str(best_seat)]} pts!")
+                    log.append(f"ROUND FINISHED! Winner is {seat_name(state, best_seat)} with {state['scores'][str(best_seat)]} pts!")
             else:
                 state["turn"] = (seat + 1) % 4
             return state
@@ -1101,6 +1163,7 @@ class EuchreGame:
 
     @classmethod
     def apply(cls, state, seat, action):
+        assert_legal(cls, state, seat, action)
         log = state["log"]
         act = action.get("action")
 
@@ -1111,10 +1174,10 @@ class EuchreGame:
                 state["maker_seat"] = seat
                 state["phase"] = "playing"
                 state["turn"] = 0
-                log.append(f"{SEAT_NAMES[seat]} named TRUMP as {SUIT_NAMES[suit]} ({SUIT_SYMBOLS[suit]})! 5-trick showdown begins.")
+                log.append(f"{seat_name(state, seat)} named TRUMP as {SUIT_NAMES[suit]} ({SUIT_SYMBOLS[suit]})! 5-trick showdown begins.")
             else:
                 state["bids"][str(seat)] = "pass"
-                log.append(f"{SEAT_NAMES[seat]} passed.")
+                log.append(f"{seat_name(state, seat)} passed.")
                 if len(state["bids"]) >= 4:
                     # Default: Maker is South with up-card suit
                     state["trump_suit"] = state["up_card"][0]
@@ -1137,7 +1200,7 @@ class EuchreGame:
                 state["lead_suit"] = eff_suit
 
             state["trick"].append({"seat": seat, "card": card})
-            log.append(f"{SEAT_NAMES[seat]} played {pretty_card(card)}")
+            log.append(f"{seat_name(state, seat)} played {pretty_card(card)}")
 
             if len(state["trick"]) == 4:
                 lead = state["lead_suit"]
@@ -1147,7 +1210,7 @@ class EuchreGame:
 
                 state["tricks"][str(winner)] += 1
                 state["team_tricks"][team] += 1
-                log.append(f"{SEAT_NAMES[winner]} won trick (Team {team[-1]} tricks: {state['team_tricks'][team]})")
+                log.append(f"{seat_name(state, winner)} won trick (Team {team[-1]} tricks: {state['team_tricks'][team]})")
 
                 state["trick"] = []
                 state["lead_suit"] = None
@@ -1271,13 +1334,14 @@ class CallBreakGame:
 
     @classmethod
     def apply(cls, state, seat, action):
+        assert_legal(cls, state, seat, action)
         log = state["log"]
         act = action.get("action")
 
         if state["phase"] == "bidding":
             val = int(action.get("value", 2))
             state["bids"][str(seat)] = val
-            log.append(f"{SEAT_NAMES[seat]} bid {val} tricks.")
+            log.append(f"{seat_name(state, seat)} bid {val} tricks.")
 
             if len(state["bids"]) == 4:
                 state["phase"] = "playing"
@@ -1295,7 +1359,7 @@ class CallBreakGame:
             if not state["trick"]:
                 state["lead_suit"] = suit_of(card)
             state["trick"].append({"seat": seat, "card": card})
-            log.append(f"{SEAT_NAMES[seat]} played {pretty_card(card)}")
+            log.append(f"{seat_name(state, seat)} played {pretty_card(card)}")
 
             if len(state["trick"]) == 4:
                 lead = state["lead_suit"]
@@ -1310,7 +1374,7 @@ class CallBreakGame:
                 winner = winning_e["seat"]
 
                 state["tricks"][str(winner)] += 1
-                log.append(f"{SEAT_NAMES[winner]} won trick (total: {state['tricks'][str(winner)]} / call: {state['bids'][str(winner)]})")
+                log.append(f"{seat_name(state, winner)} won trick (total: {state['tricks'][str(winner)]} / call: {state['bids'][str(winner)]})")
 
                 state["trick"] = []
                 state["lead_suit"] = None
@@ -1328,7 +1392,7 @@ class CallBreakGame:
                             state["scores"][str(i)] = -float(bid)
                     best_seat = max(range(4), key=lambda i: state["scores"][str(i)])
                     state["winner"] = best_seat
-                    log.append(f"ROUND FINISHED! Call Break Champion: {SEAT_NAMES[best_seat]} with {state['scores'][str(best_seat)]} pts!")
+                    log.append(f"ROUND FINISHED! Call Break Champion: {seat_name(state, best_seat)} with {state['scores'][str(best_seat)]} pts!")
             else:
                 state["turn"] = (seat + 1) % 4
             return state
@@ -1391,6 +1455,11 @@ def get_game_view(state, seat=0):
         "slug": slug,
         "title": getattr(engine, "title", slug),
         "description": getattr(engine, "description", ""),
+        "my_seat": seat,
+        "seat_labels": [seat_name(state, i) for i in range(4)],
+        "seat_roles": list(SEAT_ROLES),
+        "human_seats": sorted(human_seats(state)),
+        "bot_seats": sorted(set(range(4)) - human_seats(state)),
         "phase": state.get("phase"),
         "over": state.get("over", False),
         "winner": state.get("winner"),
@@ -1398,7 +1467,7 @@ def get_game_view(state, seat=0):
         "turn": state.get("turn"),
         "bid_turn": state.get("bid_turn"),
         "seat": seat,
-        "seat_name": SEAT_NAMES[seat],
+        "seat_name": seat_name(state, seat),
         "hand": human_hand,
         "counts": counts,
         "dummy_hand": dummy_hand,
@@ -1426,40 +1495,47 @@ def get_game_view(state, seat=0):
     }
 
 
-def step_ai_until_human(state):
+def step_ai_until_human(state, max_steps=80):
     """
-    Executes automated AI bot moves for seats 1, 2, and 3
-    until it is either seat 0's turn (human) or the round/game ends.
+    Plays every non-human seat until control reaches one of the seats in
+    ``state["human_seats"]`` (seat 0 in solo games) or the game ends.
     """
     slug = state.get("slug", "29")
     engine = GAME_ENGINES.get(slug, TwentyNineGame)
+    humans = human_seats(state)
 
-    max_steps = 60
     steps = 0
-
     while not state.get("over") and steps < max_steps:
         phase = state.get("phase")
-        if phase == "setting_trump":
-            if state.get("high_bidder") == 0:
-                break
-
-        cur_seat = state.get("bid_turn") if phase == "bidding" else state.get("turn")
-
-        # If it's the human's turn (seat 0), stop and wait for human input
-        if cur_seat == 0:
+        if phase == "setting_trump" and state.get("high_bidder") in humans:
             break
 
-        # In Bridge, if human is declarer (seat 0) and it's dummy's turn, human controls dummy
-        if slug == "bridge" and cur_seat == state.get("dummy") and state.get("declarer") == 0:
+        cur_seat = state.get("bid_turn") if phase == "bidding" else state.get("turn")
+        if cur_seat is None or cur_seat in humans:
+            break
+
+        # Bridge: the human declarer also drives the dummy hand
+        if slug == "bridge" and cur_seat == state.get("dummy")                 and state.get("declarer") in humans:
             break
 
         legal = engine.legal_actions(state, cur_seat)
         if not legal:
             break
 
-        # AI chooses an action
-        chosen_action = choose_ai_action(slug, state, cur_seat, legal)
-        engine.apply(state, cur_seat, chosen_action)
+        chosen = choose_ai_action(slug, state, cur_seat, legal)
+        if not any(action_matches(chosen, opt) for opt in legal):
+            chosen = legal[0]
+
+        applied = False
+        for option in ([chosen] + [o for o in legal if o is not chosen]):
+            try:
+                engine.apply(state, cur_seat, option)
+                applied = True
+                break
+            except Exception:
+                continue
+        if not applied:
+            break
         steps += 1
 
     return state

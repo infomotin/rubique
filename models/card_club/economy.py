@@ -588,6 +588,106 @@ def settle_zero_sum(table_id, payouts, pool_bonus):
         return {"pot": pot, "pool_bonus": pool_bonus, "total": total}
 
 
+# ---------------------------------------------- classic suite escrow
+# The Classic Playing Cards Suite keeps its own stake table (it never creates
+# a club_tables row) but every coin still travels through the same hold wallet
+# and hash-chained ledger, so classic wins/losses show up in /club/ledger and
+# pass verify_ledger() exactly like club bets do.
+
+def place_classic_stake(game_id, user_id, amount, group_id=0):
+    """Escrow one seat's stake for a Classic Suite game."""
+    amount = int(amount or 0)
+    if amount < 0:
+        raise CardClubError("Stake cannot be negative")
+    if amount > MAX_BET_LIMIT:
+        raise BetLimitExceeded(f"Per-table bet limit is {MAX_BET_LIMIT}")
+    with _tx() as (conn, db_type):
+        if amount > 0:
+            outstanding = _one(
+                conn, db_type,
+                """SELECT COALESCE(SUM(amount),0) FROM classic_stakes
+                   WHERE user_id = %s AND status = 'escrowed'""",
+                """SELECT COALESCE(SUM(amount),0) FROM classic_stakes
+                   WHERE user_id = ? AND status = 'escrowed'""",
+                (user_id,))
+            held = int(outstanding[0]) if outstanding else 0
+            if held + amount > MAX_OUTSTANDING_EXPOSURE:
+                raise BetLimitExceeded(
+                    f"Outstanding exposure would exceed {MAX_OUTSTANDING_EXPOSURE}")
+            _move(conn, db_type, (group_id, user_id), HOLD_WALLET, amount,
+                  "bet_escrow", ref_type="classic_game", ref_id=game_id,
+                  note="classic seat stake escrowed")
+        return _insert(
+            conn, db_type,
+            "INSERT INTO classic_stakes (game_id, user_id, amount) VALUES (%s,%s,%s)",
+            "INSERT INTO classic_stakes (game_id, user_id, amount) VALUES (?,?,?)",
+            (game_id, user_id, amount))
+
+
+def refund_classic_stakes(game_id, group_id=0):
+    """Return every escrowed stake (abandoned or cancelled classic game)."""
+    with _tx() as (conn, db_type):
+        rows = _all(
+            conn, db_type,
+            "SELECT id, user_id, amount FROM classic_stakes "
+            "WHERE game_id = %s AND status = 'escrowed'",
+            "SELECT id, user_id, amount FROM classic_stakes "
+            "WHERE game_id = ? AND status = 'escrowed'",
+            (game_id,))
+        for st in rows or []:
+            stake_id, user, amount = int(st[0]), int(st[1]), int(st[2])
+            if amount > 0:
+                _move(conn, db_type, HOLD_WALLET, (group_id, user), amount,
+                      "bet_refund", ref_type="classic_game", ref_id=game_id,
+                      note="classic stake refunded")
+            _exec(conn, db_type,
+                  "UPDATE classic_stakes SET status = 'refunded' WHERE id = %s",
+                  "UPDATE classic_stakes SET status = 'refunded' WHERE id = ?",
+                  (stake_id,))
+        return len(rows or [])
+
+
+def settle_classic(game_id, payouts, group_id=0):
+    """Distribute a finished Classic Suite pot. Payouts must equal the pot
+    exactly (zero-sum) and every leg is hash-chained onto the ledger."""
+    with _tx() as (conn, db_type):
+        stakes = _all(
+            conn, db_type,
+            "SELECT user_id, amount FROM classic_stakes "
+            "WHERE game_id = %s AND status = 'escrowed'",
+            "SELECT user_id, amount FROM classic_stakes "
+            "WHERE game_id = ? AND status = 'escrowed'",
+            (game_id,))
+        pot = sum(int(s[1]) for s in stakes or [])
+        total = sum(int(v) for v in payouts.values())
+        if total != pot:
+            raise ZeroSumViolation(f"Payouts {total} != pot {pot}")
+        for user, amount in payouts.items():
+            amount = int(amount)
+            if amount <= 0:
+                continue
+            _move(conn, db_type, HOLD_WALLET, (group_id, int(user)), amount,
+                  "payout", ref_type="classic_game", ref_id=game_id,
+                  note="classic suite settlement")
+        _exec(conn, db_type,
+              "UPDATE classic_stakes SET status = 'paid' "
+              "WHERE game_id = %s AND status = 'escrowed'",
+              "UPDATE classic_stakes SET status = 'paid' "
+              "WHERE game_id = ? AND status = 'escrowed'",
+              (game_id,))
+        return {"pot": pot, "total": total}
+
+
+def classic_stakes(game_id):
+    with _tx() as (conn, db_type):
+        rows = _all(
+            conn, db_type,
+            "SELECT user_id, amount FROM classic_stakes WHERE game_id = %s",
+            "SELECT user_id, amount FROM classic_stakes WHERE game_id = ?",
+            (game_id,))
+        return [{"user_id": int(r[0]), "amount": int(r[1])} for r in rows or []]
+
+
 def sweep_member_balance(group_id, user_id):
     """Member removal: remaining group balance returns to the group pool."""
     with _tx() as (conn, db_type):
